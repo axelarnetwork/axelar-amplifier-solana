@@ -8,7 +8,8 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-anchor-lang = "0.31.1" # TODO(v2) move to workspace Cargo.toml
+anchor-lang.workspace = true
+anchor-spl.workspace = true
 
 spl-token = { workspace = true, features = ["no-entrypoint"] }
 spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
@@ -44,7 +45,7 @@ no-entrypoint = []
 cpi = ["no-entrypoint"]
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []

@@ -23,3 +23,15 @@ pub use refund_native_fees::*;
 //
 // Gas-related operations with SPL tokens
 //
+
+pub mod pay_spl_for_contract_call;
+pub use pay_spl_for_contract_call::*;
+
+pub mod add_spl_gas;
+pub use add_spl_gas::*;
+
+pub mod collect_spl_fees;
+pub use collect_spl_fees::*;
+
+pub mod refund_spl_fees;
+pub use refund_spl_fees::*;

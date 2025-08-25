@@ -65,63 +65,63 @@ pub mod axelar_solana_gas_service_v2 {
     // Gas-related operations with SPL tokens
     //
 
-    // #[instruction(discriminator = GasServiceDiscriminators::SPL_PAY_FOR_CONTRACT_CALL)]
-    // pub fn pay_spl_for_contract_call(
-    //     ctx: Context<PaySplForContractCall>,
-    //     destination_chain: String,
-    //     destination_address: String,
-    //     payload_hash: [u8; 32],
-    //     gas_fee_amount: u64,
-    //     params: Vec<u8>,
-    //     decimals: u8,
-    //     refund_address: Pubkey,
-    // ) -> Result<()> {
-    //     instructions::spl::pay_spl_for_contract_call(
-    //         ctx,
-    //         destination_chain,
-    //         destination_address,
-    //         payload_hash,
-    //         gas_fee_amount,
-    //         params,
-    //         decimals,
-    //         refund_address,
-    //     )
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::SPL_PAY_FOR_CONTRACT_CALL)]
+    pub fn pay_spl_for_contract_call<'info>(
+        ctx: Context<'_, '_, '_, 'info, PaySplForContractCall<'info>>,
+        destination_chain: String,
+        destination_address: String,
+        payload_hash: [u8; 32],
+        gas_fee_amount: u64,
+        params: Vec<u8>,
+        decimals: u8,
+        refund_address: Pubkey,
+    ) -> Result<()> {
+        instructions::pay_spl_for_contract_call::pay_spl_for_contract_call(
+            ctx,
+            destination_chain,
+            destination_address,
+            payload_hash,
+            &params,
+            gas_fee_amount,
+            decimals,
+            refund_address,
+        )
+    }
 
-    // #[instruction(discriminator = GasServiceDiscriminators::SPL_ADD_GAS)]
-    // pub fn add_spl_gas(
-    //     ctx: Context<AddSplGas>,
-    //     tx_hash: [u8; 32],
-    //     log_index: u32,
-    //     gas_fee_amount: u64,
-    //     decimals: u8,
-    //     refund_address: Pubkey,
-    // ) -> Result<()> {
-    //     instructions::spl::add_spl_gas(
-    //         ctx,
-    //         tx_hash,
-    //         log_index,
-    //         gas_fee_amount,
-    //         decimals,
-    //         refund_address,
-    //     )
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::SPL_ADD_GAS)]
+    pub fn add_spl_gas<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddSplGas<'info>>,
+        tx_hash: [u8; 64],
+        log_index: u64,
+        gas_fee_amount: u64,
+        decimals: u8,
+        refund_address: Pubkey,
+    ) -> Result<()> {
+        instructions::add_spl_gas::add_spl_gas(
+            ctx,
+            tx_hash,
+            log_index,
+            gas_fee_amount,
+            decimals,
+            refund_address,
+        )
+    }
 
-    // #[instruction(discriminator = GasServiceDiscriminators::SPL_COLLECT_FEES)]
-    // pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8) -> Result<()> {
-    //     instructions::spl::collect_spl_fees(ctx, amount, decimals)
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::SPL_COLLECT_FEES)]
+    pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8) -> Result<()> {
+        instructions::collect_spl_fees::collect_spl_fees(ctx, amount, decimals)
+    }
 
-    // #[instruction(discriminator = GasServiceDiscriminators::SPL_REFUND)]
-    // pub fn refund_spl_fees(
-    //     ctx: Context<RefundSplFees>,
-    //     tx_hash: [u8; 32],
-    //     log_index: u32,
-    //     fees: u64,
-    //     decimals: u8,
-    // ) -> Result<()> {
-    //     instructions::spl::refund_spl_fees(ctx, tx_hash, log_index, fees, decimals)
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::SPL_REFUND)]
+    pub fn refund_spl_fees(
+        ctx: Context<RefundSplFees>,
+        tx_hash: [u8; 64],
+        log_index: u64,
+        fees: u64,
+        decimals: u8,
+    ) -> Result<()> {
+        instructions::refund_spl_fees::refund_spl_fees(ctx, tx_hash, log_index, fees, decimals)
+    }
 
     //
     // Gas-related operations with native token SOL
