@@ -8,7 +8,7 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-anchor-lang = "0.31.1" # TODO(cp) move to workspace Cargo.toml
+anchor-lang = "0.31.1" # TODO(v2) move to workspace Cargo.toml
 
 spl-token = { workspace = true, features = ["no-entrypoint"] }
 spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
@@ -29,7 +29,7 @@ gateway-event-stack.workspace = true
 # using 0.5.0 due to build issues with 0.6.1
 # https://github.com/LiteSVM/litesvm/issues/154
 litesvm = "0.5.0"
-solana-signature = "~2.1" # TODO(cp) move to workspace Cargo.toml
+solana-signature = "~2.1" # TODO(v2) move to workspace Cargo.toml
 
 [lints]
 workspace = true

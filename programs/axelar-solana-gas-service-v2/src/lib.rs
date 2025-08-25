@@ -65,7 +65,7 @@ pub mod axelar_solana_gas_service_v2 {
     // Gas-related operations with SPL tokens
     //
 
-    // #[instruction(discriminator = GasServiceInstruction::SPL_PAY_FOR_CONTRACT_CALL)]
+    // #[instruction(discriminator = GasServiceDiscriminators::SPL_PAY_FOR_CONTRACT_CALL)]
     // pub fn pay_spl_for_contract_call(
     //     ctx: Context<PaySplForContractCall>,
     //     destination_chain: String,
@@ -88,7 +88,7 @@ pub mod axelar_solana_gas_service_v2 {
     //     )
     // }
 
-    // #[instruction(discriminator = GasServiceInstruction::SPL_ADD_GAS)]
+    // #[instruction(discriminator = GasServiceDiscriminators::SPL_ADD_GAS)]
     // pub fn add_spl_gas(
     //     ctx: Context<AddSplGas>,
     //     tx_hash: [u8; 32],
@@ -107,12 +107,12 @@ pub mod axelar_solana_gas_service_v2 {
     //     )
     // }
 
-    // #[instruction(discriminator = GasServiceInstruction::SPL_COLLECT_FEES)]
+    // #[instruction(discriminator = GasServiceDiscriminators::SPL_COLLECT_FEES)]
     // pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8) -> Result<()> {
     //     instructions::spl::collect_spl_fees(ctx, amount, decimals)
     // }
 
-    // #[instruction(discriminator = GasServiceInstruction::SPL_REFUND)]
+    // #[instruction(discriminator = GasServiceDiscriminators::SPL_REFUND)]
     // pub fn refund_spl_fees(
     //     ctx: Context<RefundSplFees>,
     //     tx_hash: [u8; 32],
@@ -123,62 +123,62 @@ pub mod axelar_solana_gas_service_v2 {
     //     instructions::spl::refund_spl_fees(ctx, tx_hash, log_index, fees, decimals)
     // }
 
-    // //
-    // // Gas-related operations with native token SOL
-    // //
+    //
+    // Gas-related operations with native token SOL
+    //
 
-    // #[instruction(discriminator = GasServiceInstruction::NATIVE_PAY_FOR_CONTRACT_CALL)]
-    // pub fn pay_native_for_contract_call(
-    //     ctx: Context<PayNativeForContractCall>,
-    //     destination_chain: String,
-    //     destination_address: String,
-    //     payload_hash: [u8; 32],
-    //     refund_address: Pubkey,
-    //     params: Vec<u8>,
-    //     gas_fee_amount: u64,
-    // ) -> Result<()> {
-    //     instructions::native::pay_native_for_contract_call(
-    //         ctx,
-    //         destination_chain,
-    //         destination_address,
-    //         payload_hash,
-    //         refund_address,
-    //         params,
-    //         gas_fee_amount,
-    //     )
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::NATIVE_PAY_FOR_CONTRACT_CALL)]
+    pub fn pay_native_for_contract_call(
+        ctx: Context<PayNativeForContractCall>,
+        destination_chain: String,
+        destination_address: String,
+        payload_hash: [u8; 32],
+        refund_address: Pubkey,
+        params: Vec<u8>,
+        gas_fee_amount: u64,
+    ) -> Result<()> {
+        instructions::pay_native_for_contract_call::pay_native_for_contract_call(
+            ctx,
+            destination_chain,
+            destination_address,
+            payload_hash,
+            refund_address,
+            &params,
+            gas_fee_amount,
+        )
+    }
 
-    // #[instruction(discriminator = GasServiceInstruction::NATIVE_ADD_GAS)]
-    // pub fn add_native_gas(
-    //     ctx: Context<AddNativeGas>,
-    //     tx_hash: [u8; 32],
-    //     log_index: u32,
-    //     gas_fee_amount: u64,
-    //     refund_address: Pubkey,
-    // ) -> Result<()> {
-    //     instructions::native::add_native_gas(
-    //         ctx,
-    //         tx_hash,
-    //         log_index,
-    //         gas_fee_amount,
-    //         refund_address,
-    //     )
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::NATIVE_ADD_GAS)]
+    pub fn add_native_gas(
+        ctx: Context<AddNativeGas>,
+        tx_hash: [u8; 64],
+        log_index: u64,
+        gas_fee_amount: u64,
+        refund_address: Pubkey,
+    ) -> Result<()> {
+        instructions::add_native_gas::add_native_gas(
+            ctx,
+            tx_hash,
+            log_index,
+            gas_fee_amount,
+            refund_address,
+        )
+    }
 
-    // #[instruction(discriminator = GasServiceInstruction::NATIVE_COLLECT_FEES)]
-    // pub fn collect_native_fees(ctx: Context<CollectNativeFees>, amount: u64) -> Result<()> {
-    //     instructions::native::collect_native_fees(ctx, amount)
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::NATIVE_COLLECT_FEES)]
+    pub fn collect_native_fees(ctx: Context<CollectNativeFees>, amount: u64) -> Result<()> {
+        instructions::collect_native_fees::collect_native_fees(ctx, amount)
+    }
 
-    // #[instruction(discriminator = GasServiceInstruction::NATIVE_REFUND)]
-    // pub fn refund_native_fees(
-    //     ctx: Context<RefundNativeFees>,
-    //     tx_hash: [u8; 32],
-    //     log_index: u32,
-    //     fees: u64,
-    // ) -> Result<()> {
-    //     instructions::native::refund_native_fees(ctx, tx_hash, log_index, fees)
-    // }
+    #[instruction(discriminator = GasServiceDiscriminators::NATIVE_REFUND)]
+    pub fn refund_native_fees(
+        ctx: Context<RefundNativeFees>,
+        tx_hash: [u8; 64],
+        log_index: u64,
+        fees: u64,
+    ) -> Result<()> {
+        instructions::refund_native_fees::refund_native_fees(ctx, tx_hash, log_index, fees)
+    }
 }
 
 #[cfg(test)]
