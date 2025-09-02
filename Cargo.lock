@@ -979,9 +979,7 @@ dependencies = [
  "axelar-solana-gas-service-events",
  "axelar-solana-gateway-test-fixtures",
  "bytemuck",
- "litesvm",
  "program-utils",
- "solana-signature",
 ]
 
 [[package]]
@@ -4276,15 +4274,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4721,37 +4710,6 @@ name = "litemap"
 version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23fb14cb19457329c82206317a5663005a4d404783dc74f4252769b0d5f42856"
-
-[[package]]
-name = "litesvm"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e89818484130353695dfdee963fc818c808dfa9a5be6ff8070964bfc810579b3"
-dependencies = [
- "bincode",
- "indexmap 2.9.0",
- "itertools 0.14.0",
- "log",
- "solana-address-lookup-table-program",
- "solana-bpf-loader-program",
- "solana-compute-budget",
- "solana-compute-budget-program",
- "solana-config-program",
- "solana-fee",
- "solana-loader-v4-program",
- "solana-log-collector",
- "solana-program",
- "solana-program-runtime",
- "solana-runtime-transaction",
- "solana-sdk",
- "solana-stake-program",
- "solana-svm",
- "solana-svm-transaction",
- "solana-system-program",
- "solana-timings",
- "solana-vote-program",
- "thiserror 2.0.12",
-]
 
 [[package]]
 name = "lock_api"

@@ -17,10 +17,6 @@ bytemuck.workspace = true
 [dev-dependencies]
 axelar-solana-gateway-test-fixtures.workspace = true
 axelar-solana-gas-service.workspace = true
-# using 0.5.0 due to build issues with 0.6.1
-# https://github.com/LiteSVM/litesvm/issues/154
-litesvm = "0.5.0"
-solana-signature = "~2.1" # TODO(v2) move to workspace Cargo.toml
 
 [lints]
 workspace = true
