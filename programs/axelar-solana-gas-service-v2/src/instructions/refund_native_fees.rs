@@ -1,7 +1,6 @@
 use crate::state::Config;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::log::sol_log_data;
-use axelar_solana_gas_service_events::event_prefixes;
+use axelar_solana_gas_service_events::events::NativeGasRefundedEvent;
 
 /// Refund previously collected native SOL fees (operator only).
 ///
@@ -9,6 +8,7 @@ use axelar_solana_gas_service_events::event_prefixes;
 /// 1. `[signer, read-only]` The `operator` account authorized to issue refunds.
 /// 2. `[writable]` The `receiver` account that will receive the refunded lamports.
 /// 3. `[writable]` The `config_pda` account from which lamports are refunded.
+#[event_cpi]
 #[derive(Accounts)]
 pub struct RefundNativeFees<'info> {
     #[account(address = config_pda.load()?.operator)]
@@ -42,15 +42,13 @@ pub fn refund_native_fees(
     ctx.accounts.config_pda.sub_lamports(fees)?;
     ctx.accounts.receiver.add_lamports(fees)?;
 
-    // Emit an event
-    sol_log_data(&[
-        event_prefixes::NATIVE_GAS_REFUNDED,
-        &tx_hash,
-        &ctx.accounts.config_pda.to_account_info().key.to_bytes(),
-        &log_index.to_le_bytes(),
-        &ctx.accounts.receiver.to_account_info().key.to_bytes(),
-        &fees.to_le_bytes(),
-    ]);
+    emit_cpi!(NativeGasRefundedEvent {
+        tx_hash,
+        config_pda: *ctx.accounts.config_pda.to_account_info().key,
+        log_index,
+        receiver: *ctx.accounts.receiver.to_account_info().key,
+        fees,
+    });
 
     Ok(())
 }

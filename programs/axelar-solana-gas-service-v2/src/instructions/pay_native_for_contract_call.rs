@@ -1,7 +1,6 @@
 use crate::state::Config;
-use anchor_lang::solana_program::log::sol_log_data;
 use anchor_lang::{prelude::*, system_program};
-use axelar_solana_gas_service_events::event_prefixes;
+use axelar_solana_gas_service_events::events::NativeGasPaidForContractCallEvent;
 
 /// Pay gas fees for a contract call using native SOL.
 ///
@@ -9,6 +8,7 @@ use axelar_solana_gas_service_events::event_prefixes;
 /// 0. `[signer, writable]` The account (`payer`) paying the gas fee in lamports.
 /// 1. `[writable]` The `config_pda` account that receives the lamports.
 /// 2. `[]` The `system_program` account.
+#[event_cpi]
 #[derive(Accounts)]
 pub struct PayNativeForContractCall<'info> {
     #[account(mut)]
@@ -53,17 +53,15 @@ pub fn pay_native_for_contract_call(
         gas_fee_amount,
     )?;
 
-    // Emit an event
-    sol_log_data(&[
-        event_prefixes::NATIVE_GAS_PAID_FOR_CONTRACT_CALL,
-        &config_pda_account_info.key.to_bytes(),
-        &destination_chain.into_bytes(),
-        &destination_address.into_bytes(),
-        &payload_hash,
-        &refund_address.to_bytes(),
-        params,
-        &gas_fee_amount.to_le_bytes(),
-    ]);
+    emit_cpi!(NativeGasPaidForContractCallEvent {
+        config_pda: *config_pda_account_info.key,
+        destination_chain: destination_chain.clone(),
+        destination_address: destination_address.clone(),
+        payload_hash,
+        refund_address,
+        params: params.to_vec(),
+        gas_fee_amount,
+    });
 
     Ok(())
 }

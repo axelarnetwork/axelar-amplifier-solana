@@ -1,8 +1,7 @@
 use crate::state::Config;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::log::sol_log_data;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
-use axelar_solana_gas_service_events::event_prefixes;
+use axelar_solana_gas_service_events::events::SplGasAddedEvent;
 
 /// Add more gas (SPL tokens) to an existing contract call.
 ///
@@ -14,6 +13,7 @@ use axelar_solana_gas_service_events::event_prefixes;
 /// 4. `[]` The mint account for the SPL token.
 /// 5. `[]` The SPL token program.
 /// 6+. `[signer, writable]` Optional additional accounts required by the SPL token program for the transfer.
+#[event_cpi]
 #[derive(Accounts)]
 pub struct AddSplGas<'info> {
     #[account(mut)]
@@ -81,18 +81,16 @@ pub fn add_spl_gas<'info>(
 
     token_interface::transfer_checked(cpi_context, gas_fee_amount, decimals)?;
 
-    // Emit an event
-    sol_log_data(&[
-        event_prefixes::SPL_GAS_ADDED,
-        &ctx.accounts.config_pda.to_account_info().key.to_bytes(),
-        &ctx.accounts.config_pda_ata.to_account_info().key.to_bytes(),
-        &ctx.accounts.mint.to_account_info().key.to_bytes(),
-        &ctx.accounts.token_program.key.to_bytes(),
-        &tx_hash,
-        &log_index.to_le_bytes(),
-        &refund_address.to_bytes(),
-        &gas_fee_amount.to_le_bytes(),
-    ]);
+    emit_cpi!(SplGasAddedEvent {
+        config_pda: *ctx.accounts.config_pda.to_account_info().key,
+        config_pda_ata: *ctx.accounts.config_pda_ata.to_account_info().key,
+        mint: *ctx.accounts.mint.to_account_info().key,
+        token_program_id: *ctx.accounts.token_program.to_account_info().key,
+        tx_hash,
+        log_index,
+        refund_address,
+        gas_fee_amount,
+    });
 
     Ok(())
 }

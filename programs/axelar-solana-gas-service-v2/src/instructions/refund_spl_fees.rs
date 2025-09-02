@@ -1,8 +1,7 @@
 use crate::state::Config;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::log::sol_log_data;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
-use axelar_solana_gas_service_events::event_prefixes;
+use axelar_solana_gas_service_events::events::SplGasRefundedEvent;
 
 /// Refund previously collected SPL token fees (operator only).
 ///
@@ -13,6 +12,7 @@ use axelar_solana_gas_service_events::event_prefixes;
 /// 3. `[writable]` The config PDA's associated token account for the mint.
 /// 4. `[]` The mint account for the SPL token.
 /// 5. `[]` The SPL token program.
+#[event_cpi]
 #[derive(Accounts)]
 pub struct RefundSplFees<'info> {
     #[account(address = config_pda.load()?.operator)]
@@ -79,22 +79,16 @@ pub fn refund_spl_fees(
 
     token_interface::transfer_checked(cpi_context, fees, decimals)?;
 
-    // Emit an event
-    sol_log_data(&[
-        event_prefixes::SPL_GAS_REFUNDED,
-        &tx_hash,
-        &ctx.accounts.config_pda.to_account_info().key.to_bytes(),
-        &ctx.accounts.config_pda_ata.to_account_info().key.to_bytes(),
-        &ctx.accounts.mint.to_account_info().key.to_bytes(),
-        &ctx.accounts.token_program.key.to_bytes(),
-        &log_index.to_le_bytes(),
-        &ctx.accounts
-            .receiver_account
-            .to_account_info()
-            .key
-            .to_bytes(),
-        &fees.to_le_bytes(),
-    ]);
+    emit_cpi!(SplGasRefundedEvent {
+        config_pda_ata: *ctx.accounts.config_pda_ata.to_account_info().key,
+        mint: *ctx.accounts.mint.to_account_info().key,
+        token_program_id: *ctx.accounts.token_program.to_account_info().key,
+        tx_hash,
+        config_pda: *ctx.accounts.config_pda.to_account_info().key,
+        log_index,
+        receiver: *ctx.accounts.receiver_account.to_account_info().key,
+        fees,
+    });
 
     Ok(())
 }

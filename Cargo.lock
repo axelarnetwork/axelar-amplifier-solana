@@ -965,8 +965,8 @@ dependencies = [
 name = "axelar-solana-gas-service-events"
 version = "0.1.0"
 dependencies = [
+ "anchor-lang",
  "event-utils",
- "solana-program",
 ]
 
 [[package]]

@@ -1,7 +1,6 @@
 use crate::state::Config;
-use anchor_lang::solana_program::log::sol_log_data;
 use anchor_lang::{prelude::*, system_program};
-use axelar_solana_gas_service_events::event_prefixes;
+use axelar_solana_gas_service_events::events::NativeGasAddedEvent;
 
 /// Add more native SOL gas to an existing transaction.
 ///
@@ -9,6 +8,7 @@ use axelar_solana_gas_service_events::event_prefixes;
 /// 1. `[signer, writable]` The account (`sender`) providing the additional lamports.
 /// 2. `[writable]` The `config_pda` account that receives the additional lamports.
 /// 3. `[]` The `system_program` account.
+#[event_cpi]
 #[derive(Accounts)]
 pub struct AddNativeGas<'info> {
     #[account(mut)]
@@ -51,15 +51,13 @@ pub fn add_native_gas(
         gas_fee_amount,
     )?;
 
-    // Emit an event
-    sol_log_data(&[
-        event_prefixes::NATIVE_GAS_ADDED,
-        &config_pda_account_info.key.to_bytes(),
-        &tx_hash,
-        &log_index.to_le_bytes(),
-        &refund_address.to_bytes(),
-        &gas_fee_amount.to_le_bytes(),
-    ]);
+    emit_cpi!(NativeGasAddedEvent {
+        config_pda: *config_pda_account_info.key,
+        tx_hash,
+        log_index,
+        refund_address,
+        gas_fee_amount,
+    });
 
     Ok(())
 }

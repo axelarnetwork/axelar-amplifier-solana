@@ -1,8 +1,7 @@
 use crate::state::Config;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::log::sol_log_data;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
-use axelar_solana_gas_service_events::event_prefixes;
+use axelar_solana_gas_service_events::events::SplGasPaidForContractCallEvent;
 
 /// Pay gas fees for a contract call using SPL tokens.
 ///
@@ -14,6 +13,7 @@ use axelar_solana_gas_service_events::event_prefixes;
 /// 4. `[]` The mint account for the SPL token.
 /// 5. `[]` The SPL token program.
 /// 6+. `[signer, writable]` Optional additional accounts required by the SPL token program for the transfer.
+#[event_cpi]
 #[derive(Accounts)]
 pub struct PaySplForContractCall<'info> {
     #[account(mut)]
@@ -83,20 +83,18 @@ pub fn pay_spl_for_contract_call<'info>(
 
     token_interface::transfer_checked(cpi_context, gas_fee_amount, decimals)?;
 
-    // Emit an event
-    sol_log_data(&[
-        event_prefixes::SPL_PAID_FOR_CONTRACT_CALL,
-        &ctx.accounts.config_pda.to_account_info().key.to_bytes(),
-        &ctx.accounts.config_pda_ata.to_account_info().key.to_bytes(),
-        &ctx.accounts.mint.to_account_info().key.to_bytes(),
-        &ctx.accounts.token_program.key.to_bytes(),
-        &destination_chain.into_bytes(),
-        &destination_address.into_bytes(),
-        &payload_hash,
-        &refund_address.to_bytes(),
-        params,
-        &gas_fee_amount.to_le_bytes(),
-    ]);
+    emit_cpi!(SplGasPaidForContractCallEvent {
+        config_pda: *ctx.accounts.config_pda.to_account_info().key,
+        config_pda_ata: *ctx.accounts.config_pda_ata.to_account_info().key,
+        mint: *ctx.accounts.mint.to_account_info().key,
+        token_program_id: *ctx.accounts.token_program.key,
+        destination_chain: destination_chain.clone(),
+        destination_address: destination_address.clone(),
+        payload_hash,
+        refund_address,
+        params: params.to_vec(),
+        gas_fee_amount,
+    });
 
     Ok(())
 }
