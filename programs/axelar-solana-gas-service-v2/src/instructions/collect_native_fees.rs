@@ -1,5 +1,6 @@
 use crate::state::Config;
 use anchor_lang::prelude::*;
+use axelar_solana_operators::OperatorAccount;
 
 /// Collect accrued native SOL fees (operator only).
 ///
@@ -9,17 +10,19 @@ use anchor_lang::prelude::*;
 /// 3. `[writable]` The `receiver` account where the collected lamports will be sent.
 #[derive(Accounts)]
 pub struct CollectNativeFees<'info> {
-    #[account(address = config_pda.load()?.operator)]
+    #[account(mut, constraint = operator_pda.operator == operator.key() @ axelar_solana_operators::ErrorCode::InvalidOperator)]
     pub operator: Signer<'info>,
 
     #[account(
-    	mut,
+        constraint = operator_pda.operator == operator.key() @ axelar_solana_operators::ErrorCode::InvalidOperator,
         seeds = [
-            Config::SEED_PREFIX,
+            OperatorAccount::SEED_PREFIX,
+            operator.key().as_ref(),
         ],
-        bump = config_pda.load()?.bump,
+        bump = operator_pda.bump,
+        seeds::program = axelar_solana_operators::ID
     )]
-    pub config_pda: AccountLoader<'info, Config>,
+    pub operator_pda: Account<'info, OperatorAccount>,
 
     /// CHECK: Can be any account to receive funds
     #[account(mut)]

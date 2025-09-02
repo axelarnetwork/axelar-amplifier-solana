@@ -11,6 +11,7 @@ edition.workspace = true
 anchor-lang.workspace = true
 anchor-spl.workspace = true
 axelar-solana-gas-service-events.workspace = true
+axelar-solana-operators.workspace = true
 program-utils.workspace = true
 bytemuck.workspace = true
 
