@@ -10,23 +10,13 @@ edition.workspace = true
 [dependencies]
 anchor-lang.workspace = true
 anchor-spl.workspace = true
-
-spl-token = { workspace = true, features = ["no-entrypoint"] }
-spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
-spl-associated-token-account = { workspace = true, features = [
-	"no-entrypoint",
-] }
 axelar-solana-gas-service-events.workspace = true
-bytemuck.workspace = true
-borsh.workspace = true
 program-utils.workspace = true
+bytemuck.workspace = true
 
 [dev-dependencies]
-solana-sdk.workspace = true
-solana-program-test.workspace = true
 axelar-solana-gateway-test-fixtures.workspace = true
 axelar-solana-gas-service.workspace = true
-gateway-event-stack.workspace = true
 # using 0.5.0 due to build issues with 0.6.1
 # https://github.com/LiteSVM/litesvm/issues/154
 litesvm = "0.5.0"

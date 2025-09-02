@@ -1,8 +1,8 @@
 use crate::state::Config;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::log::sol_log_data;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 use axelar_solana_gas_service_events::event_prefixes;
-use spl_token::solana_program::log::sol_log_data;
 
 /// Refund previously collected SPL token fees (operator only).
 ///
