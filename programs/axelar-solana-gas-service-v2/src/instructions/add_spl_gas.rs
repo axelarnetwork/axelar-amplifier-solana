@@ -62,13 +62,6 @@ pub fn add_spl_gas<'info>(
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    // TODO(v2) check if this check is necessary
-    // or move to account constraint
-    if decimals != ctx.accounts.mint.decimals {
-        msg!("Decimals do not match the mint's decimals");
-        return Err(ProgramError::InvalidInstructionData.into());
-    }
-
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
         from: ctx.accounts.sender_ata.to_account_info().clone(),

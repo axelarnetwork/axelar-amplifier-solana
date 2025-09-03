@@ -49,13 +49,6 @@ pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8)
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    // TODO(v2) check if this check is necessary
-    // or move to account constraint
-    if decimals != ctx.accounts.mint.decimals {
-        msg!("Decimals do not match the mint's decimals");
-        return Err(ProgramError::InvalidInstructionData.into());
-    }
-
     let config = ctx.accounts.config_pda.load()?;
 
     let signer_seeds: &[&[&[u8]]] = &[&[Config::SEED_PREFIX, &[config.bump]]];
