@@ -1,31 +1,36 @@
-use crate::state::Config;
+use crate::state::Treasury;
 use anchor_lang::prelude::*;
 use axelar_solana_gas_service_events::events::NativeGasRefundedEvent;
+use axelar_solana_operators::OperatorAccount;
 
 /// Refund previously collected native SOL fees (operator only).
-///
-/// Accounts expected:
-/// 1. `[signer, read-only]` The `operator` account authorized to issue refunds.
-/// 2. `[writable]` The `receiver` account that will receive the refunded lamports.
-/// 3. `[writable]` The `config_pda` account from which lamports are refunded.
 #[event_cpi]
 #[derive(Accounts)]
 pub struct RefundNativeFees<'info> {
-    #[account(address = config_pda.load()?.operator)]
     pub operator: Signer<'info>,
+
+    #[account(
+        seeds = [
+            OperatorAccount::SEED_PREFIX,
+            operator.key().as_ref(),
+        ],
+        bump = operator_pda.bump,
+        seeds::program = axelar_solana_operators::ID
+    )]
+    pub operator_pda: Account<'info, OperatorAccount>,
 
     /// CHECK: Can be any account to receive funds
     #[account(mut)]
     pub receiver: UncheckedAccount<'info>,
 
     #[account(
-    	mut,
+        mut,
         seeds = [
-            Config::SEED_PREFIX,
+            Treasury::SEED_PREFIX,
         ],
-        bump = config_pda.load()?.bump,
+        bump = treasury.bump,
     )]
-    pub config_pda: AccountLoader<'info, Config>,
+    pub treasury: Account<'info, Treasury>,
 }
 
 pub fn refund_native_fees(
@@ -36,15 +41,15 @@ pub fn refund_native_fees(
 ) -> Result<()> {
     // TODO(v2) consider making this a utility function in program-utils
     // similar to transfer_lamports
-    if ctx.accounts.config_pda.get_lamports() < fees {
+    if ctx.accounts.treasury.get_lamports() < fees {
         return Err(ProgramError::InsufficientFunds.into());
     }
-    ctx.accounts.config_pda.sub_lamports(fees)?;
+    ctx.accounts.treasury.sub_lamports(fees)?;
     ctx.accounts.receiver.add_lamports(fees)?;
 
     emit_cpi!(NativeGasRefundedEvent {
         tx_hash,
-        config_pda: *ctx.accounts.config_pda.to_account_info().key,
+        config_pda: *ctx.accounts.treasury.to_account_info().key,
         log_index,
         receiver: *ctx.accounts.receiver.to_account_info().key,
         fees,

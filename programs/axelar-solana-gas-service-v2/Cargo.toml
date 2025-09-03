@@ -41,18 +41,22 @@ custom-panic = []
 
 devnet-amplifier = [
 	"axelar-solana-gateway-test-fixtures/devnet-amplifier",
+	"axelar-solana-operators/devnet-amplifier",
 	"program-utils/devnet-amplifier",
 ]
 stagenet = [
 	"axelar-solana-gateway-test-fixtures/stagenet",
+	"axelar-solana-operators/stagenet",
 	"program-utils/stagenet",
 ]
 testnet = [
 	"axelar-solana-gateway-test-fixtures/testnet",
+	"axelar-solana-operators/testnet",
 	"program-utils/testnet",
 ]
 mainnet = [
 	"axelar-solana-gateway-test-fixtures/mainnet",
+	"axelar-solana-operators/mainnet",
 	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]
