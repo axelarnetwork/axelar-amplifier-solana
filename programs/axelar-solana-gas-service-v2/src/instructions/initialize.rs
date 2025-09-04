@@ -20,6 +20,8 @@ pub struct Initialize<'info> {
     )]
     pub operator_pda: Account<'info, OperatorAccount>,
 
+    pub system_program: Program<'info, System>,
+
     #[account(
         init,
         space = Treasury::DISCRIMINATOR.len() + Treasury::INIT_SPACE,
@@ -30,8 +32,6 @@ pub struct Initialize<'info> {
         bump,
     )]
     pub treasury: Account<'info, Treasury>,
-
-    pub system_program: Program<'info, System>,
 }
 
 pub fn initialize(ctx: Context<Initialize>) -> Result<()> {

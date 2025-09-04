@@ -1082,6 +1082,7 @@ dependencies = [
  "mollusk-svm",
  "program-utils",
  "solana-sdk",
+ "solana-sdk-ids",
 ]
 
 [[package]]

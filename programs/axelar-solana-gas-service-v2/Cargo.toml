@@ -11,13 +11,14 @@ edition.workspace = true
 anchor-lang.workspace = true
 anchor-spl.workspace = true
 axelar-solana-gas-service-events.workspace = true
-axelar-solana-operators.workspace = true
+axelar-solana-operators = { workspace = true, features = ["no-entrypoint"] }
 program-utils.workspace = true
 bytemuck.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway-test-fixtures.workspace = true
 axelar-solana-gas-service.workspace = true
+solana-sdk-ids.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 
