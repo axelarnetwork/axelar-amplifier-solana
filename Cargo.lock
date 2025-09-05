@@ -1117,7 +1117,9 @@ dependencies = [
  "axelar-solana-gas-service",
  "axelar-solana-gateway-test-fixtures",
  "bytemuck",
+ "mollusk-svm",
  "program-utils",
+ "solana-sdk",
 ]
 
 [[package]]
