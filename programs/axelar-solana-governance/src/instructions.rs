@@ -158,7 +158,9 @@ pub mod builder {
     use solana_program::keccak::hash;
     use solana_program::program_error::ProgramError;
     use solana_program::pubkey::Pubkey;
-    use solana_program::{bpf_loader_upgradeable, msg, system_program};
+    #[allow(deprecated)]
+    use solana_program::{bpf_loader_upgradeable, msg};
+    use solana_sdk_ids::system_program;
 
     use super::GovernanceInstruction;
     use crate::processor::{
