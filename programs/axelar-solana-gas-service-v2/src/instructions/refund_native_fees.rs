@@ -2,6 +2,7 @@ use crate::state::Treasury;
 use anchor_lang::prelude::*;
 use axelar_solana_gas_service_events::events::NativeGasRefundedEvent;
 use axelar_solana_operators::OperatorAccount;
+use program_utils::transfer_lamports_anchor;
 
 /// Refund previously collected native SOL fees (operator only).
 #[event_cpi]
@@ -44,13 +45,11 @@ pub fn refund_native_fees(
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    // TODO(v2) consider making this a utility function in program-utils
-    // similar to transfer_lamports
-    if ctx.accounts.treasury.get_lamports() < fees {
-        return Err(ProgramError::InsufficientFunds.into());
-    }
-    ctx.accounts.treasury.sub_lamports(fees)?;
-    ctx.accounts.receiver.add_lamports(fees)?;
+    transfer_lamports_anchor!(
+        ctx.accounts.treasury.to_account_info(),
+        ctx.accounts.receiver.to_account_info(),
+        fees
+    );
 
     emit_cpi!(NativeGasRefundedEvent {
         tx_hash,

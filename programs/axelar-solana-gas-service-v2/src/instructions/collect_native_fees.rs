@@ -1,6 +1,7 @@
 use crate::state::Treasury;
 use anchor_lang::prelude::*;
 use axelar_solana_operators::OperatorAccount;
+use program_utils::transfer_lamports_anchor;
 
 /// Collect accrued native SOL fees (operator only).
 ///
@@ -42,13 +43,11 @@ pub fn collect_native_fees(ctx: Context<CollectNativeFees>, amount: u64) -> Resu
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    // TODO(v2) consider making this a utility function in program-utils
-    // similar to transfer_lamports
-    if ctx.accounts.treasury.get_lamports() < amount {
-        return Err(ProgramError::InsufficientFunds.into());
-    }
-    ctx.accounts.treasury.sub_lamports(amount)?;
-    ctx.accounts.receiver.add_lamports(amount)?;
+    transfer_lamports_anchor!(
+        ctx.accounts.treasury.to_account_info(),
+        ctx.accounts.receiver.to_account_info(),
+        amount
+    );
 
     Ok(())
 }
