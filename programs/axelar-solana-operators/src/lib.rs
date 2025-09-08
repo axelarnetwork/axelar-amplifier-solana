@@ -38,6 +38,10 @@ pub mod operators {
     pub fn remove_operator(ctx: Context<RemoveOperator>) -> Result<()> {
         instructions::remove_operator(ctx)
     }
+
+    pub fn transfer_master(ctx: Context<TransferMaster>) -> Result<()> {
+        instructions::transfer_master(ctx)
+    }
 }
 
 #[event]
@@ -50,10 +54,18 @@ pub struct OperatorRemoved {
     pub key: Pubkey,
 }
 
+#[event]
+pub struct MasterTransferred {
+    pub old_master: Pubkey,
+    pub new_master: Pubkey,
+}
+
 #[error_code]
 pub enum ErrorCode {
     #[msg("Only the master operator can perform this action")]
     UnauthorizedMaster,
     #[msg("Invalid operator account")]
     InvalidOperator,
+    #[msg("New master cannot be the same as current master")]
+    SameMaster,
 }

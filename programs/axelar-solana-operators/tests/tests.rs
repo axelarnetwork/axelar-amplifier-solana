@@ -183,6 +183,47 @@ pub fn remove_operator(
         .clone()
 }
 
+pub fn transfer_master(
+    mollusk: &Mollusk,
+    program_id: Pubkey,
+    (registry, registry_account): (Pubkey, Account),
+    (current_master, current_master_account): (Pubkey, Account),
+    (new_master, new_master_account): (Pubkey, Account),
+) -> Account {
+    // Transfer master instruction
+    let ix = Instruction {
+        program_id,
+        accounts: axelar_solana_operators::accounts::TransferMaster {
+            current_master,
+            new_master,
+            registry,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_operators::instruction::TransferMaster {}.data(),
+    };
+
+    let checks = vec![
+        Check::success(),
+        Check::account(&registry)
+            .data_slice(OperatorRegistry::DISCRIMINATOR.len(), new_master.as_array())
+            .build(),
+    ];
+
+    let accounts = vec![
+        (current_master, current_master_account),
+        (new_master, new_master_account),
+        (registry, registry_account.clone()),
+    ];
+
+    let result = mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+
+    // Return the updated registry account
+    result
+        .get_account(&registry)
+        .expect("Registry account should exist")
+        .clone()
+}
+
 #[test]
 fn test_initialize_add_remove() {
     let program_id = axelar_solana_operators::id();
@@ -240,5 +281,57 @@ fn test_initialize_add_remove() {
     assert_eq!(
         registry_state.operator_count, 1,
         "Operator count should be decremented to 1"
+    );
+}
+
+#[test]
+fn test_transfer_master() {
+    let program_id = axelar_solana_operators::id();
+    let mollusk = setup_mollusk(&program_id, "axelar_solana_operators");
+
+    let original_master = Pubkey::new_unique();
+    let original_master_account = Account::new(1_000_000_000, 0, &system_program::ID);
+
+    // Setup registry with original master
+    let (registry, registry_account) = setup_registry(
+        &mollusk,
+        program_id,
+        original_master,
+        &original_master_account,
+    );
+
+    // Create new master operator
+    let new_master = Pubkey::new_unique();
+    let new_master_account = Account::new(1_000_000_000, 0, &system_program::ID);
+
+    // Transfer master operatorship
+    let updated_registry_account = transfer_master(
+        &mollusk,
+        program_id,
+        (registry, registry_account),
+        (original_master, original_master_account.clone()),
+        (new_master, new_master_account.clone()),
+    );
+
+    // Verify the master operator has been updated
+    let registry_state: OperatorRegistry =
+        OperatorRegistry::try_deserialize(&mut updated_registry_account.data())
+            .expect("Failed to deserialize registry account");
+
+    assert_eq!(
+        registry_state.master_operator, new_master,
+        "Master operator should be updated to new master"
+    );
+
+    // Test that the new master can now add operators
+    let operator = Pubkey::new_unique();
+    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+
+    let (_registry_account, _operator_pda, _operator_pda_account) = add_operator(
+        &mollusk,
+        program_id,
+        (registry, updated_registry_account),
+        (new_master, new_master_account), // New master should be able to add operators
+        (operator, operator_account),
     );
 }
