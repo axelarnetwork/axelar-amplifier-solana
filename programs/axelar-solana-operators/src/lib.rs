@@ -39,8 +39,8 @@ pub mod operators {
         instructions::remove_operator(ctx)
     }
 
-    pub fn transfer_master(ctx: Context<TransferMaster>) -> Result<()> {
-        instructions::transfer_master(ctx)
+    pub fn transfer_owner(ctx: Context<TransferOwner>) -> Result<()> {
+        instructions::transfer_owner(ctx)
     }
 }
 
@@ -55,9 +55,9 @@ pub struct OperatorRemoved {
 }
 
 #[event]
-pub struct MasterTransferred {
-    pub old_master: Pubkey,
-    pub new_master: Pubkey,
+pub struct OwnershipTransferred {
+    pub old_owner: Pubkey,
+    pub new_owner: Pubkey,
 }
 
 #[error_code]

@@ -21,8 +21,8 @@ pub(crate) fn setup_mollusk(program_id: &Pubkey, program_name: &str) -> Mollusk 
 fn setup_registry(
     mollusk: &Mollusk,
     program_id: Pubkey,
-    master_operator: Pubkey,
-    master_operator_account: &Account,
+    owner: Pubkey,
+    owner_account: &Account,
 ) -> (Pubkey, Account) {
     // Derive the registry PDA
     let (registry, _bump) = Pubkey::find_program_address(
@@ -34,8 +34,8 @@ fn setup_registry(
     let ix1 = Instruction {
         program_id,
         accounts: axelar_solana_operators::accounts::Initialize {
-            payer: master_operator,
-            master_operator,
+            payer: owner,
+            owner,
             registry,
             system_program: system_program::ID,
         }
@@ -44,7 +44,7 @@ fn setup_registry(
     };
 
     let accounts = vec![
-        (master_operator, master_operator_account.clone()),
+        (owner, owner_account.clone()),
         (registry, Account::new(0, 0, &system_program::ID)),
         keyed_account_for_system_program(),
     ];
@@ -70,7 +70,7 @@ pub fn add_operator(
     mollusk: &Mollusk,
     program_id: Pubkey,
     (registry, registry_account): (Pubkey, Account),
-    (master_operator, master_operator_account): (Pubkey, Account),
+    (owner, owner_account): (Pubkey, Account),
     (operator_to_add, operator_to_add_account): (Pubkey, Account),
 ) -> (Account, Pubkey, Account) {
     // Derive the operator PDA
@@ -86,7 +86,7 @@ pub fn add_operator(
     let ix = Instruction {
         program_id,
         accounts: axelar_solana_operators::accounts::AddOperator {
-            master_operator,
+            owner,
             operator_to_add,
             registry,
             operator_account: operator_to_add_pda,
@@ -107,7 +107,7 @@ pub fn add_operator(
     // List accounts
     let accounts = vec![
         (operator_to_add, operator_to_add_account.clone()),
-        (master_operator, master_operator_account),
+        (owner, owner_account),
         (registry, registry_account),
         (operator_to_add_pda, Account::new(0, 0, &system_program::ID)),
         keyed_account_for_system_program(),
@@ -136,7 +136,7 @@ pub fn remove_operator(
     mollusk: &Mollusk,
     program_id: Pubkey,
     (registry, registry_account): (Pubkey, Account),
-    (master_operator, master_operator_account): (Pubkey, Account),
+    (owner, owner_account): (Pubkey, Account),
     (operator_to_remove, operator_to_remove_account): (Pubkey, Account),
     (operator_pda, operator_pda_account): (Pubkey, Account),
 ) -> Account {
@@ -144,7 +144,7 @@ pub fn remove_operator(
     let ix = Instruction {
         program_id,
         accounts: axelar_solana_operators::accounts::RemoveOperator {
-            master_operator,
+            owner,
             operator_to_remove,
             registry,
             operator_account: operator_pda,
@@ -153,8 +153,8 @@ pub fn remove_operator(
         data: axelar_solana_operators::instruction::RemoveOperator {}.data(),
     };
 
-    // The operator account should be closed and its lamports returned to master_operator
-    let initial_master_balance = master_operator_account.lamports;
+    // The operator account should be closed and its lamports returned to owner
+    let initial_owner_balance = owner_account.lamports;
     let operator_account_lamports = operator_pda_account.lamports;
 
     let checks = vec![
@@ -162,13 +162,13 @@ pub fn remove_operator(
         // Operator account should be closed (no longer exist)
         Check::account(&operator_pda).closed().build(),
         // Master operator should receive the lamports from the closed account
-        Check::account(&master_operator)
-            .lamports(initial_master_balance + operator_account_lamports)
+        Check::account(&owner)
+            .lamports(initial_owner_balance + operator_account_lamports)
             .build(),
     ];
 
     let accounts = vec![
-        (master_operator, master_operator_account),
+        (owner, owner_account),
         (operator_to_remove, operator_to_remove_account),
         (registry, registry_account.clone()),
         (operator_pda, operator_pda_account),
@@ -187,31 +187,31 @@ pub fn transfer_master(
     mollusk: &Mollusk,
     program_id: Pubkey,
     (registry, registry_account): (Pubkey, Account),
-    (current_master, current_master_account): (Pubkey, Account),
-    (new_master, new_master_account): (Pubkey, Account),
+    (current_owner, current_owner_account): (Pubkey, Account),
+    (new_owner, new_owner_account): (Pubkey, Account),
 ) -> Account {
     // Transfer master instruction
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::TransferMaster {
-            current_master,
-            new_master,
+        accounts: axelar_solana_operators::accounts::TransferOwner {
+            owner: current_owner,
+            new_owner,
             registry,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::TransferMaster {}.data(),
+        data: axelar_solana_operators::instruction::TransferOwner {}.data(),
     };
 
     let checks = vec![
         Check::success(),
         Check::account(&registry)
-            .data_slice(OperatorRegistry::DISCRIMINATOR.len(), new_master.as_array())
+            .data_slice(OperatorRegistry::DISCRIMINATOR.len(), new_owner.as_array())
             .build(),
     ];
 
     let accounts = vec![
-        (current_master, current_master_account),
-        (new_master, new_master_account),
+        (current_owner, current_owner_account),
+        (new_owner, new_owner_account),
         (registry, registry_account.clone()),
     ];
 
@@ -230,15 +230,10 @@ fn test_initialize_add_remove() {
 
     let mollusk = setup_mollusk(&program_id, "axelar_solana_operators");
 
-    let master_operator = Pubkey::new_unique();
-    let master_operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let owner = Pubkey::new_unique();
+    let owner_account = Account::new(1_000_000_000, 0, &system_program::ID);
 
-    let (registry, registry_account) = setup_registry(
-        &mollusk,
-        program_id,
-        master_operator,
-        &master_operator_account,
-    );
+    let (registry, registry_account) = setup_registry(&mollusk, program_id, owner, &owner_account);
 
     // Add first operator
     let operator1 = Pubkey::new_unique();
@@ -248,7 +243,7 @@ fn test_initialize_add_remove() {
         &mollusk,
         program_id,
         (registry, registry_account.clone()),
-        (master_operator, master_operator_account.clone()),
+        (owner, owner_account.clone()),
         (operator1, operator1_account.clone()),
     );
 
@@ -260,7 +255,7 @@ fn test_initialize_add_remove() {
         &mollusk,
         program_id,
         (registry, registry_account.clone()),
-        (master_operator, master_operator_account.clone()),
+        (owner, owner_account.clone()),
         (operator2, operator2_account),
     );
 
@@ -269,7 +264,7 @@ fn test_initialize_add_remove() {
         &mollusk,
         program_id,
         (registry, registry_account.clone()),
-        (master_operator, master_operator_account.clone()),
+        (owner, owner_account.clone()),
         (operator1, operator1_account),
         (operator1_pda, operator1_pda_account),
     );
@@ -289,28 +284,28 @@ fn test_transfer_master() {
     let program_id = axelar_solana_operators::id();
     let mollusk = setup_mollusk(&program_id, "axelar_solana_operators");
 
-    let original_master = Pubkey::new_unique();
-    let original_master_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let original_owner = Pubkey::new_unique();
+    let original_owner_account = Account::new(1_000_000_000, 0, &system_program::ID);
 
     // Setup registry with original master
     let (registry, registry_account) = setup_registry(
         &mollusk,
         program_id,
-        original_master,
-        &original_master_account,
+        original_owner,
+        &original_owner_account,
     );
 
     // Create new master operator
-    let new_master = Pubkey::new_unique();
-    let new_master_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let new_owner = Pubkey::new_unique();
+    let new_owner_account = Account::new(1_000_000_000, 0, &system_program::ID);
 
     // Transfer master operatorship
     let updated_registry_account = transfer_master(
         &mollusk,
         program_id,
         (registry, registry_account),
-        (original_master, original_master_account.clone()),
-        (new_master, new_master_account.clone()),
+        (original_owner, original_owner_account.clone()),
+        (new_owner, new_owner_account.clone()),
     );
 
     // Verify the master operator has been updated
@@ -319,7 +314,7 @@ fn test_transfer_master() {
             .expect("Failed to deserialize registry account");
 
     assert_eq!(
-        registry_state.master_operator, new_master,
+        registry_state.owner, new_owner,
         "Master operator should be updated to new master"
     );
 
@@ -331,7 +326,7 @@ fn test_transfer_master() {
         &mollusk,
         program_id,
         (registry, updated_registry_account),
-        (new_master, new_master_account), // New master should be able to add operators
+        (new_owner, new_owner_account), // New master should be able to add operators
         (operator, operator_account),
     );
 }

@@ -7,7 +7,7 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    pub master_operator: Signer<'info>,
+    pub owner: Signer<'info>,
 
     #[account(
         init,
@@ -24,7 +24,7 @@ pub struct Initialize<'info> {
 pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
     let registry = &mut ctx.accounts.registry;
 
-    registry.master_operator = ctx.accounts.master_operator.key();
+    registry.owner = ctx.accounts.owner.key();
     registry.operator_count = 0;
     registry.bump = ctx.bumps.registry;
 

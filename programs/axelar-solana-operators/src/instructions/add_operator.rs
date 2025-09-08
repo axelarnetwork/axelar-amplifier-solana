@@ -6,9 +6,9 @@ use anchor_lang::prelude::*;
 pub struct AddOperator<'info> {
     #[account(
         mut,
-        address = registry.master_operator @ ErrorCode::UnauthorizedMaster
+        address = registry.owner @ ErrorCode::UnauthorizedMaster
     )]
-    pub master_operator: Signer<'info>,
+    pub owner: Signer<'info>,
 
     /// CHECK: The operator pubkey to add
     pub operator_to_add: AccountInfo<'info>,
@@ -22,7 +22,7 @@ pub struct AddOperator<'info> {
 
     #[account(
         init,
-        payer = master_operator,
+        payer = owner,
         space = OperatorAccount::DISCRIMINATOR.len() + OperatorAccount::INIT_SPACE,
         seeds = [
             OperatorAccount::SEED_PREFIX,

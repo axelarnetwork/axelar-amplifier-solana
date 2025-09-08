@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 #[derive(InitSpace)]
 pub struct OperatorRegistry {
     /// Master operator who can add/remove operators
-    pub master_operator: Pubkey,
+    pub owner: Pubkey,
     /// Total number of operators
     pub operator_count: u64,
     /// Bump seed

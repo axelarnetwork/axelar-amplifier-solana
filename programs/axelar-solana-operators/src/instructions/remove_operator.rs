@@ -6,9 +6,9 @@ use anchor_lang::prelude::*;
 pub struct RemoveOperator<'info> {
     #[account(
         mut,
-        address = registry.master_operator @ ErrorCode::UnauthorizedMaster
+        address = registry.owner @ ErrorCode::UnauthorizedMaster
     )]
-    pub master_operator: Signer<'info>,
+    pub owner: Signer<'info>,
 
     /// CHECK: Referenced in operator_account
     pub operator_to_remove: AccountInfo<'info>,
@@ -22,7 +22,7 @@ pub struct RemoveOperator<'info> {
 
     #[account(
         mut,
-        close = master_operator,
+        close = owner,
         seeds = [
             OperatorAccount::SEED_PREFIX,
             operator_to_remove.key().as_ref(),
