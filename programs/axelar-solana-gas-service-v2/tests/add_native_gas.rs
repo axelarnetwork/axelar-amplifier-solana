@@ -220,7 +220,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
     // Instruction
 
     let sender = Pubkey::new_unique();
-    let sender_balance = 300_000_000u64; // 0.2 SOL
+    let sender_balance = 300_000_000u64; // 0.3 SOL
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
     let tx_hash = [0u8; 64];

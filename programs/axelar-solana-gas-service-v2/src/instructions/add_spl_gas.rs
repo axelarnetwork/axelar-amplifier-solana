@@ -75,7 +75,7 @@ pub fn add_spl_gas<'info>(
     token_interface::transfer_checked(cpi_context, gas_fee_amount, decimals)?;
 
     emit_cpi!(SplGasAddedEvent {
-        config_pda: *ctx.accounts.treasury_ata.to_account_info().key,
+        config_pda: *ctx.accounts.treasury.to_account_info().key,
         config_pda_ata: *ctx.accounts.treasury_ata.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
