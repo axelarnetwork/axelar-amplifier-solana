@@ -1,11 +1,11 @@
 //! Axelar Operators program for the Solana blockchain
-#![allow(clippy::little_endian_bytes)]
+use anchor_lang::prelude::*;
+
 pub mod instructions;
 pub mod state;
 
 use instructions::*;
-
-use anchor_lang::prelude::*;
+pub use state::*;
 
 use program_utils::ensure_single_feature;
 
