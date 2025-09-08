@@ -39,6 +39,11 @@ pub fn refund_native_fees(
     log_index: u64,
     fees: u64,
 ) -> Result<()> {
+    if fees == 0 {
+        msg!("Gas fee amount cannot be zero");
+        return Err(ProgramError::InvalidInstructionData.into());
+    }
+
     // TODO(v2) consider making this a utility function in program-utils
     // similar to transfer_lamports
     if ctx.accounts.treasury.get_lamports() < fees {
