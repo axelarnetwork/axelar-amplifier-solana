@@ -11,9 +11,6 @@ pub struct TransferMaster<'info> {
     )]
     pub current_master: Signer<'info>,
 
-    // TODO(v2) either change this to Signer
-    // or introduce a propose/accept flow
-    //
     /// CHECK: The new master operator pubkey
     #[account(
     	// Ensure the new master is not the same as the current master

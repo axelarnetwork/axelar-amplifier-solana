@@ -45,7 +45,7 @@ pub fn add_operator(ctx: Context<AddOperator>) -> Result<()> {
     registry.operator_count = registry
         .operator_count
         .checked_add(1)
-        .ok_or::<anchor_lang::error::Error>(ProgramError::InvalidInstructionData.into())?;
+        .ok_or::<anchor_lang::error::Error>(ProgramError::ArithmeticOverflow.into())?;
 
     Ok(())
 }

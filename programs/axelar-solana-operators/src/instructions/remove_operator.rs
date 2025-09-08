@@ -38,6 +38,7 @@ pub fn remove_operator(ctx: Context<RemoveOperator>) -> Result<()> {
     registry.operator_count = registry
         .operator_count
         .checked_sub(1)
+        // Should never happen if the Operator PDA exists
         .ok_or::<Error>(ProgramError::InvalidAccountData.into())?;
 
     Ok(())
