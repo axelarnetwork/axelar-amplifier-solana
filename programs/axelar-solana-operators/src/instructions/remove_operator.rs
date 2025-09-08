@@ -28,7 +28,7 @@ pub struct RemoveOperator<'info> {
             operator_to_remove.key().as_ref(),
         ],
         bump = operator_account.bump,
-        address = operator_to_remove.key() @ ErrorCode::InvalidOperator
+        constraint = operator_account.operator == operator_to_remove.key() @ ErrorCode::InvalidOperator
     )]
     pub operator_account: Account<'info, OperatorAccount>,
 }

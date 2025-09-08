@@ -12,6 +12,11 @@ anchor-lang.workspace = true
 anchor-spl.workspace = true
 program-utils.workspace = true
 
+[dev-dependencies]
+solana-sdk-ids.workspace = true
+mollusk-svm.workspace = true
+solana-sdk.workspace = true
+
 [lints]
 workspace = true
 
