@@ -54,7 +54,7 @@ pub(crate) fn setup_operator(
         program_id,
         accounts: axelar_solana_operators::accounts::Initialize {
             payer: operator,
-            master_operator: operator,
+            owner: operator,
             registry,
             system_program: system_program::ID,
         }
@@ -74,7 +74,7 @@ pub(crate) fn setup_operator(
     let ix2 = Instruction {
         program_id,
         accounts: axelar_solana_operators::accounts::AddOperator {
-            master_operator: operator,
+            owner: operator,
             operator_to_add: operator,
             registry,
             operator_account: operator_pda,
