@@ -29,12 +29,6 @@ fn test_discriminators_backwards_compatible() {
         instruction::Initialize::DISCRIMINATOR
     );
 
-    test_discriminator!(
-        "TransferOperatorship",
-        transfer_operatorship(&operator, &payer).unwrap(),
-        instruction::TransferOperatorship::DISCRIMINATOR
-    );
-
     // Native Token instructions (2 byte discriminators)
     test_discriminator!(
         "Native PayForContractCall",
