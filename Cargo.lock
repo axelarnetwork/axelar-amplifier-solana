@@ -1282,6 +1282,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-its-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-gas-service",
+ "axelar-solana-gas-service-events",
+ "axelar-solana-gas-service-v2",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-operators",
+ "bytemuck",
+ "mollusk-svm",
+ "program-utils",
+ "solana-sdk",
+ "solana-sdk-ids",
+]
+
+[[package]]
 name = "axelar-solana-memo-program"
 version = "0.1.0"
 dependencies = [
