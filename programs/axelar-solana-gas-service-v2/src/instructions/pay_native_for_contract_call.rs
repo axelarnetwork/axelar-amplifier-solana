@@ -1,5 +1,5 @@
 use crate::events::NativeGasPaidForContractCallEvent;
-use crate::state::Config;
+use crate::state::Treasury;
 use anchor_lang::{prelude::*, system_program};
 
 /// Pay gas fees for a contract call using native SOL.
@@ -15,13 +15,13 @@ pub struct PayNativeForContractCall<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-    	mut,
+        mut,
         seeds = [
-            Config::SEED_PREFIX,
+            Treasury::SEED_PREFIX,
         ],
-        bump = config_pda.load()?.bump,
+        bump = treasury.bump,
     )]
-    pub config_pda: AccountLoader<'info, Config>,
+    pub treasury: Account<'info, Treasury>,
 
     pub system_program: Program<'info, System>,
 }
@@ -39,21 +39,21 @@ pub fn pay_native_for_contract_call(
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    let config_pda_account_info = &ctx.accounts.config_pda.to_account_info();
+    let treasury_account_info = &ctx.accounts.treasury.to_account_info();
 
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
                 from: ctx.accounts.payer.to_account_info(),
-                to: config_pda_account_info.clone(),
+                to: treasury_account_info.clone(),
             },
         ),
         gas_fee_amount,
     )?;
 
     emit_cpi!(NativeGasPaidForContractCallEvent {
-        config_pda: *config_pda_account_info.key,
+        config_pda: *treasury_account_info.key,
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         payload_hash,
