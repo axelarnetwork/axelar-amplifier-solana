@@ -28,6 +28,7 @@ pub struct Discriminators;
 
 impl Discriminators {
     pub const INITIALIZE: &'static [u8] = &[0];
+    pub const SET_PAUSE_STATUS: &'static [u8] = &[1];
 }
 
 #[program]
@@ -41,5 +42,10 @@ pub mod axelar_solana_its_v2 {
         its_hub_address: String,
     ) -> Result<()> {
         instructions::initialize::initialize(ctx, chain_name, its_hub_address)
+    }
+
+    #[instruction(discriminator = Discriminators::SET_PAUSE_STATUS)]
+    pub fn set_pause_status(ctx: Context<SetPauseStatus>, paused: bool) -> Result<()> {
+        instructions::set_pause_status::set_pause_status(ctx, paused)
     }
 }
