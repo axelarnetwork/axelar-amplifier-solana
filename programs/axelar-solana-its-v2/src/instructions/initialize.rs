@@ -1,8 +1,7 @@
-use crate::state::InterchainTokenService;
+use crate::state::{InterchainTokenService, Roles, UserRoles};
 use anchor_lang::prelude::*;
 #[allow(deprecated)]
 use anchor_lang::solana_program::bpf_loader_upgradeable;
-use axelar_solana_operators::OperatorAccount;
 
 /// Initialize the configuration PDA.
 #[derive(Accounts)]
@@ -20,31 +19,31 @@ pub struct Initialize<'info> {
 
     #[account(
     	init,
-     	space = InterchainTokenService::DISCRIMINATOR.len() + InterchainTokenService::INIT_SPACE,
       	payer = payer,
+     	space = InterchainTokenService::DISCRIMINATOR.len() + InterchainTokenService::INIT_SPACE,
      	seeds = [InterchainTokenService::SEED_PREFIX],
      	bump,
     )]
-    pub its_root_pda_account: Account<'info, InterchainTokenService>,
+    pub its_root_pda: Account<'info, InterchainTokenService>,
 
     pub system_program: Program<'info, System>,
 
     pub operator: Signer<'info>,
 
-    #[account(
-        seeds = [
-            OperatorAccount::SEED_PREFIX,
-            operator.key().as_ref(),
-        ],
-        bump = operator_pda.bump,
-        seeds::program = axelar_solana_operators::ID
-    )]
-    pub operator_pda: Account<'info, OperatorAccount>,
-
     /// The address of the account that will store the roles of the operator account.
-    #[account(mut)]
-    // TODO(v2) make user roles account
-    pub user_roles_account: UncheckedAccount<'info>,
+    #[account(
+    	init,
+	 	payer = payer,
+	 	space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
+	 	seeds = [
+			UserRoles::SEED_PREFIX,
+			its_root_pda.key().as_ref(),
+			operator.key().as_ref(),
+		],
+	 	bump,
+
+    )]
+    pub user_roles_account: Account<'info, UserRoles>,
 }
 
 pub fn initialize(
@@ -52,5 +51,13 @@ pub fn initialize(
     chain_name: String,
     its_hub_address: String,
 ) -> Result<()> {
+    // Initialize ITS root
+    *ctx.accounts.its_root_pda =
+        InterchainTokenService::new(ctx.bumps.its_root_pda, chain_name, its_hub_address);
+
+    // Initialize and assign OPERATOR role to the operator account.
+    ctx.accounts.user_roles_account.roles = Roles::OPERATOR;
+    ctx.accounts.user_roles_account.bump = ctx.bumps.user_roles_account;
+
     Ok(())
 }

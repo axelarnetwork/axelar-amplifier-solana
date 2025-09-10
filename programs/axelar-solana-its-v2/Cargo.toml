@@ -15,13 +15,15 @@ axelar-solana-gas-service-v2 = { workspace = true, features = ["no-entrypoint"] 
 axelar-solana-operators = { workspace = true, features = ["no-entrypoint"] }
 program-utils.workspace = true
 bytemuck.workspace = true
+bitflags.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway-test-fixtures.workspace = true
 axelar-solana-gas-service.workspace = true
+bincode.workspace = true
 solana-sdk-ids.workspace = true
-mollusk-svm.workspace = true
 solana-sdk.workspace = true
+mollusk-svm.workspace = true
 
 [lints]
 workspace = true

@@ -17,7 +17,8 @@ pub struct InterchainTokenService {
     /// Trusted chains
     // TODO(v2) maybe use HashSet or light hash set
     // https://github.com/Lightprotocol/light-protocol/blob/light-hash-set-v2.0.0/program-libs/hash-set/src/lib.rs
-    #[max_len(100, 100)]
+    // TODO(v2) check sizes
+    #[max_len(50, 30)]
     pub trusted_chains: Vec<String>,
 
     /// The bump seed used to derive the PDA, ensuring the address is valid.
@@ -47,12 +48,6 @@ impl InterchainTokenService {
     /// Unpauses the Interchain Token Service.
     pub fn unpause(&mut self) {
         self.paused = false;
-    }
-
-    /// Returns the bump used to derive the ITS PDA.
-    #[must_use]
-    pub const fn bump(&self) -> u8 {
-        self.bump
     }
 
     //// Add a chain as trusted
