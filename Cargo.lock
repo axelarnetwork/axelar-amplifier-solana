@@ -1292,6 +1292,8 @@ dependencies = [
  "axelar-solana-gas-service-v2",
  "axelar-solana-gateway-test-fixtures",
  "axelar-solana-operators",
+ "bincode",
+ "bitflags 2.9.4",
  "bytemuck",
  "mollusk-svm",
  "program-utils",
