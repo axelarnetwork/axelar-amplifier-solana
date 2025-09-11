@@ -15,6 +15,10 @@ impl UserRoles {
     /// - ITS Root PDA key
     /// - User key
     pub const SEED_PREFIX: &'static [u8] = b"user-roles";
+
+    pub fn pda_seeds<'a>(resource: &'a Pubkey, user: &'a Pubkey) -> [&'a [u8]; 3] {
+        [Self::SEED_PREFIX, resource.as_ref(), user.as_ref()]
+    }
 }
 
 // Roles flag used in ITS
@@ -32,6 +36,16 @@ bitflags! {
         /// Can change the limit to the flow of tokens.
         const FLOW_LIMITER = 0b0000_0100;
     }
+}
+
+#[error_code]
+pub enum RolesError {
+    #[msg("User does not have the MINTER role.")]
+    MissingMinterRole,
+    #[msg("User does not have the OPERATOR role.")]
+    MissingOperatorRole,
+    #[msg("User does not have the FLOW_LIMITER role.")]
+    MissingFlowLimiterRole,
 }
 
 impl anchor_lang::Space for Roles {

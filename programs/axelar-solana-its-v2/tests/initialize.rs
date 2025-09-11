@@ -68,17 +68,17 @@ pub(crate) fn init_its_service(
         Pubkey::find_program_address(&[program_id.as_ref()], &bpf_loader_upgradeable::ID);
     let program_data_account = create_program_data_account(upgrade_authority);
 
+    if payer != upgrade_authority {
+        println!("[WARNING] Initialize will fail since payer is not the upgrade authority");
+    }
+
     // Derive the ITS root PDA
     let (its_root_pda, _bump) =
         Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &program_id);
 
     // Derive the user roles PDA
     let (user_roles_pda, _bump) = Pubkey::find_program_address(
-        &[
-            UserRoles::SEED_PREFIX,
-            its_root_pda.as_ref(),
-            operator.as_ref(),
-        ],
+        &UserRoles::pda_seeds(&its_root_pda, &operator)[..],
         &program_id,
     );
 
@@ -129,6 +129,10 @@ pub(crate) fn init_its_service(
     let user_roles_account = result
         .get_account(&user_roles_pda)
         .expect("User roles PDA should exist");
+
+    let user_roles_data = UserRoles::try_deserialize(&mut user_roles_account.data.as_slice())
+        .expect("Failed to deserialize roles data");
+    assert_eq!(user_roles_data.roles, Roles::OPERATOR);
 
     (
         its_root_pda,
