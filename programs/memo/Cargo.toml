@@ -1,0 +1,46 @@
+[package]
+name = "memo"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "memo"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+devnet-amplifier = [
+	"axelar-solana-gateway/devnet-amplifier",
+]
+stagenet = [
+	"axelar-solana-gateway/stagenet",
+
+]
+testnet = [
+	"axelar-solana-gateway/testnet",
+]
+mainnet = [
+	"axelar-solana-gateway/mainnet",
+]
+
+[dependencies]
+anchor-lang = "0.31.1"
+axelar-solana-gateway-v2 = { path = "../axelar-solana-gateway-v2", features = ["cpi"] }
+axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
+borsh.workspace = true
+
+[dev-dependencies]
+axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
+borsh.workspace = true
+mollusk-svm.workspace = true
+solana-sdk.workspace = true
+bincode.workspace = true
+axelar-solana-encoding.workspace = true
+hex.workspace = true

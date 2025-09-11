@@ -1,0 +1,115 @@
+use anchor_lang::prelude::*;
+
+#[derive(Clone, PartialEq, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
+pub struct MessageLeaf {
+    /// The message contained within this leaf node.
+    pub message: Message,
+
+    /// The position of this leaf within the Merkle tree.
+    pub position: u16,
+
+    /// The total number of leaves in the Merkle tree.
+    pub set_size: u16,
+
+    /// A domain separator used to ensure the uniqueness of hashes across
+    /// different contexts.
+    pub domain_separator: [u8; 32],
+
+    /// The Merkle root of the signing verifier set, used for verifying
+    /// signatures.
+    pub signing_verifier_set: [u8; 32],
+}
+
+impl MessageLeaf {
+    // placeholder hash function
+    pub fn hash(&self) -> [u8; 32] {
+        // Use borsh serialization (matches how Anchor serializes data)
+        let data = self.try_to_vec().expect("Serialization should not fail");
+        solana_program::keccak::hash(&data).to_bytes()
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
+pub struct MerkleisedMessage {
+    /// The leaf node representing the message in the Merkle tree.
+    pub leaf: MessageLeaf,
+
+    /// The Merkle proof demonstrating the message's inclusion in the payload's
+    /// Merkle tree.
+    pub proof: Vec<u8>,
+}
+
+/// Identifies a specific blockchain and its unique identifier within that
+/// chain.
+#[derive(Clone, PartialEq, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
+pub struct CrossChainId {
+    /// The name or identifier of the source blockchain.
+    pub chain: String,
+
+    /// A unique identifier within the specified blockchain.
+    pub id: String,
+}
+
+/// Represents a message intended for cross-chain communication.
+#[derive(Clone, PartialEq, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
+pub struct Message {
+    /// The cross-chain identifier of the message
+    pub cc_id: CrossChainId,
+
+    /// The source address from which the message originates.
+    pub source_address: String,
+
+    /// The destination blockchain where the message is intended to be sent.
+    pub destination_chain: String,
+
+    /// The destination address on the target blockchain.
+    pub destination_address: String,
+
+    /// A 32-byte hash of the message payload, ensuring data integrity.
+    pub payload_hash: [u8; 32],
+}
+
+impl Message {
+    // placeholder hash function
+    pub fn hash(&self) -> [u8; 32] {
+        // Use borsh serialization (matches how Anchor serializes data)
+        let data = self.try_to_vec().expect("Serialization should not fail");
+        solana_program::keccak::hash(&data).to_bytes()
+    }
+
+    pub fn command_id(&self) -> [u8; 32] {
+        let cc_id = &self.cc_id;
+        let command_id =
+            solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
+        return command_id;
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize)]
+pub struct MessageStatus(u8);
+
+impl MessageStatus {
+    /// Creates a `MessageStatus` value which can be interpreted as "approved".
+    #[must_use]
+    pub const fn approved() -> Self {
+        Self(0)
+    }
+
+    pub const fn executed() -> Self {
+        Self(1)
+    }
+
+    pub fn is_approved(&self) -> bool {
+        self.0 == 0
+    }
+}
+
+#[account]
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingMessage {
+    pub bump: u8,
+    pub signing_pda_bump: u8,
+    pub status: MessageStatus,
+    pub message_hash: [u8; 32],
+    pub payload_hash: [u8; 32],
+}
