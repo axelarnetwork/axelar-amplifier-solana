@@ -1,5 +1,6 @@
 //! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
+pub mod events;
 pub mod instructions;
 pub mod state;
 
@@ -29,6 +30,8 @@ pub struct Discriminators;
 impl Discriminators {
     pub const INITIALIZE: &'static [u8] = &[0];
     pub const SET_PAUSE_STATUS: &'static [u8] = &[1];
+    pub const SET_TRUSTED_CHAIN: &'static [u8] = &[2];
+    pub const REMOVE_TRUSTED_CHAIN: &'static [u8] = &[3];
 }
 
 #[program]
@@ -47,5 +50,18 @@ pub mod axelar_solana_its_v2 {
     #[instruction(discriminator = Discriminators::SET_PAUSE_STATUS)]
     pub fn set_pause_status(ctx: Context<SetPauseStatus>, paused: bool) -> Result<()> {
         instructions::set_pause_status::set_pause_status(ctx, paused)
+    }
+
+    #[instruction(discriminator = Discriminators::SET_TRUSTED_CHAIN)]
+    pub fn set_trusted_chain(ctx: Context<SetTrustedChain>, chain_name: String) -> Result<()> {
+        instructions::set_trusted_chain::set_trusted_chain(ctx, chain_name)
+    }
+
+    #[instruction(discriminator = Discriminators::REMOVE_TRUSTED_CHAIN)]
+    pub fn remove_trusted_chain(
+        ctx: Context<RemoveTrustedChain>,
+        chain_name: String,
+    ) -> Result<()> {
+        instructions::remove_trusted_chain::remove_trusted_chain(ctx, chain_name)
     }
 }

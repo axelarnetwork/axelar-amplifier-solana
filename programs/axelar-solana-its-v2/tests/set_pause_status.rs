@@ -1,20 +1,16 @@
-use anchor_lang::{prelude::ProgramError, prelude::UpgradeableLoaderState, AccountDeserialize};
-use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
-use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use solana_sdk::rent::Rent;
+use anchor_lang::{prelude::ProgramError, AccountDeserialize};
+use axelar_solana_its_v2::state::InterchainTokenService;
+use mollusk_svm::result::Check;
 use {
     anchor_lang::{
-        solana_program::instruction::Instruction, system_program, Discriminator, InstructionData,
-        Space, ToAccountMetas,
+        solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
     },
-    mollusk_svm::Mollusk,
     solana_sdk::{account::Account, pubkey::Pubkey},
-    solana_sdk_ids::bpf_loader_upgradeable,
 };
 
 // Import helper functions from initialize.rs
 mod initialize;
-use initialize::{create_program_data_account, init_its_service, setup_mollusk};
+use initialize::{init_its_service, setup_mollusk};
 
 #[test]
 fn test_set_pause_status_success() {
