@@ -38,3 +38,8 @@ pub struct CallContractEvent {
     pub destination_contract_address: String,
     pub payload: Vec<u8>,
 }
+
+#[event]
+pub struct OperatorshipTransferedEvent {
+    pub new_operator: [u8; 32],
+}

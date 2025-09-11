@@ -716,6 +716,101 @@ pub fn rotate_signers_helper(
     setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
+pub fn transfer_operatorship_helper(
+    setup: &TestSetup,
+    init_result: InstructionResult,
+    new_operator: Pubkey,
+) -> InstructionResult {
+    // Create the instruction discriminator for transfer_operatorship
+    let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let instruction_data = discriminator.to_vec();
+
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let program_data_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.program_data_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let accounts = vec![
+        (setup.gateway_root_pda, gateway_account),
+        (setup.program_data_pda, program_data_account),
+        (
+            setup.operator,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            new_operator,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        // for cpi events
+        (
+            event_authority_pda,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            GATEWAY_PROGRAM_ID,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(setup.gateway_root_pda, false),
+            AccountMeta::new_readonly(setup.operator, true),
+            AccountMeta::new_readonly(setup.program_data_pda, false),
+            AccountMeta::new_readonly(new_operator, false),
+            // for CPI events
+            AccountMeta::new_readonly(event_authority_pda, false),
+            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
+        ],
+        data: instruction_data,
+    };
+
+    // Execute the instruction
+    return setup.mollusk.process_instruction(&instruction, &accounts);
+}
+
 pub fn setup_message_merkle_tree(
     setup: &TestSetup,
     verifier_set_merkle_root: [u8; 32],
