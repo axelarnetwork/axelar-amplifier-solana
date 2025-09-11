@@ -7,7 +7,7 @@ use axelar_solana_gateway_v2::{
 };
 use axelar_solana_gateway_v2::{IncomingMessage, MessageStatus};
 use axelar_solana_gateway_v2_test_fixtures::{
-    approve_message_helper, create_verifier_info, initialize_gateway,
+    approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session, initialize_payload_verification_session_with_root,
     mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
     setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
@@ -513,4 +513,25 @@ fn test_transfer_operatorship() {
     let updated_config =
         GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
     assert_eq!(updated_config.operator, new_operator);
+}
+
+#[test]
+fn test_call_contract_from_program() {
+    let memo_program_id = Pubkey::new_unique();
+    let setup = mock_setup_test(Some(memo_program_id));
+
+    // Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(
+        !init_result.program_result.is_err(),
+        "Gateway initialization should succeed"
+    );
+
+    let result = call_contract_helper(&setup, init_result, memo_program_id);
+
+    assert!(
+        !result.program_result.is_err(),
+        "call_contract should succeed: {:?}",
+        result.program_result
+    );
 }
