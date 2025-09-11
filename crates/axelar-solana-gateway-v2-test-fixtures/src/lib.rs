@@ -1,0 +1,1007 @@
+use anchor_lang::{prelude::borsh::BorshSerialize, solana_program};
+use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
+use axelar_solana_gateway::seed_prefixes::{
+    CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
+};
+use axelar_solana_gateway_v2::{
+    state::config::{InitialVerifierSet, InitializeConfig},
+    u256::U256,
+    MerkleisedMessage, ID as GATEWAY_PROGRAM_ID,
+};
+use axelar_solana_gateway_v2::{
+    CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
+};
+use libsecp256k1::SecretKey;
+use mollusk_svm::{result::InstructionResult, Mollusk};
+use solana_sdk::{
+    account::Account,
+    bpf_loader_upgradeable::{self, UpgradeableLoaderState},
+    hash,
+    instruction::{AccountMeta, Instruction},
+    native_token::LAMPORTS_PER_SOL,
+    pubkey::Pubkey,
+    system_program::ID as SYSTEM_PROGRAM_ID,
+};
+
+pub struct TestSetup {
+    pub mollusk: Mollusk,
+    pub payer: Pubkey,
+    pub upgrade_authority: Pubkey,
+    pub operator: Pubkey,
+    pub gateway_root_pda: Pubkey,
+    pub gateway_bump: u8,
+    pub program_data_pda: Pubkey,
+    pub verifier_set_tracker_pda: Pubkey,
+    pub verifier_bump: u8,
+    pub verifier_set_hash: [u8; 32],
+    pub domain_separator: [u8; 32],
+    pub minimum_rotation_delay: u64,
+    pub epoch: U256,
+    pub previous_verifier_retention: U256,
+    pub gateway_caller_pda: Option<Pubkey>,
+    pub gateway_caller_bump: Option<u8>,
+    pub event_authority_pda: Option<Pubkey>,
+    pub event_authority_bump: Option<u8>,
+}
+
+pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
+    let mollusk = Mollusk::new(
+        &GATEWAY_PROGRAM_ID,
+        "../../target/deploy/axelar_solana_gateway_v2",
+    );
+
+    let payer = Pubkey::new_unique();
+    let upgrade_authority = Pubkey::new_unique();
+    let operator = Pubkey::new_unique();
+
+    // dummy values
+    let verifier_set_hash = [1u8; 32];
+    let epoch = U256::from(1);
+    let previous_verifier_retention = U256::from(5);
+    let domain_separator = [2u8; 32];
+    let minimum_rotation_delay = 3600;
+
+    // Derive PDAs
+    let (gateway_root_pda, gateway_bump) =
+        Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
+
+    let (program_data_pda, _) = Pubkey::find_program_address(
+        &[GATEWAY_PROGRAM_ID.as_ref()],
+        &bpf_loader_upgradeable::id(),
+    );
+
+    let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
+        &[VERIFIER_SET_TRACKER_SEED, &verifier_set_hash],
+        &GATEWAY_PROGRAM_ID,
+    );
+
+    match gateway_caller_program_id {
+        Some(program_id) => {
+            // Derive PDAs specific to memo program
+            let (gateway_caller_pda, gateway_caller_bump) =
+                Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &program_id);
+
+            let (event_authority_pda, event_authority_bump) =
+                Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+            TestSetup {
+                mollusk,
+                payer,
+                upgrade_authority,
+                operator,
+                gateway_root_pda,
+                gateway_bump,
+                program_data_pda,
+                verifier_set_tracker_pda,
+                verifier_bump,
+                verifier_set_hash,
+                domain_separator,
+                minimum_rotation_delay,
+                epoch,
+                previous_verifier_retention,
+                gateway_caller_pda: Some(gateway_caller_pda),
+                gateway_caller_bump: Some(gateway_caller_bump),
+                event_authority_pda: Some(event_authority_pda),
+                event_authority_bump: Some(event_authority_bump),
+            }
+        }
+        None => TestSetup {
+            mollusk,
+            payer,
+            upgrade_authority,
+            operator,
+            gateway_root_pda,
+            gateway_bump,
+            program_data_pda,
+            verifier_set_tracker_pda,
+            verifier_bump,
+            verifier_set_hash,
+            domain_separator,
+            minimum_rotation_delay,
+            epoch,
+            previous_verifier_retention,
+            gateway_caller_pda: None,
+            gateway_caller_bump: None,
+            event_authority_pda: None,
+            event_authority_bump: None,
+        },
+    }
+}
+
+pub fn setup_test_with_real_signers() -> (
+    TestSetup,
+    Vec<VerifierSetLeaf>,
+    MerkleTree<SolanaSyscallHasher>,
+    SecretKey,
+    SecretKey,
+) {
+    let mollusk = Mollusk::new(
+        &GATEWAY_PROGRAM_ID,
+        "../../target/deploy/axelar_solana_gateway_v2",
+    );
+
+    let payer = Pubkey::new_unique();
+    let upgrade_authority = Pubkey::new_unique();
+    let operator = Pubkey::new_unique();
+
+    // Step 1: Create REAL signers first
+    let (secret_key_1, compressed_pubkey_1) = generate_random_signer();
+    let (secret_key_2, compressed_pubkey_2) = generate_random_signer();
+
+    let epoch = U256::from(1);
+    let previous_verifier_retention = U256::from(5);
+    let domain_separator = [2u8; 32];
+    let minimum_rotation_delay = 3600;
+
+    // Step 2: Create verifier set with your 2 real signers
+    let quorum_threshold = 100;
+    let verifier_leaves = vec![
+        VerifierSetLeaf {
+            nonce: 0,
+            quorum: quorum_threshold,
+            signer_pubkey: compressed_pubkey_1,
+            signer_weight: 50,
+            position: 0,
+            set_size: 2,
+            domain_separator,
+        },
+        VerifierSetLeaf {
+            nonce: 0,
+            quorum: quorum_threshold,
+            signer_pubkey: compressed_pubkey_2,
+            signer_weight: 50,
+            position: 1,
+            set_size: 2,
+            domain_separator,
+        },
+    ];
+
+    // Step 3: Calculate the REAL verifier set hash
+    let verifier_leaf_hashes: Vec<[u8; 32]> =
+        verifier_leaves.iter().map(|leaf| leaf.hash()).collect();
+    let verifier_merkle_tree =
+        MerkleTree::<SolanaSyscallHasher>::from_leaves(&verifier_leaf_hashes);
+    let verifier_set_hash = verifier_merkle_tree.root().unwrap();
+
+    // Step 4: Derive PDAs with the REAL verifier set hash
+    let (gateway_root_pda, gateway_bump) =
+        Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
+
+    let (program_data_pda, _) = Pubkey::find_program_address(
+        &[GATEWAY_PROGRAM_ID.as_ref()],
+        &bpf_loader_upgradeable::id(),
+    );
+
+    let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
+        &[VERIFIER_SET_TRACKER_SEED, &verifier_set_hash],
+        &GATEWAY_PROGRAM_ID,
+    );
+
+    let setup = TestSetup {
+        mollusk,
+        payer,
+        upgrade_authority,
+        operator,
+        gateway_root_pda,
+        gateway_bump,
+        program_data_pda,
+        verifier_set_tracker_pda,
+        verifier_bump,
+        verifier_set_hash,
+        domain_separator,
+        minimum_rotation_delay,
+        epoch,
+        previous_verifier_retention,
+        gateway_caller_pda: None,
+        gateway_caller_bump: None,
+        event_authority_pda: None,
+        event_authority_bump: None,
+    };
+
+    (
+        setup,
+        verifier_leaves,
+        verifier_merkle_tree,
+        secret_key_1,
+        secret_key_2,
+    )
+}
+
+pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
+    let params = InitializeConfig {
+        domain_separator: setup.domain_separator,
+        initial_verifier_set: InitialVerifierSet {
+            hash: setup.verifier_set_hash,
+            pda: setup.verifier_set_tracker_pda,
+        },
+        minimum_rotation_delay: setup.minimum_rotation_delay,
+        operator: setup.operator,
+        previous_verifier_retention: setup.previous_verifier_retention,
+    };
+
+    let discriminator: [u8; 8] = hash::hash(b"global:initialise_config").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let mut instruction_data = discriminator.to_vec();
+    instruction_data.extend_from_slice(&params.try_to_vec().unwrap());
+
+    let program_data_state = UpgradeableLoaderState::ProgramData {
+        slot: 0,
+        upgrade_authority_address: Some(setup.upgrade_authority),
+    };
+
+    let serialized_program_data = bincode::serialize(&program_data_state).unwrap();
+
+    let accounts = vec![
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.upgrade_authority,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.program_data_pda,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: serialized_program_data,
+                owner: bpf_loader_upgradeable::id(),
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.gateway_root_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.verifier_set_tracker_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(setup.payer, true),
+            AccountMeta::new_readonly(setup.upgrade_authority, true),
+            AccountMeta::new_readonly(setup.program_data_pda, false),
+            AccountMeta::new(setup.gateway_root_pda, false),
+            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+            AccountMeta::new(setup.verifier_set_tracker_pda, false),
+        ],
+        data: instruction_data,
+    };
+
+    setup.mollusk.process_instruction(&instruction, &accounts)
+}
+
+pub fn initialize_payload_verification_session(
+    setup: &TestSetup,
+    init_result: &InstructionResult,
+) -> (InstructionResult, Pubkey) {
+    let initialized_gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let merkle_root = [3u8; 32];
+
+    let (verification_session_pda, _verification_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_gateway::seed_prefixes::SIGNATURE_VERIFICATION_SEED,
+            &merkle_root,
+        ],
+        &GATEWAY_PROGRAM_ID,
+    );
+
+    let discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let mut instruction_data = discriminator.to_vec();
+    instruction_data.extend_from_slice(&merkle_root.try_to_vec().unwrap());
+
+    let accounts = vec![
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (setup.gateway_root_pda, initialized_gateway_account),
+        (
+            verification_session_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(setup.payer, true),
+            AccountMeta::new_readonly(setup.gateway_root_pda, false),
+            AccountMeta::new(verification_session_pda, false),
+            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        ],
+        data: instruction_data,
+    };
+
+    return (
+        setup.mollusk.process_instruction(&instruction, &accounts),
+        verification_session_pda,
+    );
+}
+
+pub fn generate_random_signer() -> (SecretKey, [u8; 33]) {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let secret_key_bytes: [u8; 32] = rng.gen();
+    let secret_key = libsecp256k1::SecretKey::parse(&secret_key_bytes).unwrap();
+    let public_key = libsecp256k1::PublicKey::from_secret_key(&secret_key);
+    let compressed_pubkey = public_key.serialize_compressed();
+
+    return (secret_key, compressed_pubkey);
+}
+
+pub fn create_test_message(
+    source_chain: &str,
+    message_id: &str,
+    destination_address: &str,
+    payload_hash: [u8; 32],
+) -> Message {
+    Message {
+        cc_id: CrossChainId {
+            chain: source_chain.to_string(),
+            id: message_id.to_string(),
+        },
+        source_address: "0xSourceAddress".to_string(),
+        destination_chain: "solana".to_string(),
+        destination_address: destination_address.to_string(),
+        payload_hash,
+    }
+}
+
+pub fn initialize_payload_verification_session_with_root(
+    setup: &TestSetup,
+    init_result: &InstructionResult,
+    payload_merkle_root: [u8; 32],
+) -> (InstructionResult, Pubkey) {
+    let initialized_gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let (verification_session_pda, _) = Pubkey::find_program_address(
+        &[
+            axelar_solana_gateway::seed_prefixes::SIGNATURE_VERIFICATION_SEED,
+            &payload_merkle_root,
+        ],
+        &GATEWAY_PROGRAM_ID,
+    );
+
+    let discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let mut instruction_data = discriminator.to_vec();
+    instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+
+    let accounts = vec![
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (setup.gateway_root_pda, initialized_gateway_account),
+        (
+            verification_session_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(setup.payer, true),
+            AccountMeta::new_readonly(setup.gateway_root_pda, false),
+            AccountMeta::new(verification_session_pda, false),
+            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        ],
+        data: instruction_data,
+    };
+
+    (
+        setup.mollusk.process_instruction(&instruction, &accounts),
+        verification_session_pda,
+    )
+}
+
+pub fn create_verifier_info(
+    secret_key: &SecretKey,
+    payload_merkle_root: [u8; 32],
+    verifier_leaf: &VerifierSetLeaf,
+    position: usize,
+    verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
+) -> SigningVerifierSetInfo {
+    let message = libsecp256k1::Message::parse(&payload_merkle_root);
+    let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
+    let mut signature_bytes = signature.serialize().to_vec();
+    signature_bytes.push(recovery_id.serialize() + 27);
+    let signature_array: [u8; 65] = signature_bytes.try_into().unwrap();
+
+    let merkle_proof = verifier_merkle_tree.proof(&[position]);
+    let merkle_proof_bytes = merkle_proof.to_bytes();
+
+    SigningVerifierSetInfo {
+        signature: signature_array,
+        leaf: verifier_leaf.clone(),
+        merkle_proof: merkle_proof_bytes,
+    }
+}
+
+pub fn verify_signature_helper(
+    setup: &TestSetup,
+    payload_merkle_root: [u8; 32],
+    verifier_info: SigningVerifierSetInfo,
+    verification_session_pda: Pubkey,
+    gateway_account: Account,
+    verification_session_account: Account,
+    verifier_set_tracker_pda: Pubkey,
+    verifier_set_tracker_account: Account,
+) -> InstructionResult {
+    let discriminator: [u8; 8] = hash::hash(b"global:verify_signature").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let mut instruction_data = discriminator.to_vec();
+    instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+    instruction_data.extend_from_slice(&verifier_info.try_to_vec().unwrap());
+
+    let accounts = vec![
+        (setup.gateway_root_pda, gateway_account),
+        (verification_session_pda, verification_session_account),
+        (verifier_set_tracker_pda, verifier_set_tracker_account),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new_readonly(setup.gateway_root_pda, false),
+            AccountMeta::new(verification_session_pda, false),
+            AccountMeta::new_readonly(verifier_set_tracker_pda, false),
+        ],
+        data: instruction_data,
+    };
+
+    // Execute the verify_signature instruction
+    setup.mollusk.process_instruction(&instruction, &accounts)
+}
+
+pub fn rotate_signers_helper(
+    setup: &TestSetup,
+    new_verifier_set_hash: [u8; 32],
+    verification_session_pda: Pubkey,
+    verify_result: InstructionResult,
+) -> InstructionResult {
+    let discriminator: [u8; 8] = hash::hash(b"global:rotate_signers").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let mut instruction_data = discriminator.to_vec();
+    instruction_data.extend_from_slice(&new_verifier_set_hash.try_to_vec().unwrap());
+
+    let (new_verifier_set_tracker_pda, _) = Pubkey::find_program_address(
+        &[VERIFIER_SET_TRACKER_SEED, new_verifier_set_hash.as_slice()],
+        &GATEWAY_PROGRAM_ID,
+    );
+
+    let final_gateway_account = verify_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let final_verification_session_account = verify_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_account = verify_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+    let accounts = vec![
+        (setup.gateway_root_pda, final_gateway_account),
+        (verification_session_pda, final_verification_session_account),
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
+        (
+            new_verifier_set_tracker_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.operator,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        // for cpi events
+        (
+            event_authority_pda,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            GATEWAY_PROGRAM_ID,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(setup.gateway_root_pda, false),
+            AccountMeta::new_readonly(verification_session_pda, false),
+            AccountMeta::new_readonly(setup.verifier_set_tracker_pda, false),
+            AccountMeta::new(new_verifier_set_tracker_pda, false),
+            AccountMeta::new(setup.payer, true),
+            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+            // optional operator
+            AccountMeta::new(setup.operator, true),
+            // for event cpi
+            AccountMeta::new_readonly(event_authority_pda, false),
+            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
+        ],
+        data: instruction_data,
+    };
+
+    setup.mollusk.process_instruction(&instruction, &accounts)
+}
+
+pub fn transfer_operatorship_helper(
+    setup: &TestSetup,
+    init_result: InstructionResult,
+    new_operator: Pubkey,
+) -> InstructionResult {
+    // Create the instruction discriminator for transfer_operatorship
+    let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let instruction_data = discriminator.to_vec();
+
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let program_data_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.program_data_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let accounts = vec![
+        (setup.gateway_root_pda, gateway_account),
+        (setup.program_data_pda, program_data_account),
+        (
+            setup.operator,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            new_operator,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        // for cpi events
+        (
+            event_authority_pda,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            GATEWAY_PROGRAM_ID,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new(setup.gateway_root_pda, false),
+            AccountMeta::new_readonly(setup.operator, true),
+            AccountMeta::new_readonly(setup.program_data_pda, false),
+            AccountMeta::new_readonly(new_operator, false),
+            // for CPI events
+            AccountMeta::new_readonly(event_authority_pda, false),
+            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
+        ],
+        data: instruction_data,
+    };
+
+    // Execute the instruction
+    return setup.mollusk.process_instruction(&instruction, &accounts);
+}
+
+pub fn setup_message_merkle_tree(
+    setup: &TestSetup,
+    verifier_set_merkle_root: [u8; 32],
+) -> (
+    Vec<Message>,
+    Vec<MessageLeaf>,
+    MerkleTree<SolanaSyscallHasher>,
+    [u8; 32],
+) {
+    let messages = vec![
+        create_test_message(
+            "ethereum",
+            "msg_1",
+            "DNHKNbf4JWJNnquuWJuNUSFGsXbDYs1sPR1ZvVhah827",
+            [1u8; 32],
+        ),
+        create_test_message(
+            "ethereum",
+            "msg_2",
+            "8q49wyQjNrSEZf5A8h6jR7dwLnDxdnURftv89FWLWMGK",
+            [2u8; 32],
+        ),
+    ];
+
+    let message_leaves: Vec<MessageLeaf> = messages
+        .iter()
+        .enumerate()
+        .map(|(i, msg)| MessageLeaf {
+            message: msg.clone(),
+            position: i as u16,
+            set_size: messages.len() as u16,
+            domain_separator: setup.domain_separator,
+            signing_verifier_set: verifier_set_merkle_root,
+        })
+        .collect();
+
+    let message_leaf_hashes: Vec<[u8; 32]> =
+        message_leaves.iter().map(|leaf| leaf.hash()).collect();
+
+    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+
+    let payload_merkle_root = message_merkle_tree.root().unwrap();
+
+    return (
+        messages,
+        message_leaves,
+        message_merkle_tree,
+        payload_merkle_root,
+    );
+}
+
+pub fn setup_signer_rotation_payload(
+    current_verifier_set_hash: [u8; 32],
+    new_verifier_set_hash: [u8; 32],
+) -> [u8; 32] {
+    axelar_solana_gateway_v2::construct_payload_hash(
+        new_verifier_set_hash,
+        current_verifier_set_hash,
+    )
+}
+
+pub fn approve_message_helper(
+    setup: &TestSetup,
+    message_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    message_leaves: Vec<MessageLeaf>,
+    messages: &Vec<Message>,
+    payload_merkle_root: [u8; 32],
+    verification_session_pda: Pubkey,
+    verify_result_2: InstructionResult,
+    position: usize,
+) -> (InstructionResult, Pubkey) {
+    let message_proof = message_merkle_tree.proof(&[position]);
+    let message_proof_bytes = message_proof.to_bytes();
+
+    let merkelised_message = MerkleisedMessage {
+        leaf: message_leaves[position].clone(),
+        proof: message_proof_bytes,
+    };
+
+    let cc_id = &messages[position].cc_id;
+    let command_id =
+        solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
+
+    let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_gateway::seed_prefixes::INCOMING_MESSAGE_SEED,
+            &command_id,
+        ],
+        &GATEWAY_PROGRAM_ID,
+    );
+
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+    let discriminator: [u8; 8] = hash::hash(b"global:approve_message").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let mut approve_instruction_data = discriminator.to_vec();
+    approve_instruction_data.extend_from_slice(&merkelised_message.try_to_vec().unwrap());
+    approve_instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+
+    let final_gateway_account = verify_result_2
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let final_verification_session_account = verify_result_2
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let approve_accounts = vec![
+        (setup.gateway_root_pda, final_gateway_account),
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (verification_session_pda, final_verification_session_account),
+        (
+            incoming_message_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            event_authority_pda,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            GATEWAY_PROGRAM_ID,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let approve_instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new_readonly(setup.gateway_root_pda, false),
+            AccountMeta::new(setup.payer, true),
+            AccountMeta::new_readonly(verification_session_pda, false),
+            AccountMeta::new(incoming_message_pda, false),
+            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+            AccountMeta::new_readonly(event_authority_pda, false),
+            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
+        ],
+        data: approve_instruction_data,
+    };
+
+    return (
+        setup
+            .mollusk
+            .process_instruction(&approve_instruction, &approve_accounts),
+        incoming_message_pda,
+    );
+}
