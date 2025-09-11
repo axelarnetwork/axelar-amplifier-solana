@@ -10,7 +10,8 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session, initialize_payload_verification_session_with_root,
     mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
-    setup_signer_rotation_payload, setup_test_with_real_signers, verify_signature_helper,
+    setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
+    verify_signature_helper,
 };
 use solana_sdk::pubkey::Pubkey;
 
@@ -478,4 +479,38 @@ fn test_rotate_signers() {
         GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
 
     assert_eq!(updated_config.current_epoch, setup.epoch + U256::ONE);
+}
+
+#[test]
+fn test_transfer_operatorship() {
+    let gateway_caller = None;
+    let setup = mock_setup_test(gateway_caller);
+
+    // Initialize gateway first
+    let init_result = initialize_gateway(&setup);
+    assert!(!init_result.program_result.is_err());
+
+    // Create a new operator
+    let new_operator = Pubkey::new_unique();
+
+    let result = transfer_operatorship_helper(&setup, init_result, new_operator);
+
+    assert!(
+        !result.program_result.is_err(),
+        "Transfer operatorship should succeed: {:?}",
+        result.program_result
+    );
+
+    // Verify that the operator was changed
+    let updated_gateway_account = result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let updated_config =
+        GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
+    assert_eq!(updated_config.operator, new_operator);
 }

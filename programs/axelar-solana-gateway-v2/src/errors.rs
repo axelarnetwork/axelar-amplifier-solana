@@ -23,4 +23,7 @@ pub enum GatewayError {
     DuplicateVerifierSetRotation,
     InvalidVerifierSetTrackerProvided,
     InvalidUpgradeAuthority,
+    InvalidLoaderContent,
+    InvalidLoaderState,
+    InvalidOperatorOrAuthorityAccount,
 }

@@ -94,4 +94,8 @@ pub mod axelar_solana_gateway_v2 {
     ) -> Result<()> {
         instructions::rotate_signers_handler(ctx, new_verifier_set_merkle_root)
     }
+
+    pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {
+        instructions::transfer_operatorship_handler(ctx)
+    }
 }

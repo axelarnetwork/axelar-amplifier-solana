@@ -18,3 +18,6 @@ pub use validate_message::*;
 
 pub mod rotate_signers;
 pub use rotate_signers::*;
+
+pub mod transfer_operatorship;
+pub use transfer_operatorship::*;
