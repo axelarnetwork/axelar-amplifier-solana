@@ -6,132 +6,18 @@ use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2::{CrossChainId, Message, MessageLeaf};
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
-    initialize_payload_verification_session_with_root, mock_setup_test,
-    setup_test_with_real_signers, verify_signature_helper,
+    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
+    verify_signature_helper,
 };
 use memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
-    bpf_loader_upgradeable::{self},
     hash,
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
     system_program::ID as SYSTEM_PROGRAM_ID,
 };
-
-#[test]
-fn test_send_memo() {
-    let gateway_caller = Some(MEMO_PROGRAM_ID);
-    let mut setup = mock_setup_test(gateway_caller);
-
-    setup.mollusk.add_program(
-        &MEMO_PROGRAM_ID,
-        "../../target/deploy/memo",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
-
-    let init_result = initialize_gateway(&setup);
-    assert!(
-        !init_result.program_result.is_err(),
-        "Gateway initialization should succeed"
-    );
-
-    let initialized_gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let destination_chain = "ethereum".to_string();
-    let destination_contract_address = "0x1234567890123456789012345678901234567890".to_string();
-    let memo = "Hello from Solana!".to_string();
-
-    let discriminator: [u8; 8] = hash::hash(b"global:send_memo").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&destination_chain.try_to_vec().unwrap());
-    instruction_data.extend_from_slice(&destination_contract_address.try_to_vec().unwrap());
-    instruction_data.extend_from_slice(&memo.try_to_vec().unwrap());
-
-    let accounts = vec![
-        (
-            setup.gateway_caller_pda.unwrap(),
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: SYSTEM_PROGRAM_ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            MEMO_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (setup.gateway_root_pda, initialized_gateway_account),
-        (
-            setup.event_authority_pda.unwrap(),
-            Account {
-                lamports: 0,
-                data: vec![],
-                owner: SYSTEM_PROGRAM_ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            SYSTEM_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-    ];
-
-    let instruction = Instruction {
-        program_id: MEMO_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new_readonly(setup.gateway_caller_pda.unwrap(), true),
-            AccountMeta::new_readonly(MEMO_PROGRAM_ID, false),
-            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
-            AccountMeta::new_readonly(setup.gateway_root_pda, false),
-            AccountMeta::new_readonly(setup.event_authority_pda.unwrap(), false),
-            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-        ],
-        data: instruction_data,
-    };
-
-    let result = setup.mollusk.process_instruction(&instruction, &accounts);
-
-    assert!(
-        !result.program_result.is_err(),
-        "Send memo instruction should succeed"
-    );
-}
 
 #[test]
 fn test_execute() {

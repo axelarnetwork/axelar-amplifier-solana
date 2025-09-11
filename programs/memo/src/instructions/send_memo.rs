@@ -74,6 +74,7 @@ pub fn send_memo_handler(
         destination_chain,
         destination_contract_address,
         payload,
+        bump,
     )?;
 
     msg!("Memo sent successfully!");

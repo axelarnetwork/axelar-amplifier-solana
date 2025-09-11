@@ -45,12 +45,14 @@ pub mod axelar_solana_gateway_v2 {
         destination_chain: String,
         destination_contract_address: String,
         payload: Vec<u8>,
+        signing_pda_bump: u8,
     ) -> Result<()> {
         instructions::call_contract_handler(
             ctx,
             destination_chain,
             destination_contract_address,
             payload,
+            signing_pda_bump,
         )
     }
 

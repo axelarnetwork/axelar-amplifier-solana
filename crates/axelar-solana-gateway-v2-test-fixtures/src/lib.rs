@@ -545,6 +545,98 @@ pub fn create_verifier_info(
     }
 }
 
+pub fn call_contract_helper(
+    setup: &TestSetup,
+    init_result: InstructionResult,
+    memo_program_id: Pubkey,
+) -> InstructionResult {
+    let signing_pda = setup.gateway_caller_pda.unwrap();
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+    let mut accounts = vec![
+        (
+            memo_program_id,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            signing_pda,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            event_authority_pda,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            GATEWAY_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pk, _)| *pk == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+    accounts.push((setup.gateway_root_pda, gateway_account));
+
+    let discriminator: [u8; 8] = solana_sdk::hash::hash(b"global:call_contract").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+    let destination_chain = "ethereum".to_string();
+    let destination_contract_address = "0xdeadbeef".to_string();
+    let payload = b"memo test".to_vec();
+
+    let signing_pda_bump = setup.gateway_caller_bump.unwrap();
+
+    let mut ix_data = discriminator.to_vec();
+    ix_data.extend_from_slice(&destination_chain.try_to_vec().unwrap());
+    ix_data.extend_from_slice(&destination_contract_address.try_to_vec().unwrap());
+    ix_data.extend_from_slice(&payload.try_to_vec().unwrap());
+    ix_data.push(signing_pda_bump);
+
+    // Full account metas (must include event_authority + program)
+    let ix = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts: vec![
+            AccountMeta::new_readonly(memo_program_id, false),
+            AccountMeta::new(signing_pda, true),
+            AccountMeta::new_readonly(setup.gateway_root_pda, false),
+            AccountMeta::new_readonly(event_authority_pda, false),
+            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
+        ],
+        data: ix_data,
+    };
+
+    return setup.mollusk.process_instruction(&ix, &accounts);
+}
+
 pub fn verify_signature_helper(
     setup: &TestSetup,
     payload_merkle_root: [u8; 32],
