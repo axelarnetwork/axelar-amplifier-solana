@@ -26,4 +26,5 @@ pub enum GatewayError {
     InvalidLoaderContent,
     InvalidLoaderState,
     InvalidOperatorOrAuthorityAccount,
+    CallerNotSigner,
 }
