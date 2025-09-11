@@ -1151,6 +1151,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-gateway-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "bitvec",
+ "borsh 1.5.7",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "rand 0.8.5",
+ "solana-program",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-gateway-v2-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2",
+ "bincode",
+ "borsh 1.5.7",
+ "libsecp256k1",
+ "mollusk-svm",
+ "rand 0.8.5",
+ "solana-sdk",
+]
+
+[[package]]
 name = "axelar-solana-governance"
 version = "0.1.0"
 dependencies = [
@@ -5140,6 +5175,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "843a98750cd611cc2965a8213b53b43e715f13c37a9e096c6408e69990961db7"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "memo"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "borsh 1.5.7",
+ "hex",
+ "mollusk-svm",
+ "solana-sdk",
 ]
 
 [[package]]
