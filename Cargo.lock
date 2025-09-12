@@ -1105,6 +1105,7 @@ dependencies = [
  "axelar-solana-operators",
  "borsh 1.5.7",
  "mollusk-svm",
+ "mollusk-test-utils",
  "program-utils",
  "solana-sdk",
  "solana-sdk-ids",
@@ -1287,6 +1288,7 @@ dependencies = [
  "bitflags 2.9.4",
  "bytemuck",
  "mollusk-svm",
+ "mollusk-test-utils",
  "program-utils",
  "solana-sdk",
  "solana-sdk-ids",
@@ -5489,6 +5491,17 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "solana-rent",
+]
+
+[[package]]
+name = "mollusk-test-utils"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "mollusk-svm",
+ "solana-sdk",
+ "solana-sdk-ids",
 ]
 
 [[package]]

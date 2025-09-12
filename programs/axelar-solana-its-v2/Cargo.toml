@@ -24,6 +24,7 @@ bincode.workspace = true
 solana-sdk-ids.workspace = true
 solana-sdk.workspace = true
 mollusk-svm.workspace = true
+mollusk-test-utils.workspace = true
 
 [lints]
 workspace = true

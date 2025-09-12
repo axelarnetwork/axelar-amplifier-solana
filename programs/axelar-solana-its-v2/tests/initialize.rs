@@ -1,7 +1,7 @@
-use anchor_lang::{prelude::UpgradeableLoaderState, AccountDeserialize};
+use anchor_lang::AccountDeserialize;
 use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use solana_sdk::rent::Rent;
+use mollusk_test_utils::{create_program_data_account, setup_mollusk};
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, Discriminator, InstructionData,
@@ -11,45 +11,6 @@ use {
     solana_sdk::{account::Account, pubkey::Pubkey},
     solana_sdk_ids::bpf_loader_upgradeable,
 };
-
-// TODO(v2) extract to a common test utils crate
-// or set the env var differently
-pub(crate) fn setup_mollusk(program_id: &Pubkey, program_name: &str) -> Mollusk {
-    std::env::set_var("SBF_OUT_DIR", "../../target/deploy");
-    Mollusk::new(program_id, program_name)
-}
-
-// TODO(v2) use create_program_data_account_loader_v3 once it supports
-// setting the upgrade authority
-// Insipired by https://github.com/anza-xyz/mollusk/blob/1cfdd642b3afa351068148d008c0b4f066ed09c6/harness/src/program.rs#L305
-pub(crate) fn create_program_data_account(upgrade_authority: Pubkey) -> Account {
-    let elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
-
-    let data = {
-        let elf_offset = UpgradeableLoaderState::size_of_programdata_metadata();
-        let data_len = elf_offset + elf.len();
-        let mut data = vec![0; data_len];
-        bincode::serialize_into(
-            &mut data[0..elf_offset],
-            &UpgradeableLoaderState::ProgramData {
-                slot: 0,
-                upgrade_authority_address: Some(upgrade_authority),
-            },
-        )
-        .unwrap();
-        data[elf_offset..].copy_from_slice(&elf);
-        data
-    };
-    let lamports = Rent::default().minimum_balance(data.len());
-
-    Account {
-        lamports,
-        data,
-        owner: bpf_loader_upgradeable::ID,
-        executable: false,
-        rent_epoch: 0,
-    }
-}
 
 pub(crate) fn init_its_service(
     mollusk: &Mollusk,
