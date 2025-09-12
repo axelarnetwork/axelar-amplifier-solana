@@ -1,6 +1,7 @@
 use anchor_lang::{prelude::ProgramError, AccountDeserialize, Discriminator};
 use axelar_solana_its_v2::state::{InterchainTokenService, Roles, RolesError, UserRoles};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
+use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
@@ -10,17 +11,7 @@ use {
 
 // Import helper functions from initialize.rs
 mod initialize;
-use initialize::{init_its_service, setup_mollusk};
-
-fn get_event_authority_and_program_accounts(program_id: &Pubkey) -> (Pubkey, Account, Account) {
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
-    let event_authority_account = Account::new(0, 0, &system_program::ID);
-
-    let program_account = mollusk_svm::program::create_program_account_loader_v3(program_id);
-
-    (event_authority, event_authority_account, program_account)
-}
+use initialize::init_its_service;
 
 #[test]
 fn test_set_trusted_chain_success() {

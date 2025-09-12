@@ -1,12 +1,12 @@
 #![cfg(test)]
 use mollusk_svm::result::Check;
+use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_sdk::account::WritableAccount;
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
     },
     solana_sdk::{account::Account, pubkey::Pubkey},
-    solana_sdk_ids::bpf_loader_upgradeable,
 };
 mod initialize;
 use initialize::{init_gas_service, setup_mollusk, setup_operator};
@@ -46,9 +46,8 @@ fn test_refund_native_fees() {
     let message_id = "tx-sig-2.1".to_owned();
     let fees = 500_000_000u64; // 0.5 SOL
 
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
-    let event_authority_account = Account::new(0, 0, &system_program::ID);
+    let (event_authority, event_authority_account, program_account) =
+        get_event_authority_and_program_accounts(&program_id);
 
     let ix = Instruction {
         program_id,
@@ -78,16 +77,7 @@ fn test_refund_native_fees() {
         // Event authority
         (event_authority, event_authority_account),
         // Current program account (executable)
-        (
-            program_id,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (program_id, program_account),
     ];
 
     // Checks

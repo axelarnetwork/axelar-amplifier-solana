@@ -216,6 +216,7 @@ governance-gmp = { path = "helpers/governance-gmp" }
 interchain-token-transfer-gmp = { path = "helpers/interchain-token-transfer-gmp" }
 its-instruction-builder = { path = "helpers/its-instruction-builder", default-features = false }
 program-utils = { path = "helpers/program-utils", default-features = false }
+mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 role-management = { path = "helpers/role-management" }
 
 [workspace.metadata.cargo-machete]

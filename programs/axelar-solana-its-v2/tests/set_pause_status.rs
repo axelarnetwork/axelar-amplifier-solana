@@ -1,6 +1,7 @@
 use anchor_lang::{prelude::ProgramError, AccountDeserialize};
 use axelar_solana_its_v2::state::InterchainTokenService;
 use mollusk_svm::result::Check;
+use mollusk_test_utils::setup_mollusk;
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
@@ -10,7 +11,7 @@ use {
 
 // Import helper functions from initialize.rs
 mod initialize;
-use initialize::{init_its_service, setup_mollusk};
+use initialize::init_its_service;
 
 #[test]
 fn test_set_pause_status_success() {
