@@ -1,4 +1,4 @@
-use axelar_solana_gas_service::state::Config;
+use axelar_solana_gas_service::{discriminators::CONFIG_DISCRIMINATOR, state::Config};
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::signer::Signer;
@@ -20,6 +20,7 @@ async fn test_successfully_initialize_config() {
     assert_eq!(
         config,
         Config {
+            discriminator: CONFIG_DISCRIMINATOR,
             operator: gas_utils.operator.pubkey(),
             bump: config.bump
         }
