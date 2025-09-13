@@ -637,4 +637,31 @@ fn compute_all_pda_discriminators() {
             .collect::<Vec<_>>()
             .join(", ")
     );
+
+    // Governance
+    let governance_config_discriminator: [u8; 8] = hash::hash(b"account:GovernanceConfig")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+    println!(
+        "GovernanceConfig discriminator: [{}]",
+        governance_config_discriminator
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+
+    let execute_proposal_discriminator: [u8; 8] = hash::hash(b"account:(`ExecutableProposal`)")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+    println!(
+        "ExecutableProposal discriminator: [{}]",
+        execute_proposal_discriminator
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 }
