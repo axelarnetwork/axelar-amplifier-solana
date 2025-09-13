@@ -624,4 +624,17 @@ fn compute_all_pda_discriminators() {
             .collect::<Vec<_>>()
             .join(", ")
     );
+
+    // GasService Discriminators
+    let config_discriminators: [u8; 8] = hash::hash(b"account:Config").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+    println!(
+        "Config discriminator: [{}]",
+        config_discriminators
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 }
