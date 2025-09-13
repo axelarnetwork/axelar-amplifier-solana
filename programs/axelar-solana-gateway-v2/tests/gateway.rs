@@ -1,4 +1,5 @@
 use anchor_lang::AccountDeserialize;
+use axelar_solana_gateway::BytemuckedPda;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
     signature_verification::{SignatureVerification, VerificationSessionAccount},
@@ -13,6 +14,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
     verify_signature_helper,
 };
+use solana_program::hash;
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
@@ -533,5 +535,93 @@ fn test_call_contract_from_program() {
         !result.program_result.is_err(),
         "call_contract should succeed: {:?}",
         result.program_result
+    );
+}
+
+#[test]
+fn test_config_discriminator() {
+    let gateway_caller = None;
+    let setup = mock_setup_test(gateway_caller);
+    let initialize_result = initialize_gateway(&setup);
+
+    let updated_gateway_account = initialize_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let _ = GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
+
+    let expected_discriminator = &hash::hash(b"account:GatewayConfig").to_bytes()[..8];
+    println!("Discriminator: {:02x?}", expected_discriminator);
+    let actual_discriminator = &updated_gateway_account.data.as_slice()[..8];
+    assert_eq!(actual_discriminator, expected_discriminator);
+
+    let gateway_config =
+        axelar_solana_gateway::state::GatewayConfig::read(&updated_gateway_account.data).unwrap();
+
+    assert_eq!(gateway_config.operator, setup.operator);
+    assert_eq!(gateway_config.minimum_rotation_delay, 3600);
+    assert_eq!(gateway_config.domain_separator, [2u8; 32]);
+}
+
+#[test]
+fn compute_all_pda_discriminators() {
+    // 1. GatewayConfig discriminator
+    let gateway_config_discriminator: [u8; 8] = hash::hash(b"account:GatewayConfig").to_bytes()
+        [..8]
+        .try_into()
+        .unwrap();
+    println!(
+        "GatewayConfig discriminator: [{}]",
+        gateway_config_discriminator
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+
+    // 2. VerifierSetTracker discriminator
+    let verifier_set_tracker_discriminator: [u8; 8] = hash::hash(b"account:VerifierSetTracker")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+    println!(
+        "VerifierSetTracker discriminator: [{}]",
+        verifier_set_tracker_discriminator
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+
+    // 3. IncomingMessage discriminator
+    let incoming_message_discriminator: [u8; 8] = hash::hash(b"account:IncomingMessage").to_bytes()
+        [..8]
+        .try_into()
+        .unwrap();
+    println!(
+        "IncomingMessage discriminator: [{}]",
+        incoming_message_discriminator
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+
+    // 4. VerificationSessionAccount discriminator
+    let verification_session_discriminator: [u8; 8] =
+        hash::hash(b"account:VerificationSessionAccount").to_bytes()[..8]
+            .try_into()
+            .unwrap();
+    println!(
+        "VerificationSessionAccount discriminator: [{}]",
+        verification_session_discriminator
+            .iter()
+            .map(|b| format!("0x{:02x}", b))
+            .collect::<Vec<_>>()
+            .join(", ")
     );
 }
