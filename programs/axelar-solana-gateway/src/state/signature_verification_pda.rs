@@ -14,6 +14,10 @@ use super::signature_verification::SignatureVerification;
 #[allow(clippy::partial_pub_fields)]
 #[derive(Zeroable, Pod, Copy, Clone, Default, PartialEq, Eq, Debug)]
 pub struct SignatureVerificationSessionData {
+    /// Anchor compatible discriminator
+    pub discriminator: [u8; 8],
+    /// Padding to align SignatureVerification to 16-byte boundary
+    _discriminator_pad: [u8; 8],
     /// Signature verification session
     pub signature_verification: SignatureVerification,
     /// Seed bump for this account's PDA
