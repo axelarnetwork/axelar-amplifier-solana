@@ -1,5 +1,5 @@
 use borsh::BorshDeserialize;
-use solana_program::instruction::AccountMeta;
+use solana_program::{hash, instruction::AccountMeta};
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
@@ -1192,6 +1192,21 @@ async fn test_prevent_privilege_escalation_through_different_token(ctx: &mut Its
         // - TokenB as the resource/context for authorization (where Bob is Operator)
         // - But transfers Minter role on TokenA from Alice to Bob
 
+        let instruction_data =
+            borsh::to_vec(&InterchainTokenServiceInstruction::TransferInterchainTokenMintership)
+                .unwrap();
+
+        let discriminator: [u8; 8] = hash::hash(b"global:transfer_interchain_token_mintership")
+            .to_bytes()[..8]
+            .try_into()
+            .unwrap();
+
+        let data: Vec<u8> = discriminator
+            .iter()
+            .chain(instruction_data.iter())
+            .cloned()
+            .collect();
+
         // Create a custom instruction mimicking transfer_mintership instruction
         // with mismatched resource and role accounts
         solana_program::instruction::Instruction {
@@ -1209,10 +1224,7 @@ async fn test_prevent_privilege_escalation_through_different_token(ctx: &mut Its
                 AccountMeta::new_readonly(ctx.solana_chain.fixture.payer.pubkey(), false),
                 AccountMeta::new(alice_roles_pda_token_a, false),
             ],
-            data: borsh::to_vec(
-                &InterchainTokenServiceInstruction::TransferInterchainTokenMintership,
-            )
-            .unwrap(),
+            data,
         }
     };
 
