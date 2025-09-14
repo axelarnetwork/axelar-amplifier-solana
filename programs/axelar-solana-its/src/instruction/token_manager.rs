@@ -1,6 +1,7 @@
 //! Instructions for the token manager.
 
 use borsh::to_vec;
+use solana_program::hash;
 use solana_program::instruction::AccountMeta;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
@@ -26,7 +27,18 @@ pub fn set_flow_limit(
     let (its_user_roles_pda, _) =
         role_management::find_user_roles_pda(&crate::id(), &its_root_pda, &payer);
 
-    let data = to_vec(&InterchainTokenServiceInstruction::SetTokenManagerFlowLimit { flow_limit })?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::SetTokenManagerFlowLimit { flow_limit })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:set_token_manager_flow_limit").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     let accounts = vec![
         AccountMeta::new_readonly(payer, true),
@@ -71,7 +83,18 @@ pub fn add_flow_limiter(
         AccountMeta::new(flow_limiter_roles_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::AddTokenManagerFlowLimiter)?;
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::AddTokenManagerFlowLimiter)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:add_token_manager_flow_limiter").to_bytes()
+        [..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -107,7 +130,19 @@ pub fn remove_flow_limiter(
         AccountMeta::new(flow_limiter_roles_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::RemoveTokenManagerFlowLimiter)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::RemoveTokenManagerFlowLimiter)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:remove_token_manager_flow_limiter").to_bytes()
+        [..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -143,7 +178,19 @@ pub fn transfer_operatorship(
         AccountMeta::new(destination_roles_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::TransferTokenManagerOperatorship)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::TransferTokenManagerOperatorship)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:transfer_token_manager_operatorship")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -182,7 +229,19 @@ pub fn propose_operatorship(
         AccountMeta::new(proposal_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::ProposeTokenManagerOperatorship)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::ProposeTokenManagerOperatorship)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:propose_token_manager_operatorship")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -221,7 +280,19 @@ pub fn accept_operatorship(
         AccountMeta::new(proposal_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::AcceptTokenManagerOperatorship)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::AcceptTokenManagerOperatorship)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:accept_token_manager_operatorship").to_bytes()
+        [..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -256,7 +327,18 @@ pub fn handover_mint_authority(
         AccountMeta::new_readonly(system_program::ID, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::HandoverMintAuthority { token_id })?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::HandoverMintAuthority { token_id })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:handover_mint_authority").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),

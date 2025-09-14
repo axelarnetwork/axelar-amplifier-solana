@@ -13,7 +13,7 @@ use solana_program::bpf_loader_upgradeable;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
-use solana_program::sysvar;
+use solana_program::{hash, sysvar};
 use solana_sdk_ids::system_program;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use typed_builder::TypedBuilder;
@@ -705,10 +705,20 @@ pub fn initialize(
     let (user_roles_pda, _) =
         role_management::find_user_roles_pda(&crate::ID, &its_root_pda, &operator);
 
-    let data = to_vec(&InterchainTokenServiceInstruction::Initialize {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::Initialize {
         chain_name,
         its_hub_address,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:initialize").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     let accounts = vec![
         AccountMeta::new(payer, true),
@@ -736,7 +746,17 @@ pub fn set_pause_status(payer: Pubkey, paused: bool) -> Result<Instruction, Prog
         Pubkey::find_program_address(&[crate::ID.as_ref()], &bpf_loader_upgradeable::ID);
     let (its_root_pda, _) = crate::find_its_root_pda();
 
-    let data = to_vec(&InterchainTokenServiceInstruction::SetPauseStatus { paused })?;
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::SetPauseStatus { paused })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:set_pause_status").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     let accounts = vec![
         AccountMeta::new(payer, true),
@@ -765,7 +785,18 @@ pub fn set_trusted_chain(payer: Pubkey, chain_name: String) -> Result<Instructio
     let (payer_roles_pda, _) =
         role_management::find_user_roles_pda(&crate::ID, &its_root_pda, &payer);
 
-    let data = to_vec(&InterchainTokenServiceInstruction::SetTrustedChain { chain_name })?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::SetTrustedChain { chain_name })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:set_trusted_chain").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     let accounts = vec![
         AccountMeta::new(payer, true),
@@ -797,7 +828,18 @@ pub fn remove_trusted_chain(
     let (payer_roles_pda, _) =
         role_management::find_user_roles_pda(&crate::ID, &its_root_pda, &payer);
 
-    let data = to_vec(&InterchainTokenServiceInstruction::RemoveTrustedChain { chain_name })?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::RemoveTrustedChain { chain_name })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:remove_trusted_chain").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     let accounts = vec![
         AccountMeta::new(payer, true),
@@ -855,7 +897,7 @@ pub fn approve_deploy_remote_interchain_token(
         AccountMeta::new_readonly(system_program::ID, false),
     ];
 
-    let data = to_vec(
+    let instruction_data = to_vec(
         &InterchainTokenServiceInstruction::ApproveDeployRemoteInterchainToken {
             deployer,
             salt,
@@ -863,6 +905,17 @@ pub fn approve_deploy_remote_interchain_token(
             destination_minter,
         },
     )?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:approve_deploy_remote_interchain_token")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -902,13 +955,24 @@ pub fn revoke_deploy_remote_interchain_token(
         AccountMeta::new_readonly(system_program::ID, false),
     ];
 
-    let data = to_vec(
+    let instruction_data = to_vec(
         &InterchainTokenServiceInstruction::RevokeDeployRemoteInterchainToken {
             deployer,
             salt,
             destination_chain,
         },
     )?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:revoke_deploy_remote_interchain_token")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -951,7 +1015,19 @@ pub fn register_canonical_interchain_token(
         AccountMeta::new_readonly(sysvar::rent::ID, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::RegisterCanonicalInterchainToken)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::RegisterCanonicalInterchainToken)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:register_canonical_interchain_token")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -996,13 +1072,24 @@ pub fn deploy_remote_canonical_interchain_token(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(
+    let instruction_data = to_vec(
         &InterchainTokenServiceInstruction::DeployRemoteCanonicalInterchainToken {
             destination_chain,
             gas_value,
             signing_pda_bump,
         },
     )?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:deploy_remote_canonical_interchain_token")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1065,13 +1152,23 @@ pub fn deploy_interchain_token(
         accounts.push(AccountMeta::new(minter_roles_pda, false));
     }
 
-    let data = to_vec(&InterchainTokenServiceInstruction::DeployInterchainToken {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::DeployInterchainToken {
         salt,
         name,
         symbol,
         decimals,
         initial_supply,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:deploy_interchain_token").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1117,7 +1214,7 @@ pub fn deploy_remote_interchain_token(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(
+    let instruction_data = to_vec(
         &InterchainTokenServiceInstruction::DeployRemoteInterchainToken {
             salt,
             destination_chain,
@@ -1125,6 +1222,17 @@ pub fn deploy_remote_interchain_token(
             signing_pda_bump,
         },
     )?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:deploy_remote_interchain_token").to_bytes()
+        [..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1179,7 +1287,7 @@ pub fn deploy_remote_interchain_token_with_minter(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(
+    let instruction_data = to_vec(
         &InterchainTokenServiceInstruction::DeployRemoteInterchainTokenWithMinter {
             salt,
             destination_chain,
@@ -1188,6 +1296,17 @@ pub fn deploy_remote_interchain_token_with_minter(
             destination_minter,
         },
     )?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:deploy_remote_interchain_token_with_minter")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1225,10 +1344,20 @@ pub fn register_token_metadata(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::RegisterTokenMetadata {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::RegisterTokenMetadata {
         gas_value,
         signing_pda_bump,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:register_token_metadata").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1281,11 +1410,21 @@ pub fn register_custom_token(
         accounts.push(AccountMeta::new(operator_roles_pda, false));
     }
 
-    let data = to_vec(&InterchainTokenServiceInstruction::RegisterCustomToken {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::RegisterCustomToken {
         salt,
         token_manager_type,
         operator,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:register_custom_token").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1329,7 +1468,7 @@ pub fn link_token(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::LinkToken {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::LinkToken {
         salt,
         destination_chain,
         destination_token_address,
@@ -1338,6 +1477,16 @@ pub fn link_token(
         gas_value,
         signing_pda_bump,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:link_token").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1391,7 +1540,7 @@ pub fn interchain_transfer(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::InterchainTransfer {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::InterchainTransfer {
         token_id,
         destination_chain,
         destination_address,
@@ -1399,6 +1548,16 @@ pub fn interchain_transfer(
         gas_value,
         signing_pda_bump,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:interchain_transfer").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1451,7 +1610,7 @@ pub fn call_contract_with_interchain_token(
         AccountMeta::new_readonly(crate::ID, false),
     ];
 
-    let data = to_vec(
+    let instruction_data = to_vec(
         &InterchainTokenServiceInstruction::CallContractWithInterchainToken {
             token_id,
             destination_chain,
@@ -1462,6 +1621,17 @@ pub fn call_contract_with_interchain_token(
             data,
         },
     )?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:call_contract_with_interchain_token")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1488,7 +1658,18 @@ pub fn set_flow_limit(
     let (token_manager_user_roles_pda, _) =
         role_management::find_user_roles_pda(&crate::ID, &token_manager_pda, &its_root_pda);
 
-    let data = to_vec(&InterchainTokenServiceInstruction::SetFlowLimit { flow_limit })?;
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::SetFlowLimit { flow_limit })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:set_flow_limit").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
+
     let accounts = vec![
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new_readonly(its_root_pda, false),
@@ -1534,9 +1715,19 @@ pub fn its_gmp_payload(inputs: ItsGmpInstructionInputs) -> Result<Instruction, P
 
     accounts.append(&mut its_accounts);
 
-    let data = to_vec(&InterchainTokenServiceInstruction::ItsGmpPayload {
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::ItsGmpPayload {
         message: inputs.message,
     })?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:its_gmp_payload").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1568,7 +1759,17 @@ pub fn transfer_operatorship(payer: Pubkey, to: Pubkey) -> Result<Instruction, P
         AccountMeta::new(destination_roles_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::TransferOperatorship)?;
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::TransferOperatorship)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1601,7 +1802,17 @@ pub fn propose_operatorship(payer: Pubkey, to: Pubkey) -> Result<Instruction, Pr
         AccountMeta::new(proposal_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::ProposeOperatorship)?;
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::ProposeOperatorship)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:propose_operatorship").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -1634,7 +1845,17 @@ pub fn accept_operatorship(payer: Pubkey, from: Pubkey) -> Result<Instruction, P
         AccountMeta::new(proposal_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::AcceptOperatorship)?;
+    let instruction_data = to_vec(&InterchainTokenServiceInstruction::AcceptOperatorship)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:accept_operatorship").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(Instruction {
         program_id: crate::ID,

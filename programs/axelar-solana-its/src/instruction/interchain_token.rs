@@ -1,6 +1,7 @@
 //! Instructions for the Interchain Token
 
 use borsh::to_vec;
+use solana_program::hash;
 use solana_program::instruction::AccountMeta;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
@@ -26,8 +27,19 @@ pub fn mint(
     let (token_manager_pda, _) = crate::find_token_manager_pda(&its_root_pda, &token_id);
     let (minter_roles_pda, _) =
         role_management::find_user_roles_pda(&crate::id(), &token_manager_pda, &minter);
-    let data = to_vec(&InterchainTokenServiceInstruction::MintInterchainToken { amount })?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::MintInterchainToken { amount })?;
     let ata = get_associated_token_address_with_program_id(&to, &mint, &token_program);
+
+    let discriminator: [u8; 8] = hash::hash(b"global:mint_interchain_token").to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -76,7 +88,19 @@ pub fn transfer_mintership(
         AccountMeta::new(destination_roles_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::TransferInterchainTokenMintership)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::TransferInterchainTokenMintership)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:transfer_interchain_token_mintership")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -115,7 +139,19 @@ pub fn propose_mintership(
         AccountMeta::new(proposal_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::ProposeInterchainTokenMintership)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::ProposeInterchainTokenMintership)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:propose_interchain_token_mintership")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
@@ -155,7 +191,19 @@ pub fn accept_mintership(
         AccountMeta::new(proposal_pda, false),
     ];
 
-    let data = to_vec(&InterchainTokenServiceInstruction::AcceptInterchainTokenMintership)?;
+    let instruction_data =
+        to_vec(&InterchainTokenServiceInstruction::AcceptInterchainTokenMintership)?;
+
+    let discriminator: [u8; 8] = hash::hash(b"global:accept_interchain_token_mintership")
+        .to_bytes()[..8]
+        .try_into()
+        .unwrap();
+
+    let data: Vec<u8> = discriminator
+        .iter()
+        .chain(instruction_data.iter())
+        .cloned()
+        .collect();
 
     Ok(solana_program::instruction::Instruction {
         program_id: crate::id(),
