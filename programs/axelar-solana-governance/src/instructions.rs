@@ -153,6 +153,7 @@ pub mod builder {
     use governance_gmp::alloy_primitives::Uint;
     use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
     use program_utils::{checked_from_u256_le_bytes_to_u64, from_u64_to_u256_le_bytes};
+    use solana_program::hash;
     use solana_program::instruction::{AccountMeta, Instruction};
     use solana_program::keccak::hash;
     use solana_program::program_error::ProgramError;
@@ -499,10 +500,21 @@ pub mod builder {
 
             accounts.push(AccountMeta::new_readonly(crate::ID, false));
 
-            let data = to_vec(&GovernanceInstruction::TransferOperatorship {
+            let instruction_data = to_vec(&GovernanceInstruction::TransferOperatorship {
                 new_operator: new_operator_pda.to_bytes(),
             })
             .unwrap();
+
+            let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()
+                [..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             Self::new().with_proposal_data(crate::ID, 0, eta, None, &accounts, data)
         }
@@ -529,14 +541,20 @@ pub mod builder {
 
             target_accounts.push(AccountMeta::new_readonly(crate::ID, false));
 
-            Self::new().with_proposal_data(
-                crate::ID,
-                0,
-                eta,
-                None,
-                &target_accounts,
-                to_vec(&GovernanceInstruction::WithdrawTokens { amount }).unwrap(),
-            )
+            let instruction_data =
+                to_vec(&GovernanceInstruction::WithdrawTokens { amount }).unwrap();
+
+            let discriminator: [u8; 8] = hash::hash(b"global:withdraw_tokens").to_bytes()[..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
+
+            Self::new().with_proposal_data(crate::ID, 0, eta, None, &target_accounts, data)
         }
     }
 
@@ -885,7 +903,18 @@ pub mod builder {
                 native_value,
             ));
 
-            let data = to_vec(&gov_instruction).expect("Unable to encode GovernanceInstruction");
+            let instruction_data =
+                to_vec(&gov_instruction).expect("Unable to encode GovernanceInstruction");
+
+            let discriminator: [u8; 8] = hash::hash(b"global:execute_proposal").to_bytes()[..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             Instruction {
                 program_id: crate::id(),
@@ -908,7 +937,19 @@ pub mod builder {
                 ExecuteProposalData::new(target_address.to_bytes(), call_data, native_value),
             );
 
-            let data = to_vec(&gov_instruction).expect("Unable to encode GovernanceInstruction");
+            let discriminator: [u8; 8] = hash::hash(b"global:execute_operator_proposal").to_bytes()
+                [..8]
+                .try_into()
+                .unwrap();
+
+            let instruction_data =
+                to_vec(&gov_instruction).expect("Unable to encode GovernanceInstruction");
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             Instruction {
                 program_id: crate::id(),
@@ -925,8 +966,18 @@ pub mod builder {
             let accounts = self.accounts.unwrap();
             let config = self.config.unwrap();
 
-            let data = to_vec(&GovernanceInstruction::InitializeConfig(config))
+            let instruction_data = to_vec(&GovernanceInstruction::InitializeConfig(config))
                 .expect("Unable to encode GovernanceInstruction");
+
+            let discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             Instruction {
                 program_id: crate::id(),
@@ -943,8 +994,18 @@ pub mod builder {
             let accounts = self.accounts.unwrap();
             let config_update = self.config_update.unwrap();
 
-            let data = to_vec(&GovernanceInstruction::UpdateConfig(config_update))
+            let instruction_data = to_vec(&GovernanceInstruction::UpdateConfig(config_update))
                 .expect("Unable to encode GovernanceInstruction");
+
+            let discriminator: [u8; 8] = hash::hash(b"global:update_config").to_bytes()[..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             Instruction {
                 program_id: crate::id(),
@@ -961,10 +1022,21 @@ pub mod builder {
             let accounts = self.accounts.unwrap();
             let new_operator = self.new_operator.unwrap();
 
-            let data = to_vec(&GovernanceInstruction::TransferOperatorship {
+            let instruction_data = to_vec(&GovernanceInstruction::TransferOperatorship {
                 new_operator: new_operator.to_bytes(),
             })
             .expect("Unable to encode GovernanceInstruction");
+
+            let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()
+                [..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             Instruction {
                 program_id: crate::id(),
@@ -1000,7 +1072,17 @@ pub mod builder {
             let gov_instruction = GovernanceInstruction::ProcessGmp {
                 message: gmp_msg_meta.clone(),
             };
-            let data = to_vec(&gov_instruction).unwrap();
+            let instruction_data = to_vec(&gov_instruction).unwrap();
+
+            let discriminator: [u8; 8] = hash::hash(b"global:process_gmp").to_bytes()[..8]
+                .try_into()
+                .unwrap();
+
+            let data: Vec<u8> = discriminator
+                .iter()
+                .chain(instruction_data.iter())
+                .cloned()
+                .collect();
 
             GmpCallData::new(
                 Instruction {
