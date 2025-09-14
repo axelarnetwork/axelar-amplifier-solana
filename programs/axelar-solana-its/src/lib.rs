@@ -10,6 +10,7 @@ use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 use state::InterchainTokenService;
 
+pub mod discriminators;
 mod entrypoint;
 pub mod event;
 pub mod executable;
