@@ -79,8 +79,11 @@ pub mod axelar_solana_gateway_v2 {
         instructions::approve_message_handler(ctx, approve_message_instruction)
     }
 
-    pub fn validate_message(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {
-        instructions::validate_message_handler(ctx, message)
+    pub fn validate_message(
+        ctx: Context<ValidateMessage>,
+        validate_message_instruction: ValidateMessageInstruction,
+    ) -> Result<()> {
+        instructions::validate_message_handler(ctx, validate_message_instruction)
     }
 
     pub fn rotate_signers(

@@ -5,25 +5,45 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(message: Message)]
+#[instruction(validate_message_instruction: ValidateMessageInstruction,)]
 pub struct ValidateMessage<'info> {
     #[account(
-        seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
+        seeds = [INCOMING_MESSAGE_SEED, validate_message_instruction.message.command_id().as_ref()],
         bump = incoming_message_pda.bump,
         constraint = incoming_message_pda.status.is_approved() @ GatewayError::MessageNotApproved,
-                constraint = incoming_message_pda.message_hash == message.hash() @ GatewayError::InvalidMessageHash
+                constraint = incoming_message_pda.message_hash == validate_message_instruction.message.hash() @ GatewayError::InvalidMessageHash
     )]
     pub incoming_message_pda: Account<'info, IncomingMessage>,
     /// The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
     #[account(
         mut,
         signer,
-        constraint = validate_caller_pda(&caller, &message, &incoming_message_pda)? @ GatewayError::InvalidSigningPDA
+        constraint = validate_caller_pda(&caller, &validate_message_instruction.message, &incoming_message_pda)? @ GatewayError::InvalidSigningPDA
     )]
     pub caller: AccountInfo<'info>,
 }
 
-pub fn validate_message_handler(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {
+#[derive(Debug, AnchorSerialize, AnchorDeserialize)]
+pub struct ValidateMessageInstruction {
+    _padding: u8,
+    pub message: Message,
+}
+
+impl ValidateMessageInstruction {
+    pub fn new(message: Message) -> Self {
+        ValidateMessageInstruction {
+            _padding: 0u8,
+            message,
+        }
+    }
+}
+
+pub fn validate_message_handler(
+    ctx: Context<ValidateMessage>,
+    validate_message_instruction: ValidateMessageInstruction,
+) -> Result<()> {
+    let message = validate_message_instruction.message;
+
     ctx.accounts.incoming_message_pda.status = MessageStatus::executed();
 
     // Parse destination address
