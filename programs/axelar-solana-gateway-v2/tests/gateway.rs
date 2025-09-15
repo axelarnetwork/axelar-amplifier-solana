@@ -1,6 +1,7 @@
 use anchor_lang::prelude::UpgradeableLoaderState;
 use anchor_lang::{AccountDeserialize, AnchorDeserialize, AnchorSerialize};
 use axelar_solana_gateway::{get_gateway_root_config_pda, BytemuckedPda};
+use axelar_solana_gateway_test_fixtures::gateway::random_bytes;
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
@@ -9,7 +10,8 @@ use axelar_solana_gateway_v2::{
     GatewayConfig, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
-    IncomingMessage, InitialVerifierSet, InitializeConfig, MessageStatus,
+    IncomingMessage, InitialVerifierSet, InitializeConfig,
+    InitializePayloadVerificationSessionInstruction, MessageStatus,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
@@ -624,4 +626,41 @@ async fn test_initialize_config_discriminator() {
     assert_eq!(parsed_config.previous_verifier_retention, U256::from(1));
     assert_eq!(parsed_config.minimum_rotation_delay, 0);
     assert_eq!(parsed_config.initial_verifier_set.hash, initial_sets.hash);
+}
+
+#[tokio::test]
+async fn test_initialize_payload_verification_session_discriminator() {
+    // Setup
+    let metadata = SolanaAxelarIntegration::builder()
+        .initial_signer_weights(vec![42])
+        .build()
+        .setup()
+        .await;
+
+    // Action
+    let payload_merkle_root = random_bytes();
+    let gateway_config_pda = get_gateway_root_config_pda().0;
+
+    let v1_ix = axelar_solana_gateway::instructions::initialize_payload_verification_session(
+        metadata.payer.pubkey(),
+        gateway_config_pda,
+        payload_merkle_root,
+    )
+    .unwrap();
+
+    let v1_discriminator: [u8; 8] = v1_ix.data[..8].to_vec().try_into().unwrap();
+    let v2_discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
+        .to_bytes()[..8]
+        .to_vec()
+        .try_into()
+        .unwrap();
+
+    assert_eq!(
+        v1_discriminator, v2_discriminator,
+        "Discriminators should match for backwards compatibility"
+    );
+
+    let v2_parsed =
+        InitializePayloadVerificationSessionInstruction::try_from_slice(&v1_ix.data[8..]).unwrap();
+    assert_eq!(v2_parsed.payload_merkle_root, payload_merkle_root);
 }
