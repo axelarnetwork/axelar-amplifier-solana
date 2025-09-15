@@ -66,10 +66,9 @@ pub mod axelar_solana_gateway_v2 {
 
     pub fn verify_signature(
         ctx: Context<VerifySignature>,
-        payload_merkle_root: [u8; 32],
-        verifier_info: SigningVerifierSetInfo,
+        verify_signature_instruction: VerifySignatureInstruction,
     ) -> Result<()> {
-        instructions::verify_signature_handler(ctx, payload_merkle_root, verifier_info)
+        instructions::verify_signature_handler(ctx, verify_signature_instruction)
     }
 
     pub fn approve_message(
