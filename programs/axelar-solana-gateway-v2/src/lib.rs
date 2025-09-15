@@ -42,18 +42,9 @@ pub mod axelar_solana_gateway_v2 {
 
     pub fn call_contract(
         ctx: Context<CallContract>,
-        destination_chain: String,
-        destination_contract_address: String,
-        payload: Vec<u8>,
-        signing_pda_bump: u8,
+        call_contract_instruction: CallContractInstruction,
     ) -> Result<()> {
-        instructions::call_contract_handler(
-            ctx,
-            destination_chain,
-            destination_contract_address,
-            payload,
-            signing_pda_bump,
-        )
+        instructions::call_contract_handler(ctx, call_contract_instruction)
     }
 
     pub fn initialise_config(
