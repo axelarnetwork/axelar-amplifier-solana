@@ -1,7 +1,14 @@
 use anchor_lang::prelude::UpgradeableLoaderState;
 use anchor_lang::{AccountDeserialize, AnchorDeserialize, AnchorSerialize};
-use axelar_solana_gateway::{get_gateway_root_config_pda, BytemuckedPda};
-use axelar_solana_gateway_test_fixtures::gateway::random_bytes;
+use axelar_solana_encoding::hasher::SolanaSyscallHasher;
+use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
+use axelar_solana_encoding::types::messages::Messages;
+use axelar_solana_encoding::types::payload::Payload;
+use axelar_solana_encoding::LeafHash;
+use axelar_solana_gateway::instructions::approve_message;
+use axelar_solana_gateway::state::incoming_message::command_id;
+use axelar_solana_gateway::{get_gateway_root_config_pda, get_incoming_message_pda, BytemuckedPda};
+use axelar_solana_gateway_test_fixtures::gateway::{make_messages, random_bytes};
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
@@ -10,7 +17,7 @@ use axelar_solana_gateway_v2::{
     GatewayConfig, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
-    IncomingMessage, InitialVerifierSet, InitializeConfig,
+    ApproveMessageInstruction, IncomingMessage, InitialVerifierSet, InitializeConfig,
     InitializePayloadVerificationSessionInstruction, MessageStatus,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
@@ -663,4 +670,79 @@ async fn test_initialize_payload_verification_session_discriminator() {
     let v2_parsed =
         InitializePayloadVerificationSessionInstruction::try_from_slice(&v1_ix.data[8..]).unwrap();
     assert_eq!(v2_parsed.payload_merkle_root, payload_merkle_root);
+}
+
+#[tokio::test]
+async fn test_approve_message_dscriminator() {
+    // Setup
+    let mut metadata = SolanaAxelarIntegration::builder()
+        .initial_signer_weights(vec![42, 42])
+        .build()
+        .setup()
+        .await;
+    let message_count = 1;
+    let messages = make_messages(message_count);
+    let payload = Payload::Messages(Messages(messages.clone()));
+    let execute_data = metadata.construct_execute_data(&metadata.signers.clone(), payload);
+    let verification_session_pda = metadata
+        .init_payload_session_and_verify(&execute_data)
+        .await
+        .unwrap();
+
+    let MerkleisedPayload::NewMessages { messages } = execute_data.payload_items else {
+        unreachable!()
+    };
+
+    let message_info = messages.get(0).unwrap();
+    let command_id = command_id(
+        &message_info.leaf.message.cc_id.chain,
+        &message_info.leaf.message.cc_id.id,
+    );
+    let (incoming_message_pda, _) = get_incoming_message_pda(&command_id);
+
+    let message = message_info.leaf.clone().message;
+    let v1_ix = approve_message(
+        message_info.clone(),
+        execute_data.payload_merkle_root,
+        metadata.gateway_root_pda,
+        metadata.payer.pubkey(),
+        verification_session_pda,
+        incoming_message_pda,
+    )
+    .unwrap();
+
+    let v1_discriminator: [u8; 8] = v1_ix.data[..8].to_vec().try_into().unwrap();
+    let v2_discriminator: [u8; 8] = hash::hash(b"global:approve_message").to_bytes()[..8]
+        .to_vec()
+        .try_into()
+        .unwrap();
+
+    assert_eq!(
+        v1_discriminator, v2_discriminator,
+        "Discriminators should match for backwards compatibility"
+    );
+
+    let v2_parsed = ApproveMessageInstruction::try_from_slice(&v1_ix.data[8..]).unwrap();
+
+    assert_eq!(
+        v2_parsed.message.leaf.message.cc_id.chain,
+        message.cc_id.chain
+    );
+    assert_eq!(v2_parsed.message.leaf.message.cc_id.id, message.cc_id.id);
+    assert_eq!(
+        v2_parsed.message.leaf.message.source_address,
+        message.source_address
+    );
+    assert_eq!(
+        v2_parsed.message.leaf.message.destination_chain,
+        message.destination_chain
+    );
+    assert_eq!(
+        v2_parsed.message.leaf.message.destination_address,
+        message.destination_address
+    );
+    assert_eq!(
+        v2_parsed.message.leaf.message.payload_hash,
+        message.payload_hash
+    );
 }

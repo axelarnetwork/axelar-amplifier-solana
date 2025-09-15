@@ -6,8 +6,8 @@ use axelar_solana_gateway::seed_prefixes::{
 use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfig},
     u256::U256,
-    CallContractInstruction, InitializePayloadVerificationSessionInstruction, MerkleisedMessage,
-    ID as GATEWAY_PROGRAM_ID,
+    ApproveMessageInstruction, CallContractInstruction,
+    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -1018,8 +1018,9 @@ pub fn approve_message_helper(
         .unwrap();
 
     let mut approve_instruction_data = discriminator.to_vec();
-    approve_instruction_data.extend_from_slice(&merkelised_message.try_to_vec().unwrap());
-    approve_instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+    let approve_message_instruction =
+        ApproveMessageInstruction::new(merkelised_message, payload_merkle_root);
+    approve_instruction_data.extend_from_slice(&approve_message_instruction.try_to_vec().unwrap());
 
     let final_gateway_account = verify_result_2
         .resulting_accounts
