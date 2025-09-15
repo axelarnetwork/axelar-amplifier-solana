@@ -1,14 +1,17 @@
 use anchor_lang::prelude::UpgradeableLoaderState;
 use anchor_lang::{AccountDeserialize, AnchorDeserialize, AnchorSerialize};
-use axelar_solana_encoding::hasher::SolanaSyscallHasher;
+use axelar_solana_encoding::hasher::{NativeHasher, SolanaSyscallHasher};
 use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
 use axelar_solana_encoding::types::messages::Messages;
 use axelar_solana_encoding::types::payload::Payload;
+use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
 use axelar_solana_encoding::LeafHash;
 use axelar_solana_gateway::instructions::approve_message;
 use axelar_solana_gateway::state::incoming_message::command_id;
 use axelar_solana_gateway::{get_gateway_root_config_pda, get_incoming_message_pda, BytemuckedPda};
-use axelar_solana_gateway_test_fixtures::gateway::{make_messages, random_bytes};
+use axelar_solana_gateway_test_fixtures::gateway::{
+    make_messages, make_verifier_set, random_bytes,
+};
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
@@ -18,7 +21,7 @@ use axelar_solana_gateway_v2::{
 };
 use axelar_solana_gateway_v2::{
     ApproveMessageInstruction, IncomingMessage, InitialVerifierSet, InitializeConfig,
-    InitializePayloadVerificationSessionInstruction, MessageStatus,
+    InitializePayloadVerificationSessionInstruction, MessageStatus, RotateSignersInstruction,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
@@ -673,7 +676,7 @@ async fn test_initialize_payload_verification_session_discriminator() {
 }
 
 #[tokio::test]
-async fn test_approve_message_dscriminator() {
+async fn test_approve_message_discriminator() {
     // Setup
     let mut metadata = SolanaAxelarIntegration::builder()
         .initial_signer_weights(vec![42, 42])
@@ -744,5 +747,61 @@ async fn test_approve_message_dscriminator() {
     assert_eq!(
         v2_parsed.message.leaf.message.payload_hash,
         message.payload_hash
+    );
+}
+
+#[tokio::test]
+async fn test_rotate_signers_discriminator() {
+    // Setup
+    let mut metadata = SolanaAxelarIntegration::builder()
+        .initial_signer_weights(vec![42, 42])
+        .build()
+        .setup()
+        .await;
+    let new_verifier_set = make_verifier_set(&[500, 200], 1, metadata.domain_separator);
+    let payload = Payload::NewVerifierSet(new_verifier_set.verifier_set());
+    let execute_data = metadata.construct_execute_data(&metadata.signers.clone(), payload);
+    let new_verifier_set_hash = verifier_set_hash::<NativeHasher>(
+        &new_verifier_set.verifier_set(),
+        &metadata.domain_separator,
+    )
+    .unwrap();
+    let MerkleisedPayload::VerifierSetRotation {
+        new_verifier_set_merkle_root,
+    } = execute_data.payload_items
+    else {
+        unreachable!()
+    };
+    let verification_session_account = metadata
+        .init_payload_session_and_verify(&execute_data)
+        .await
+        .unwrap();
+
+    let v1_ix = axelar_solana_gateway::instructions::rotate_signers(
+        metadata.gateway_root_pda,
+        verification_session_account,
+        metadata.signers.verifier_set_tracker().0,
+        axelar_solana_gateway::get_verifier_set_tracker_pda(new_verifier_set_merkle_root).0,
+        metadata.payer.pubkey(),
+        None,
+        new_verifier_set_hash,
+    )
+    .unwrap();
+
+    let v1_discriminator: [u8; 8] = v1_ix.data[..8].to_vec().try_into().unwrap();
+    let v2_discriminator: [u8; 8] = hash::hash(b"global:rotate_signers").to_bytes()[..8]
+        .to_vec()
+        .try_into()
+        .unwrap();
+
+    assert_eq!(
+        v1_discriminator, v2_discriminator,
+        "Discriminators should match for backwards compatibility"
+    );
+
+    let v2_parsed = RotateSignersInstruction::try_from_slice(&v1_ix.data[8..]).unwrap();
+    assert_eq!(
+        v2_parsed.new_verifier_set_merkle_root,
+        new_verifier_set_hash
     );
 }

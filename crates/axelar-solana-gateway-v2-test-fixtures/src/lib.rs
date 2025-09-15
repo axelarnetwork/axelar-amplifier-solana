@@ -7,7 +7,8 @@ use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfig},
     u256::U256,
     ApproveMessageInstruction, CallContractInstruction,
-    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, ID as GATEWAY_PROGRAM_ID,
+    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, RotateSignersInstruction,
+    ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -702,7 +703,8 @@ pub fn rotate_signers_helper(
         .unwrap();
 
     let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&new_verifier_set_hash.try_to_vec().unwrap());
+    let rotate_signers_instruction = RotateSignersInstruction::new(new_verifier_set_hash);
+    instruction_data.extend_from_slice(&rotate_signers_instruction.try_to_vec().unwrap());
 
     let (new_verifier_set_tracker_pda, _) = Pubkey::find_program_address(
         &[VERIFIER_SET_TRACKER_SEED, new_verifier_set_hash.as_slice()],

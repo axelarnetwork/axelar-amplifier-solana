@@ -85,9 +85,9 @@ pub mod axelar_solana_gateway_v2 {
 
     pub fn rotate_signers(
         ctx: Context<RotateSigners>,
-        new_verifier_set_merkle_root: [u8; 32],
+        rotate_signers_instruction: RotateSignersInstruction,
     ) -> Result<()> {
-        instructions::rotate_signers_handler(ctx, new_verifier_set_merkle_root)
+        instructions::rotate_signers_handler(ctx, rotate_signers_instruction)
     }
 
     pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {

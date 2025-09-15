@@ -9,7 +9,7 @@ use axelar_solana_gateway::seed_prefixes::{
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(new_verifier_set_merkle_root: [u8; 32])]
+#[instruction(rotate_signers_instruction: RotateSignersInstruction)]
 pub struct RotateSigners<'info> {
     #[account(
             mut,
@@ -18,7 +18,7 @@ pub struct RotateSigners<'info> {
         )]
     pub gateway_root_pda: Account<'info, GatewayConfig>,
     #[account(
-            seeds = [SIGNATURE_VERIFICATION_SEED, construct_payload_hash(new_verifier_set_merkle_root, verification_session_account.signature_verification
+            seeds = [SIGNATURE_VERIFICATION_SEED, construct_payload_hash(rotate_signers_instruction.new_verifier_set_merkle_root, verification_session_account.signature_verification
             .signing_verifier_set_hash).as_ref()],
             bump = verification_session_account.bump
         )]
@@ -38,7 +38,7 @@ pub struct RotateSigners<'info> {
            space = 8 + std::mem::size_of::<VerifierSetTracker>(),
            seeds = [
                axelar_solana_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
-               new_verifier_set_merkle_root.as_ref()
+               rotate_signers_instruction.new_verifier_set_merkle_root.as_ref()
            ],
            bump
        )]
@@ -49,10 +49,27 @@ pub struct RotateSigners<'info> {
     pub operator: Option<Signer<'info>>,
 }
 
+#[derive(Debug, AnchorSerialize, AnchorDeserialize)]
+pub struct RotateSignersInstruction {
+    _padding: u8,
+    pub new_verifier_set_merkle_root: [u8; 32],
+}
+
+impl RotateSignersInstruction {
+    pub fn new(new_verifier_set_merkle_root: [u8; 32]) -> Self {
+        RotateSignersInstruction {
+            _padding: 0u8,
+            new_verifier_set_merkle_root,
+        }
+    }
+}
+
 pub fn rotate_signers_handler(
     ctx: Context<RotateSigners>,
-    new_verifier_set_merkle_root: [u8; 32],
+    rotate_signers_instruction: RotateSignersInstruction,
 ) -> Result<()> {
+    let new_verifier_set_merkle_root = rotate_signers_instruction.new_verifier_set_merkle_root;
+
     // Check signature session is complete
     if !ctx
         .accounts
