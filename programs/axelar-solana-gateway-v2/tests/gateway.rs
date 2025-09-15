@@ -23,9 +23,9 @@ use axelar_solana_gateway_v2::{
     GatewayConfig, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
-    ApproveMessageInstruction, IncomingMessage, InitializePayloadVerificationSessionInstruction,
-    MessageStatus, RotateSignersInstruction, ValidateMessageInstruction,
-    VerifySignatureInstruction,
+    ApproveMessageInstruction, IncomingMessage, InitializeConfigInstruction,
+    InitializePayloadVerificationSessionInstruction, MessageStatus, RotateSignersInstruction,
+    ValidateMessageInstruction, VerifySignatureInstruction,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
@@ -638,8 +638,7 @@ async fn test_initialize_config_discriminator() {
         "Discriminators should match for backwards compatibility"
     );
 
-    let v2_parsed =
-        axelar_solana_gateway_v2::state::config::InitializeConfig::try_from_slice(&v1_ix.data[8..]);
+    let v2_parsed = InitializeConfigInstruction::try_from_slice(&v1_ix.data[8..]);
     let parsed_config = v2_parsed.expect("Failed to parse V1 instruction as V2 InitializeConfig");
 
     assert_eq!(parsed_config.domain_separator, [42; 32]);
