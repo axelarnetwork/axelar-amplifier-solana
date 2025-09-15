@@ -135,9 +135,21 @@ pub type PublicKey = [u8; 33];
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct SigningVerifierSetInfo {
+    _padding: u8,
     pub signature: Signature,
     pub leaf: VerifierSetLeaf,
     pub merkle_proof: Vec<u8>,
+}
+
+impl SigningVerifierSetInfo {
+    pub fn new(signature: Signature, leaf: VerifierSetLeaf, merkle_proof: Vec<u8>) -> Self {
+        SigningVerifierSetInfo {
+            _padding: 0u8,
+            signature,
+            leaf,
+            merkle_proof,
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize)]
@@ -147,6 +159,8 @@ pub struct VerifierSetLeaf {
 
     /// The quorum value from the associated `VerifierSet`.
     pub quorum: u128,
+
+    _padding: u8,
 
     /// The public key of the verifier.
     pub signer_pubkey: PublicKey,
@@ -175,5 +189,26 @@ impl VerifierSetLeaf {
         // Use borsh serialization (matches how Anchor serializes data)
         let data = self.try_to_vec().expect("Serialization should not fail");
         keccak::hash(&data).to_bytes()
+    }
+
+    pub fn new(
+        nonce: u64,
+        quorum: u128,
+        signer_pubkey: PublicKey,
+        signer_weight: u128,
+        position: u16,
+        set_size: u16,
+        domain_separator: [u8; 32],
+    ) -> Self {
+        Self {
+            nonce,
+            quorum,
+            _padding: 0,
+            signer_pubkey,
+            signer_weight,
+            position,
+            set_size,
+            domain_separator,
+        }
     }
 }

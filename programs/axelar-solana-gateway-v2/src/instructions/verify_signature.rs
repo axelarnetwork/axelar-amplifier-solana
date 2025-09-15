@@ -8,7 +8,7 @@ use axelar_solana_gateway::seed_prefixes::{
 };
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32])]
+#[instruction(verify_signature_instruction: VerifySignatureInstruction)]
 pub struct VerifySignature<'info> {
     #[account(
             seeds = [GATEWAY_SEED],
@@ -17,18 +17,37 @@ pub struct VerifySignature<'info> {
     pub gateway_root_pda: Account<'info, GatewayConfig>,
     #[account(
             mut,
-            seeds = [SIGNATURE_VERIFICATION_SEED, merkle_root.as_ref()],
+            seeds = [SIGNATURE_VERIFICATION_SEED, verify_signature_instruction.payload_merkle_root.as_ref()],
             bump = verification_session_account.bump
         )]
     pub verification_session_account: Account<'info, VerificationSessionAccount>,
     pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
 }
 
+#[derive(Debug, AnchorSerialize, AnchorDeserialize)]
+pub struct VerifySignatureInstruction {
+    _padding: u8,
+    pub payload_merkle_root: [u8; 32],
+    pub verifier_info: SigningVerifierSetInfo,
+}
+
+impl VerifySignatureInstruction {
+    pub fn new(payload_merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo) -> Self {
+        VerifySignatureInstruction {
+            _padding: 0u8,
+            payload_merkle_root,
+            verifier_info,
+        }
+    }
+}
+
 pub fn verify_signature_handler(
     ctx: Context<VerifySignature>,
-    payload_merkle_root: [u8; 32],
-    verifier_info: SigningVerifierSetInfo,
+    verify_signature_instruction: VerifySignatureInstruction,
 ) -> Result<()> {
+    let payload_merkle_root = verify_signature_instruction.payload_merkle_root;
+    let verifier_info = verify_signature_instruction.verifier_info;
+
     let epoch = ctx.accounts.verifier_set_tracker_pda.epoch;
     let current_epoch = ctx.accounts.gateway_root_pda.current_epoch;
 

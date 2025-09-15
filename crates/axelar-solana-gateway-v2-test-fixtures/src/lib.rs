@@ -8,7 +8,7 @@ use axelar_solana_gateway_v2::{
     u256::U256,
     ApproveMessageInstruction, CallContractInstruction,
     InitializePayloadVerificationSessionInstruction, MerkleisedMessage, RotateSignersInstruction,
-    ID as GATEWAY_PROGRAM_ID,
+    VerifySignatureInstruction, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -158,24 +158,24 @@ pub fn setup_test_with_real_signers() -> (
     // Step 2: Create verifier set with your 2 real signers
     let quorum_threshold = 100;
     let verifier_leaves = vec![
-        VerifierSetLeaf {
-            nonce: 0,
-            quorum: quorum_threshold,
-            signer_pubkey: compressed_pubkey_1,
-            signer_weight: 50,
-            position: 0,
-            set_size: 2,
+        VerifierSetLeaf::new(
+            0,
+            quorum_threshold,
+            compressed_pubkey_1,
+            50,
+            0,
+            2,
             domain_separator,
-        },
-        VerifierSetLeaf {
-            nonce: 0,
-            quorum: quorum_threshold,
-            signer_pubkey: compressed_pubkey_2,
-            signer_weight: 50,
-            position: 1,
-            set_size: 2,
+        ),
+        VerifierSetLeaf::new(
+            0,
+            quorum_threshold,
+            compressed_pubkey_2,
+            50,
+            1,
+            2,
             domain_separator,
-        },
+        ),
     ];
 
     // Step 3: Calculate the REAL verifier set hash
@@ -552,11 +552,7 @@ pub fn create_verifier_info(
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
 
-    SigningVerifierSetInfo {
-        signature: signature_array,
-        leaf: verifier_leaf.clone(),
-        merkle_proof: merkle_proof_bytes,
-    }
+    SigningVerifierSetInfo::new(signature_array, verifier_leaf.clone(), merkle_proof_bytes)
 }
 
 pub fn call_contract_helper(
@@ -669,8 +665,9 @@ pub fn verify_signature_helper(
         .unwrap();
 
     let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
-    instruction_data.extend_from_slice(&verifier_info.try_to_vec().unwrap());
+    let verify_signature_instruction =
+        VerifySignatureInstruction::new(payload_merkle_root, verifier_info);
+    instruction_data.extend_from_slice(&verify_signature_instruction.try_to_vec().unwrap());
 
     let accounts = vec![
         (setup.gateway_root_pda, gateway_account),

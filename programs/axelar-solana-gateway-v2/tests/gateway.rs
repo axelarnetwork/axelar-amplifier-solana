@@ -13,7 +13,7 @@ use axelar_solana_gateway::{
     BytemuckedPda,
 };
 use axelar_solana_gateway_test_fixtures::gateway::{
-    make_messages, make_verifier_set, random_bytes,
+    make_messages, make_verifier_set, random_bytes, random_message,
 };
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use axelar_solana_gateway_v2::u256::U256;
@@ -25,6 +25,7 @@ use axelar_solana_gateway_v2::{
 use axelar_solana_gateway_v2::{
     ApproveMessageInstruction, IncomingMessage, InitializePayloadVerificationSessionInstruction,
     MessageStatus, RotateSignersInstruction, ValidateMessageInstruction,
+    VerifySignatureInstruction,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
@@ -875,4 +876,75 @@ async fn test_validate_message_discriminator() {
         message.destination_address
     );
     assert_eq!(v2_parsed.message.payload_hash, message.payload_hash);
+}
+
+#[tokio::test]
+async fn test_verify_signature_discriminator() {
+    // Define test cases
+    let test_cases = vec![(vec![42], Messages(vec![random_message()]))];
+
+    for (initial_signer_weights, messages) in test_cases {
+        // Setup
+        let mut metadata = SolanaAxelarIntegration::builder()
+            .initial_signer_weights(initial_signer_weights.clone())
+            .build()
+            .setup()
+            .await;
+
+        let payload = Payload::Messages(messages);
+        let execute_data = metadata.construct_execute_data(&metadata.signers.clone(), payload);
+        metadata
+            .initialize_payload_verification_session(&execute_data)
+            .await
+            .unwrap();
+        let verifier_set_tracker_pda = metadata.signers.verifier_set_tracker().0;
+        let leaf_info = execute_data.signing_verifier_set_leaves.first().unwrap();
+
+        // Verify the signature
+        let v1_ix = axelar_solana_gateway::instructions::verify_signature(
+            metadata.gateway_root_pda,
+            verifier_set_tracker_pda,
+            execute_data.payload_merkle_root,
+            leaf_info.clone(),
+        )
+        .unwrap();
+
+        let v1_discriminator: [u8; 8] = v1_ix.data[..8].to_vec().try_into().unwrap();
+        let v2_discriminator: [u8; 8] = hash::hash(b"global:verify_signature").to_bytes()[..8]
+            .to_vec()
+            .try_into()
+            .unwrap();
+
+        assert_eq!(
+            v1_discriminator, v2_discriminator,
+            "Discriminators should match for backwards compatibility"
+        );
+
+        let v2_parsed = VerifySignatureInstruction::try_from_slice(&v1_ix.data[8..]).unwrap();
+        assert_eq!(
+            v2_parsed.payload_merkle_root,
+            execute_data.payload_merkle_root
+        );
+
+        let expected_leaf = &leaf_info.leaf;
+        assert_eq!(v2_parsed.verifier_info.leaf.nonce, expected_leaf.nonce);
+        assert_eq!(v2_parsed.verifier_info.leaf.quorum, expected_leaf.quorum);
+        assert_eq!(
+            v2_parsed.verifier_info.leaf.signer_weight,
+            expected_leaf.signer_weight
+        );
+        assert_eq!(
+            v2_parsed.verifier_info.leaf.position,
+            expected_leaf.position
+        );
+        assert_eq!(
+            v2_parsed.verifier_info.leaf.set_size,
+            expected_leaf.set_size
+        );
+        assert_eq!(
+            v2_parsed.verifier_info.leaf.domain_separator,
+            expected_leaf.domain_separator
+        );
+        assert_eq!(v2_parsed.verifier_info.merkle_proof, leaf_info.merkle_proof);
+    }
 }
