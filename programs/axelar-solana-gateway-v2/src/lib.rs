@@ -36,8 +36,6 @@ impl GatewayDiscriminators {
 
 #[program]
 pub mod axelar_solana_gateway_v2 {
-    use crate::signature_verification::SigningVerifierSetInfo;
-
     use super::*;
 
     pub fn call_contract(
@@ -49,7 +47,7 @@ pub mod axelar_solana_gateway_v2 {
 
     pub fn initialise_config(
         ctx: Context<InitializeConfigAccounts>,
-        params: InitializeConfig,
+        params: InitializeConfigInstruction,
     ) -> Result<()> {
         instructions::initialize_config_handler(ctx, params)
     }
