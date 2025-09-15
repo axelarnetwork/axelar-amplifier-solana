@@ -1,14 +1,17 @@
-use anchor_lang::prelude::UpgradeableLoaderState;
-use anchor_lang::{AccountDeserialize, AnchorDeserialize, AnchorSerialize};
-use axelar_solana_encoding::hasher::{NativeHasher, SolanaSyscallHasher};
+use anchor_lang::prelude::ProgramError;
+use anchor_lang::{AccountDeserialize, AnchorDeserialize};
+use axelar_solana_encoding::hasher::NativeHasher;
 use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
-use axelar_solana_encoding::types::messages::Messages;
+use axelar_solana_encoding::types::messages::{Message, Messages};
 use axelar_solana_encoding::types::payload::Payload;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
-use axelar_solana_encoding::LeafHash;
 use axelar_solana_gateway::instructions::approve_message;
+use axelar_solana_gateway::instructions::validate_message;
 use axelar_solana_gateway::state::incoming_message::command_id;
-use axelar_solana_gateway::{get_gateway_root_config_pda, get_incoming_message_pda, BytemuckedPda};
+use axelar_solana_gateway::{
+    get_gateway_root_config_pda, get_incoming_message_pda, get_validate_message_signing_pda,
+    BytemuckedPda,
+};
 use axelar_solana_gateway_test_fixtures::gateway::{
     make_messages, make_verifier_set, random_bytes,
 };
@@ -20,8 +23,8 @@ use axelar_solana_gateway_v2::{
     GatewayConfig, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
-    ApproveMessageInstruction, IncomingMessage, InitialVerifierSet, InitializeConfig,
-    InitializePayloadVerificationSessionInstruction, MessageStatus, RotateSignersInstruction,
+    ApproveMessageInstruction, IncomingMessage, InitializePayloadVerificationSessionInstruction,
+    MessageStatus, RotateSignersInstruction, ValidateMessageInstruction,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
@@ -30,12 +33,22 @@ use axelar_solana_gateway_v2_test_fixtures::{
     setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
     verify_signature_helper,
 };
-use solana_program::{bpf_loader_upgradeable, hash};
-use solana_sdk::account::Account;
+use solana_program::hash;
 use solana_sdk::instruction::Instruction;
-use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
+
+fn validate_message_for_tests(
+    incoming_message_pda: &Pubkey,
+    signing_pda: &Pubkey,
+    message: Message,
+) -> Result<Instruction, ProgramError> {
+    let mut res = validate_message(incoming_message_pda, signing_pda, message)?;
+    // needed because we cannot sign with a PDA without creating a real on-chain
+    // program
+    res.accounts[1].is_signer = false;
+    Ok(res)
+}
 
 #[test]
 fn test_initialize_config() {
@@ -804,4 +817,62 @@ async fn test_rotate_signers_discriminator() {
         v2_parsed.new_verifier_set_merkle_root,
         new_verifier_set_hash
     );
+}
+
+#[tokio::test]
+async fn test_validate_message_discriminator() {
+    // Setup
+    let mut metadata = SolanaAxelarIntegration::builder()
+        .initial_signer_weights(vec![42, 42])
+        .build()
+        .setup()
+        .await;
+    let mut messages = make_messages(1);
+    let destination_address = Pubkey::new_unique();
+    if let Some(x) = messages.get_mut(0) {
+        x.destination_address = destination_address.to_string();
+    }
+    let message_leaf = metadata
+        .sign_session_and_approve_messages(&metadata.signers.clone(), &messages)
+        .await
+        .unwrap()
+        .into_iter()
+        .next()
+        .unwrap()
+        .leaf;
+    let fake_command_id = solana_program::keccak::hash(b"fake command id").0; // source of error -- invalid command id
+    let (incoming_message_pda, ..) = get_incoming_message_pda(&fake_command_id);
+
+    // action
+    let (signing_pda, _signing_pda_bump) =
+        get_validate_message_signing_pda(destination_address, fake_command_id);
+    let v1_ix =
+        validate_message_for_tests(&incoming_message_pda, &signing_pda, message_leaf.message)
+            .unwrap();
+
+    let v1_discriminator: [u8; 8] = v1_ix.data[..8].to_vec().try_into().unwrap();
+    let v2_discriminator: [u8; 8] = hash::hash(b"global:validate_message").to_bytes()[..8]
+        .to_vec()
+        .try_into()
+        .unwrap();
+
+    assert_eq!(
+        v1_discriminator, v2_discriminator,
+        "Discriminators should match for backwards compatibility"
+    );
+
+    let v2_parsed = ValidateMessageInstruction::try_from_slice(&v1_ix.data[8..]).unwrap();
+    let message = &messages[0];
+    assert_eq!(v2_parsed.message.cc_id.chain, message.cc_id.chain);
+    assert_eq!(v2_parsed.message.cc_id.id, message.cc_id.id);
+    assert_eq!(v2_parsed.message.source_address, message.source_address);
+    assert_eq!(
+        v2_parsed.message.destination_chain,
+        message.destination_chain
+    );
+    assert_eq!(
+        v2_parsed.message.destination_address,
+        message.destination_address
+    );
+    assert_eq!(v2_parsed.message.payload_hash, message.payload_hash);
 }
