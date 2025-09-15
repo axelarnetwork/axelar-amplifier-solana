@@ -50,7 +50,7 @@ pub struct InitialVerifierSet {
 
 #[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub struct InitializeConfig {
-    pub _padding: u8,
+    _padding: u8,
     /// The domain separator, used as an input for hashing payloads.
     pub domain_separator: [u8; 32],
     /// initial verifier set
@@ -61,6 +61,25 @@ pub struct InitializeConfig {
     pub operator: Pubkey,
     /// how many n epochs do we consider valid
     pub previous_verifier_retention: VerifierSetEpoch,
+}
+
+impl InitializeConfig {
+    pub fn new(
+        domain_separator: [u8; 32],
+        initial_verifier_set: InitialVerifierSet,
+        minimum_rotation_delay: RotationDelaySecs,
+        operator: Pubkey,
+        previous_verifier_retention: VerifierSetEpoch,
+    ) -> Self {
+        Self {
+            _padding: 0,
+            domain_separator,
+            initial_verifier_set,
+            minimum_rotation_delay,
+            operator,
+            previous_verifier_retention,
+        }
+    }
 }
 
 /// Ever-incrementing counter for keeping track of the sequence of signer sets

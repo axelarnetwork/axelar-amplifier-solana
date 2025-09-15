@@ -65,9 +65,12 @@ pub mod axelar_solana_gateway_v2 {
 
     pub fn initialize_payload_verification_session(
         ctx: Context<InitializePayloadVerificationSession>,
-        merkle_root: [u8; 32],
+        initialize_payload_verification_sesssion: InitializePayloadVerificationSessionInstruction,
     ) -> Result<()> {
-        instructions::initialize_payload_verification_session_handler(ctx, merkle_root)
+        instructions::initialize_payload_verification_session_handler(
+            ctx,
+            initialize_payload_verification_sesssion,
+        )
     }
 
     pub fn verify_signature(

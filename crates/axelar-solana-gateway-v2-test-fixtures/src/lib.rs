@@ -6,7 +6,7 @@ use axelar_solana_gateway::seed_prefixes::{
 use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfig},
     u256::U256,
-    MerkleisedMessage, ID as GATEWAY_PROGRAM_ID,
+    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -228,17 +228,16 @@ pub fn setup_test_with_real_signers() -> (
 }
 
 pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
-    let params = InitializeConfig {
-        _padding: 0u8,
-        domain_separator: setup.domain_separator,
-        initial_verifier_set: InitialVerifierSet {
+    let params = InitializeConfig::new(
+        setup.domain_separator,
+        InitialVerifierSet {
             hash: setup.verifier_set_hash,
             pda: setup.verifier_set_tracker_pda,
         },
-        minimum_rotation_delay: setup.minimum_rotation_delay,
-        operator: setup.operator,
-        previous_verifier_retention: setup.previous_verifier_retention,
-    };
+        setup.minimum_rotation_delay,
+        setup.operator,
+        setup.previous_verifier_retention,
+    );
 
     let discriminator: [u8; 8] = hash::hash(b"global:initialise_config").to_bytes()[..8]
         .try_into()
@@ -361,7 +360,13 @@ pub fn initialize_payload_verification_session(
         .unwrap();
 
     let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&merkle_root.try_to_vec().unwrap());
+    let initialize_payload_verification_session_instruction =
+        InitializePayloadVerificationSessionInstruction::new(merkle_root);
+    instruction_data.extend_from_slice(
+        &initialize_payload_verification_session_instruction
+            .try_to_vec()
+            .unwrap(),
+    );
 
     let accounts = vec![
         (
@@ -470,7 +475,13 @@ pub fn initialize_payload_verification_session_with_root(
         .unwrap();
 
     let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+    let initialize_payload_verification_session_instruction =
+        InitializePayloadVerificationSessionInstruction::new(payload_merkle_root);
+    instruction_data.extend_from_slice(
+        &initialize_payload_verification_session_instruction
+            .try_to_vec()
+            .unwrap(),
+    );
 
     let accounts = vec![
         (
