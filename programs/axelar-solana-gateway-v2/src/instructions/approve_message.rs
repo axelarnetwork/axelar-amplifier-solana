@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
+#[instruction(approve_message_instruction: ApproveMessageInstruction)]
 pub struct ApproveMessage<'info> {
     #[account(
             seeds = [GATEWAY_SEED],
@@ -21,7 +21,7 @@ pub struct ApproveMessage<'info> {
     #[account(mut)]
     pub funder: Signer<'info>,
     #[account(
-            seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
+            seeds = [SIGNATURE_VERIFICATION_SEED, approve_message_instruction.payload_merkle_root.as_ref()],
             bump = verification_session_account.bump
         )]
     pub verification_session_account: Account<'info, VerificationSessionAccount>,
@@ -29,18 +29,39 @@ pub struct ApproveMessage<'info> {
         init,
         payer = funder,
         space = 8 + std::mem::size_of::<IncomingMessage>(),
-        seeds = [INCOMING_MESSAGE_SEED, message.leaf.message.command_id().as_ref()],
+        seeds = [INCOMING_MESSAGE_SEED, approve_message_instruction.message.leaf.message.command_id().as_ref()],
         bump
     )]
     pub incoming_message_pda: Account<'info, IncomingMessage>,
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Debug, AnchorSerialize, AnchorDeserialize)]
+pub struct ApproveMessageInstruction {
+    _padding: u8,
+    /// The message that's to be approved
+    pub message: MerkleisedMessage,
+    /// The merkle root of the new message batch
+    pub payload_merkle_root: [u8; 32],
+}
+
+impl ApproveMessageInstruction {
+    pub fn new(message: MerkleisedMessage, payload_merkle_root: [u8; 32]) -> Self {
+        Self {
+            _padding: 0,
+            message,
+            payload_merkle_root,
+        }
+    }
+}
+
 pub fn approve_message_handler(
     ctx: Context<ApproveMessage>,
-    message: MerkleisedMessage,
-    payload_merkle_root: [u8; 32],
+    approve_message_instruction: ApproveMessageInstruction,
 ) -> Result<()> {
+    let message = approve_message_instruction.message;
+    let payload_merkle_root = approve_message_instruction.payload_merkle_root;
+
     msg!("Approving message!");
 
     let gateway_config = &ctx.accounts.gateway_root_pda;

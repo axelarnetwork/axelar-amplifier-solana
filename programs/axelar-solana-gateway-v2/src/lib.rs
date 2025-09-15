@@ -74,10 +74,9 @@ pub mod axelar_solana_gateway_v2 {
 
     pub fn approve_message(
         ctx: Context<ApproveMessage>,
-        message: MerkleisedMessage,
-        payload_merkle_root: [u8; 32],
+        approve_message_instruction: ApproveMessageInstruction,
     ) -> Result<()> {
-        instructions::approve_message_handler(ctx, message, payload_merkle_root)
+        instructions::approve_message_handler(ctx, approve_message_instruction)
     }
 
     pub fn validate_message(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {
