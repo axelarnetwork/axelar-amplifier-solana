@@ -50,6 +50,7 @@ pub struct InitialVerifierSet {
 
 #[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub struct InitializeConfig {
+    pub _padding: u8,
     /// The domain separator, used as an input for hashing payloads.
     pub domain_separator: [u8; 32],
     /// initial verifier set

@@ -1157,6 +1157,7 @@ dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
  "axelar-solana-gateway",
+ "axelar-solana-gateway-test-fixtures",
  "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "bitvec",
@@ -1167,6 +1168,7 @@ dependencies = [
  "rand 0.8.5",
  "solana-program",
  "solana-sdk",
+ "tokio",
 ]
 
 [[package]]

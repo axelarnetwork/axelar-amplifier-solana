@@ -47,6 +47,7 @@ bincode.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
+axelar-solana-gateway-test-fixtures = {path = "../../crates/axelar-solana-gateway-test-fixtures" }
 borsh.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
@@ -54,3 +55,4 @@ bincode.workspace = true
 libsecp256k1.workspace = true
 rand.workspace = true
 hex.workspace = true
+tokio.workspace = true

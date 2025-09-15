@@ -229,6 +229,7 @@ pub fn setup_test_with_real_signers() -> (
 
 pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
     let params = InitializeConfig {
+        _padding: 0u8,
         domain_separator: setup.domain_separator,
         initial_verifier_set: InitialVerifierSet {
             hash: setup.verifier_set_hash,
