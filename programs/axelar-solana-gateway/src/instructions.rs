@@ -401,7 +401,7 @@ pub fn initialize_config(
         AccountMeta::new(initial_verifier_set.pda, false),
     ];
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialise_config").to_bytes()[..8]
+    let discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
         .try_into()
         .unwrap();
 

@@ -1,12 +1,16 @@
-use anchor_lang::AccountDeserialize;
-use axelar_solana_gateway::BytemuckedPda;
+use anchor_lang::prelude::UpgradeableLoaderState;
+use anchor_lang::{AccountDeserialize, AnchorDeserialize, AnchorSerialize};
+use axelar_solana_gateway::{get_gateway_root_config_pda, BytemuckedPda};
+use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
     signature_verification::{SignatureVerification, VerificationSessionAccount},
     state::VerifierSetTracker,
     GatewayConfig, ID as GATEWAY_PROGRAM_ID,
 };
-use axelar_solana_gateway_v2::{IncomingMessage, MessageStatus};
+use axelar_solana_gateway_v2::{
+    IncomingMessage, InitialVerifierSet, InitializeConfig, MessageStatus,
+};
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session, initialize_payload_verification_session_with_root,
@@ -14,8 +18,12 @@ use axelar_solana_gateway_v2_test_fixtures::{
     setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
     verify_signature_helper,
 };
-use solana_program::hash;
+use solana_program::{bpf_loader_upgradeable, hash};
+use solana_sdk::account::Account;
+use solana_sdk::instruction::Instruction;
+use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signer;
 
 #[test]
 fn test_initialize_config() {
@@ -565,4 +573,55 @@ fn test_config_discriminator() {
     assert_eq!(gateway_config.operator, setup.operator);
     assert_eq!(gateway_config.minimum_rotation_delay, 3600);
     assert_eq!(gateway_config.domain_separator, [2u8; 32]);
+}
+
+#[tokio::test]
+async fn test_initialize_config_discriminator() {
+    // Create V1 instruction
+    let metadata = SolanaAxelarIntegration::builder()
+        .initial_signer_weights(vec![42])
+        .build()
+        .setup_without_init_config()
+        .await;
+    let (gateway_config_pda, _bump) = get_gateway_root_config_pda();
+    let initial_sets = metadata.init_gateway_config_verifier_set_data();
+
+    let v1_ix = axelar_solana_gateway::instructions::initialize_config(
+        metadata.fixture.payer.pubkey(),
+        metadata.upgrade_authority.pubkey(),
+        metadata.domain_separator,
+        initial_sets.clone(),
+        metadata.minimum_rotate_signers_delay_seconds,
+        metadata.operator.pubkey(),
+        metadata.previous_signers_retention.into(),
+        gateway_config_pda,
+    )
+    .unwrap();
+
+    // Check the V1 discriminator
+    let v1_discriminator: [u8; 8] = v1_ix.data[..8].to_vec().try_into().unwrap();
+
+    // Check V2's expected discriminator
+    let v2_discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
+        .to_vec()
+        .try_into()
+        .unwrap();
+
+    assert_eq!(
+        v1_discriminator, v2_discriminator,
+        "Discriminators should match for backwards compatibility"
+    );
+
+    let v2_parsed =
+        axelar_solana_gateway_v2::state::config::InitializeConfig::try_from_slice(&v1_ix.data[8..]);
+    let parsed_config = v2_parsed.expect("Failed to parse V1 instruction as V2 InitializeConfig");
+
+    assert_eq!(parsed_config.domain_separator, [42; 32]);
+    assert_eq!(
+        parsed_config.operator.to_string(),
+        metadata.operator.pubkey().to_string()
+    );
+    assert_eq!(parsed_config.previous_verifier_retention, U256::from(1));
+    assert_eq!(parsed_config.minimum_rotation_delay, 0);
+    assert_eq!(parsed_config.initial_verifier_set.hash, initial_sets.hash);
 }
