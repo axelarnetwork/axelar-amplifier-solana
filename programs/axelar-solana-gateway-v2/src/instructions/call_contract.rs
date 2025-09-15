@@ -19,13 +19,45 @@ pub struct CallContract<'info> {
     pub gateway_root_pda: Account<'info, GatewayConfig>,
 }
 
+#[derive(Debug, AnchorSerialize, AnchorDeserialize)]
+pub struct CallContractInstruction {
+    _padding: u8,
+    /// The name of the target blockchain.
+    pub destination_chain: String,
+    /// The address of the target contract in the destination blockchain.
+    pub destination_contract_address: String,
+    /// Contract call data.
+    pub payload: Vec<u8>,
+    /// The pda bump for the signing PDA
+    pub signing_pda_bump: u8,
+}
+
+impl CallContractInstruction {
+    pub fn new(
+        destination_chain: String,
+        destination_contract_address: String,
+        payload: Vec<u8>,
+        signing_pda_bump: u8,
+    ) -> Self {
+        Self {
+            _padding: 0,
+            destination_chain,
+            destination_contract_address,
+            payload,
+            signing_pda_bump,
+        }
+    }
+}
+
 pub fn call_contract_handler(
     ctx: Context<CallContract>,
-    destination_chain: String,
-    destination_contract_address: String,
-    payload: Vec<u8>,
-    signing_pda_bump: u8,
+    call_conract_instruction: CallContractInstruction,
 ) -> Result<()> {
+    let destination_chain = call_conract_instruction.destination_chain;
+    let destination_contract_address = call_conract_instruction.destination_contract_address;
+    let payload = call_conract_instruction.payload;
+    let signing_pda_bump = call_conract_instruction.signing_pda_bump;
+
     let payload_hash = keccak::hash(&payload);
     let signing_pda = &ctx.accounts.signing_pda;
     let sender = &ctx.accounts.calling_program;
