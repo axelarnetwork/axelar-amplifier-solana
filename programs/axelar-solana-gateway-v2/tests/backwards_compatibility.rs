@@ -32,7 +32,7 @@ use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
     ApproveMessageInstruction, GatewayConfig, InitializeConfigInstruction,
     InitializePayloadVerificationSessionInstruction, RotateSignersInstruction,
-    ValidateMessageInstruction, VerifySignatureInstruction,
+    ValidateMessageInstruction, VerifierSetTracker, VerifySignatureInstruction,
 };
 use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, mock_setup_test};
 use solana_program::hash;
@@ -73,9 +73,58 @@ fn test_config_discriminator() {
     let gateway_config =
         axelar_solana_gateway::state::GatewayConfig::read(&updated_gateway_account.data).unwrap();
 
+    assert_eq!(gateway_config.discriminator, actual_discriminator);
     assert_eq!(gateway_config.operator, setup.operator);
     assert_eq!(gateway_config.minimum_rotation_delay, 3600);
     assert_eq!(gateway_config.domain_separator, [2u8; 32]);
+}
+
+#[test]
+fn test_verifier_set_tracker_discriminator() {
+    let gateway_caller = None;
+    let setup = mock_setup_test(gateway_caller);
+    let initialize_result = initialize_gateway(&setup);
+
+    let verifier_set_tracker_account = initialize_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_v2 =
+        VerifierSetTracker::try_deserialize(&mut verifier_set_tracker_account.data.as_slice())
+            .unwrap();
+
+    let expected_discriminator = &hash::hash(b"account:VerifierSetTracker").to_bytes()[..8];
+    let actual_discriminator = &verifier_set_tracker_account.data.as_slice()[..8];
+    assert_eq!(actual_discriminator, expected_discriminator);
+
+    let verifier_set_tracker_v1 =
+        axelar_solana_gateway::state::verifier_set_tracker::VerifierSetTracker::read(
+            &verifier_set_tracker_account.data,
+        )
+        .unwrap();
+
+    let v1_discriminator = verifier_set_tracker_v1.discriminator;
+    assert_eq!(actual_discriminator, v1_discriminator);
+
+    assert_eq!(verifier_set_tracker_v1.bump, verifier_set_tracker_v2.bump);
+
+    assert_eq!(
+        verifier_set_tracker_v1.epoch.to_le_bytes(),
+        verifier_set_tracker_v2.epoch.to_le_bytes(),
+    );
+
+    let expected_hash = [1u8; 32];
+    assert_eq!(verifier_set_tracker_v2.verifier_set_hash, expected_hash);
+
+    let v1_hash_bytes: [u8; 32] = verifier_set_tracker_v1
+        .verifier_set_hash
+        .try_into()
+        .unwrap();
+    assert_eq!(v1_hash_bytes, expected_hash);
 }
 
 #[tokio::test]

@@ -61,6 +61,7 @@ fn test_initialize_config() {
     let expected_verifier_set_tracker = VerifierSetTracker {
         bump: setup.verifier_bump,
         verifier_set_hash: setup.verifier_set_hash,
+        _padding: [0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8],
         epoch: setup.epoch,
     };
 

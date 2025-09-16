@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use axelar_solana_gateway::bytemuck;
 
 /// Custom U256 implementation that works with Anchor
 #[derive(
@@ -81,6 +82,11 @@ impl U256 {
         }
 
         Some(U256 { inner: result })
+    }
+
+    pub fn to_le_bytes(self) -> [u8; 32] {
+        let bytes: [u64; 4] = self.inner;
+        bytemuck::cast(bytes)
     }
 }
 
