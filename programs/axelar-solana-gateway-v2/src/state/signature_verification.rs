@@ -1,8 +1,9 @@
-use crate::{GatewayError, VerifierSetHash};
+use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use axelar_solana_gateway::state::signature_verification::verify_ecdsa_signature;
 use bitvec::prelude::*;
+use udigest::{encoding::EncodeValue, Digestable};
 
 #[derive(Debug, Clone, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
 pub struct SignatureVerification {
@@ -33,8 +34,13 @@ impl VerificationSessionAccount {
     ) -> Result<()> {
         self.check_slot_is_done(&verifier_info.leaf)?;
 
+        let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
+            PublicKey::Secp256k1(key) => key,
+            _ => return err!(GatewayError::UnsupportedSignatureScheme),
+        };
+
         if !verify_ecdsa_signature(
-            &verifier_info.leaf.signer_pubkey,
+            &pubkey_bytes,
             &verifier_info.signature,
             &payload_merkle_root,
         ) {
@@ -131,7 +137,6 @@ impl VerificationSessionAccount {
 }
 
 pub type Signature = [u8; 65];
-pub type PublicKey = [u8; 33];
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct SigningVerifierSetInfo {
@@ -152,15 +157,13 @@ impl SigningVerifierSetInfo {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct VerifierSetLeaf {
     /// The nonce value from the associated `VerifierSet`.
     pub nonce: u64,
 
     /// The quorum value from the associated `VerifierSet`.
     pub quorum: u128,
-
-    _padding: u8,
 
     /// The public key of the verifier.
     pub signer_pubkey: PublicKey,
@@ -182,11 +185,10 @@ pub struct VerifierSetLeaf {
 }
 
 impl VerifierSetLeaf {
-    // placeholder hash function
     pub fn hash(&self) -> [u8; 32] {
-        // Use borsh serialization (matches how Anchor serializes data)
-        let data = self.try_to_vec().expect("Serialization should not fail");
-        solana_program::keccak::hashv(&[&data]).to_bytes()
+        let mut buffer = VecBuf(vec![]);
+        self.unambiguously_encode(EncodeValue::new(&mut buffer));
+        solana_program::keccak::hash(&buffer.0).to_bytes()
     }
 
     pub fn new(
@@ -201,7 +203,6 @@ impl VerifierSetLeaf {
         Self {
             nonce,
             quorum,
-            _padding: 0,
             signer_pubkey,
             signer_weight,
             position,
