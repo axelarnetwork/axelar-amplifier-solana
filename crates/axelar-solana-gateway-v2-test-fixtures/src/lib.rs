@@ -7,8 +7,8 @@ use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfigInstruction},
     u256::U256,
     ApproveMessageInstruction, CallContractInstruction,
-    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, RotateSignersInstruction,
-    VerifySignatureInstruction, ID as GATEWAY_PROGRAM_ID,
+    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, PublicKey,
+    RotateSignersInstruction, VerifySignatureInstruction, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -161,7 +161,7 @@ pub fn setup_test_with_real_signers() -> (
         VerifierSetLeaf::new(
             0,
             quorum_threshold,
-            compressed_pubkey_1,
+            PublicKey::Secp256k1(compressed_pubkey_1),
             50,
             0,
             2,
@@ -170,7 +170,7 @@ pub fn setup_test_with_real_signers() -> (
         VerifierSetLeaf::new(
             0,
             quorum_threshold,
-            compressed_pubkey_2,
+            PublicKey::Secp256k1(compressed_pubkey_2),
             50,
             1,
             2,

@@ -1,10 +1,17 @@
 use anchor_lang::prelude::ProgramError;
 use anchor_lang::{AccountDeserialize, AnchorDeserialize};
 use axelar_solana_encoding::hasher::NativeHasher;
+use axelar_solana_encoding::hasher::SolanaSyscallHasher;
 use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
+use axelar_solana_encoding::types::messages::CrossChainId as V1CrossChainId;
+use axelar_solana_encoding::types::messages::Message as V1Message;
+use axelar_solana_encoding::types::messages::MessageLeaf as V1MessageLeaf;
 use axelar_solana_encoding::types::messages::{Message, Messages};
 use axelar_solana_encoding::types::payload::Payload;
+use axelar_solana_encoding::types::pubkey::PublicKey as V1PublicKey;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
+use axelar_solana_encoding::types::verifier_set::VerifierSetLeaf as V1VerifierSetLeaf;
+use axelar_solana_encoding::LeafHash;
 use axelar_solana_gateway::instructions::{approve_message, validate_message};
 use axelar_solana_gateway::state::incoming_message::command_id;
 use axelar_solana_gateway::{
@@ -15,6 +22,12 @@ use axelar_solana_gateway_test_fixtures::gateway::{
     make_messages, make_verifier_set, random_bytes, random_message,
 };
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
+use axelar_solana_gateway_v2::state::message_approval::MessageLeaf as V2MessageLeaf;
+use axelar_solana_gateway_v2::state::message_approval::{
+    CrossChainId as V2CrossChainId, Message as V2Message,
+};
+use axelar_solana_gateway_v2::state::signature_verification::VerifierSetLeaf as V2VerifierSetLeaf;
+use axelar_solana_gateway_v2::types::pubkey::PublicKey as V2PublicKey;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
     ApproveMessageInstruction, GatewayConfig, InitializeConfigInstruction,
@@ -414,16 +427,6 @@ async fn test_verify_signature_discriminator() {
 
 #[test]
 fn test_message_leaf_hash_compatibility() {
-    use axelar_solana_encoding::hasher::SolanaSyscallHasher;
-    use axelar_solana_encoding::types::messages::CrossChainId as V1CrossChainId;
-    use axelar_solana_encoding::types::messages::Message as V1Message;
-    use axelar_solana_encoding::types::messages::MessageLeaf as V1MessageLeaf;
-    use axelar_solana_encoding::LeafHash;
-    use axelar_solana_gateway_v2::state::message_approval::{
-        CrossChainId as V2CrossChainId, Message as V2Message, MessageLeaf as V2MessageLeaf,
-    };
-
-    // Create test data
     let chain = "ethereum".to_string();
     let id = "0x1234567890abcdef".to_string();
     let source_address = "0xabcdef1234567890".to_string();
@@ -435,7 +438,6 @@ fn test_message_leaf_hash_compatibility() {
     let domain_separator = [42u8; 32];
     let signing_verifier_set = [84u8; 32];
 
-    // Create V1 message and leaf
     let v1_cc_id = V1CrossChainId {
         chain: chain.clone(),
         id: id.clone(),
@@ -455,7 +457,6 @@ fn test_message_leaf_hash_compatibility() {
         signing_verifier_set,
     };
 
-    // Create V2 message and leaf
     let v2_cc_id = V2CrossChainId {
         chain: chain.clone(),
         id: id.clone(),
@@ -475,16 +476,102 @@ fn test_message_leaf_hash_compatibility() {
         signing_verifier_set,
     };
 
-    // Hash with V1 (using LeafHash trait with SolanaSyscallHasher)
     let v1_hash = v1_leaf.hash::<SolanaSyscallHasher>();
-
-    // Hash with V2 (using the current borsh implementation)
     let v2_hash = v2_leaf.hash();
 
-    // They should match for backwards compatibility
     assert_eq!(
         v1_hash, v2_hash,
         "Message leaf hashes should match between v1 and v2 implementations.\nV1 hash: {:?}\nV2 hash: {:?}",
+        v1_hash, v2_hash
+    );
+}
+
+#[test]
+fn test_message_hash_compatibility() {
+    let chain = "ethereum".to_string();
+    let id = "0x1234567890abcdef".to_string();
+    let source_address = "0xabcdef1234567890".to_string();
+    let destination_chain = "solana".to_string();
+    let destination_address = "11111111111111111111111111111112".to_string();
+    let payload_hash = [1u8; 32];
+
+    let v1_cc_id = V1CrossChainId {
+        chain: chain.clone(),
+        id: id.clone(),
+    };
+    let v1_message = V1Message {
+        cc_id: v1_cc_id,
+        source_address: source_address.clone(),
+        destination_chain: destination_chain.clone(),
+        destination_address: destination_address.clone(),
+        payload_hash,
+    };
+
+    let v2_cc_id = V2CrossChainId {
+        chain: chain.clone(),
+        id: id.clone(),
+    };
+    let v2_message = V2Message {
+        cc_id: v2_cc_id,
+        source_address: source_address.clone(),
+        destination_chain: destination_chain.clone(),
+        destination_address: destination_address.clone(),
+        payload_hash,
+    };
+
+    let v1_hash = v1_message.hash::<SolanaSyscallHasher>();
+    let v2_hash = v2_message.hash();
+
+    assert_eq!(
+        v1_hash, v2_hash,
+        "Message leaf hashes should match between v1 and v2 implementations.\nV1 hash: {:?}\nV2 hash: {:?}",
+        v1_hash, v2_hash
+    );
+}
+
+#[test]
+fn test_verifier_set_leaf_hash_compatibility() {
+    let nonce = 12345u64;
+    let quorum = 666u128;
+    let signer_weight = 100u128;
+    let position = 5u16;
+    let set_size = 10u16;
+    let domain_separator = [42u8; 32];
+
+    let secp256k1_pubkey = [
+        0x02, 0x79, 0xbe, 0x66, 0x7e, 0xf9, 0xdc, 0xbb, 0xac, 0x55, 0xa0, 0x62, 0x95, 0xce, 0x87,
+        0x0b, 0x07, 0x02, 0x9b, 0xfc, 0xdb, 0x2d, 0xce, 0x28, 0xd9, 0x59, 0xf2, 0x81, 0x5b, 0x16,
+        0xf8, 0x17, 0x98,
+    ];
+
+    let v1_signer_pubkey = V1PublicKey::Secp256k1(secp256k1_pubkey);
+    let v1_leaf = V1VerifierSetLeaf {
+        nonce,
+        quorum,
+        signer_pubkey: v1_signer_pubkey,
+        signer_weight,
+        position,
+        set_size,
+        domain_separator,
+    };
+
+    let v2_signer_pubkey = V2PublicKey::Secp256k1(secp256k1_pubkey);
+    let v2_leaf = V2VerifierSetLeaf {
+        nonce,
+        quorum,
+        signer_pubkey: v2_signer_pubkey,
+        signer_weight,
+        position,
+        set_size,
+        domain_separator,
+    };
+
+    let v1_hash = v1_leaf.hash::<SolanaSyscallHasher>();
+    let v2_hash = v2_leaf.hash();
+
+    assert_eq!(
+        v1_hash, v2_hash,
+        "VerifierSetLeaf hashes should match between v1 and v2 implementations.\nV1 hash: {:?}\nV2 hash: {:?}",
         v1_hash, v2_hash
     );
 }
