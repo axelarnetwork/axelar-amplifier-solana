@@ -18,20 +18,6 @@ impl SignatureVerification {
     }
 }
 
-// #[derive(Zeroable, Pod, Copy, Clone, Default, PartialEq, Eq, Debug)]
-// pub struct SignatureVerificationSessionData {
-//     /// Anchor compatible discriminator
-//     pub discriminator: [u8; 8],
-//     /// Padding to align SignatureVerification to 16-byte boundary
-//     _discriminator_pad: [u8; 8],
-//     /// Signature verification session
-//     pub signature_verification: SignatureVerification,
-//     /// Seed bump for this account's PDA
-//     pub bump: u8,
-//     /// Padding for memory alignment.
-//     _pad: [u8; 15],
-// }
-
 #[account]
 #[derive(Debug, PartialEq, Eq)]
 pub struct SignatureVerificationSessionData {

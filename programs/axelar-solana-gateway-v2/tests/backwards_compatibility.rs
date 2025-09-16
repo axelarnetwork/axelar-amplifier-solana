@@ -30,14 +30,15 @@ use axelar_solana_gateway_v2::state::signature_verification::VerifierSetLeaf as 
 use axelar_solana_gateway_v2::types::pubkey::PublicKey as V2PublicKey;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
-    ApproveMessageInstruction, GatewayConfig, InitializeConfigInstruction,
+    ApproveMessageInstruction, GatewayConfig, IncomingMessage, InitializeConfigInstruction,
     InitializePayloadVerificationSessionInstruction, RotateSignersInstruction,
     SignatureVerificationSessionData, ValidateMessageInstruction, VerifierSetTracker,
     VerifySignatureInstruction,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
-    initialize_gateway, initialize_payload_verification_session_with_root, mock_setup_test,
-    setup_message_merkle_tree, setup_test_with_real_signers,
+    approve_message_helper, create_verifier_info, initialize_gateway,
+    initialize_payload_verification_session_with_root, mock_setup_test, setup_message_merkle_tree,
+    setup_test_with_real_signers, verify_signature_helper,
 };
 use solana_program::hash;
 use solana_sdk::instruction::Instruction;
@@ -194,6 +195,167 @@ fn test_verification_session_tracker_discriminator() {
     assert_eq!(
         sig_v1.signing_verifier_set_hash,
         sig_v2.signing_verifier_set_hash
+    );
+}
+
+#[test]
+fn test_incoming_message_discriminator() {
+    // Step 1: Setup gateway with real signers
+    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
+        setup_test_with_real_signers();
+
+    // Step 2: Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(!init_result.program_result.is_err());
+
+    // Step 3: Create messages and payload merkle root
+    let verifier_set_merkle_root = setup.verifier_set_hash;
+    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
+        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+    // Step 4: Initialize payload verification session
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(
+            &setup,
+            &init_result,
+            payload_merkle_root,
+        );
+    assert!(!session_result.program_result.is_err());
+
+    // Step 5: Get existing accounts
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verification_session_account = session_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Step 6: Sign the payload with both signers and verify signatures
+    // Create verifier info for first signer
+    let verifier_info_1 = create_verifier_info(
+        &secret_key_1,
+        payload_merkle_root,
+        &verifier_leaves[0],
+        0, // Position 0
+        &verifier_merkle_tree,
+    );
+
+    // Execute the first verify_signature instruction using helper
+    let verify_result_1 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_1,
+        verification_session_pda,
+        gateway_account.clone(),
+        verification_session_account.clone(),
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account.clone(),
+    );
+
+    // Get updated verification session after first signature
+    let updated_verification_account_after_first = verify_result_1
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Create verifier info for second signer
+    let verifier_info_2 = create_verifier_info(
+        &secret_key_2,
+        payload_merkle_root,
+        &verifier_leaves[1],
+        1, // Position 1
+        &verifier_merkle_tree,
+    );
+
+    // Execute the second verify_signature instruction using helper
+    let verify_result_2 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_2,
+        verification_session_pda,
+        gateway_account,
+        updated_verification_account_after_first,
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account,
+    );
+
+    let (approve_result, incoming_message_pda) = approve_message_helper(
+        &setup,
+        message_merkle_tree,
+        message_leaves,
+        &messages,
+        payload_merkle_root,
+        verification_session_pda,
+        verify_result_2,
+        0, // position
+    );
+
+    let incoming_message_account = approve_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == incoming_message_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let incoming_message_pda_account_v2 =
+        IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
+
+    let expected_discriminator = &hash::hash(b"account:IncomingMessage").to_bytes()[..8];
+    let actual_discriminator = &incoming_message_account.data.as_slice()[..8];
+    assert_eq!(actual_discriminator, expected_discriminator);
+
+    let incoming_message_pda_account_v1 =
+        axelar_solana_gateway::state::incoming_message::IncomingMessage::read(
+            &incoming_message_account.data,
+        )
+        .unwrap();
+
+    assert_eq!(
+        incoming_message_pda_account_v1.discriminator,
+        actual_discriminator
+    );
+
+    assert_eq!(
+        incoming_message_pda_account_v1.bump,
+        incoming_message_pda_account_v2.bump
+    );
+    assert_eq!(
+        incoming_message_pda_account_v1.signing_pda_bump,
+        incoming_message_pda_account_v2.signing_pda_bump
+    );
+
+    assert_eq!(
+        incoming_message_pda_account_v1.status.is_approved(),
+        incoming_message_pda_account_v2.status.is_approved()
+    );
+    assert_eq!(
+        incoming_message_pda_account_v1.message_hash,
+        incoming_message_pda_account_v2.message_hash
+    );
+    assert_eq!(
+        incoming_message_pda_account_v1.payload_hash,
+        incoming_message_pda_account_v2.payload_hash
     );
 }
 

@@ -115,6 +115,7 @@ impl MessageStatus {
 pub struct IncomingMessage {
     pub bump: u8,
     pub signing_pda_bump: u8,
+    _pad: [u8; 3],
     pub status: MessageStatus,
     pub message_hash: [u8; 32],
     pub payload_hash: [u8; 32],
