@@ -215,7 +215,7 @@ pub fn transfer_operatorship(
 /// # Errors
 /// - ix data cannot be serialized
 #[allow(clippy::too_many_arguments)]
-pub fn pay_native_for_contract_call_instruction(
+pub fn pay_native_gas_for_contract_call_instruction(
     payer: &Pubkey,
     destination_chain: String,
     destination_address: String,
@@ -344,7 +344,7 @@ pub fn refund_native_fees_instruction(
 /// # Errors
 /// - ix data cannot be serialized
 #[allow(clippy::too_many_arguments)]
-pub fn pay_spl_token_for_contract_call_instruction(
+pub fn pay_spl_gas_for_contract_call_instruction(
     sender: &Pubkey,
     sender_ata: &Pubkey,
     mint: &Pubkey,
