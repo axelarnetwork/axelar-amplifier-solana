@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 use axelar_solana_gateway_v2::{
-    cpi::accounts::CallContract, program::AxelarSolanaGatewayV2, GatewayConfig,
+    cpi::accounts::CallContract, program::AxelarSolanaGatewayV2, CallContractInstruction,
+    GatewayConfig,
 };
 
 #[derive(Accounts)]
@@ -69,13 +70,14 @@ pub fn send_memo_handler(
         signer_seeds,
     );
 
-    axelar_solana_gateway_v2::cpi::call_contract(
-        cpi_ctx,
+    let call_conract_instruction = CallContractInstruction::new(
         destination_chain,
         destination_contract_address,
         payload,
         bump,
-    )?;
+    );
+
+    axelar_solana_gateway_v2::cpi::call_contract(cpi_ctx, call_conract_instruction)?;
 
     msg!("Memo sent successfully!");
     Ok(())

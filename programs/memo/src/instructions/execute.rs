@@ -2,6 +2,7 @@ use anchor_lang::{prelude::*, solana_program};
 use axelar_solana_gateway::seed_prefixes::INCOMING_MESSAGE_SEED;
 use axelar_solana_gateway_v2::{
     cpi::accounts::ValidateMessage, program::AxelarSolanaGatewayV2, IncomingMessage, Message,
+    ValidateMessageInstruction,
 };
 
 #[error_code]
@@ -67,7 +68,8 @@ pub fn execute_handler(
         cpi_accounts,
     );
 
-    axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message.clone())?;
+    let validate_message_instruction = ValidateMessageInstruction::new(message);
+    axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, validate_message_instruction)?;
 
     msg!("Message validated successfully!");
 

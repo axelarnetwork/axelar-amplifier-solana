@@ -45,8 +45,6 @@ fn validate_message_for_tests(
     message: Message,
 ) -> Result<Instruction, ProgramError> {
     let mut res = validate_message(incoming_message_pda, signing_pda, message)?;
-    // needed because we cannot sign with a PDA without creating a real on-chain
-    // program
     res.accounts[1].is_signer = false;
     Ok(res)
 }
