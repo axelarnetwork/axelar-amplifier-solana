@@ -1,7 +1,7 @@
 use anchor_lang::AccountDeserialize;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
-    signature_verification::{SignatureVerification, VerificationSessionAccount},
+    signature_verification::{SignatureVerification, SignatureVerificationSessionData},
     state::VerifierSetTracker,
     GatewayConfig, ID as GATEWAY_PROGRAM_ID,
 };
@@ -93,18 +93,19 @@ fn test_initialize_payload_verification_session() {
         .1
         .clone();
 
-    let actual_verification_account =
-        VerificationSessionAccount::try_deserialize(&mut verification_account.data.as_slice())
-            .unwrap();
+    let actual_verification_account = SignatureVerificationSessionData::try_deserialize(
+        &mut verification_account.data.as_slice(),
+    )
+    .unwrap();
 
-    let expected_verification_account = VerificationSessionAccount {
-        signature_verification: SignatureVerification {
+    let expected_verification_account = SignatureVerificationSessionData::new(
+        SignatureVerification {
             accumulated_threshold: 0,
             signature_slots: [0u8; 32],
             signing_verifier_set_hash: [0u8; 32],
         },
-        bump: 255, // we know the bump in this case since the seed is static
-    };
+        255,
+    );
 
     assert_eq!(expected_verification_account, actual_verification_account);
 }
@@ -231,7 +232,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         .1
         .clone();
 
-    let final_verification_session = VerificationSessionAccount::try_deserialize(
+    let final_verification_session = SignatureVerificationSessionData::try_deserialize(
         &mut final_verification_account.data.as_slice(),
     )
     .unwrap();
@@ -420,7 +421,7 @@ fn test_rotate_signers() {
         .1
         .clone();
 
-    let final_verification_session = VerificationSessionAccount::try_deserialize(
+    let final_verification_session = SignatureVerificationSessionData::try_deserialize(
         &mut final_verification_account.data.as_slice(),
     )
     .unwrap();

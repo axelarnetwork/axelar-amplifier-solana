@@ -1,5 +1,5 @@
 use crate::{
-    signature_verification::{SigningVerifierSetInfo, VerificationSessionAccount},
+    signature_verification::{SignatureVerificationSessionData, SigningVerifierSetInfo},
     GatewayConfig, GatewayError, VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
@@ -20,7 +20,7 @@ pub struct VerifySignature<'info> {
             seeds = [SIGNATURE_VERIFICATION_SEED, verify_signature_instruction.payload_merkle_root.as_ref()],
             bump = verification_session_account.bump
         )]
-    pub verification_session_account: Account<'info, VerificationSessionAccount>,
+    pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
     pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
 }
 
