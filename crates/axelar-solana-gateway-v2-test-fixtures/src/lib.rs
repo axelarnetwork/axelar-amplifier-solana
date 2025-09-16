@@ -4,14 +4,13 @@ use axelar_solana_gateway::seed_prefixes::{
     CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
 };
 use axelar_solana_gateway_v2::{
-    state::config::{InitialVerifierSet, InitializeConfigInstruction},
-    u256::U256,
-    ApproveMessageInstruction, CallContractInstruction,
-    InitializePayloadVerificationSessionInstruction, MerkleisedMessage, PublicKey,
-    RotateSignersInstruction, VerifySignatureInstruction, ID as GATEWAY_PROGRAM_ID,
+    state::config::InitialVerifierSet, u256::U256, ApproveMessageInstruction,
+    CallContractInstruction, InitializePayloadVerificationSessionInstruction, MerkleisedMessage,
+    PublicKey, RotateSignersInstruction, VerifySignatureInstruction, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
-    CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
+    CrossChainId, InitializeConfigInstruction, Message, MessageLeaf, SigningVerifierSetInfo,
+    VerifierSetLeaf,
 };
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};

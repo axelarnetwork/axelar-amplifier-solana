@@ -1,8 +1,11 @@
 use crate::{
-    state::config::GatewayConfig, u256::U256, GatewayError, InitializeConfigInstruction,
-    VerifierSetTracker,
+    state::config::GatewayConfig, u256::U256, GatewayError, InitialVerifierSet, RotationDelaySecs,
+    VerifierSetEpoch, VerifierSetTracker,
 };
-use anchor_lang::prelude::*;
+use anchor_lang::prelude::{
+    borsh::{BorshDeserialize, BorshSerialize},
+    *,
+};
 use axelar_solana_gateway::seed_prefixes::{GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED};
 
 #[derive(Accounts)]
@@ -41,6 +44,40 @@ pub struct InitializeConfigAccounts<'info> {
             bump
         )]
     pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
+pub struct InitializeConfigInstruction {
+    _padding: u8,
+    /// The domain separator, used as an input for hashing payloads.
+    pub domain_separator: [u8; 32],
+    /// initial verifier set
+    pub initial_verifier_set: InitialVerifierSet,
+    /// the minimum delay required between rotations
+    pub minimum_rotation_delay: RotationDelaySecs,
+    /// The gateway operator.
+    pub operator: Pubkey,
+    /// how many n epochs do we consider valid
+    pub previous_verifier_retention: VerifierSetEpoch,
+}
+
+impl InitializeConfigInstruction {
+    pub fn new(
+        domain_separator: [u8; 32],
+        initial_verifier_set: InitialVerifierSet,
+        minimum_rotation_delay: RotationDelaySecs,
+        operator: Pubkey,
+        previous_verifier_retention: VerifierSetEpoch,
+    ) -> Self {
+        Self {
+            _padding: 0,
+            domain_separator,
+            initial_verifier_set,
+            minimum_rotation_delay,
+            operator,
+            previous_verifier_retention,
+        }
+    }
 }
 
 pub fn initialize_config_handler(

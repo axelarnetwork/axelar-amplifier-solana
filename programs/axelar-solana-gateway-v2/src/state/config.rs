@@ -48,40 +48,6 @@ pub struct InitialVerifierSet {
     pub pda: Pubkey,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
-pub struct InitializeConfigInstruction {
-    _padding: u8,
-    /// The domain separator, used as an input for hashing payloads.
-    pub domain_separator: [u8; 32],
-    /// initial verifier set
-    pub initial_verifier_set: InitialVerifierSet,
-    /// the minimum delay required between rotations
-    pub minimum_rotation_delay: RotationDelaySecs,
-    /// The gateway operator.
-    pub operator: Pubkey,
-    /// how many n epochs do we consider valid
-    pub previous_verifier_retention: VerifierSetEpoch,
-}
-
-impl InitializeConfigInstruction {
-    pub fn new(
-        domain_separator: [u8; 32],
-        initial_verifier_set: InitialVerifierSet,
-        minimum_rotation_delay: RotationDelaySecs,
-        operator: Pubkey,
-        previous_verifier_retention: VerifierSetEpoch,
-    ) -> Self {
-        Self {
-            _padding: 0,
-            domain_separator,
-            initial_verifier_set,
-            minimum_rotation_delay,
-            operator,
-            previous_verifier_retention,
-        }
-    }
-}
-
 /// Ever-incrementing counter for keeping track of the sequence of signer sets
 pub type Epoch = U256;
 
@@ -90,6 +56,8 @@ pub type Epoch = U256;
 pub struct VerifierSetTracker {
     /// The canonical bump for this account.
     pub bump: u8,
+    /// Padding for the bump
+    pub _padding: [u8; 7],
     /// The epoch associated with this verifier set
     pub epoch: Epoch,
     /// The verifier set hash
