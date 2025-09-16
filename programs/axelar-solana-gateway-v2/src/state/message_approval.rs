@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
+use udigest::{encoding::EncodeValue, Digestable};
 
-#[derive(Clone, PartialEq, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
+#[derive(Clone, PartialEq, Eq, Digestable, Debug, AnchorDeserialize, AnchorSerialize)]
 pub struct MessageLeaf {
     /// The message contained within this leaf node.
     pub message: Message,
@@ -20,12 +21,18 @@ pub struct MessageLeaf {
     pub signing_verifier_set: [u8; 32],
 }
 
+pub(crate) struct VecBuf(pub(crate) Vec<u8>);
+impl udigest::encoding::Buffer for VecBuf {
+    fn write(&mut self, bytes: &[u8]) {
+        self.0.extend_from_slice(bytes);
+    }
+}
+
 impl MessageLeaf {
-    // placeholder hash function
     pub fn hash(&self) -> [u8; 32] {
-        // Use borsh serialization (matches how Anchor serializes data)
-        let data = self.try_to_vec().expect("Serialization should not fail");
-        solana_program::keccak::hash(&data).to_bytes()
+        let mut buffer = VecBuf(vec![]);
+        self.unambiguously_encode(EncodeValue::new(&mut buffer));
+        solana_program::keccak::hash(&buffer.0).to_bytes()
     }
 }
 
@@ -41,7 +48,7 @@ pub struct MerkleisedMessage {
 
 /// Identifies a specific blockchain and its unique identifier within that
 /// chain.
-#[derive(Clone, PartialEq, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
+#[derive(Clone, PartialEq, Eq, Digestable, Debug, AnchorDeserialize, AnchorSerialize)]
 pub struct CrossChainId {
     /// The name or identifier of the source blockchain.
     pub chain: String,
@@ -51,7 +58,7 @@ pub struct CrossChainId {
 }
 
 /// Represents a message intended for cross-chain communication.
-#[derive(Clone, PartialEq, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
+#[derive(Clone, PartialEq, Digestable, Eq, Debug, AnchorDeserialize, AnchorSerialize)]
 pub struct Message {
     /// The cross-chain identifier of the message
     pub cc_id: CrossChainId,
@@ -74,7 +81,7 @@ impl Message {
     pub fn hash(&self) -> [u8; 32] {
         // Use borsh serialization (matches how Anchor serializes data)
         let data = self.try_to_vec().expect("Serialization should not fail");
-        solana_program::keccak::hash(&data).to_bytes()
+        solana_program::keccak::hashv(&[&data]).to_bytes()
     }
 
     pub fn command_id(&self) -> [u8; 32] {

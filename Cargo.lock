@@ -1169,6 +1169,7 @@ dependencies = [
  "solana-program",
  "solana-sdk",
  "tokio",
+ "udigest",
 ]
 
 [[package]]
