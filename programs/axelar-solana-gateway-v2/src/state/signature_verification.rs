@@ -184,11 +184,9 @@ pub struct VerifierSetLeaf {
 impl VerifierSetLeaf {
     // placeholder hash function
     pub fn hash(&self) -> [u8; 32] {
-        use solana_program::keccak;
-
         // Use borsh serialization (matches how Anchor serializes data)
         let data = self.try_to_vec().expect("Serialization should not fail");
-        keccak::hash(&data).to_bytes()
+        solana_program::keccak::hashv(&[&data]).to_bytes()
     }
 
     pub fn new(
