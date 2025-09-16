@@ -1,5 +1,5 @@
 use crate::{
-    u256::U256, GatewayConfig, GatewayError, SignersRotatedEvent, VerificationSessionAccount,
+    u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData, SignersRotatedEvent,
     VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
@@ -22,7 +22,7 @@ pub struct RotateSigners<'info> {
             .signing_verifier_set_hash).as_ref()],
             bump = verification_session_account.bump
         )]
-    pub verification_session_account: Account<'info, VerificationSessionAccount>,
+    pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
     #[account(
             seeds = [
                 VERIFIER_SET_TRACKER_SEED,

@@ -32,9 +32,13 @@ use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
     ApproveMessageInstruction, GatewayConfig, InitializeConfigInstruction,
     InitializePayloadVerificationSessionInstruction, RotateSignersInstruction,
-    ValidateMessageInstruction, VerifierSetTracker, VerifySignatureInstruction,
+    SignatureVerificationSessionData, ValidateMessageInstruction, VerifierSetTracker,
+    VerifySignatureInstruction,
 };
-use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, mock_setup_test};
+use axelar_solana_gateway_v2_test_fixtures::{
+    initialize_gateway, initialize_payload_verification_session_with_root, mock_setup_test,
+    setup_message_merkle_tree, setup_test_with_real_signers,
+};
 use solana_program::hash;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::pubkey::Pubkey;
@@ -125,6 +129,72 @@ fn test_verifier_set_tracker_discriminator() {
         .try_into()
         .unwrap();
     assert_eq!(v1_hash_bytes, expected_hash);
+}
+
+#[test]
+fn test_verification_session_tracker_discriminator() {
+    // Step 1: Setup gateway with real signers
+    let (setup, _, _, _, _) = setup_test_with_real_signers();
+
+    // Step 2: Initialize gateway
+    let init_result = initialize_gateway(&setup);
+
+    // Step 3: Create messages and payload merkle root
+    let verifier_set_merkle_root = setup.verifier_set_hash;
+    let (_, _, _, payload_merkle_root) =
+        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+    // Step 4: Initialize payload verification session
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(
+            &setup,
+            &init_result,
+            payload_merkle_root,
+        );
+
+    let verification_session_account = session_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verification_session_account_v2 = SignatureVerificationSessionData::try_deserialize(
+        &mut verification_session_account.data.as_slice(),
+    )
+    .unwrap();
+
+    let expected_discriminator =
+        &hash::hash(b"account:SignatureVerificationSessionData").to_bytes()[..8];
+    let actual_discriminator = &verification_session_account.data.as_slice()[..8];
+    assert_eq!(actual_discriminator, expected_discriminator);
+
+    let verification_session_account_v1 =
+        axelar_solana_gateway::state::signature_verification_pda::SignatureVerificationSessionData::read(
+            &verification_session_account.data,
+        )
+        .unwrap();
+
+    assert_eq!(
+        verification_session_account_v1.discriminator,
+        actual_discriminator
+    );
+
+    assert_eq!(
+        verification_session_account_v1.bump,
+        verification_session_account_v2.bump
+    );
+
+    let sig_v1 = &verification_session_account_v1.signature_verification;
+    let sig_v2 = &verification_session_account_v2.signature_verification;
+
+    assert_eq!(sig_v1.accumulated_threshold, sig_v2.accumulated_threshold);
+    assert_eq!(sig_v1.signature_slots, sig_v2.signature_slots);
+    assert_eq!(
+        sig_v1.signing_verifier_set_hash,
+        sig_v2.signing_verifier_set_hash
+    );
 }
 
 #[tokio::test]

@@ -18,14 +18,39 @@ impl SignatureVerification {
     }
 }
 
+// #[derive(Zeroable, Pod, Copy, Clone, Default, PartialEq, Eq, Debug)]
+// pub struct SignatureVerificationSessionData {
+//     /// Anchor compatible discriminator
+//     pub discriminator: [u8; 8],
+//     /// Padding to align SignatureVerification to 16-byte boundary
+//     _discriminator_pad: [u8; 8],
+//     /// Signature verification session
+//     pub signature_verification: SignatureVerification,
+//     /// Seed bump for this account's PDA
+//     pub bump: u8,
+//     /// Padding for memory alignment.
+//     _pad: [u8; 15],
+// }
+
 #[account]
 #[derive(Debug, PartialEq, Eq)]
-pub struct VerificationSessionAccount {
+pub struct SignatureVerificationSessionData {
+    pub _discriminator_pad: [u8; 8],
     pub signature_verification: SignatureVerification,
     pub bump: u8,
+    pub _pad: [u8; 15],
 }
 
-impl VerificationSessionAccount {
+impl SignatureVerificationSessionData {
+    pub fn new(signature_verification: SignatureVerification, bump: u8) -> Self {
+        SignatureVerificationSessionData {
+            _discriminator_pad: [0u8; 8],
+            signature_verification,
+            bump,
+            _pad: [0u8; 15],
+        }
+    }
+
     pub fn process_signature(
         &mut self,
         payload_merkle_root: [u8; 32],
