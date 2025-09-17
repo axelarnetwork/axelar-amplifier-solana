@@ -49,6 +49,7 @@ udigest.workspace = true
 [dev-dependencies]
 axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
 axelar-solana-gateway-test-fixtures = {path = "../../crates/axelar-solana-gateway-test-fixtures" }
+discriminator-utils = { path = "../../crates/discriminator-utils" }
 borsh.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true

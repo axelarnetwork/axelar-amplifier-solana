@@ -24,11 +24,11 @@ mod pda_compatibility {
         GatewayConfig, IncomingMessage, SignatureVerificationSessionData, VerifierSetTracker,
     };
     use axelar_solana_gateway_v2_test_fixtures::{
-        approve_message_helper, compute_account_discriminator, create_verifier_info,
-        initialize_gateway, initialize_payload_verification_session_with_root, mock_setup_test,
+        approve_message_helper, create_verifier_info, initialize_gateway,
+        initialize_payload_verification_session_with_root, mock_setup_test,
         setup_message_merkle_tree, setup_test_with_real_signers, verify_signature_helper,
     };
-    use solana_program::hash;
+    use discriminator_utils::compute_account_discriminator;
 
     #[test]
     fn test_config_discriminator() {
@@ -361,7 +361,7 @@ mod instruction_compatibility {
         InitializePayloadVerificationSessionInstruction, RotateSignersInstruction,
         ValidateMessageInstruction, VerifySignatureInstruction,
     };
-    use axelar_solana_gateway_v2_test_fixtures::compute_instruction_discriminator;
+    use discriminator_utils::compute_instruction_discriminator;
     use solana_sdk::pubkey::Pubkey;
     use solana_sdk::signature::Signer;
 

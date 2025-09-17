@@ -4,7 +4,7 @@ mod instruction_discriminators {
         PAY_NATIVE_FOR_CONTRACT_CALL, PAY_SPL_FOR_CONTRACT_CALL, REFUND_NATIVE_FEES,
         REFUND_SPL_FEES, TRANSFER_OPERATORSHIP,
     };
-    use axelar_solana_gateway_v2_test_fixtures::compute_instruction_discriminator;
+    use discriminator_utils::compute_instruction_discriminator;
 
     #[test]
     fn test_init_config_discriminator() {
@@ -90,7 +90,7 @@ mod instruction_discriminators {
 
 mod pda_dicriminators {
     use axelar_solana_gas_service::discriminators::CONFIG_PDA_DISCRIMINATOR;
-    use axelar_solana_gateway_v2_test_fixtures::compute_account_discriminator;
+    use discriminator_utils::compute_account_discriminator;
 
     #[test]
     fn test_config_discriminator() {

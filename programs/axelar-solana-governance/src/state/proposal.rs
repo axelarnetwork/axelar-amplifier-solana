@@ -7,7 +7,7 @@
 //! fine, but we should at least encapsulate such logic in a function
 //! so the processor can use it from this module.
 
-use crate::discriminators::EXECUTE_PROPOSAL_DISCRIMINATOR;
+use crate::discriminators::EXECUTABLE_PROPOSAL_PDA_DISCRIMINATOR;
 use crate::sol_types::SolanaAccountMetadata;
 use crate::{seed_prefixes, ID};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -50,7 +50,7 @@ impl ExecutableProposal {
     #[must_use]
     pub const fn new(eta: u64, bump: u8, managed_bump: u8) -> Self {
         Self {
-            discriminator: EXECUTE_PROPOSAL_DISCRIMINATOR,
+            discriminator: EXECUTABLE_PROPOSAL_PDA_DISCRIMINATOR,
             eta,
             bump,
             managed_bump,
