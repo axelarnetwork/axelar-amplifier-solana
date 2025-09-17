@@ -150,6 +150,7 @@ pub mod builder {
     use axelar_solana_encoding::types::messages::Message;
     use axelar_solana_gateway::state::incoming_message::command_id;
     use borsh::to_vec;
+    use discriminator_utils::prepend_discriminator;
     use governance_gmp::alloy_primitives::Uint;
     use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
     use program_utils::{checked_from_u256_le_bytes_to_u64, from_u64_to_u256_le_bytes};
@@ -161,6 +162,10 @@ pub mod builder {
     use solana_program::{bpf_loader_upgradeable, msg, system_program};
 
     use super::GovernanceInstruction;
+    use crate::discriminators::{
+        EXECUTE_OPERATOR_PROPOSAL, EXECUTE_PROPOSAL, INITIALIZE_CONFIG, PROCESS_GMP,
+        TRANSFER_OPERATORSHIP, UPDATE_CONFIG, WITHDRAW_TOKENS,
+    };
     use crate::processor::{
         gmp, ApproveOperatorProposalMeta, CancelOperatorApprovalMeta, CancelTimeLockProposalMeta,
         ExecuteOperatorProposalMeta, ExecuteProposalMeta, ScheduleTimeLockProposalMeta,
@@ -503,16 +508,7 @@ pub mod builder {
             })
             .unwrap();
 
-            let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()
-                [..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(TRANSFER_OPERATORSHIP, &instruction_data);
 
             Self::new().with_proposal_data(crate::ID, 0, eta, None, &accounts, data)
         }
@@ -542,15 +538,7 @@ pub mod builder {
             let instruction_data =
                 to_vec(&GovernanceInstruction::WithdrawTokens { amount }).unwrap();
 
-            let discriminator: [u8; 8] = hash::hash(b"global:withdraw_tokens").to_bytes()[..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(WITHDRAW_TOKENS, &instruction_data);
 
             Self::new().with_proposal_data(crate::ID, 0, eta, None, &target_accounts, data)
         }
@@ -904,15 +892,7 @@ pub mod builder {
             let instruction_data =
                 to_vec(&gov_instruction).expect("Unable to encode GovernanceInstruction");
 
-            let discriminator: [u8; 8] = hash::hash(b"global:execute_proposal").to_bytes()[..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(EXECUTE_PROPOSAL, &instruction_data);
 
             Instruction {
                 program_id: crate::id(),
@@ -935,19 +915,10 @@ pub mod builder {
                 ExecuteProposalData::new(target_address.to_bytes(), call_data, native_value),
             );
 
-            let discriminator: [u8; 8] = hash::hash(b"global:execute_operator_proposal").to_bytes()
-                [..8]
-                .try_into()
-                .unwrap();
-
             let instruction_data =
                 to_vec(&gov_instruction).expect("Unable to encode GovernanceInstruction");
 
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(EXECUTE_OPERATOR_PROPOSAL, &instruction_data);
 
             Instruction {
                 program_id: crate::id(),
@@ -967,15 +938,7 @@ pub mod builder {
             let instruction_data = to_vec(&GovernanceInstruction::InitializeConfig(config))
                 .expect("Unable to encode GovernanceInstruction");
 
-            let discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(INITIALIZE_CONFIG, &instruction_data);
 
             Instruction {
                 program_id: crate::id(),
@@ -995,15 +958,7 @@ pub mod builder {
             let instruction_data = to_vec(&GovernanceInstruction::UpdateConfig(config_update))
                 .expect("Unable to encode GovernanceInstruction");
 
-            let discriminator: [u8; 8] = hash::hash(b"global:update_config").to_bytes()[..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(UPDATE_CONFIG, &instruction_data);
 
             Instruction {
                 program_id: crate::id(),
@@ -1025,16 +980,7 @@ pub mod builder {
             })
             .expect("Unable to encode GovernanceInstruction");
 
-            let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()
-                [..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(TRANSFER_OPERATORSHIP, &instruction_data);
 
             Instruction {
                 program_id: crate::id(),
@@ -1072,15 +1018,7 @@ pub mod builder {
             };
             let instruction_data = to_vec(&gov_instruction).unwrap();
 
-            let discriminator: [u8; 8] = hash::hash(b"global:process_gmp").to_bytes()[..8]
-                .try_into()
-                .unwrap();
-
-            let data: Vec<u8> = discriminator
-                .iter()
-                .chain(instruction_data.iter())
-                .cloned()
-                .collect();
+            let data = prepend_discriminator(PROCESS_GMP, &instruction_data);
 
             GmpCallData::new(
                 Instruction {

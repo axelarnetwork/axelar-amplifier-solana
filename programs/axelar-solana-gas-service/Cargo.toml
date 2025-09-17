@@ -18,7 +18,7 @@ borsh.workspace = true
 program-utils.workspace = true
 
 [dev-dependencies]
-axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
+discriminator-utils = { path = "../../crates/discriminator-utils" }
 solana-sdk.workspace = true
 solana-program-test.workspace = true
 axelar-solana-gateway-test-fixtures.workspace = true

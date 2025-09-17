@@ -1,6 +1,6 @@
 //! State related structs and operations for the governance contract.
 
-use crate::discriminators::GOVERNANCE_CONFIG_DISCRIMINATOR;
+use crate::discriminators::GOVERNANCE_CONFIG_PDA_DISCRIMINATOR;
 use crate::seed_prefixes;
 use borsh::{BorshDeserialize, BorshSerialize};
 use core::any::type_name;
@@ -58,7 +58,7 @@ impl GovernanceConfig {
         operator: Address,
     ) -> Self {
         Self {
-            discriminator: GOVERNANCE_CONFIG_DISCRIMINATOR,
+            discriminator: GOVERNANCE_CONFIG_PDA_DISCRIMINATOR,
             bump: 0, // This will be set by the program
             chain_hash,
             address_hash,

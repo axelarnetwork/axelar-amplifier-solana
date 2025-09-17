@@ -5,7 +5,7 @@ mod instruction_discriminators {
         ROTATE_SIGNERS, TRANSFER_OPERATORSHIP, VALIDATE_MESSAGE, VERIFY_SIGNATURE,
         WRITE_MESSAGE_PAYLOAD,
     };
-    use axelar_solana_gateway_v2_test_fixtures::compute_instruction_discriminator;
+    use discriminator_utils::compute_instruction_discriminator;
 
     #[test]
     fn test_approve_message_discriminator() {
@@ -110,7 +110,7 @@ mod pda_discriminators {
         CONFIG_PDA_DISCRIMINATOR, INCOMING_MESSAGE_PDA_DISCRIMINATOR,
         VERIFICATION_SESSION_ACCOUNT_PDA_DISCRIMINATOR, VERIFIER_SET_TRACKER_PDA_DISCRIMINATOR,
     };
-    use axelar_solana_gateway_v2_test_fixtures::compute_account_discriminator;
+    use discriminator_utils::compute_account_discriminator;
 
     #[test]
     fn test_config_pda_discriminator() {
