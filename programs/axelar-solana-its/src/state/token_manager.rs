@@ -8,7 +8,7 @@ use program_utils::pda::BorshPda;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
-use crate::discriminators::TOKEN_MANAGER_DISCRIMINATOR;
+use crate::discriminators::TOKEN_MANAGER_PDA_DISCRIMINATOR;
 use crate::state::flow_limit::FlowState;
 
 /// There are different types of token managers available for developers to
@@ -169,7 +169,7 @@ impl TokenManager {
         bump: u8,
     ) -> Self {
         Self {
-            discriminator: TOKEN_MANAGER_DISCRIMINATOR,
+            discriminator: TOKEN_MANAGER_PDA_DISCRIMINATOR,
             ty,
             token_id,
             token_address,

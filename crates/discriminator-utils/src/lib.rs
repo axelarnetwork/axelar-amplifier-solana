@@ -1,4 +1,4 @@
-use solana_sdk::hash;
+use solana_program::hash;
 
 pub fn compute_instruction_discriminator(name: &str) -> [u8; 8] {
     hash::hash(format!("global:{name}").as_bytes()).to_bytes()[..8]

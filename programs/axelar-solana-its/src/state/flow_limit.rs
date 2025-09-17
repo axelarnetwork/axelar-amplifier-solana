@@ -11,7 +11,7 @@ use solana_program::msg;
 use solana_program::program_error::ProgramError;
 use solana_program::sysvar::Sysvar;
 
-use crate::discriminators::FLOW_STATE_DISCRIMINATOR;
+use crate::discriminators::FLOW_STATE_PDA_DISCRIMINATOR;
 
 const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60);
 
@@ -29,7 +29,7 @@ pub struct FlowState {
 impl FlowState {
     pub(crate) const fn new(flow_limit: u64, epoch: u64) -> Self {
         Self {
-            discriminator: FLOW_STATE_DISCRIMINATOR,
+            discriminator: FLOW_STATE_PDA_DISCRIMINATOR,
             flow_in: 0,
             flow_out: 0,
             epoch,
