@@ -784,6 +784,7 @@ dependencies = [
  "axelar-message-primitives",
  "axelar-solana-encoding",
  "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "bitvec",
  "borsh 1.5.7",

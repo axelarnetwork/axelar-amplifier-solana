@@ -24,8 +24,8 @@ mod pda_compatibility {
         GatewayConfig, IncomingMessage, SignatureVerificationSessionData, VerifierSetTracker,
     };
     use axelar_solana_gateway_v2_test_fixtures::{
-        approve_message_helper, create_verifier_info, initialize_gateway,
-        initialize_payload_verification_session_with_root, mock_setup_test,
+        approve_message_helper, compute_account_discriminator, create_verifier_info,
+        initialize_gateway, initialize_payload_verification_session_with_root, mock_setup_test,
         setup_message_merkle_tree, setup_test_with_real_signers, verify_signature_helper,
     };
     use solana_program::hash;
@@ -47,7 +47,7 @@ mod pda_compatibility {
         let _ =
             GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
 
-        let expected_discriminator = &hash::hash(b"account:GatewayConfig").to_bytes()[..8];
+        let expected_discriminator = compute_account_discriminator("GatewayConfig");
         let actual_discriminator = &updated_gateway_account.data.as_slice()[..8];
         assert_eq!(actual_discriminator, expected_discriminator);
 
@@ -79,7 +79,7 @@ mod pda_compatibility {
             VerifierSetTracker::try_deserialize(&mut verifier_set_tracker_account.data.as_slice())
                 .unwrap();
 
-        let expected_discriminator = &hash::hash(b"account:VerifierSetTracker").to_bytes()[..8];
+        let expected_discriminator = compute_account_discriminator("VerifierSetTracker");
         let actual_discriminator = &verifier_set_tracker_account.data.as_slice()[..8];
         assert_eq!(actual_discriminator, expected_discriminator);
 
@@ -144,7 +144,7 @@ mod pda_compatibility {
         .unwrap();
 
         let expected_discriminator =
-            &hash::hash(b"account:SignatureVerificationSessionData").to_bytes()[..8];
+            compute_account_discriminator("SignatureVerificationSessionData");
         let actual_discriminator = &verification_session_account.data.as_slice()[..8];
         assert_eq!(actual_discriminator, expected_discriminator);
 
@@ -299,7 +299,7 @@ mod pda_compatibility {
             IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice())
                 .unwrap();
 
-        let expected_discriminator = &hash::hash(b"account:IncomingMessage").to_bytes()[..8];
+        let expected_discriminator = compute_account_discriminator("IncomingMessage");
         let actual_discriminator = &incoming_message_account.data.as_slice()[..8];
         assert_eq!(actual_discriminator, expected_discriminator);
 

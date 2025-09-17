@@ -4,7 +4,7 @@ use axelar_message_primitives::U256;
 use bytemuck::{Pod, Zeroable};
 use program_utils::pda::BytemuckedPda;
 
-use crate::discriminators::VERIFIER_SET_TRACKER_DISCRIMINATOR;
+use crate::discriminators::VERIFIER_SET_TRACKER_PDA_DISCRIMINATOR;
 
 /// Ever-incrementing counter for keeping track of the sequence of signer sets
 pub type Epoch = U256;
@@ -35,7 +35,7 @@ impl VerifierSetTracker {
     #[must_use]
     pub const fn new(bump: u8, epoch: Epoch, verifier_set_hash: VerifierSetHash) -> Self {
         Self {
-            discriminator: VERIFIER_SET_TRACKER_DISCRIMINATOR,
+            discriminator: VERIFIER_SET_TRACKER_PDA_DISCRIMINATOR,
             bump,
             _padding: [0; 7],
             epoch,

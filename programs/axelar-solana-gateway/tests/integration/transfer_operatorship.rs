@@ -1,3 +1,4 @@
+use axelar_solana_gateway::discriminators::TRANSFER_OPERATORSHIP;
 use axelar_solana_gateway::error::GatewayError;
 use axelar_solana_gateway::instructions::GatewayInstruction;
 use axelar_solana_gateway::processor::{GatewayEvent, OperatorshipTransferredEvent};
@@ -266,15 +267,11 @@ async fn fail_if_invalid_program_id() {
 
     let instruction_data = borsh::to_vec(&GatewayInstruction::TransferOperatorship).unwrap();
 
-    let discriminator: [u8; 8] = hash::hash(b"global:tranafer_operatorship").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        TRANSFER_OPERATORSHIP.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     let ix = Instruction {
         program_id: axelar_solana_gateway::id(),
@@ -339,15 +336,11 @@ async fn fail_if_stranger_dose_not_sing_anything() {
 
     let instruction_data = borsh::to_vec(&GatewayInstruction::TransferOperatorship).unwrap();
 
-    let discriminator: [u8; 8] = hash::hash(b"global:tranafer_operatorship").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        TRANSFER_OPERATORSHIP.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     let ix = Instruction {
         program_id: axelar_solana_gateway::id(),

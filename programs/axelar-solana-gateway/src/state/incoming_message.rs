@@ -3,7 +3,7 @@
 use bytemuck::{Pod, Zeroable};
 use program_utils::pda::BytemuckedPda;
 
-use crate::discriminators::INCOMING_MESSAGE_DISCRIMINATOR;
+use crate::discriminators::INCOMING_MESSAGE_PDA_DISCRIMINATOR;
 
 /// Data for the incoming message (from Axelar to Solana) PDA.
 #[repr(C)]
@@ -37,7 +37,7 @@ impl IncomingMessage {
         payload_hash: [u8; 32],
     ) -> Self {
         Self {
-            discriminator: INCOMING_MESSAGE_DISCRIMINATOR,
+            discriminator: INCOMING_MESSAGE_PDA_DISCRIMINATOR,
             bump,
             signing_pda_bump,
             _pad: Default::default(),
