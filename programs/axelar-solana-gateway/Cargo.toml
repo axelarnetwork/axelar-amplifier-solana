@@ -33,6 +33,7 @@ mainnet = [
 default = ["devnet-amplifier"]
 
 [dependencies]
+discriminator-utils = { path = "../../crates/discriminator-utils" }
 axelar-message-primitives.workspace = true
 axelar-solana-encoding = { workspace = true, features = ["solana"] }
 bincode.workspace = true
