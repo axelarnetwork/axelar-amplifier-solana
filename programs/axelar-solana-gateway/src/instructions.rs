@@ -12,6 +12,12 @@ use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
+use crate::discriminators::{
+    APPROVE_MESSAGE, CALL_CONTRACT, CLOSE_MESSAGE_PAYLOAD, COMMIT_MESSAGE_PAYLOAD,
+    INITIALIZE_CONFIG, INITIALIZE_MESSAGE_PAYLOAD, INITIALIZE_PAYLOAD_VERIFICATION_SESSION,
+    ROTATE_SIGNERS, TRANSFER_OPERATORSHIP, VALIDATE_MESSAGE, VERIFY_SIGNATURE,
+    WRITE_MESSAGE_PAYLOAD,
+};
 use crate::state::config::{RotationDelaySecs, VerifierSetEpoch};
 use crate::state::verifier_set_tracker::VerifierSetHash;
 
@@ -252,15 +258,7 @@ pub fn approve_message(
         payload_merkle_root,
     })?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:approve_message").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [APPROVE_MESSAGE.as_slice(), instruction_data.as_slice()].concat();
 
     let accounts = vec![
         AccountMeta::new_readonly(gateway_root_pda, false),
@@ -296,15 +294,7 @@ pub fn rotate_signers(
         new_verifier_set_merkle_root,
     })?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:rotate_signers").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [ROTATE_SIGNERS.as_slice(), instruction_data.as_slice()].concat();
 
     let mut accounts = vec![
         AccountMeta::new(gateway_root_pda, false),
@@ -357,15 +347,7 @@ pub fn call_contract(
         AccountMeta::new_readonly(gateway_root_pda, false),
     ];
 
-    let discriminator: [u8; 8] = hash::hash(b"global:call_contract").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [CALL_CONTRACT.as_slice(), instruction_data.as_slice()].concat();
 
     Ok(Instruction {
         program_id: gateway_program_id,
@@ -402,10 +384,6 @@ pub fn initialize_config(
         AccountMeta::new(initial_verifier_set.pda, false),
     ];
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
     let instruction_data = to_vec(&GatewayInstruction::InitializeConfig(InitializeConfig {
         domain_separator,
         initial_verifier_set,
@@ -414,11 +392,7 @@ pub fn initialize_config(
         previous_verifier_retention,
     }))?;
 
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [INITIALIZE_CONFIG.as_slice(), instruction_data.as_slice()].concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -451,16 +425,11 @@ pub fn initialize_payload_verification_session(
         payload_merkle_root,
     })?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        INITIALIZE_PAYLOAD_VERIFICATION_SESSION.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -495,15 +464,7 @@ pub fn verify_signature(
         verifier_info,
     })?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:verify_signature").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [VERIFY_SIGNATURE.as_slice(), instruction_data.as_slice()].concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -527,17 +488,9 @@ pub fn validate_message(
         AccountMeta::new_readonly(*signing_pda, true),
     ];
 
-    let discriminator: [u8; 8] = hash::hash(b"global:validate_message").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
     let instruction_data = borsh::to_vec(&GatewayInstruction::ValidateMessage { message })?;
 
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [VALIDATE_MESSAGE.as_slice(), instruction_data.as_slice()].concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -573,17 +526,13 @@ pub fn initialize_message_payload(
         command_id,
     };
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_message_payload").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
     let instruction_data = borsh::to_vec(&instruction)?;
 
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        INITIALIZE_MESSAGE_PAYLOAD.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -618,17 +567,13 @@ pub fn write_message_payload(
         command_id,
     };
 
-    let discriminator: [u8; 8] = hash::hash(b"global:write_message_payload").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
     let instruction_data = borsh::to_vec(&instruction)?;
 
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        WRITE_MESSAGE_PAYLOAD.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -656,19 +601,14 @@ pub fn commit_message_payload(
         AccountMeta::new_readonly(incoming_message_pda, false),
         AccountMeta::new(message_payload_pda, false),
     ];
-
-    let discriminator: [u8; 8] = hash::hash(b"global:commit_message_payload").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
     let instruction = GatewayInstruction::CommitMessagePayload { command_id };
     let instruction_data = borsh::to_vec(&instruction)?;
 
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        COMMIT_MESSAGE_PAYLOAD.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -696,18 +636,13 @@ pub fn close_message_payload(
         AccountMeta::new(message_payload_pda, false),
     ];
     let instruction = GatewayInstruction::CloseMessagePayload { command_id };
-
-    let discriminator: [u8; 8] = hash::hash(b"global:close_message_payload").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
     let instruction_data = borsh::to_vec(&instruction)?;
 
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        CLOSE_MESSAGE_PAYLOAD.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::id(),
@@ -738,15 +673,11 @@ pub fn transfer_operatorship(
 
     let instruction_data = borsh::to_vec(&GatewayInstruction::TransferOperatorship)?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        TRANSFER_OPERATORSHIP.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::id(),

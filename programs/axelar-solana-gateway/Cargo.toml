@@ -54,6 +54,7 @@ thiserror.workspace = true
 alloy-sol-types.workspace = true
 
 [dev-dependencies]
+axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
 hex.workspace = true
 lazy_static.workspace = true
 sha3.workspace = true
