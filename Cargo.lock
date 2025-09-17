@@ -1233,6 +1233,7 @@ dependencies = [
  "axelar-solana-memo-program",
  "bitflags 2.9.4",
  "borsh 1.5.7",
+ "discriminator-utils",
  "event-utils",
  "evm-contracts-test-suite",
  "interchain-token-transfer-gmp",
@@ -2645,7 +2646,7 @@ dependencies = [
 name = "discriminator-utils"
 version = "0.1.0"
 dependencies = [
- "solana-sdk",
+ "solana-program",
 ]
 
 [[package]]

@@ -1,4 +1,5 @@
 use borsh::BorshDeserialize;
+use discriminator_utils::prepend_discriminator;
 use solana_program::{hash, instruction::AccountMeta};
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
@@ -11,6 +12,7 @@ use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::{assert_msg_present_in_logs, base::FindLog};
 use axelar_solana_its::{
+    discriminators::TRANSFER_INTERCHAIN_TOKEN_MINTERSHIP,
     instruction::InterchainTokenServiceInstruction, state::token_manager::TokenManager, Roles,
 };
 use role_management::state::UserRoles;
@@ -1197,16 +1199,7 @@ async fn test_prevent_privilege_escalation_through_different_token(ctx: &mut Its
             borsh::to_vec(&InterchainTokenServiceInstruction::TransferInterchainTokenMintership)
                 .unwrap();
 
-        let discriminator: [u8; 8] = hash::hash(b"global:transfer_interchain_token_mintership")
-            .to_bytes()[..8]
-            .try_into()
-            .unwrap();
-
-        let data: Vec<u8> = discriminator
-            .iter()
-            .chain(instruction_data.iter())
-            .cloned()
-            .collect();
+        let data = prepend_discriminator(TRANSFER_INTERCHAIN_TOKEN_MINTERSHIP, &instruction_data);
 
         // Create a custom instruction mimicking transfer_mintership instruction
         // with mismatched resource and role accounts

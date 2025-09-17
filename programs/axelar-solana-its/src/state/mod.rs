@@ -1,7 +1,7 @@
 //! State module contains data structures that keep state within the ITS
 //! program.
 
-use crate::discriminators::INTERCHAIN_TOKEN_SERVICE_DISCRIMINATOR;
+use crate::discriminators::INTERCHAIN_TOKEN_SERVICE_PDA_DISCRIMINATOR;
 use borsh::{BorshDeserialize, BorshSerialize};
 use program_utils::pda::BorshPda;
 use std::collections::HashSet;
@@ -35,7 +35,7 @@ impl InterchainTokenService {
     #[must_use]
     pub fn new(bump: u8, chain_name: String, its_hub_address: String) -> Self {
         Self {
-            discriminator: INTERCHAIN_TOKEN_SERVICE_DISCRIMINATOR,
+            discriminator: INTERCHAIN_TOKEN_SERVICE_PDA_DISCRIMINATOR,
             its_hub_address,
             chain_name,
             paused: false,

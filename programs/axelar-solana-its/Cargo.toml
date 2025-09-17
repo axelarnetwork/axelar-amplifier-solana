@@ -69,6 +69,7 @@ spl-token-2022 = { workspace = true, features = [
 spl-token-metadata-interface.workspace = true
 typed-builder.workspace = true
 event-utils.workspace = true
+discriminator-utils = { path = "../../crates/discriminator-utils" }
 
 [dev-dependencies]
 anyhow.workspace = true
@@ -79,3 +80,4 @@ rstest.workspace = true
 solana-program-test.workspace = true
 solana-sdk.workspace = true
 test-context.workspace = true
+discriminator-utils = { path = "../../crates/discriminator-utils" }

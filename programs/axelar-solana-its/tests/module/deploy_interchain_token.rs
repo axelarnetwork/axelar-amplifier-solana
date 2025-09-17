@@ -1,6 +1,8 @@
 use anyhow::anyhow;
+use axelar_solana_its::discriminators::APPROVE_DEPLOY_REMOTE_INTERCHAIN_TOKEN;
 use axelar_solana_its::instruction::InterchainTokenServiceInstruction;
 use borsh::to_vec;
+use discriminator_utils::prepend_discriminator;
 use event_utils::Event as _;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::{hash, system_program};
@@ -514,16 +516,7 @@ async fn test_prevent_deploy_approval_created_by_anyone(
         },
     )?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:approve_deploy_remote_interchain_token")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = prepend_discriminator(APPROVE_DEPLOY_REMOTE_INTERCHAIN_TOKEN, &instruction_data);
 
     let approve_deploy_b_ix = Instruction {
         program_id: axelar_solana_its::ID,
