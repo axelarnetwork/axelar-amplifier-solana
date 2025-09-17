@@ -3,6 +3,7 @@
 //! This module provides constructors and definitions for all instructions that can be issued to the
 
 use borsh::{BorshDeserialize, BorshSerialize};
+use discriminator_utils::prepend_discriminator;
 use solana_program::hash;
 use solana_program::program_error::ProgramError;
 use solana_program::{
@@ -178,7 +179,7 @@ pub enum PayWithNativeToken {
 pub fn init_config(payer: &Pubkey, operator: &Pubkey) -> Result<Instruction, ProgramError> {
     let instruction_data = borsh::to_vec(&GasServiceInstruction::Initialize)?;
 
-    let data = [INIT_CONFIG.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(INIT_CONFIG, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -213,11 +214,7 @@ pub fn transfer_operatorship(
         AccountMeta::new(config_pda, false),
     ];
 
-    let data = [
-        TRANSFER_OPERATORSHIP.as_slice(),
-        instruction_data.as_slice(),
-    ]
-    .concat();
+    let data = prepend_discriminator(TRANSFER_OPERATORSHIP, &instruction_data);
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -251,11 +248,7 @@ pub fn pay_native_for_contract_call_instruction(
         },
     ))?;
 
-    let data = [
-        PAY_NATIVE_FOR_CONTRACT_CALL.as_slice(),
-        instruction_data.as_slice(),
-    ]
-    .concat();
+    let data = prepend_discriminator(PAY_NATIVE_FOR_CONTRACT_CALL, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -291,7 +284,7 @@ pub fn add_native_gas_instruction(
             refund_address,
         }))?;
 
-    let data = [ADD_NATIVE_GAS.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(ADD_NATIVE_GAS, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -321,7 +314,7 @@ pub fn collect_native_fees_instruction(
         PayWithNativeToken::CollectFees { amount },
     ))?;
 
-    let data = [COLLECT_NATIVE_FEES.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(COLLECT_NATIVE_FEES, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -356,7 +349,7 @@ pub fn refund_native_fees_instruction(
             fees,
         }))?;
 
-    let data = [REFUND_NATIVE_FEES.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(REFUND_NATIVE_FEES, &instruction_data);
 
     let (config_pda, _) = crate::get_config_pda();
 
@@ -404,11 +397,7 @@ pub fn pay_spl_for_contract_call_instruction(
         },
     ))?;
 
-    let data = [
-        PAY_SPL_FOR_CONTRACT_CALL.as_slice(),
-        instruction_data.as_slice(),
-    ]
-    .concat();
+    let data = prepend_discriminator(PAY_SPL_FOR_CONTRACT_CALL, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -463,7 +452,7 @@ pub fn add_spl_gas_instruction(
             refund_address,
         }))?;
 
-    let data = [ADD_SPL_GAS.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(ADD_SPL_GAS, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -508,7 +497,7 @@ pub fn collect_spl_fees_instruction(
         PayWithSplToken::CollectFees { amount, decimals },
     ))?;
 
-    let data = [COLLECT_SPL_FEES.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(COLLECT_SPL_FEES, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -556,7 +545,7 @@ pub fn refund_spl_fees_instruction(
             fees,
         }))?;
 
-    let data = [REFUND_SPL_FEES.as_slice(), instruction_data.as_slice()].concat();
+    let data = prepend_discriminator(REFUND_SPL_FEES, &instruction_data);
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(

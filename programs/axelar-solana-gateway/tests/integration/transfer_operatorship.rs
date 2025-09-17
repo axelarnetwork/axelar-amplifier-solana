@@ -8,6 +8,7 @@ use axelar_solana_gateway_test_fixtures::gateway::{get_gateway_events, ProgramIn
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
+use discriminator_utils::prepend_discriminator;
 use num_traits::ToPrimitive as _;
 use program_utils::pda::BytemuckedPda;
 use solana_program::hash;
@@ -267,11 +268,7 @@ async fn fail_if_invalid_program_id() {
 
     let instruction_data = borsh::to_vec(&GatewayInstruction::TransferOperatorship).unwrap();
 
-    let data = [
-        TRANSFER_OPERATORSHIP.as_slice(),
-        instruction_data.as_slice(),
-    ]
-    .concat();
+    let data = prepend_discriminator(TRANSFER_OPERATORSHIP, &instruction_data);
 
     let ix = Instruction {
         program_id: axelar_solana_gateway::id(),
@@ -336,11 +333,7 @@ async fn fail_if_stranger_dose_not_sing_anything() {
 
     let instruction_data = borsh::to_vec(&GatewayInstruction::TransferOperatorship).unwrap();
 
-    let data = [
-        TRANSFER_OPERATORSHIP.as_slice(),
-        instruction_data.as_slice(),
-    ]
-    .concat();
+    let data = prepend_discriminator(TRANSFER_OPERATORSHIP, &instruction_data);
 
     let ix = Instruction {
         program_id: axelar_solana_gateway::id(),

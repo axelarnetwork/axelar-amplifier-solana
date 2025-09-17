@@ -154,7 +154,6 @@ pub mod builder {
     use governance_gmp::alloy_primitives::Uint;
     use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
     use program_utils::{checked_from_u256_le_bytes_to_u64, from_u64_to_u256_le_bytes};
-    use solana_program::hash;
     use solana_program::instruction::{AccountMeta, Instruction};
     use solana_program::keccak::hash;
     use solana_program::program_error::ProgramError;
