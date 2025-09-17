@@ -19,6 +19,7 @@ borsh.workspace = true
 program-utils.workspace = true
 
 [dev-dependencies]
+axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
 solana-sdk.workspace = true
 solana-program-test.workspace = true
 axelar-solana-gateway-test-fixtures.workspace = true
@@ -48,6 +49,6 @@ testnet = [
 ]
 mainnet = [
     "axelar-solana-gateway-test-fixtures/mainnet",
-    "program-utils/mainnet", 
+    "program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]

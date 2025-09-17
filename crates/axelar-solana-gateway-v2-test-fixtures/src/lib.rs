@@ -1112,3 +1112,15 @@ pub fn approve_message_helper(
         incoming_message_pda,
     );
 }
+
+pub fn compute_instruction_discriminator(name: &str) -> [u8; 8] {
+    hash::hash(format!("global:{name}").as_bytes()).to_bytes()[..8]
+        .try_into()
+        .unwrap()
+}
+
+pub fn compute_account_discriminator(name: &str) -> [u8; 8] {
+    hash::hash(format!("account:{name}").as_bytes()).to_bytes()[..8]
+        .try_into()
+        .unwrap()
+}
