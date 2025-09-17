@@ -754,6 +754,7 @@ version = "0.1.0"
 dependencies = [
  "axelar-solana-gas-service-events",
  "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-gateway-v2-test-fixtures",
  "borsh 1.5.7",
  "bytemuck",
  "gateway-event-stack",

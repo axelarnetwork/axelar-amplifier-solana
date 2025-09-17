@@ -1,7 +1,6 @@
 use anchor_lang::prelude::ProgramError;
 use axelar_solana_encoding::types::messages::Message;
 use axelar_solana_gateway::instructions::validate_message;
-use solana_program::hash;
 use solana_sdk::{instruction::Instruction, pubkey::Pubkey};
 
 fn validate_message_for_tests(
@@ -16,12 +15,6 @@ fn validate_message_for_tests(
 
 fn discriminator(ix: &Instruction) -> [u8; 8] {
     ix.data[..8].try_into().unwrap()
-}
-
-fn expected_discriminator(name: &str) -> [u8; 8] {
-    hash::hash(format!("global:{name}").as_bytes()).to_bytes()[..8]
-        .try_into()
-        .unwrap()
 }
 
 mod pda_compatibility {
@@ -346,7 +339,7 @@ mod pda_compatibility {
 }
 
 mod instruction_compatibility {
-    use crate::{discriminator, expected_discriminator, validate_message_for_tests};
+    use crate::{discriminator, validate_message_for_tests};
     use anchor_lang::AnchorDeserialize;
     use axelar_solana_encoding::hasher::NativeHasher;
     use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
@@ -368,6 +361,7 @@ mod instruction_compatibility {
         InitializePayloadVerificationSessionInstruction, RotateSignersInstruction,
         ValidateMessageInstruction, VerifySignatureInstruction,
     };
+    use axelar_solana_gateway_v2_test_fixtures::compute_instruction_discriminator;
     use solana_sdk::pubkey::Pubkey;
     use solana_sdk::signature::Signer;
 
@@ -396,7 +390,7 @@ mod instruction_compatibility {
 
         assert_eq!(
             discriminator(&v1_ix),
-            expected_discriminator("initialize_config"),
+            compute_instruction_discriminator("initialize_config"),
             "Discriminators should match for backwards compatibility"
         );
 
@@ -435,7 +429,7 @@ mod instruction_compatibility {
 
         assert_eq!(
             discriminator(&v1_ix),
-            expected_discriminator("initialize_payload_verification_session"),
+            compute_instruction_discriminator("initialize_payload_verification_session"),
             "Discriminators should match for backwards compatibility"
         );
 
@@ -486,7 +480,7 @@ mod instruction_compatibility {
 
         assert_eq!(
             discriminator(&v1_ix),
-            expected_discriminator("approve_message"),
+            compute_instruction_discriminator("approve_message"),
             "Discriminators should match for backwards compatibility"
         );
 
@@ -555,7 +549,7 @@ mod instruction_compatibility {
 
         assert_eq!(
             discriminator(&v1_ix),
-            expected_discriminator("rotate_signers"),
+            compute_instruction_discriminator("rotate_signers"),
             "Discriminators should match for backwards compatibility"
         );
 
@@ -599,7 +593,7 @@ mod instruction_compatibility {
 
         assert_eq!(
             discriminator(&v1_ix),
-            expected_discriminator("validate_message"),
+            compute_instruction_discriminator("validate_message"),
             "Discriminators should match for backwards compatibility"
         );
 
@@ -652,7 +646,7 @@ mod instruction_compatibility {
 
             assert_eq!(
                 discriminator(&v1_ix),
-                expected_discriminator("verify_signature"),
+                compute_instruction_discriminator("verify_signature"),
                 "Discriminators should match for backwards compatibility"
             );
 

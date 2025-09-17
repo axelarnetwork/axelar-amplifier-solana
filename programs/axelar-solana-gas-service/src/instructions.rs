@@ -11,6 +11,12 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
+use crate::discriminators::{
+    ADD_NATIVE_GAS, ADD_SPL_GAS, COLLECT_NATIVE_FEES, COLLECT_SPL_FEES, INIT_CONFIG,
+    PAY_NATIVE_FOR_CONTRACT_CALL, PAY_SPL_FOR_CONTRACT_CALL, REFUND_NATIVE_FEES, REFUND_SPL_FEES,
+    TRANSFER_OPERATORSHIP,
+};
+
 /// Top-level instructions supported by the Axelar Solana Gas Service program.
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize)]
@@ -172,15 +178,7 @@ pub enum PayWithNativeToken {
 pub fn init_config(payer: &Pubkey, operator: &Pubkey) -> Result<Instruction, ProgramError> {
     let instruction_data = borsh::to_vec(&GasServiceInstruction::Initialize)?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:init_config").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [INIT_CONFIG.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -215,15 +213,11 @@ pub fn transfer_operatorship(
         AccountMeta::new(config_pda, false),
     ];
 
-    let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        TRANSFER_OPERATORSHIP.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     Ok(Instruction {
         program_id: crate::ID,
@@ -257,15 +251,11 @@ pub fn pay_native_for_contract_call_instruction(
         },
     ))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:pay_native_for_contract_call").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        PAY_NATIVE_FOR_CONTRACT_CALL.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -301,15 +291,7 @@ pub fn add_native_gas_instruction(
             refund_address,
         }))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:add_native_gas").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [ADD_NATIVE_GAS.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -339,15 +321,7 @@ pub fn collect_native_fees_instruction(
         PayWithNativeToken::CollectFees { amount },
     ))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:collect_native_fees").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [COLLECT_NATIVE_FEES.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
 
@@ -382,15 +356,7 @@ pub fn refund_native_fees_instruction(
             fees,
         }))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:refund_native_fees").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [REFUND_NATIVE_FEES.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _) = crate::get_config_pda();
 
@@ -438,15 +404,11 @@ pub fn pay_spl_for_contract_call_instruction(
         },
     ))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:pay_spl_for_contract_call").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [
+        PAY_SPL_FOR_CONTRACT_CALL.as_slice(),
+        instruction_data.as_slice(),
+    ]
+    .concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -501,15 +463,7 @@ pub fn add_spl_gas_instruction(
             refund_address,
         }))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:add_spl_gas").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [ADD_SPL_GAS.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -554,15 +508,7 @@ pub fn collect_spl_fees_instruction(
         PayWithSplToken::CollectFees { amount, decimals },
     ))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:collect_spl_fees").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [COLLECT_SPL_FEES.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
@@ -610,15 +556,7 @@ pub fn refund_spl_fees_instruction(
             fees,
         }))?;
 
-    let discriminator: [u8; 8] = hash::hash(b"global:refund_spl_fees").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let data: Vec<u8> = discriminator
-        .iter()
-        .chain(instruction_data.iter())
-        .cloned()
-        .collect();
+    let data = [REFUND_SPL_FEES.as_slice(), instruction_data.as_slice()].concat();
 
     let (config_pda, _bump) = crate::get_config_pda();
     let config_pda_ata = spl_associated_token_account::get_associated_token_address_with_program_id(
