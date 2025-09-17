@@ -7,7 +7,7 @@ use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
 
 #[tokio::test]
-async fn test_pay_native_for_contract_call() {
+async fn test_pay_native_gas_for_contract_call() {
     // Setup
     let pt = ProgramTest::default();
     let mut test_fixture = TestFixture::new(pt).await;
@@ -41,7 +41,7 @@ async fn test_pay_native_for_contract_call() {
     let params = "\u{1f42a}\u{1f42a}\u{1f42a}\u{1f42a}"
         .to_string()
         .into_bytes();
-    let ix = axelar_solana_gas_service::instructions::pay_native_for_contract_call_instruction(
+    let ix = axelar_solana_gas_service::instructions::pay_native_gas_for_contract_call_instruction(
         &payer.pubkey(),
         destination_chain.clone(),
         destination_addr.clone(),
@@ -131,7 +131,7 @@ async fn fails_if_payer_not_signer() {
     let params = "\u{1f42a}\u{1f42a}\u{1f42a}\u{1f42a}"
         .to_string()
         .into_bytes();
-    let mut ix = axelar_solana_gas_service::instructions::pay_native_for_contract_call_instruction(
+    let mut ix = axelar_solana_gas_service::instructions::pay_native_gas_for_contract_call_instruction(
         &payer.pubkey(),
         destination_chain.clone(),
         destination_addr.clone(),

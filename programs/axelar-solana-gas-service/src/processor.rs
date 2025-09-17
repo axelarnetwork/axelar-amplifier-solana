@@ -11,9 +11,9 @@ use crate::{
 use self::{
     initialize::process_initialize_config,
     native::{
-        add_native_gas, collect_fees_native, process_pay_native_for_contract_call, refund_native,
+        add_native_gas, collect_fees_native, process_pay_native_gas_for_contract_call, refund_native,
     },
-    spl::{add_spl_gas, collect_fees_spl, process_pay_spl_for_contract_call, refund_spl},
+    spl::{add_spl_gas, collect_fees_spl, process_pay_spl_gas_for_contract_call, refund_spl},
     transfer_operatorship::process_transfer_operatorship,
 };
 
@@ -49,7 +49,7 @@ pub fn process_instruction(
                 params,
                 decimals,
                 refund_address,
-            } => process_pay_spl_for_contract_call(
+            } => process_pay_spl_gas_for_contract_call(
                 program_id,
                 accounts,
                 destination_chain,
@@ -93,7 +93,7 @@ pub fn process_instruction(
                 refund_address,
                 params,
                 gas_fee_amount,
-            } => process_pay_native_for_contract_call(
+            } => process_pay_native_gas_for_contract_call(
                 program_id,
                 accounts,
                 destination_chain,

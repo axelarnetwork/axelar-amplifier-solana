@@ -16,7 +16,7 @@ use solana_program::pubkey::Pubkey;
 use solana_program::system_instruction;
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn process_pay_native_for_contract_call(
+pub(crate) fn process_pay_native_gas_for_contract_call(
     program_id: &Pubkey,
     accounts: &[AccountInfo<'_>],
     destination_chain: String,
@@ -194,7 +194,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_process_pay_native_for_contract_call_cannot_accept_zero_amount() {
+    fn test_process_pay_native_gas_for_contract_call_cannot_accept_zero_amount() {
         let program_id = Pubkey::new_unique();
         let accounts = vec![];
         let destination_chain = "destination_chain".to_owned();
@@ -204,7 +204,7 @@ mod tests {
         let params = vec![1, 2, 3];
         let gas_fee_amount = 0;
 
-        let result = process_pay_native_for_contract_call(
+        let result = process_pay_native_gas_for_contract_call(
             &program_id,
             &accounts,
             destination_chain,
