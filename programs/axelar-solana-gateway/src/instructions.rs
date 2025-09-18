@@ -8,7 +8,6 @@ use borsh::{to_vec, BorshDeserialize, BorshSerialize};
 use discriminator_utils::prepend_discriminator;
 #[allow(deprecated)]
 use solana_program::bpf_loader_upgradeable;
-use solana_program::hash;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;

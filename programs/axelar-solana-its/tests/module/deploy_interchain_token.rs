@@ -5,7 +5,7 @@ use borsh::to_vec;
 use discriminator_utils::prepend_discriminator;
 use event_utils::Event as _;
 use solana_program::instruction::{AccountMeta, Instruction};
-use solana_program::{hash, system_program};
+use solana_program::system_program;
 use solana_program_test::tokio;
 use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;

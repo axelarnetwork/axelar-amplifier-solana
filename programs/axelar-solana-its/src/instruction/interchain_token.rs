@@ -2,17 +2,15 @@
 
 use borsh::to_vec;
 use discriminator_utils::prepend_discriminator;
-use solana_program::hash;
 use solana_program::instruction::AccountMeta;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
 
+use super::InterchainTokenServiceInstruction;
 use crate::discriminators::{
     ACCEPT_INTERCHAIN_TOKEN_MINTERSHIP, MINT_INTERCHAIN_TOKEN, PROPOSE_INTERCHAIN_TOKEN_MINTERSHIP,
     TRANSFER_INTERCHAIN_TOKEN_MINTERSHIP,
 };
-
-use super::InterchainTokenServiceInstruction;
 
 /// Creates an [`InterchainTokenServiceInstruction::MintInterchainToken`] instruction.
 ///
@@ -32,7 +30,6 @@ pub fn mint(
         role_management::find_user_roles_pda(&crate::id(), &token_manager_pda, &minter);
     let instruction_data =
         to_vec(&InterchainTokenServiceInstruction::MintInterchainToken { amount })?;
-    let ata = get_associated_token_address_with_program_id(&to, &mint, &token_program);
 
     let data = prepend_discriminator(MINT_INTERCHAIN_TOKEN, &instruction_data);
 

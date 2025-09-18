@@ -4,7 +4,6 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use discriminator_utils::prepend_discriminator;
-use solana_program::hash;
 use solana_program::program_error::ProgramError;
 use solana_program::system_program;
 use solana_program::{

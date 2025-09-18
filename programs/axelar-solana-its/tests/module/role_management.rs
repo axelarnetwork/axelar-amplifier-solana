@@ -1,6 +1,6 @@
 use borsh::BorshDeserialize;
 use discriminator_utils::prepend_discriminator;
-use solana_program::{hash, instruction::AccountMeta};
+use solana_program::instruction::AccountMeta;
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;

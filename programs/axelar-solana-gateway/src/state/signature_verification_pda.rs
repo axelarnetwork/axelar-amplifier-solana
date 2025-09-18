@@ -16,14 +16,14 @@ use super::signature_verification::SignatureVerification;
 pub struct SignatureVerificationSessionData {
     /// Anchor compatible discriminator
     pub discriminator: [u8; 8],
-    /// Padding to align SignatureVerification to 16-byte boundary
+    /// Padding for memory alignment.
     _discriminator_pad: [u8; 8],
     /// Signature verification session
     pub signature_verification: SignatureVerification,
     /// Seed bump for this account's PDA
     pub bump: u8,
     /// Padding for memory alignment.
-    _pad: [u8; 15],
+    _pad: [u8; 15 + 16],
 }
 
 impl BytemuckedPda for SignatureVerificationSessionData {}

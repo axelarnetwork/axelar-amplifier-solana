@@ -2,7 +2,6 @@
 
 use borsh::to_vec;
 use discriminator_utils::prepend_discriminator;
-use solana_program::hash;
 use solana_program::instruction::AccountMeta;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;

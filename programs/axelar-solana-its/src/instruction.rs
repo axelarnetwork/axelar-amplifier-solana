@@ -13,8 +13,8 @@ use solana_program::bpf_loader_upgradeable;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
-use solana_program::{hash, sysvar};
-use solana_sdk_ids::system_program;
+use solana_program::system_program;
+use solana_program::sysvar;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use typed_builder::TypedBuilder;
 
