@@ -30,7 +30,7 @@ fn test_discriminators_backwards_compatible() {
     // Native Token instructions (2 byte discriminators)
     test_discriminator!(
         "Native PayForContractCall",
-        pay_native_for_contract_call_instruction(
+        pay_native_gas_for_contract_call_instruction(
             &payer,
             "ethereum".to_string(),
             "0x123".to_string(),
@@ -68,7 +68,7 @@ fn test_discriminators_backwards_compatible() {
     // SPL Token instructions (2 byte discriminators)
     test_discriminator!(
         "SPL PayForContractCall",
-        pay_spl_for_contract_call_instruction(
+        pay_spl_gas_for_contract_call_instruction(
             &payer,
             &sender_ata,
             &mint,
