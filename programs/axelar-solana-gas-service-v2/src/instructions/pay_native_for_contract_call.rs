@@ -6,7 +6,7 @@ use axelar_solana_gas_service_events::events::NativeGasPaidForContractCallEvent;
 ///
 /// Accounts expected:
 /// 0. `[signer, writable]` The account (`payer`) paying the gas fee in lamports.
-/// 1. `[writable]` The `config_pda` account that receives the lamports.
+/// 1. `[writable]` The `treasury` account that receives the lamports.
 /// 2. `[]` The `system_program` account.
 #[event_cpi]
 #[derive(Accounts)]
@@ -54,7 +54,7 @@ pub fn pay_native_for_contract_call(
     )?;
 
     emit_cpi!(NativeGasPaidForContractCallEvent {
-        config_pda: *treasury_account_info.key,
+        treasury: *treasury_account_info.key,
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         payload_hash,

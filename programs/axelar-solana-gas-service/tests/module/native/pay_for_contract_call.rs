@@ -131,16 +131,17 @@ async fn fails_if_payer_not_signer() {
     let params = "\u{1f42a}\u{1f42a}\u{1f42a}\u{1f42a}"
         .to_string()
         .into_bytes();
-    let mut ix = axelar_solana_gas_service::instructions::pay_native_gas_for_contract_call_instruction(
-        &payer.pubkey(),
-        destination_chain.clone(),
-        destination_addr.clone(),
-        payload_hash,
-        refund_address,
-        params.clone(),
-        gas_amount,
-    )
-    .unwrap();
+    let mut ix =
+        axelar_solana_gas_service::instructions::pay_native_gas_for_contract_call_instruction(
+            &payer.pubkey(),
+            destination_chain.clone(),
+            destination_addr.clone(),
+            payload_hash,
+            refund_address,
+            params.clone(),
+            gas_amount,
+        )
+        .unwrap();
     ix.accounts[0].is_signer = false;
 
     let res = test_fixture

@@ -27,8 +27,8 @@ pub enum GasServiceEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NativeGasPaidForContractCallEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// Destination chain on the Axelar network
     pub destination_chain: String,
     /// Destination address on the Axelar network
@@ -49,10 +49,10 @@ impl NativeGasPaidForContractCallEvent {
     /// # Errors
     /// - if the data could not be parsed into an event
     pub fn new<I: Iterator<Item = Vec<u8>>>(mut data: I) -> Result<Self, EventParseError> {
-        let config_pda_data = data
+        let treasury_data = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda"))?;
-        let config_pda = Pubkey::new_from_array(read_array::<32>("config_pda", &config_pda_data)?);
+            .ok_or(EventParseError::MissingData("treasury"))?;
+        let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
         let destination_chain_data = data
             .next()
@@ -83,7 +83,7 @@ impl NativeGasPaidForContractCallEvent {
         let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
 
         Ok(Self {
-            config_pda,
+            treasury,
             destination_chain,
             destination_address,
             payload_hash,
@@ -98,8 +98,8 @@ impl NativeGasPaidForContractCallEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NativeGasAddedEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
     /// index of the log
@@ -116,10 +116,10 @@ impl NativeGasAddedEvent {
     /// # Errors
     /// - if the data could not be parsed into an event
     pub fn new<I: Iterator<Item = Vec<u8>>>(mut data: I) -> Result<Self, EventParseError> {
-        let config_pda_data = data
+        let treasury_data = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda"))?;
-        let config_pda = Pubkey::new_from_array(read_array::<32>("config_pda", &config_pda_data)?);
+            .ok_or(EventParseError::MissingData("treasury"))?;
+        let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
         let tx_hash_data = data.next().ok_or(EventParseError::MissingData("tx_hash"))?;
         let tx_hash = read_array::<64>("tx_hash", &tx_hash_data)?;
@@ -141,7 +141,7 @@ impl NativeGasAddedEvent {
         let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
 
         Ok(Self {
-            config_pda,
+            treasury,
             tx_hash,
             log_index,
             refund_address,
@@ -156,8 +156,8 @@ impl NativeGasAddedEvent {
 pub struct NativeGasRefundedEvent {
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// The log index
     pub log_index: u64,
     /// The receiver of the refund
@@ -175,10 +175,10 @@ impl NativeGasRefundedEvent {
         let tx_hash_data = data.next().ok_or(EventParseError::MissingData("tx_hash"))?;
         let tx_hash = read_array::<64>("tx_hash", &tx_hash_data)?;
 
-        let config_pda_data = data
+        let treasury_data = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda"))?;
-        let config_pda = Pubkey::new_from_array(read_array::<32>("config_pda", &config_pda_data)?);
+            .ok_or(EventParseError::MissingData("treasury"))?;
+        let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
         let log_index_data = data
             .next()
@@ -195,7 +195,7 @@ impl NativeGasRefundedEvent {
 
         Ok(Self {
             tx_hash,
-            config_pda,
+            treasury,
             log_index,
             receiver,
             fees,
@@ -207,10 +207,10 @@ impl NativeGasRefundedEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasPaidForContractCallEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
-    /// The Gas service config associated token account PDA
-    pub config_pda_ata: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -235,16 +235,18 @@ impl SplGasPaidForContractCallEvent {
     /// # Errors
     /// - if the data could not be parsed into an event
     pub fn new<I: Iterator<Item = Vec<u8>>>(mut data: I) -> Result<Self, EventParseError> {
-        let config_pda_data = data
+        let treasury_data = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda"))?;
-        let config_pda = Pubkey::new_from_array(read_array::<32>("config_pda", &config_pda_data)?);
+            .ok_or(EventParseError::MissingData("treasury"))?;
+        let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
-        let config_pda_ata = data
+        let treasury_token_account = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda_ata"))?;
-        let config_pda_ata =
-            Pubkey::new_from_array(read_array::<32>("config_pda_ata", &config_pda_ata)?);
+            .ok_or(EventParseError::MissingData("treasury_token_account"))?;
+        let treasury_token_account = Pubkey::new_from_array(read_array::<32>(
+            "treasury_token_account",
+            &treasury_token_account,
+        )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
         let mint = Pubkey::new_from_array(read_array::<32>("mint", &mint)?);
@@ -284,8 +286,8 @@ impl SplGasPaidForContractCallEvent {
         let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
 
         Ok(Self {
-            config_pda,
-            config_pda_ata,
+            treasury,
+            treasury_token_account,
             mint,
             token_program_id,
             destination_chain,
@@ -302,10 +304,10 @@ impl SplGasPaidForContractCallEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasAddedEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
-    /// The Gas service config associated token account PDA
-    pub config_pda_ata: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -326,16 +328,18 @@ impl SplGasAddedEvent {
     /// # Errors
     /// - if the data could not be parsed into an event
     pub fn new<I: Iterator<Item = Vec<u8>>>(mut data: I) -> Result<Self, EventParseError> {
-        let config_pda = data
+        let treasury_data = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda"))?;
-        let config_pda = Pubkey::new_from_array(read_array::<32>("config_pda", &config_pda)?);
+            .ok_or(EventParseError::MissingData("treasury"))?;
+        let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
-        let config_pda_ata = data
+        let treasury_token_account = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda_ata"))?;
-        let config_pda_ata =
-            Pubkey::new_from_array(read_array::<32>("config_pda_ata", &config_pda_ata)?);
+            .ok_or(EventParseError::MissingData("treasury_token_account"))?;
+        let treasury_token_account = Pubkey::new_from_array(read_array::<32>(
+            "treasury_token_account",
+            &treasury_token_account,
+        )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
         let mint = Pubkey::new_from_array(read_array::<32>("mint", &mint)?);
@@ -366,8 +370,8 @@ impl SplGasAddedEvent {
         let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
 
         Ok(Self {
-            config_pda,
-            config_pda_ata,
+            treasury,
+            treasury_token_account,
             mint,
             token_program_id,
             tx_hash,
@@ -382,16 +386,16 @@ impl SplGasAddedEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasRefundedEvent {
-    /// The Gas service config associated token account PDA
-    pub config_pda_ata: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
     pub token_program_id: Pubkey,
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// The log index
     pub log_index: u64,
     /// The receiver of the refund
@@ -409,16 +413,18 @@ impl SplGasRefundedEvent {
         let tx_hash_data = data.next().ok_or(EventParseError::MissingData("tx_hash"))?;
         let tx_hash = read_array::<64>("tx_hash", &tx_hash_data)?;
 
-        let config_pda_data = data
+        let treasury_data = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda"))?;
-        let config_pda = Pubkey::new_from_array(read_array::<32>("config_pda", &config_pda_data)?);
+            .ok_or(EventParseError::MissingData("treasury"))?;
+        let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
-        let config_pda_ata = data
+        let treasury_token_account = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda_ata"))?;
-        let config_pda_ata =
-            Pubkey::new_from_array(read_array::<32>("config_pda_ata", &config_pda_ata)?);
+            .ok_or(EventParseError::MissingData("treasury_token_account"))?;
+        let treasury_token_account = Pubkey::new_from_array(read_array::<32>(
+            "treasury_token_account",
+            &treasury_token_account,
+        )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
         let mint = Pubkey::new_from_array(read_array::<32>("mint", &mint)?);
@@ -443,11 +449,11 @@ impl SplGasRefundedEvent {
         let fees = read_u64("fees", &fees_data)?;
 
         Ok(Self {
-            config_pda_ata,
+            treasury_token_account,
             mint,
             token_program_id,
             tx_hash,
-            config_pda,
+            treasury,
             log_index,
             receiver,
             fees,

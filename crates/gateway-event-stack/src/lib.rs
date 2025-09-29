@@ -432,7 +432,7 @@ mod tests {
         let result = build_program_event_stack(&match_context, &logs, parse_gas_service_log);
 
         let event = NativeGasPaidForContractCallEvent {
-            config_pda: "DR9Ja5ojPLPDWmWFRmpc2SEUvK94dKX4uM6AofgwAAJm"
+            treasury: "DR9Ja5ojPLPDWmWFRmpc2SEUvK94dKX4uM6AofgwAAJm"
                 .parse()
                 .unwrap(),
             destination_chain: "evm".to_owned(),
