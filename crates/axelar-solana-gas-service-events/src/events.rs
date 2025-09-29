@@ -204,8 +204,8 @@ impl NativeGasRefundedEvent {
 pub struct SplGasPaidForContractCallEvent {
     /// The Gas service treasury PDA
     pub treasury: Pubkey,
-    /// The Gas service config associated token account PDA
-    pub config_pda_token_account: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -233,12 +233,12 @@ impl SplGasPaidForContractCallEvent {
             .ok_or(EventParseError::MissingData("treasury"))?;
         let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
-        let config_pda_token_account = data
+        let treasury_token_account = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda_token_account"))?;
-        let config_pda_token_account = Pubkey::new_from_array(read_array::<32>(
-            "config_pda_token_account",
-            &config_pda_token_account,
+            .ok_or(EventParseError::MissingData("treasury_token_account"))?;
+        let treasury_token_account = Pubkey::new_from_array(read_array::<32>(
+            "treasury_token_account",
+            &treasury_token_account,
         )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
@@ -278,7 +278,7 @@ impl SplGasPaidForContractCallEvent {
 
         Ok(Self {
             treasury,
-            config_pda_token_account,
+            treasury_token_account,
             mint,
             token_program_id,
             destination_chain,
@@ -296,8 +296,8 @@ impl SplGasPaidForContractCallEvent {
 pub struct SplGasAddedEvent {
     /// The Gas service treasury PDA
     pub treasury: Pubkey,
-    /// The Gas service config associated token account PDA
-    pub config_pda_token_account: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -323,12 +323,12 @@ impl SplGasAddedEvent {
             .ok_or(EventParseError::MissingData("treasury"))?;
         let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
-        let config_pda_token_account = data
+        let treasury_token_account = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda_token_account"))?;
-        let config_pda_token_account = Pubkey::new_from_array(read_array::<32>(
-            "config_pda_token_account",
-            &config_pda_token_account,
+            .ok_or(EventParseError::MissingData("treasury_token_account"))?;
+        let treasury_token_account = Pubkey::new_from_array(read_array::<32>(
+            "treasury_token_account",
+            &treasury_token_account,
         )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
@@ -361,7 +361,7 @@ impl SplGasAddedEvent {
 
         Ok(Self {
             treasury,
-            config_pda_token_account,
+            treasury_token_account,
             mint,
             token_program_id,
             tx_hash,
@@ -376,8 +376,8 @@ impl SplGasAddedEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasRefundedEvent {
-    /// The Gas service config associated token account PDA
-    pub config_pda_token_account: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -408,12 +408,12 @@ impl SplGasRefundedEvent {
             .ok_or(EventParseError::MissingData("treasury"))?;
         let treasury = Pubkey::new_from_array(read_array::<32>("treasury", &treasury_data)?);
 
-        let config_pda_token_account = data
+        let treasury_token_account = data
             .next()
-            .ok_or(EventParseError::MissingData("config_pda_token_account"))?;
-        let config_pda_token_account = Pubkey::new_from_array(read_array::<32>(
-            "config_pda_token_account",
-            &config_pda_token_account,
+            .ok_or(EventParseError::MissingData("treasury_token_account"))?;
+        let treasury_token_account = Pubkey::new_from_array(read_array::<32>(
+            "treasury_token_account",
+            &treasury_token_account,
         )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
@@ -439,7 +439,7 @@ impl SplGasRefundedEvent {
         let fees = read_u64("fees", &fees_data)?;
 
         Ok(Self {
-            config_pda_token_account,
+            treasury_token_account,
             mint,
             token_program_id,
             tx_hash,

@@ -8,8 +8,8 @@ use axelar_solana_gas_service_events::events::SplGasAddedEvent;
 /// Accounts expected:
 /// 0. `[signer, writable]` The account (`sender`) paying the gas fee in SPL tokens.
 /// 1. `[writable]` The sender's associated token account for the mint.
-/// 2. `[writable]` The `config_pda` account.
-/// 3. `[writable]` The config PDA's associated token account for the mint.
+/// 2. `[writable]` The `treasury` account.
+/// 3. `[writable]` The treasury's associated token account for the mint.
 /// 4. `[]` The mint account for the SPL token.
 /// 5. `[]` The SPL token program.
 /// 6+. `[signer, writable]` Optional additional accounts required by the SPL token program for the transfer.
@@ -80,7 +80,7 @@ pub fn add_spl_gas<'info>(
 
     emit_cpi!(SplGasAddedEvent {
         treasury: *ctx.accounts.treasury.to_account_info().key,
-        config_pda_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
+        treasury_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,

@@ -72,7 +72,7 @@ pub fn pay_spl_for_contract_call<'info>(
 
     emit_cpi!(SplGasPaidForContractCallEvent {
         treasury: *ctx.accounts.treasury.to_account_info().key,
-        config_pda_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
+        treasury_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.key,
         destination_chain: destination_chain.clone(),

@@ -9,8 +9,8 @@ use axelar_solana_operators::OperatorAccount;
 /// Accounts expected:
 /// 0. `[signer, read-only]` The `operator` account authorized to collect fees.
 /// 1. `[writable]` The `receiver` account where the tokens will be sent.
-/// 2. `[writable]` The `config_pda` account.
-/// 3. `[writable]` The config PDA's associated token account for the mint.
+/// 2. `[writable]` The `treasury` account.
+/// 3. `[writable]` The treasury's associated token account for the mint.
 /// 4. `[]` The mint account for the SPL token.
 /// 5. `[]` The SPL token program.
 #[event_cpi]
@@ -89,7 +89,7 @@ pub fn refund_spl_fees(
     token_interface::transfer_checked(cpi_context, fees, decimals)?;
 
     emit_cpi!(SplGasRefundedEvent {
-        config_pda_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
+        treasury_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,
