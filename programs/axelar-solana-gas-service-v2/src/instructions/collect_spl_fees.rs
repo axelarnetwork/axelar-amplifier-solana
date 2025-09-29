@@ -22,7 +22,7 @@ pub struct CollectSplFees<'info> {
         mut,
         token::mint = mint,
     )]
-    pub receiver_account: InterfaceAccount<'info, TokenAccount>,
+    pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -38,7 +38,7 @@ pub struct CollectSplFees<'info> {
         associated_token::mint = mint,
         associated_token::authority = treasury,
     )]
-    pub treasury_ata: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>,
 
     pub mint: InterfaceAccount<'info, Mint>,
 
@@ -55,8 +55,8 @@ pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8)
 
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
-        from: ctx.accounts.treasury_ata.to_account_info().clone(),
-        to: ctx.accounts.receiver_account.to_account_info().clone(),
+        from: ctx.accounts.treasury_token_account.to_account_info().clone(),
+        to: ctx.accounts.receiver_token_account.to_account_info().clone(),
         authority: ctx.accounts.treasury.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();

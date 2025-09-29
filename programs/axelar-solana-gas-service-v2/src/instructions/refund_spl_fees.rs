@@ -32,7 +32,7 @@ pub struct RefundSplFees<'info> {
         mut,
         token::mint = mint,
     )]
-    pub receiver_account: InterfaceAccount<'info, TokenAccount>,
+    pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -48,7 +48,7 @@ pub struct RefundSplFees<'info> {
         associated_token::mint = mint,
         associated_token::authority = treasury,
     )]
-    pub treasury_ata: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>,
 
     pub mint: InterfaceAccount<'info, Mint>,
 
@@ -71,8 +71,8 @@ pub fn refund_spl_fees(
 
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
-        from: ctx.accounts.treasury_ata.to_account_info().clone(),
-        to: ctx.accounts.receiver_account.to_account_info().clone(),
+        from: ctx.accounts.treasury_token_account.to_account_info().clone(),
+        to: ctx.accounts.receiver_token_account.to_account_info().clone(),
         authority: ctx.accounts.treasury.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -81,13 +81,13 @@ pub fn refund_spl_fees(
     token_interface::transfer_checked(cpi_context, fees, decimals)?;
 
     emit_cpi!(SplGasRefundedEvent {
-        config_pda_ata: *ctx.accounts.treasury_ata.to_account_info().key,
+        config_pda_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,
         config_pda: *ctx.accounts.treasury.to_account_info().key,
         log_index,
-        receiver: *ctx.accounts.receiver_account.to_account_info().key,
+        receiver: *ctx.accounts.receiver_token_account.to_account_info().key,
         fees,
     });
 
