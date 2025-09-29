@@ -1,7 +1,7 @@
 //! Events emitted by the Axelar Solana Gas service
 
 use anchor_lang::prelude::{
-    borsh, event, AnchorDeserialize, AnchorSerialize, Discriminator, Pubkey,
+    borsh, event, AnchorDeserialize, AnchorSerialize, Discriminator, IdlBuild, Pubkey,
 };
 
 use event_utils::{read_array, read_string, read_u64, EventParseError};
