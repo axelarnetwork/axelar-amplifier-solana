@@ -55,8 +55,16 @@ pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8)
 
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
-        from: ctx.accounts.treasury_token_account.to_account_info().clone(),
-        to: ctx.accounts.receiver_token_account.to_account_info().clone(),
+        from: ctx
+            .accounts
+            .treasury_token_account
+            .to_account_info()
+            .clone(),
+        to: ctx
+            .accounts
+            .receiver_token_account
+            .to_account_info()
+            .clone(),
         authority: ctx.accounts.treasury.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
