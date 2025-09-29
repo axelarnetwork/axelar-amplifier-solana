@@ -32,7 +32,6 @@ pub fn pay_native_for_contract_call(
     destination_address: String,
     payload_hash: [u8; 32],
     refund_address: Pubkey,
-    params: &[u8],
     gas_fee_amount: u64,
 ) -> Result<()> {
     if gas_fee_amount == 0 {
@@ -59,7 +58,6 @@ pub fn pay_native_for_contract_call(
         destination_address: destination_address.clone(),
         payload_hash,
         refund_address,
-        params: params.to_vec(),
         gas_fee_amount,
     });
 

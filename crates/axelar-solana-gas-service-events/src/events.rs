@@ -37,8 +37,6 @@ pub struct NativeGasPaidForContractCallEvent {
     pub payload_hash: [u8; 32],
     /// The refund address
     pub refund_address: Pubkey,
-    /// Extra parameters to be passed
-    pub params: Vec<u8>,
     /// The amount of SOL to send
     pub gas_fee_amount: u64,
 }
@@ -75,8 +73,6 @@ impl NativeGasPaidForContractCallEvent {
         let refund_address =
             Pubkey::new_from_array(read_array::<32>("refund_address", &refund_address_data)?);
 
-        let params = data.next().ok_or(EventParseError::MissingData("params"))?;
-
         let gas_fee_amount_data = data
             .next()
             .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
@@ -88,7 +84,6 @@ impl NativeGasPaidForContractCallEvent {
             destination_address,
             payload_hash,
             refund_address,
-            params,
             gas_fee_amount,
         })
     }
@@ -223,8 +218,6 @@ pub struct SplGasPaidForContractCallEvent {
     pub payload_hash: [u8; 32],
     /// The refund address
     pub refund_address: Pubkey,
-    /// Extra parameters to be passed
-    pub params: Vec<u8>,
     /// The amount of SOL to send
     pub gas_fee_amount: u64,
 }
@@ -276,8 +269,6 @@ impl SplGasPaidForContractCallEvent {
         let refund_address =
             Pubkey::new_from_array(read_array::<32>("refund_address", &refund_address_data)?);
 
-        let params = data.next().ok_or(EventParseError::MissingData("params"))?;
-
         let gas_fee_amount_data = data
             .next()
             .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
@@ -292,7 +283,6 @@ impl SplGasPaidForContractCallEvent {
             destination_address,
             payload_hash,
             refund_address,
-            params,
             gas_fee_amount,
         })
     }

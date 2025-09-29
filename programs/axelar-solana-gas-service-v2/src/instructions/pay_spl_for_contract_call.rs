@@ -45,7 +45,6 @@ pub fn pay_spl_for_contract_call<'info>(
     destination_chain: String,
     destination_address: String,
     payload_hash: [u8; 32],
-    params: &[u8],
     gas_fee_amount: u64,
     decimals: u8,
     refund_address: Pubkey,
@@ -76,7 +75,6 @@ pub fn pay_spl_for_contract_call<'info>(
         destination_address: destination_address.clone(),
         payload_hash,
         refund_address,
-        params: params.to_vec(),
         gas_fee_amount,
     });
 
