@@ -1,7 +1,7 @@
 //! Events emitted by the Axelar Solana Gas service
 
 use anchor_lang::prelude::{
-    borsh, event, AnchorDeserialize, AnchorSerialize, Discriminator, IdlBuild, Pubkey,
+    borsh, event, AnchorDeserialize, AnchorSerialize, Discriminator, Pubkey,
 };
 
 use event_utils::{read_array, read_string, read_u64, EventParseError};
@@ -236,8 +236,10 @@ impl SplGasPaidForContractCallEvent {
         let config_pda_token_account = data
             .next()
             .ok_or(EventParseError::MissingData("config_pda_token_account"))?;
-        let config_pda_token_account =
-            Pubkey::new_from_array(read_array::<32>("config_pda_token_account", &config_pda_token_account)?);
+        let config_pda_token_account = Pubkey::new_from_array(read_array::<32>(
+            "config_pda_token_account",
+            &config_pda_token_account,
+        )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
         let mint = Pubkey::new_from_array(read_array::<32>("mint", &mint)?);
@@ -324,8 +326,10 @@ impl SplGasAddedEvent {
         let config_pda_token_account = data
             .next()
             .ok_or(EventParseError::MissingData("config_pda_token_account"))?;
-        let config_pda_token_account =
-            Pubkey::new_from_array(read_array::<32>("config_pda_token_account", &config_pda_token_account)?);
+        let config_pda_token_account = Pubkey::new_from_array(read_array::<32>(
+            "config_pda_token_account",
+            &config_pda_token_account,
+        )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
         let mint = Pubkey::new_from_array(read_array::<32>("mint", &mint)?);
@@ -407,8 +411,10 @@ impl SplGasRefundedEvent {
         let config_pda_token_account = data
             .next()
             .ok_or(EventParseError::MissingData("config_pda_token_account"))?;
-        let config_pda_token_account =
-            Pubkey::new_from_array(read_array::<32>("config_pda_token_account", &config_pda_token_account)?);
+        let config_pda_token_account = Pubkey::new_from_array(read_array::<32>(
+            "config_pda_token_account",
+            &config_pda_token_account,
+        )?);
 
         let mint = data.next().ok_or(EventParseError::MissingData("mint"))?;
         let mint = Pubkey::new_from_array(read_array::<32>("mint", &mint)?);
