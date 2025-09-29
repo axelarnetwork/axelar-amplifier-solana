@@ -93,7 +93,7 @@ pub fn refund_spl_fees(
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,
-        config_pda: *ctx.accounts.treasury.to_account_info().key,
+        treasury: *ctx.accounts.treasury.to_account_info().key,
         log_index,
         receiver: *ctx.accounts.receiver_token_account.to_account_info().key,
         fees,

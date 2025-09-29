@@ -72,7 +72,7 @@ pub fn pay_spl_for_contract_call<'info>(
     token_interface::transfer_checked(cpi_context, gas_fee_amount, decimals)?;
 
     emit_cpi!(SplGasPaidForContractCallEvent {
-        config_pda: *ctx.accounts.treasury.to_account_info().key,
+        treasury: *ctx.accounts.treasury.to_account_info().key,
         config_pda_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.key,

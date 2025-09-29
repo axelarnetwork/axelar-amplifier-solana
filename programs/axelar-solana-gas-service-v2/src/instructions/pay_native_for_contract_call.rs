@@ -54,7 +54,7 @@ pub fn pay_native_for_contract_call(
     )?;
 
     emit_cpi!(NativeGasPaidForContractCallEvent {
-        config_pda: *treasury_account_info.key,
+        treasury: *treasury_account_info.key,
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         payload_hash,
