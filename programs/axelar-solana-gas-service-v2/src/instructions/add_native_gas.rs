@@ -50,8 +50,8 @@ pub fn add_native_gas(
         treasury: *treasury_account_info.key,
         tx_hash,
         log_index,
-        refund_address,
         gas_fee_amount,
+        refund_address,
     });
 
     Ok(())

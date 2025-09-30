@@ -31,9 +31,8 @@ pub fn pay_native_for_contract_call(
     destination_chain: String,
     destination_address: String,
     payload_hash: [u8; 32],
-    refund_address: Pubkey,
-    params: &[u8],
     gas_fee_amount: u64,
+    refund_address: Pubkey,
 ) -> Result<()> {
     if gas_fee_amount == 0 {
         msg!("Gas fee amount cannot be zero");
@@ -58,9 +57,8 @@ pub fn pay_native_for_contract_call(
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         payload_hash,
-        refund_address,
-        params: params.to_vec(),
         gas_fee_amount,
+        refund_address,
     });
 
     Ok(())

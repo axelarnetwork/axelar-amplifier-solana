@@ -59,9 +59,8 @@ fn test_pay_native_contract_call() {
             destination_chain: "chain".to_string(),
             destination_address: "address".to_string(),
             payload_hash: [0u8; 32],
-            refund_address,
-            params: vec![],
             gas_fee_amount,
+            refund_address,
         }
         .data(),
     };

@@ -85,8 +85,8 @@ pub fn add_spl_gas<'info>(
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,
         log_index,
-        refund_address,
         gas_fee_amount,
+        refund_address,
     });
 
     Ok(())
