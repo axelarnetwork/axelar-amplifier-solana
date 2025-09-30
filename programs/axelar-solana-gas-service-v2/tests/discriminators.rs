@@ -36,7 +36,6 @@ fn test_discriminators_backwards_compatible() {
             "0x123".to_string(),
             [0u8; 32],
             Pubkey::default(),
-            vec![],
             1000,
         )
         .unwrap(),
@@ -77,7 +76,6 @@ fn test_discriminators_backwards_compatible() {
             "0x456".to_string(),
             [1u8; 32],
             Pubkey::default(),
-            vec![1, 2, 3],
             2000,
             &[],
             6,

@@ -221,7 +221,6 @@ pub fn pay_native_gas_for_contract_call_instruction(
     destination_address: String,
     payload_hash: [u8; 32],
     refund_address: Pubkey,
-    params: Vec<u8>,
     gas_fee_amount: u64,
 ) -> Result<Instruction, ProgramError> {
     let ix_data = borsh::to_vec(&GasServiceInstruction::Native(
@@ -353,7 +352,6 @@ pub fn pay_spl_gas_for_contract_call_instruction(
     destination_address: String,
     payload_hash: [u8; 32],
     refund_address: Pubkey,
-    params: Vec<u8>,
     gas_fee_amount: u64,
     signer_pubkeys: &[Pubkey],
     decimals: u8,
