@@ -113,7 +113,7 @@ pub fn decode_base64(input: &str) -> Option<Vec<u8>> {
 ///
 /// # Errors
 ///
-/// - if the discriminant for the event is not present
+/// - if the discrimintant for the event is not present
 /// - if the event was detected via the discriminant but the data does not match the discriminant type
 pub fn parse_gateway_logs<T>(log: &T) -> Result<GatewayEvent, event_utils::EventParseError>
 where
@@ -158,7 +158,7 @@ where
             let event = axelar_solana_gateway::processor::VerifierSetRotated::new(logs)?;
             GatewayEvent::VerifierSetRotated(event)
         }
-        _ => return Err(EventParseError::Other("unsupported discriminant")),
+        _ => return Err(EventParseError::Other("unsupported discrimintant")),
     };
 
     Ok(gateway_event)
@@ -172,7 +172,7 @@ where
 ///
 /// # Errors
 ///
-/// - if the discriminant for the event is not present
+/// - if the discrimintant for the event is not present
 /// - if the event was detected via the discriminant but the data does not match the discriminant type
 pub fn parse_gas_service_log<T>(log: &T) -> Result<GasServiceEvent, event_utils::EventParseError>
 where
@@ -221,7 +221,7 @@ where
             GasServiceEvent::SplGasRefunded(event)
         }
         _ => {
-            return Err(EventParseError::Other("unsupported discriminant"));
+            return Err(EventParseError::Other("unsupported discrimintant"));
         }
     };
 
@@ -441,8 +441,8 @@ mod tests {
                 253, 7, 118, 199, 14, 218, 66, 103, 127, 224, 243, 254, 44, 195, 247, 43, 10, 46,
                 193, 191, 38, 1, 250, 10, 98, 37, 164, 74, 132, 208, 191, 145,
             ],
-            gas_fee_amount: 5000,
             refund_address: "11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3".parse().unwrap(),
+            gas_fee_amount: 5000,
         };
         let expected = vec![ProgramInvocationState::Succeeded(vec![(
             3,

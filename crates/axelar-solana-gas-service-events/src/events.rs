@@ -6,7 +6,7 @@ use anchor_lang::prelude::{
 
 use event_utils::{read_array, read_string, read_u64, EventParseError};
 
-/// Event emitted by the Axelar Solana Gas service
+/// Even emitted by the Axelar Solana Gas service
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum GasServiceEvent {
     /// Event when SOL was used to pay for a contract call
@@ -35,10 +35,10 @@ pub struct NativeGasPaidForContractCallEvent {
     pub destination_address: String,
     /// The payload hash for the event we're paying for
     pub payload_hash: [u8; 32],
-    /// The amount of SOL to send
-    pub gas_fee_amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
+    /// The amount of SOL to send
+    pub gas_fee_amount: u64,
 }
 
 impl NativeGasPaidForContractCallEvent {
@@ -67,24 +67,24 @@ impl NativeGasPaidForContractCallEvent {
             .ok_or(EventParseError::MissingData("payload_hash"))?;
         let payload_hash = read_array::<32>("payload_hash", &payload_hash_data)?;
 
-        let gas_fee_amount_data = data
-            .next()
-            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
-        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
-
         let refund_address_data = data
             .next()
             .ok_or(EventParseError::MissingData("refund_address"))?;
         let refund_address =
             Pubkey::new_from_array(read_array::<32>("refund_address", &refund_address_data)?);
 
+        let gas_fee_amount_data = data
+            .next()
+            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
+        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
+
         Ok(Self {
             treasury,
             destination_chain,
             destination_address,
             payload_hash,
-            gas_fee_amount,
             refund_address,
+            gas_fee_amount,
         })
     }
 }
@@ -99,10 +99,10 @@ pub struct NativeGasAddedEvent {
     pub tx_hash: [u8; 64],
     /// index of the log
     pub log_index: u64,
-    /// amount of SOL
-    pub gas_fee_amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
+    /// amount of SOL
+    pub gas_fee_amount: u64,
 }
 
 impl NativeGasAddedEvent {
@@ -124,23 +124,23 @@ impl NativeGasAddedEvent {
             .ok_or(EventParseError::MissingData("log_index"))?;
         let log_index = read_u64("log_index", &log_index_data)?;
 
-        let gas_fee_amount_data = data
-            .next()
-            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
-        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
-
         let refund_address_data = data
             .next()
             .ok_or(EventParseError::MissingData("refund_address"))?;
         let refund_address =
             Pubkey::new_from_array(read_array::<32>("refund_address", &refund_address_data)?);
 
+        let gas_fee_amount_data = data
+            .next()
+            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
+        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
+
         Ok(Self {
             treasury,
             tx_hash,
             log_index,
-            gas_fee_amount,
             refund_address,
+            gas_fee_amount,
         })
     }
 }
@@ -216,10 +216,10 @@ pub struct SplGasPaidForContractCallEvent {
     pub destination_address: String,
     /// The payload hash for the event we're paying for
     pub payload_hash: [u8; 32],
-    /// The amount of SOL to send
-    pub gas_fee_amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
+    /// The amount of SOL to send
+    pub gas_fee_amount: u64,
 }
 
 impl SplGasPaidForContractCallEvent {
@@ -265,16 +265,16 @@ impl SplGasPaidForContractCallEvent {
             .ok_or(EventParseError::MissingData("payload_hash"))?;
         let payload_hash = read_array::<32>("payload_hash", &payload_hash_data)?;
 
-        let gas_fee_amount_data = data
-            .next()
-            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
-        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
-
         let refund_address_data = data
             .next()
             .ok_or(EventParseError::MissingData("refund_address"))?;
         let refund_address =
             Pubkey::new_from_array(read_array::<32>("refund_address", &refund_address_data)?);
+
+        let gas_fee_amount_data = data
+            .next()
+            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
+        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
 
         Ok(Self {
             treasury,
@@ -284,8 +284,8 @@ impl SplGasPaidForContractCallEvent {
             destination_chain,
             destination_address,
             payload_hash,
-            gas_fee_amount,
             refund_address,
+            gas_fee_amount,
         })
     }
 }
@@ -306,10 +306,10 @@ pub struct SplGasAddedEvent {
     pub tx_hash: [u8; 64],
     /// index of the log
     pub log_index: u64,
-    /// amount of SOL
-    pub gas_fee_amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
+    /// amount of SOL
+    pub gas_fee_amount: u64,
 }
 
 impl SplGasAddedEvent {
@@ -348,16 +348,16 @@ impl SplGasAddedEvent {
             .ok_or(EventParseError::MissingData("log_index"))?;
         let log_index = read_u64("log_index", &log_index_data)?;
 
-        let gas_fee_amount_data = data
-            .next()
-            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
-        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
-
         let refund_address_data = data
             .next()
             .ok_or(EventParseError::MissingData("refund_address"))?;
         let refund_address =
             Pubkey::new_from_array(read_array::<32>("refund_address", &refund_address_data)?);
+
+        let gas_fee_amount_data = data
+            .next()
+            .ok_or(EventParseError::MissingData("gas_fee_amount"))?;
+        let gas_fee_amount = read_u64("gas_fee_amount", &gas_fee_amount_data)?;
 
         Ok(Self {
             treasury,
@@ -366,8 +366,8 @@ impl SplGasAddedEvent {
             token_program_id,
             tx_hash,
             log_index,
-            gas_fee_amount,
             refund_address,
+            gas_fee_amount,
         })
     }
 }
