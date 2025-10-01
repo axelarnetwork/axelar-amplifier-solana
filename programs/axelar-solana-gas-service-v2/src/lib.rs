@@ -67,7 +67,6 @@ pub mod axelar_solana_gas_service_v2 {
         destination_address: String,
         payload_hash: [u8; 32],
         gas_fee_amount: u64,
-        params: Vec<u8>,
         decimals: u8,
         refund_address: Pubkey,
     ) -> Result<()> {
@@ -76,7 +75,6 @@ pub mod axelar_solana_gas_service_v2 {
             destination_chain,
             destination_address,
             payload_hash,
-            &params,
             gas_fee_amount,
             decimals,
             refund_address,
