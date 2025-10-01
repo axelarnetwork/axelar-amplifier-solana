@@ -442,6 +442,7 @@ mod tests {
                 193, 191, 38, 1, 250, 10, 98, 37, 164, 74, 132, 208, 191, 145,
             ],
             refund_address: "11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3".parse().unwrap(),
+            params: vec![],
             gas_fee_amount: 5000,
         };
         let expected = vec![ProgramInvocationState::Succeeded(vec![(
