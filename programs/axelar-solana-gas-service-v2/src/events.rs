@@ -25,8 +25,8 @@ pub enum GasServiceEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NativeGasPaidForContractCallEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// Destination chain on the Axelar network
     pub destination_chain: String,
     /// Destination address on the Axelar network
@@ -43,8 +43,8 @@ pub struct NativeGasPaidForContractCallEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct NativeGasAddedEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
     /// index of the log
@@ -61,8 +61,8 @@ pub struct NativeGasAddedEvent {
 pub struct NativeGasRefundedEvent {
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// The log index
     pub log_index: u64,
     /// The receiver of the refund
@@ -75,10 +75,10 @@ pub struct NativeGasRefundedEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasPaidForContractCallEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
-    /// The Gas service config associated token account PDA
-    pub config_pda_ata: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -99,10 +99,10 @@ pub struct SplGasPaidForContractCallEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasAddedEvent {
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
-    /// The Gas service config associated token account PDA
-    pub config_pda_ata: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
@@ -121,16 +121,16 @@ pub struct SplGasAddedEvent {
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SplGasRefundedEvent {
-    /// The Gas service config associated token account PDA
-    pub config_pda_ata: Pubkey,
+    /// The Gas service treasury token account PDA
+    pub treasury_token_account: Pubkey,
     /// Mint of the token
     pub mint: Pubkey,
     /// The token program id
     pub token_program_id: Pubkey,
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
-    /// The Gas service config PDA
-    pub config_pda: Pubkey,
+    /// The Gas service treasury PDA
+    pub treasury: Pubkey,
     /// The log index
     pub log_index: u64,
     /// The receiver of the refund

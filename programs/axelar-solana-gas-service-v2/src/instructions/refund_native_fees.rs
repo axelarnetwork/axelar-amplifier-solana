@@ -53,7 +53,7 @@ pub fn refund_native_fees(
 
     emit_cpi!(NativeGasRefundedEvent {
         tx_hash,
-        config_pda: *ctx.accounts.treasury.to_account_info().key,
+        treasury: *ctx.accounts.treasury.to_account_info().key,
         log_index,
         receiver: *ctx.accounts.receiver.to_account_info().key,
         fees,

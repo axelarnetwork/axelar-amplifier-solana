@@ -7,7 +7,7 @@ use program_utils::transfer_lamports_anchor;
 ///
 /// Accounts expected:
 /// 1. `[signer, read-only]` The `operator` account authorized to collect fees.
-/// 2. `[writable]` The `config_pda` account holding the accrued lamports to collect.
+/// 2. `[writable]` The `treasury` account holding the accrued lamports to collect.
 /// 3. `[writable]` The `receiver` account where the collected lamports will be sent.
 #[derive(Accounts)]
 pub struct CollectNativeFees<'info> {
