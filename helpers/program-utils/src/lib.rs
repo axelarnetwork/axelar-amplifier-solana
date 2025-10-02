@@ -183,9 +183,9 @@ pub fn transfer_lamports(
 /// # Examples
 /// ```
 /// transfer_lamports_anchor!(
-/// 	ctx.accounts.from_account,
-/// 	ctx.accounts.to_account,
-/// 	amount
+///  ctx.accounts.from_account,
+///  ctx.accounts.to_account,
+///  amount
 /// );
 /// ```
 #[macro_export]

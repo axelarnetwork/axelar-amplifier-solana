@@ -104,7 +104,7 @@ unused_must_use = { level = "deny", priority = -1 }
 # Remove after https://github.com/solana-foundation/anchor/pull/3748 is released
 unexpected_cfgs = { level = "warn", check-cfg = [
 	'cfg(target_os, values("solana"))',
-] }
+], priority = -1 }
 
 
 [workspace.dependencies]

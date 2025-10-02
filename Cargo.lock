@@ -1104,7 +1104,6 @@ dependencies = [
  "axelar-solana-gateway-test-fixtures",
  "axelar-solana-operators",
  "borsh 1.5.7",
- "bytemuck",
  "mollusk-svm",
  "program-utils",
  "solana-sdk",
@@ -1292,7 +1291,6 @@ name = "axelar-solana-operators"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "anchor-spl",
  "mollusk-svm",
  "program-utils",
  "solana-sdk",
