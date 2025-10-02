@@ -99,16 +99,16 @@ pub mod axelar_solana_gas_service_v2 {
         destination_chain: String,
         destination_address: String,
         payload_hash: [u8; 32],
-        refund_address: Pubkey,
         gas_fee_amount: u64,
+        refund_address: Pubkey,
     ) -> Result<()> {
         instructions::pay_native_for_contract_call::pay_native_for_contract_call(
             ctx,
             destination_chain,
             destination_address,
             payload_hash,
-            refund_address,
             gas_fee_amount,
+            refund_address,
         )
     }
 
