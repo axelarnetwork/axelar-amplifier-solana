@@ -31,8 +31,8 @@ pub fn pay_native_for_contract_call(
     destination_chain: String,
     destination_address: String,
     payload_hash: [u8; 32],
-    refund_address: Pubkey,
     gas_fee_amount: u64,
+    refund_address: Pubkey,
 ) -> Result<()> {
     if gas_fee_amount == 0 {
         msg!("Gas fee amount cannot be zero");
