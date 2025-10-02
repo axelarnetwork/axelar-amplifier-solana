@@ -6,12 +6,12 @@ use axelar_solana_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_S
 #[derive(Accounts)]
 #[event_cpi]
 pub struct CallContract<'info> {
-    /// The program that wants to call us - must be executable
-    /// CHECK: Anchor constraint verifies this is an executable program
+    /// The program that wants to call us - can be a direct signer or program
+    /// CHECK: We validate the caller using is_signer flag and signing PDA verification
     pub calling_program: UncheckedAccount<'info>,
     /// The standardized PDA that must sign - derived from the calling program
     pub signing_pda: UncheckedAccount<'info>,
-    /// The gateway configuration PDA being initialized
+    /// The gateway configuration PDA (read-only)
     #[account(
             seeds = [GATEWAY_SEED],
             bump = gateway_root_pda.bump
