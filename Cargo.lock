@@ -1100,6 +1100,7 @@ dependencies = [
  "axelar-solana-gas-service",
  "axelar-solana-gateway-test-fixtures",
  "axelar-solana-operators",
+ "borsh 1.5.7",
  "bytemuck",
  "mollusk-svm",
  "program-utils",
