@@ -17,6 +17,47 @@ pub use errors::*;
 
 declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
 
+/// Seed prefix for message signing PDAs (matches axelar-solana-gateway)
+pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = b"gtw-validate-msg";
+
+/// Create a new Signing PDA that is used for validating that a message has
+/// reached the destination program (matches axelar-solana-gateway implementation)
+#[inline]
+#[must_use]
+pub fn get_validate_message_signing_pda(
+    destination_address: Pubkey,
+    command_id: [u8; 32],
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
+        &destination_address,
+    )
+}
+
+/// Create a new Signing PDA that is used for validating that a message has
+/// reached the destination program (matches axelar-solana-gateway implementation)
+///
+/// # Errors
+///
+/// Returns an error if the derived address lies on the ed25519 curve and is therefore not
+/// a valid program derived address when using the destination address as the program ID.
+#[inline]
+pub fn create_validate_message_signing_pda(
+    destination_address: &Pubkey,
+    signing_pda_bump: u8,
+    command_id: &[u8; 32],
+) -> Result<Pubkey> {
+    Pubkey::create_program_address(
+        &[
+            VALIDATE_MESSAGE_SIGNING_SEED,
+            command_id,
+            &[signing_pda_bump],
+        ],
+        destination_address,
+    )
+    .map_err(|_| error!(crate::GatewayError::InvalidSigningPDA))
+}
+
 pub struct GatewayDiscriminators;
 
 impl GatewayDiscriminators {

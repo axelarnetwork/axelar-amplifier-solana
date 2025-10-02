@@ -89,7 +89,7 @@ pub fn approve_message_handler(
 
     // Calculate signing PDA bump
     let (_, signing_pda_bump) =
-        axelar_solana_gateway::get_validate_message_signing_pda(destination_address, command_id);
+        crate::get_validate_message_signing_pda(destination_address, command_id);
 
     // Store data in the PDA
     incoming_message_pda.bump = ctx.bumps.incoming_message_pda;
