@@ -20,6 +20,7 @@ axelar-solana-gas-service.workspace = true
 solana-sdk-ids.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
+borsh.workspace = true
 
 [lints]
 workspace = true
