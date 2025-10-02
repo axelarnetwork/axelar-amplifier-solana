@@ -538,20 +538,17 @@ fn test_call_contract_from_program() {
 
 #[test]
 fn test_fails_when_verifier_submits_signature_twice() {
-    // Step 1: Setup gateway with real signers
+    // Setup
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
         setup_test_with_real_signers();
 
-    // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    // Step 3: Create messages and payload merkle root
     let verifier_set_merkle_root = setup.verifier_set_hash;
     let (_messages, _message_leaves, _message_merkle_tree, payload_merkle_root) =
         setup_message_merkle_tree(&setup, verifier_set_merkle_root);
 
-    // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
@@ -560,85 +557,39 @@ fn test_fails_when_verifier_submits_signature_twice() {
         );
     assert!(!session_result.program_result.is_err());
 
-    // Step 5: Get existing accounts
-    let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    // Step 6: Create verifier info for first signer
-    let verifier_info_1 = create_verifier_info(
+    let verifier_info = create_verifier_info(
         &secret_key_1,
         payload_merkle_root,
         &verifier_leaves[0],
-        0, // Position 0
+        0,
         &verifier_merkle_tree,
     );
 
-    // Step 7: First signature verification should succeed
+    // First signature verification should succeed
     let verify_result_1 = verify_signature_helper(
         &setup,
         payload_merkle_root,
-        verifier_info_1.clone(),
+        verifier_info.clone(),
         verification_session_pda,
-        gateway_account.clone(),
-        verification_session_account.clone(),
+        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.gateway_root_pda).unwrap().1.clone(),
+        session_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == verification_session_pda).unwrap().1.clone(),
         setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account.clone(),
+        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda).unwrap().1.clone(),
     );
+    assert!(!verify_result_1.program_result.is_err());
 
-    assert!(
-        !verify_result_1.program_result.is_err(),
-        "First signature verification should succeed: {:?}",
-        verify_result_1.program_result
-    );
-
-    // Step 8: Get updated verification session after first signature
-    let updated_verification_account = verify_result_1
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    // Step 9: Second signature verification with the same verifier should fail
+    // Second signature verification with the same verifier should fail
     let verify_result_2 = verify_signature_helper(
         &setup,
         payload_merkle_root,
-        verifier_info_1, // Same verifier info as first attempt
+        verifier_info,
         verification_session_pda,
-        gateway_account,
-        updated_verification_account,
+        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.gateway_root_pda).unwrap().1.clone(),
+        verify_result_1.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == verification_session_pda).unwrap().1.clone(),
         setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda).unwrap().1.clone(),
     );
 
     // Should fail with SlotAlreadyVerified error
-    assert!(
-        verify_result_2.program_result.is_err(),
-        "Second signature verification with same verifier should fail"
-    );
-
-    // The test passes if the second signature verification fails
-    // The specific error checking is handled by the underlying signature verification logic
+    assert!(verify_result_2.program_result.is_err());
 }
