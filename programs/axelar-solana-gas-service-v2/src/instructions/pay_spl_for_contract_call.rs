@@ -15,7 +15,7 @@ pub struct PaySplForContractCall<'info> {
         associated_token::mint = mint,
         associated_token::authority = sender,
     )]
-    pub sender_ata: InterfaceAccount<'info, TokenAccount>,
+    pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -31,7 +31,7 @@ pub struct PaySplForContractCall<'info> {
         associated_token::mint = mint,
         associated_token::authority = treasury,
     )]
-    pub treasury_ata: InterfaceAccount<'info, TokenAccount>,
+    pub treasury_token_account: InterfaceAccount<'info, TokenAccount>,
 
     pub mint: InterfaceAccount<'info, Mint>,
 
@@ -56,8 +56,8 @@ pub fn pay_spl_for_contract_call<'info>(
 
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
-        from: ctx.accounts.sender_ata.to_account_info().clone(),
-        to: ctx.accounts.treasury_ata.to_account_info().clone(),
+        from: ctx.accounts.sender_token_account.to_account_info().clone(),
+        to: ctx.accounts.treasury_token_account.to_account_info().clone(),
         authority: ctx.accounts.sender.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -67,8 +67,8 @@ pub fn pay_spl_for_contract_call<'info>(
     token_interface::transfer_checked(cpi_context, gas_fee_amount, decimals)?;
 
     emit_cpi!(SplGasPaidForContractCallEvent {
-        config_pda: *ctx.accounts.treasury.to_account_info().key,
-        config_pda_ata: *ctx.accounts.treasury_ata.to_account_info().key,
+        treasury: *ctx.accounts.treasury.to_account_info().key,
+        treasury_token_account: *ctx.accounts.treasury_token_account.to_account_info().key,
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.key,
         destination_chain: destination_chain.clone(),

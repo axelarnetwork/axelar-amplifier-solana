@@ -47,7 +47,7 @@ pub fn add_native_gas(
     )?;
 
     emit_cpi!(NativeGasAddedEvent {
-        config_pda: *treasury_account_info.key,
+        treasury: *treasury_account_info.key,
         tx_hash,
         log_index,
         refund_address,
