@@ -5,5 +5,5 @@ pub use config::*;
 pub mod signature_verification;
 pub use signature_verification::*;
 
-pub mod message_approval;
-pub use message_approval::*;
+pub mod incoming_message;
+pub use incoming_message::*;

@@ -1,8 +1,9 @@
-use crate::{GatewayError, VerifierSetHash};
+use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use axelar_solana_gateway::state::signature_verification::verify_ecdsa_signature;
 use bitvec::prelude::*;
+use udigest::{encoding::EncodeValue, Digestable};
 
 #[derive(Debug, Clone, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
 pub struct SignatureVerification {
@@ -19,12 +20,21 @@ impl SignatureVerification {
 
 #[account]
 #[derive(Debug, PartialEq, Eq)]
-pub struct VerificationSessionAccount {
+pub struct SignatureVerificationSessionData {
     pub signature_verification: SignatureVerification,
     pub bump: u8,
+    pub _pad: [u8; 15],
 }
 
-impl VerificationSessionAccount {
+impl SignatureVerificationSessionData {
+    pub fn new(signature_verification: SignatureVerification, bump: u8) -> Self {
+        SignatureVerificationSessionData {
+            signature_verification,
+            bump,
+            _pad: [0u8; 15],
+        }
+    }
+
     pub fn process_signature(
         &mut self,
         payload_merkle_root: [u8; 32],
@@ -33,8 +43,13 @@ impl VerificationSessionAccount {
     ) -> Result<()> {
         self.check_slot_is_done(&verifier_info.leaf)?;
 
+        let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
+            PublicKey::Secp256k1(key) => key,
+            _ => return err!(GatewayError::UnsupportedSignatureScheme),
+        };
+
         if !verify_ecdsa_signature(
-            &verifier_info.leaf.signer_pubkey,
+            &pubkey_bytes,
             &verifier_info.signature,
             &payload_merkle_root,
         ) {
@@ -45,7 +60,6 @@ impl VerificationSessionAccount {
             rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&verifier_info.merkle_proof)
                 .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
-        // simple keccak hash for now
         let leaf_hash = verifier_info.leaf.hash();
 
         if !merkle_proof.verify(
@@ -131,16 +145,27 @@ impl VerificationSessionAccount {
 }
 
 pub type Signature = [u8; 65];
-pub type PublicKey = [u8; 33];
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct SigningVerifierSetInfo {
+    _padding: u8,
     pub signature: Signature,
     pub leaf: VerifierSetLeaf,
     pub merkle_proof: Vec<u8>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize)]
+impl SigningVerifierSetInfo {
+    pub fn new(signature: Signature, leaf: VerifierSetLeaf, merkle_proof: Vec<u8>) -> Self {
+        SigningVerifierSetInfo {
+            _padding: 0u8,
+            signature,
+            leaf,
+            merkle_proof,
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct VerifierSetLeaf {
     /// The nonce value from the associated `VerifierSet`.
     pub nonce: u64,
@@ -168,12 +193,29 @@ pub struct VerifierSetLeaf {
 }
 
 impl VerifierSetLeaf {
-    // placeholder hash function
     pub fn hash(&self) -> [u8; 32] {
-        use solana_program::keccak;
+        let mut buffer = VecBuf(vec![]);
+        self.unambiguously_encode(EncodeValue::new(&mut buffer));
+        solana_program::keccak::hash(&buffer.0).to_bytes()
+    }
 
-        // Use borsh serialization (matches how Anchor serializes data)
-        let data = self.try_to_vec().expect("Serialization should not fail");
-        keccak::hash(&data).to_bytes()
+    pub fn new(
+        nonce: u64,
+        quorum: u128,
+        signer_pubkey: PublicKey,
+        signer_weight: u128,
+        position: u16,
+        set_size: u16,
+        domain_separator: [u8; 32],
+    ) -> Self {
+        Self {
+            nonce,
+            quorum,
+            signer_pubkey,
+            signer_weight,
+            position,
+            set_size,
+            domain_separator,
+        }
     }
 }

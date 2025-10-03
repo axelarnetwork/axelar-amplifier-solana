@@ -1,7 +1,6 @@
 use crate::{GatewayConfig, GatewayError, OperatorshipTransferedEvent};
 use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::GATEWAY_SEED;
-use solana_program::bpf_loader_upgradeable;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -14,10 +13,10 @@ pub struct TransferOperatorship<'info> {
     pub gateway_root_pda: Account<'info, GatewayConfig>,
     pub operator_or_upgrade_authority: Signer<'info>,
     #[account(
-            constraint = programdata_account.key() ==
-                Pubkey::find_program_address(&[crate::ID.as_ref()], &bpf_loader_upgradeable::id()).0
-                @ GatewayError::InvalidUpgradeAuthority
-        )]
+        constraint = programdata_account.key() ==
+            Pubkey::find_program_address(&[crate::ID.as_ref()], &anchor_lang::solana_program::bpf_loader_upgradeable::id()).0
+            @ GatewayError::InvalidUpgradeAuthority
+    )]
     pub programdata_account: UncheckedAccount<'info>,
     pub new_operator: UncheckedAccount<'info>,
 }

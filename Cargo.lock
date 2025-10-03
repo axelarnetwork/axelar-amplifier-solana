@@ -1193,6 +1193,7 @@ dependencies = [
  "rand 0.8.5",
  "solana-program",
  "solana-sdk",
+ "udigest",
 ]
 
 [[package]]

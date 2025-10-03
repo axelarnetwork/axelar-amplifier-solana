@@ -1,5 +1,5 @@
 use crate::{
-    u256::U256, GatewayConfig, GatewayError, SignersRotatedEvent, VerificationSessionAccount,
+    u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData, SignersRotatedEvent,
     VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
@@ -22,7 +22,7 @@ pub struct RotateSigners<'info> {
             .signing_verifier_set_hash).as_ref()],
             bump = verification_session_account.bump
         )]
-    pub verification_session_account: Account<'info, VerificationSessionAccount>,
+    pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
     #[account(
             seeds = [
                 VERIFIER_SET_TRACKER_SEED,
@@ -35,7 +35,7 @@ pub struct RotateSigners<'info> {
     #[account(
            init,
            payer = payer,
-           space = 8 + std::mem::size_of::<VerifierSetTracker>(),
+           space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
            seeds = [
                axelar_solana_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
                new_verifier_set_merkle_root.as_ref()
@@ -83,7 +83,7 @@ pub fn rotate_signers_handler(
     let epoch = ctx.accounts.verifier_set_tracker_pda.epoch;
     ctx.accounts.gateway_root_pda.assert_valid_epoch(epoch)?;
 
-    // we always enforce the delay unless unless the operator has been provided and
+    // we always enforce the delay unless the operator has been provided and
     // its also the Gateway opreator
     // reference: https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/c290c7337fd447ecbb7426e52ac381175e33f602/contracts/gateway/AxelarAmplifierGateway.sol#L98-L101
     let operator = ctx.accounts.operator.clone();

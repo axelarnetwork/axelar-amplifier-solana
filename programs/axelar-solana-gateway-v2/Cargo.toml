@@ -36,6 +36,7 @@ mainnet = [
 ]
 
 [dependencies]
+udigest.workspace = true
 anchor-lang = { version = "0.31.1", features = ["event-cpi"] }
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 borsh.workspace = true

@@ -1,6 +1,6 @@
 use crate::{
     GatewayConfig, GatewayError, IncomingMessage, MerkleisedMessage, MessageApprovedEvent,
-    MessageStatus, VerificationSessionAccount,
+    MessageStatus, SignatureVerificationSessionData,
 };
 use anchor_lang::prelude::*;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
@@ -24,11 +24,11 @@ pub struct ApproveMessage<'info> {
             seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
             bump = verification_session_account.bump
         )]
-    pub verification_session_account: Account<'info, VerificationSessionAccount>,
+    pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
     #[account(
         init,
         payer = funder,
-        space = 8 + std::mem::size_of::<IncomingMessage>(),
+        space = IncomingMessage::DISCRIMINATOR.len() + std::mem::size_of::<IncomingMessage>(),
         seeds = [INCOMING_MESSAGE_SEED, message.leaf.message.command_id().as_ref()],
         bump
     )]

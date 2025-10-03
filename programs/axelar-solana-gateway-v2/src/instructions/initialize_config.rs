@@ -25,7 +25,7 @@ pub struct InitializeConfigAccounts<'info> {
     #[account(
             init,
             payer = payer,
-            space = 8 + std::mem::size_of::<GatewayConfig>(),
+            space = GatewayConfig::DISCRIMINATOR.len() + std::mem::size_of::<GatewayConfig>(),
             seeds = [GATEWAY_SEED],
             bump
         )]
@@ -34,7 +34,7 @@ pub struct InitializeConfigAccounts<'info> {
     #[account(
             init,
             payer = payer,
-            space = 8 + std::mem::size_of::<VerifierSetTracker>(),
+            space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
             seeds = [
                 VERIFIER_SET_TRACKER_SEED,
                 params.initial_verifier_set.hash.as_slice()

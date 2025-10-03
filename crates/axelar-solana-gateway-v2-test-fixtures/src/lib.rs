@@ -1,4 +1,7 @@
-use anchor_lang::{prelude::borsh::BorshSerialize, solana_program};
+use anchor_lang::{
+    prelude::{borsh::BorshSerialize, UpgradeableLoaderState},
+    solana_program,
+};
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use axelar_solana_gateway::seed_prefixes::{
     CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
@@ -6,7 +9,7 @@ use axelar_solana_gateway::seed_prefixes::{
 use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfig},
     u256::U256,
-    MerkleisedMessage, ID as GATEWAY_PROGRAM_ID,
+    MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -15,7 +18,6 @@ use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_sdk::{
     account::Account,
-    bpf_loader_upgradeable::{self, UpgradeableLoaderState},
     hash,
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
@@ -67,7 +69,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
-        &bpf_loader_upgradeable::id(),
+        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
@@ -156,24 +158,24 @@ pub fn setup_test_with_real_signers() -> (
     // Step 2: Create verifier set with your 2 real signers
     let quorum_threshold = 100;
     let verifier_leaves = vec![
-        VerifierSetLeaf {
-            nonce: 0,
-            quorum: quorum_threshold,
-            signer_pubkey: compressed_pubkey_1,
-            signer_weight: 50,
-            position: 0,
-            set_size: 2,
+        VerifierSetLeaf::new(
+            0,
+            quorum_threshold,
+            PublicKey::Secp256k1(compressed_pubkey_1),
+            50,
+            0,
+            2,
             domain_separator,
-        },
-        VerifierSetLeaf {
-            nonce: 0,
-            quorum: quorum_threshold,
-            signer_pubkey: compressed_pubkey_2,
-            signer_weight: 50,
-            position: 1,
-            set_size: 2,
+        ),
+        VerifierSetLeaf::new(
+            0,
+            quorum_threshold,
+            PublicKey::Secp256k1(compressed_pubkey_2),
+            50,
+            1,
+            2,
             domain_separator,
-        },
+        ),
     ];
 
     // Step 3: Calculate the REAL verifier set hash
@@ -189,7 +191,7 @@ pub fn setup_test_with_real_signers() -> (
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
-        &bpf_loader_upgradeable::id(),
+        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
@@ -279,7 +281,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: serialized_program_data,
-                owner: bpf_loader_upgradeable::id(),
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
                 executable: false,
                 rent_epoch: 0,
             },
@@ -538,11 +540,7 @@ pub fn create_verifier_info(
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
 
-    SigningVerifierSetInfo {
-        signature: signature_array,
-        leaf: verifier_leaf.clone(),
-        merkle_proof: merkle_proof_bytes,
-    }
+    SigningVerifierSetInfo::new(signature_array, verifier_leaf.clone(), merkle_proof_bytes)
 }
 
 pub fn call_contract_helper(
