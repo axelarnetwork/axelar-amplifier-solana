@@ -1,4 +1,4 @@
-use crate::{signature_verification::VerificationSessionAccount, GatewayConfig};
+use crate::{signature_verification::SignatureVerificationSessionData, GatewayConfig};
 use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED};
 
@@ -15,11 +15,11 @@ pub struct InitializePayloadVerificationSession<'info> {
     #[account(
             init,
             payer = payer,
-            space = 8 + std::mem::size_of::<VerificationSessionAccount>(),
+            space = SignatureVerificationSessionData::DISCRIMINATOR.len() + std::mem::size_of::<SignatureVerificationSessionData>(),
             seeds = [SIGNATURE_VERIFICATION_SEED, merkle_root.as_ref()],
             bump
         )]
-    pub verification_session_account: Account<'info, VerificationSessionAccount>,
+    pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
     pub system_program: Program<'info, System>,
 }
 

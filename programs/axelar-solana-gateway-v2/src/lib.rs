@@ -17,45 +17,10 @@ pub use errors::*;
 
 declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
 
-/// Seed prefix for message signing PDAs (matches axelar-solana-gateway)
-pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = b"gtw-validate-msg";
-
-/// Create a new Signing PDA that is used for validating that a message has
-/// reached the destination program (matches axelar-solana-gateway implementation)
-#[inline]
-#[must_use]
-pub fn get_validate_message_signing_pda(
-    destination_address: Pubkey,
-    command_id: [u8; 32],
-) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
-        &destination_address,
-    )
-}
-
-pub struct GatewayDiscriminators;
-
-impl GatewayDiscriminators {
-    pub const APPROVE_MESSAGE: &'static [u8] = &[0];
-    pub const ROTATE_SIGNERS: &'static [u8] = &[1];
-    pub const CALL_CONTRACT: &'static [u8] = &[2];
-    pub const INITIALIZE_CONFIG: &'static [u8] = &[3];
-    pub const INITIALIZE_PAYLOAD_VERIFICATION_SESSION: &'static [u8] = &[4];
-    pub const VERIFY_SIGNATURE: &'static [u8] = &[5];
-    pub const INITIALIZE_MESSAGE_PAYLOAD: &'static [u8] = &[6];
-    pub const WRITE_MESSAGE_PAYLOAD: &'static [u8] = &[7];
-    pub const COMMIT_MESSAGE_PAYLOAD: &'static [u8] = &[8];
-    pub const CLOSE_MESSAGE_PAYLOAD: &'static [u8] = &[9];
-    pub const VALIDATE_MESSAGE: &'static [u8] = &[10];
-    pub const TRANSFER_OPERATORSHIP: &'static [u8] = &[11];
-}
-
 #[program]
 pub mod axelar_solana_gateway_v2 {
-    use crate::signature_verification::SigningVerifierSetInfo;
-
     use super::*;
+    use crate::signature_verification::SigningVerifierSetInfo;
 
     pub fn call_contract(
         ctx: Context<CallContract>,
