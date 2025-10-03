@@ -1,5 +1,5 @@
 use crate::{
-    state::config::{GatewayConfig, InitializeConfig},
+    state::config::{GatewayConfig, InitializeConfigParams},
     u256::U256,
     GatewayError, VerifierSetTracker,
 };
@@ -7,7 +7,7 @@ use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::{GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED};
 
 #[derive(Accounts)]
-#[instruction(params: InitializeConfig)]
+#[instruction(params: InitializeConfigParams)]
 pub struct InitializeConfigAccounts<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -46,7 +46,7 @@ pub struct InitializeConfigAccounts<'info> {
 
 pub fn initialize_config_handler(
     ctx: Context<InitializeConfigAccounts>,
-    params: InitializeConfig,
+    params: InitializeConfigParams,
 ) -> Result<()> {
     msg!("initialize_config_handler");
 

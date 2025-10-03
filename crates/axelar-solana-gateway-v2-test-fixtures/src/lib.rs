@@ -7,7 +7,7 @@ use axelar_solana_gateway::seed_prefixes::{
     CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
 };
 use axelar_solana_gateway_v2::{
-    state::config::{InitialVerifierSet, InitializeConfig},
+    state::config::{InitialVerifierSet, InitializeConfigParams},
     u256::U256,
     MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID,
 };
@@ -230,7 +230,7 @@ pub fn setup_test_with_real_signers() -> (
 }
 
 pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
-    let params = InitializeConfig {
+    let params = InitializeConfigParams {
         domain_separator: setup.domain_separator,
         initial_verifier_set: InitialVerifierSet {
             hash: setup.verifier_set_hash,

@@ -38,9 +38,9 @@ pub mod axelar_solana_gateway_v2 {
         )
     }
 
-    pub fn initialise_config(
+    pub fn initialize_config(
         ctx: Context<InitializeConfigAccounts>,
-        params: InitializeConfig,
+        params: InitializeConfigParams,
     ) -> Result<()> {
         instructions::initialize_config_handler(ctx, params)
     }
