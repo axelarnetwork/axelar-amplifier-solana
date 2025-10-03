@@ -34,30 +34,6 @@ pub fn get_validate_message_signing_pda(
     )
 }
 
-/// Create a new Signing PDA that is used for validating that a message has
-/// reached the destination program (matches axelar-solana-gateway implementation)
-///
-/// # Errors
-///
-/// Returns an error if the derived address lies on the ed25519 curve and is therefore not
-/// a valid program derived address when using the destination address as the program ID.
-#[inline]
-pub fn create_validate_message_signing_pda(
-    destination_address: &Pubkey,
-    signing_pda_bump: u8,
-    command_id: &[u8; 32],
-) -> Result<Pubkey> {
-    Pubkey::create_program_address(
-        &[
-            VALIDATE_MESSAGE_SIGNING_SEED,
-            command_id,
-            &[signing_pda_bump],
-        ],
-        destination_address,
-    )
-    .map_err(|_| error!(crate::GatewayError::InvalidSigningPDA))
-}
-
 pub struct GatewayDiscriminators;
 
 impl GatewayDiscriminators {
