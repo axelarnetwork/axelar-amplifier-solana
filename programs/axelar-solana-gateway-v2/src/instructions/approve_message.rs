@@ -1,12 +1,12 @@
+use crate::seed_prefixes::{
+    GATEWAY_SEED, INCOMING_MESSAGE_SEED, SIGNATURE_VERIFICATION_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
+};
 use crate::{
     GatewayConfig, GatewayError, IncomingMessage, MerkleisedMessage, MessageApprovedEvent,
     MessageStatus, SignatureVerificationSessionData,
 };
 use anchor_lang::prelude::*;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
-use axelar_solana_gateway::seed_prefixes::{
-    GATEWAY_SEED, INCOMING_MESSAGE_SEED, SIGNATURE_VERIFICATION_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
-};
 use std::str::FromStr;
 
 #[derive(Accounts)]

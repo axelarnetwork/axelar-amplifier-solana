@@ -1,12 +1,10 @@
+use crate::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData,
     VerifierSetRotatedEvent, VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use axelar_solana_gateway::seed_prefixes::{
-    GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED, VERIFIER_SET_TRACKER_SEED,
-};
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -48,7 +46,7 @@ pub struct RotateSigners<'info> {
         payer = payer,
         space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
         seeds = [
-            axelar_solana_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
+            crate::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
             new_verifier_set_merkle_root.as_ref()
         ],
         bump
