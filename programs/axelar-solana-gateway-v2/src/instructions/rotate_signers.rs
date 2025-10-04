@@ -3,6 +3,7 @@ use crate::{
     VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program;
 use axelar_solana_gateway::seed_prefixes::{
     GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED, VERIFIER_SET_TRACKER_SEED,
 };

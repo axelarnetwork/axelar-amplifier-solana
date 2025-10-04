@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program;
 use udigest::{encoding::EncodeValue, Digestable};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize)]

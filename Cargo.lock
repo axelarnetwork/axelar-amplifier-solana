@@ -1191,7 +1191,6 @@ dependencies = [
  "libsecp256k1",
  "mollusk-svm",
  "rand 0.8.5",
- "solana-program",
  "solana-sdk",
  "udigest",
 ]

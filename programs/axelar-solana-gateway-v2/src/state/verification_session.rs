@@ -1,5 +1,6 @@
 use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use axelar_solana_gateway::state::signature_verification::verify_ecdsa_signature;
 use bitvec::prelude::*;
