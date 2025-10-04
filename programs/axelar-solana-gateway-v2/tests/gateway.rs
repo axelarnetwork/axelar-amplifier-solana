@@ -1,7 +1,7 @@
 use anchor_lang::AccountDeserialize;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
-    signature_verification::SignatureVerification, state::VerifierSetTracker, GatewayConfig,
+    state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
     ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
@@ -39,6 +39,7 @@ fn test_initialize_config() {
         operator: setup.operator,
         domain_separator: setup.domain_separator,
         bump: setup.gateway_bump,
+        _padding: [0u8; 7],
     };
 
     let actual_config =

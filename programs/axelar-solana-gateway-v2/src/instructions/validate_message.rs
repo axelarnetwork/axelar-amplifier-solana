@@ -1,5 +1,5 @@
 use crate::{
-    GatewayError, IncomingMessage, Message, MessageExecuted, MessageStatus,
+    GatewayError, IncomingMessage, Message, MessageExecutedEvent, MessageStatus,
     VALIDATE_MESSAGE_SIGNING_SEED,
 };
 use anchor_lang::prelude::*;
@@ -36,7 +36,7 @@ pub fn validate_message_handler(ctx: Context<ValidateMessage>, message: Message)
     let command_id = message.command_id();
     let cc_id = &message.cc_id;
 
-    emit_cpi!(MessageExecuted {
+    emit_cpi!(MessageExecutedEvent {
         command_id,
         destination_address,
         payload_hash: message.payload_hash,

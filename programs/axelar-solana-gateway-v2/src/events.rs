@@ -13,7 +13,7 @@ pub struct MessageApprovedEvent {
 }
 
 #[event]
-pub struct MessageExecuted {
+pub struct MessageExecutedEvent {
     pub command_id: [u8; 32],
     pub destination_address: Pubkey,
     pub payload_hash: [u8; 32],

@@ -21,6 +21,7 @@ pub struct GatewayConfig {
     pub operator: Pubkey,
     pub domain_separator: [u8; 32],
     pub bump: u8,
+    pub _padding: [u8; 7],
 }
 
 impl GatewayConfig {

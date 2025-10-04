@@ -20,7 +20,6 @@ declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
 #[program]
 pub mod axelar_solana_gateway_v2 {
     use super::*;
-    use crate::signature_verification::SigningVerifierSetInfo;
 
     pub fn call_contract(
         ctx: Context<CallContract>,
@@ -55,7 +54,7 @@ pub mod axelar_solana_gateway_v2 {
     pub fn verify_signature(
         ctx: Context<VerifySignature>,
         payload_merkle_root: [u8; 32],
-        verifier_info: SigningVerifierSetInfo,
+        verifier_info: crate::verification_session::SigningVerifierSetInfo,
     ) -> Result<()> {
         instructions::verify_signature_handler(ctx, payload_merkle_root, verifier_info)
     }

@@ -1,4 +1,4 @@
-use crate::{signature_verification::SignatureVerificationSessionData, GatewayConfig};
+use crate::{verification_session::SignatureVerificationSessionData, GatewayConfig};
 use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED};
 

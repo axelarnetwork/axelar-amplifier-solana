@@ -1,5 +1,5 @@
 use crate::{
-    signature_verification::SigningVerifierSetInfo, GatewayConfig, GatewayError,
+    verification_session::SigningVerifierSetInfo, GatewayConfig, GatewayError,
     SignatureVerificationSessionData, VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
