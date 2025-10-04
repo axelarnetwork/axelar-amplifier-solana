@@ -1,4 +1,5 @@
 use anchor_lang::AccountDeserialize;
+use axelar_solana_gateway_v2::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
     state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
@@ -446,10 +447,7 @@ fn test_rotate_signers() {
 
     // Step 10: Verify the new verifier set tracker was created correctly
     let (new_verifier_set_tracker_pda, _) = Pubkey::find_program_address(
-        &[
-            axelar_solana_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
-            new_verifier_set_hash.as_slice(),
-        ],
+        &[VERIFIER_SET_TRACKER_SEED, new_verifier_set_hash.as_slice()],
         &GATEWAY_PROGRAM_ID,
     );
 
@@ -572,10 +570,28 @@ fn test_fails_when_verifier_submits_signature_twice() {
         payload_merkle_root,
         verifier_info.clone(),
         verification_session_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.gateway_root_pda).unwrap().1.clone(),
-        session_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == verification_session_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .unwrap()
+            .1
+            .clone(),
+        session_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == verification_session_pda)
+            .unwrap()
+            .1
+            .clone(),
         setup.verifier_set_tracker_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+            .unwrap()
+            .1
+            .clone(),
     );
     assert!(!verify_result_1.program_result.is_err());
 
@@ -585,10 +601,28 @@ fn test_fails_when_verifier_submits_signature_twice() {
         payload_merkle_root,
         verifier_info,
         verification_session_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.gateway_root_pda).unwrap().1.clone(),
-        verify_result_1.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == verification_session_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .unwrap()
+            .1
+            .clone(),
+        verify_result_1
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == verification_session_pda)
+            .unwrap()
+            .1
+            .clone(),
         setup.verifier_set_tracker_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+            .unwrap()
+            .1
+            .clone(),
     );
 
     // Should fail with SlotAlreadyVerified error

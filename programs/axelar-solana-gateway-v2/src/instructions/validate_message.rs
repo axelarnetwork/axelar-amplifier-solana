@@ -1,6 +1,6 @@
+use crate::seed_prefixes::{INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED};
 use crate::{GatewayError, IncomingMessage, Message, MessageExecutedEvent, MessageStatus};
 use anchor_lang::prelude::*;
-use axelar_solana_gateway::seed_prefixes::{INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED};
 use std::str::FromStr;
 
 #[derive(Accounts)]

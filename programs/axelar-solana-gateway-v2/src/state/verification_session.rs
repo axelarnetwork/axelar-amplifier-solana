@@ -2,7 +2,6 @@ use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
-use axelar_solana_gateway::state::signature_verification::verify_ecdsa_signature;
 use bitvec::prelude::*;
 use udigest::{encoding::EncodeValue, Digestable};
 
@@ -49,7 +48,7 @@ impl SignatureVerificationSessionData {
             _ => return err!(GatewayError::UnsupportedSignatureScheme),
         };
 
-        if !verify_ecdsa_signature(
+        if !Self::verify_ecdsa_signature(
             &pubkey_bytes,
             &verifier_info.signature,
             &payload_merkle_root,
@@ -79,6 +78,49 @@ impl SignatureVerificationSessionData {
         self.verify_or_initialize_verifier_set(verifier_set_merkle_root)?;
 
         Ok(())
+    }
+
+    pub fn verify_ecdsa_signature(
+        pubkey: &axelar_solana_encoding::types::pubkey::Secp256k1Pubkey,
+        signature: &axelar_solana_encoding::types::pubkey::EcdsaRecoverableSignature,
+        message: &[u8; 32],
+    ) -> bool {
+        // The recovery bit in the signature's bytes is placed at the end, as per the
+        // 'multisig-prover' contract by Axelar. Unwrap: we know the 'signature'
+        // slice exact size, and it isn't empty.
+        let (signature, recovery_id) = match signature {
+            [first_64 @ .., recovery_id] => (first_64, recovery_id),
+        };
+
+        // Transform from Ethereum recovery_id (27, 28) to a range accepted by
+        // secp256k1_recover (0, 1, 2, 3)
+        // Only values 27 and 28 are valid Ethereum recovery IDs
+        let recovery_id = if *recovery_id == 27 || *recovery_id == 28 {
+            recovery_id.saturating_sub(27)
+        } else {
+            solana_program::msg!("Invalid recovery ID: {} (must be 27 or 28)", recovery_id);
+            return false;
+        };
+
+        // This is results in a Solana syscall.
+        let secp256k1_recover =
+            solana_program::secp256k1_recover::secp256k1_recover(message, recovery_id, signature);
+        let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
+            solana_program::msg!("Failed to recover ECDSA signature");
+            return false;
+        };
+
+        // Unwrap: provided pubkey is guaranteed to be secp256k1 key
+        let pubkey = libsecp256k1::PublicKey::parse_compressed(pubkey)
+            .unwrap()
+            .serialize();
+
+        // we drop the const prefix byte that indicates that this is an uncompressed
+        // pubkey
+        let full_pubkey = match pubkey {
+            [_tag, pubkey @ ..] => pubkey,
+        };
+        recovered_uncompressed_pubkey.to_bytes() == full_pubkey
     }
 
     fn check_slot_is_done(&self, signature_node: &VerifierSetLeaf) -> Result<()> {

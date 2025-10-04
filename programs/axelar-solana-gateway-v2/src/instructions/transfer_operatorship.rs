@@ -1,6 +1,6 @@
+use crate::seed_prefixes::GATEWAY_SEED;
 use crate::{GatewayConfig, GatewayError, OperatorshipTransferredEvent};
 use anchor_lang::prelude::*;
-use axelar_solana_gateway::seed_prefixes::GATEWAY_SEED;
 
 #[derive(Accounts)]
 #[event_cpi]

@@ -10,14 +10,14 @@ edition.workspace = true
 [dependencies]
 udigest.workspace = true
 anchor-lang.workspace = true
-axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 borsh.workspace = true
-axelar-solana-encoding.workspace = true
+axelar-solana-encoding = { workspace = true, features = ["solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
 bincode.workspace = true
 
 [dev-dependencies]
+axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
@@ -43,6 +43,7 @@ anchor-debug = []
 custom-heap = []
 custom-panic = []
 
+
 # Network features - these pass through to the gateway dependency
 devnet-amplifier = [
 	"axelar-solana-gateway/devnet-amplifier",
@@ -57,4 +58,5 @@ testnet = [
 mainnet = [
 	"axelar-solana-gateway/mainnet",
 ]
+
 default = ["devnet-amplifier"]

@@ -1,6 +1,6 @@
+use crate::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED};
 use crate::{verification_session::SignatureVerificationSessionData, GatewayConfig};
 use anchor_lang::prelude::*;
-use axelar_solana_gateway::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED};
 
 #[derive(Accounts)]
 #[instruction(merkle_root: [u8; 32])]

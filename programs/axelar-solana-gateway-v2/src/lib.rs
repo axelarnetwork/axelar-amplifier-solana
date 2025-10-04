@@ -17,6 +17,25 @@ pub use errors::*;
 
 declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
 
+/// Seed prefixes for different PDAs initialized by the Gateway
+pub mod seed_prefixes {
+    /// The seed prefix for deriving Gateway Config PDA
+    pub const GATEWAY_SEED: &[u8] = b"gateway";
+    /// The seed prefix for deriving `VerifierSetTracker` PDAs
+    pub const VERIFIER_SET_TRACKER_SEED: &[u8] = b"ver-set-tracker";
+    /// The seed prefix for deriving signature verification PDAs
+    pub const SIGNATURE_VERIFICATION_SEED: &[u8] = b"gtw-sig-verif";
+    /// The seed prefix for deriving call contract signature verification PDAs
+    pub const CALL_CONTRACT_SIGNING_SEED: &[u8] = b"gtw-call-contract";
+    /// The seed prefix for deriving incoming message PDAs
+    pub const INCOMING_MESSAGE_SEED: &[u8] = b"incoming message";
+    /// The seed prefix for deriving message payload PDAs
+    pub const MESSAGE_PAYLOAD_SEED: &[u8] = b"message-payload";
+    /// The seed prefix for deriving validate message signing PDAs
+    /// This corresponds to the hardcoded value in `axelar_message_primitives::destination_program_id::DestinationProgramId::signing_pda`
+    pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = b"gtw-validate-msg";
+}
+
 #[program]
 pub mod axelar_solana_gateway_v2 {
     use super::*;

@@ -1,7 +1,7 @@
+use crate::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 use crate::{CallContractEvent, GatewayConfig, GatewayError};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak;
-use axelar_solana_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 
 #[derive(Accounts)]
 #[event_cpi]
