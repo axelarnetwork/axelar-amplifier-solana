@@ -7,7 +7,7 @@ pub struct MessageApprovedEvent {
     pub destination_address: Pubkey,
     pub payload_hash: [u8; 32],
     pub source_chain: String,
-    pub message_id: String,
+    pub cc_id: String,
     pub source_address: String,
     pub destination_chain: String,
 }
@@ -18,21 +18,21 @@ pub struct MessageExecutedEvent {
     pub destination_address: Pubkey,
     pub payload_hash: [u8; 32],
     pub source_chain: String,
-    pub message_id: String,
+    pub cc_id: String,
     pub source_address: String,
     pub destination_chain: String,
 }
 
 #[event]
-pub struct SignersRotatedEvent {
-    pub new_verifier_set_merkle_root: [u8; 32],
+pub struct VerifierSetRotatedEvent {
     pub epoch: U256,
+    pub verifier_set_hash: [u8; 32],
 }
 
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CallContractEvent {
-    pub sender_key: Pubkey,
+    pub sender: Pubkey,
     pub payload_hash: [u8; 32],
     pub destination_chain: String,
     pub destination_contract_address: String,
@@ -40,6 +40,6 @@ pub struct CallContractEvent {
 }
 
 #[event]
-pub struct OperatorshipTransferedEvent {
+pub struct OperatorshipTransferredEvent {
     pub new_operator: [u8; 32],
 }

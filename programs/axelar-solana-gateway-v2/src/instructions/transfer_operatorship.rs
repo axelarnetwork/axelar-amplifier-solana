@@ -1,4 +1,4 @@
-use crate::{GatewayConfig, GatewayError, OperatorshipTransferedEvent};
+use crate::{GatewayConfig, GatewayError, OperatorshipTransferredEvent};
 use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::GATEWAY_SEED;
 
@@ -52,7 +52,7 @@ pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Resu
 
     ctx.accounts.gateway_root_pda.operator = *ctx.accounts.new_operator.key;
 
-    emit_cpi!(OperatorshipTransferedEvent {
+    emit_cpi!(OperatorshipTransferredEvent {
         new_operator: ctx.accounts.gateway_root_pda.operator.to_bytes()
     });
 

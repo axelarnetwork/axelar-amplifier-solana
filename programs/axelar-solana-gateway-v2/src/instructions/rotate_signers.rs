@@ -1,6 +1,6 @@
 use crate::{
-    u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData, SignersRotatedEvent,
-    VerifierSetTracker,
+    u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData,
+    VerifierSetRotatedEvent, VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
@@ -140,8 +140,8 @@ fn rotate_signers(
     ctx.accounts.new_verifier_set_tracker.epoch = ctx.accounts.gateway_root_pda.current_epoch;
     ctx.accounts.new_verifier_set_tracker.verifier_set_hash = new_verifier_set_merkle_root;
 
-    emit_cpi!(SignersRotatedEvent {
-        new_verifier_set_merkle_root,
+    emit_cpi!(VerifierSetRotatedEvent {
+        verifier_set_hash: new_verifier_set_merkle_root,
         epoch: ctx.accounts.new_verifier_set_tracker.epoch,
     });
 

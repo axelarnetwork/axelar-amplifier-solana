@@ -59,7 +59,7 @@ pub fn call_contract_handler(
     let payload_hash = keccak::hash(&payload);
 
     emit_cpi!(CallContractEvent {
-        sender_key: ctx.accounts.signing_pda.key(),
+        sender: ctx.accounts.signing_pda.key(),
         payload_hash: payload_hash.to_bytes(),
         destination_chain,
         destination_contract_address,
