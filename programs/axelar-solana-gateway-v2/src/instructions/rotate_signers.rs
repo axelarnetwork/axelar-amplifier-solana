@@ -13,40 +13,53 @@ use axelar_solana_gateway::seed_prefixes::{
 #[instruction(new_verifier_set_merkle_root: [u8; 32])]
 pub struct RotateSigners<'info> {
     #[account(
-            mut,
-            seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump
-        )]
+        mut,
+        seeds = [GATEWAY_SEED],
+        bump = gateway_root_pda.bump
+    )]
     pub gateway_root_pda: Account<'info, GatewayConfig>,
+
     #[account(
-            seeds = [SIGNATURE_VERIFICATION_SEED, construct_payload_hash(new_verifier_set_merkle_root, verification_session_account.signature_verification
-            .signing_verifier_set_hash).as_ref()],
-            bump = verification_session_account.bump
-        )]
+        seeds = [SIGNATURE_VERIFICATION_SEED, construct_payload_hash(new_verifier_set_merkle_root, verification_session_account.signature_verification
+        .signing_verifier_set_hash).as_ref()],
+        bump = verification_session_account.bump,
+        // Check: signature session is complete/valid
+        constraint = verification_session_account.signature_verification.is_valid() @ GatewayError::SigningSessionNotValid,
+    )]
     pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
+
     #[account(
-            seeds = [
-                VERIFIER_SET_TRACKER_SEED,
-                verification_session_account.signature_verification
-                .signing_verifier_set_hash.as_slice()
-            ],
-            bump = verifier_set_tracker_pda.bump
-        )]
+        seeds = [
+            VERIFIER_SET_TRACKER_SEED,
+            verification_session_account.signature_verification
+            .signing_verifier_set_hash.as_slice()
+        ],
+        bump = verifier_set_tracker_pda.bump,
+        // Check: we got the expected verifier hash
+        constraint = verifier_set_tracker_pda.verifier_set_hash == verification_session_account.signature_verification
+			.signing_verifier_set_hash @ GatewayError::InvalidVerifierSetTrackerProvided,
+		// Check: we aren't rotating to an already existing set
+		constraint = verifier_set_tracker_pda.verifier_set_hash != new_verifier_set_merkle_root @ GatewayError::DuplicateVerifierSetRotation,
+    )]
     pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
+
     #[account(
-           init,
-           payer = payer,
-           space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
-           seeds = [
-               axelar_solana_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
-               new_verifier_set_merkle_root.as_ref()
-           ],
-           bump
-       )]
+        init,
+        payer = payer,
+        space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
+        seeds = [
+            axelar_solana_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
+            new_verifier_set_merkle_root.as_ref()
+        ],
+        bump
+    )]
     pub new_verifier_set_tracker: Account<'info, VerifierSetTracker>,
+
     #[account(mut)]
     pub payer: Signer<'info>,
+
     pub system_program: Program<'info, System>,
+
     pub operator: Option<Signer<'info>>,
 }
 
@@ -54,32 +67,6 @@ pub fn rotate_signers_handler(
     ctx: Context<RotateSigners>,
     new_verifier_set_merkle_root: [u8; 32],
 ) -> Result<()> {
-    // Check signature session is complete
-    if !ctx
-        .accounts
-        .verification_session_account
-        .signature_verification
-        .is_valid()
-    {
-        return err!(GatewayError::SigningSessionNotValid);
-    }
-
-    // Check: we got the expected verifier hash
-    if ctx.accounts.verifier_set_tracker_pda.verifier_set_hash
-        != ctx
-            .accounts
-            .verification_session_account
-            .signature_verification
-            .signing_verifier_set_hash
-    {
-        return err!(GatewayError::InvalidVerifierSetTrackerProvided);
-    }
-
-    // Avoid rotating to already existing set
-    if new_verifier_set_merkle_root == ctx.accounts.verifier_set_tracker_pda.verifier_set_hash {
-        return err!(GatewayError::DuplicateVerifierSetRotation);
-    }
-
     // Check current verifier set isn't expired
     let epoch = ctx.accounts.verifier_set_tracker_pda.epoch;
     ctx.accounts.gateway_root_pda.assert_valid_epoch(epoch)?;
@@ -108,7 +95,7 @@ pub fn rotate_signers_handler(
         .unix_timestamp
         .try_into()
         .map_err(|_err| {
-            solana_program::msg!("received negative timestamp");
+            msg!("received negative timestamp");
             ProgramError::ArithmeticOverflow
         })?;
 
@@ -127,7 +114,8 @@ fn rotate_signers(
     ctx: Context<RotateSigners>,
     new_verifier_set_merkle_root: [u8; 32],
 ) -> Result<()> {
-    // Update Gateway config
+    // Update Gateway config:
+    // Increment the current epoch
     ctx.accounts.gateway_root_pda.current_epoch = ctx
         .accounts
         .gateway_root_pda
