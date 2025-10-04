@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program};
-use axelar_solana_gateway::seed_prefixes::INCOMING_MESSAGE_SEED;
 use axelar_solana_gateway_v2::{
-    cpi::accounts::ValidateMessage, program::AxelarSolanaGatewayV2, IncomingMessage, Message,
+    cpi::accounts::ValidateMessage, program::AxelarSolanaGatewayV2,
+    seed_prefixes::INCOMING_MESSAGE_SEED, IncomingMessage, Message,
 };
 
 #[error_code]

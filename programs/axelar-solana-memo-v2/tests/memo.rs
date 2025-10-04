@@ -9,7 +9,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
     verify_signature_helper,
 };
-use memo::ID as MEMO_PROGRAM_ID;
+use axelar_solana_memo_v2::ID as MEMO_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -34,7 +34,7 @@ fn test_execute() {
     // Add the memo program to the Mollusk instance
     setup.mollusk.add_program(
         &MEMO_PROGRAM_ID,
-        "../../target/deploy/memo",
+        "axelar_solana_memo_v2",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 

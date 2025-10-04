@@ -1,5 +1,5 @@
 [package]
-name = "memo"
+name = "axelar-solana-memo-v2"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -10,7 +10,6 @@ edition.workspace = true
 [dependencies]
 anchor-lang.workspace = true
 axelar-solana-gateway-v2 = { workspace = true, features = ["cpi"] }
-axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 borsh.workspace = true
 
 [dev-dependencies]
@@ -25,7 +24,7 @@ hex.workspace = true
 workspace = true
 
 [lib]
-name = "memo"
+name = "axelar_solana_memo_v2"
 crate-type = ["cdylib", "lib"]
 
 [features]
@@ -42,20 +41,16 @@ custom-panic = []
 
 # Network features - these pass through to the gateway dependency
 devnet-amplifier = [
-	"axelar-solana-gateway/devnet-amplifier",
 	"axelar-solana-gateway-v2/devnet-amplifier",
 ]
 stagenet = [
-	"axelar-solana-gateway/stagenet",
 	"axelar-solana-gateway-v2/stagenet",
 
 ]
 testnet = [
-	"axelar-solana-gateway/testnet",
 	"axelar-solana-gateway-v2/testnet",
 ]
 mainnet = [
-	"axelar-solana-gateway/mainnet",
 	"axelar-solana-gateway-v2/mainnet",
 ]
 default = ["devnet-amplifier"]

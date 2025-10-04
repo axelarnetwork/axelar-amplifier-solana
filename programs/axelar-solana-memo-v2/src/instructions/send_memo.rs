@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
-use axelar_solana_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 use axelar_solana_gateway_v2::{
-    cpi::accounts::CallContract, program::AxelarSolanaGatewayV2, GatewayConfig,
+    cpi::accounts::CallContract,
+    program::AxelarSolanaGatewayV2,
+    seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED},
+    GatewayConfig,
 };
 
 #[derive(Accounts)]

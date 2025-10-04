@@ -5,9 +5,8 @@ edition = "2021"
 description = "Test fixtures and utilities for axelar-solana-gateway-v2"
 
 [dependencies]
-anchor-lang = "0.31.1"
-axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
-axelar-solana-gateway-v2 = { path = "../../programs/axelar-solana-gateway-v2" }
+anchor-lang.workspace = true
+axelar-solana-gateway-v2.workspace = true
 axelar-solana-encoding.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true

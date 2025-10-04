@@ -3,8 +3,8 @@ use anchor_lang::{
     solana_program,
 };
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
-use axelar_solana_gateway::seed_prefixes::{
-    CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
+use axelar_solana_gateway_v2::seed_prefixes::{
+    self, CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
 };
 use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
@@ -349,10 +349,7 @@ pub fn initialize_payload_verification_session(
     let merkle_root = [3u8; 32];
 
     let (verification_session_pda, _verification_bump) = Pubkey::find_program_address(
-        &[
-            axelar_solana_gateway::seed_prefixes::SIGNATURE_VERIFICATION_SEED,
-            &merkle_root,
-        ],
+        &[seed_prefixes::SIGNATURE_VERIFICATION_SEED, &merkle_root],
         &GATEWAY_PROGRAM_ID,
     );
 
@@ -459,7 +456,7 @@ pub fn initialize_payload_verification_session_with_root(
 
     let (verification_session_pda, _) = Pubkey::find_program_address(
         &[
-            axelar_solana_gateway::seed_prefixes::SIGNATURE_VERIFICATION_SEED,
+            seed_prefixes::SIGNATURE_VERIFICATION_SEED,
             &payload_merkle_root,
         ],
         &GATEWAY_PROGRAM_ID,
@@ -985,10 +982,7 @@ pub fn approve_message_helper(
         solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
 
     let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
-        &[
-            axelar_solana_gateway::seed_prefixes::INCOMING_MESSAGE_SEED,
-            &command_id,
-        ],
+        &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
         &GATEWAY_PROGRAM_ID,
     );
 
