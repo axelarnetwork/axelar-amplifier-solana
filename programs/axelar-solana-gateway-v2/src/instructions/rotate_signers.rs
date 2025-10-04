@@ -15,9 +15,9 @@ pub struct RotateSigners<'info> {
     #[account(
         mut,
         seeds = [GATEWAY_SEED],
-        bump = gateway_root_pda.bump
+        bump = gateway_root_pda.load()?.bump
     )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
     #[account(
         seeds = [SIGNATURE_VERIFICATION_SEED, construct_payload_hash(new_verifier_set_merkle_root, verification_session_account.signature_verification
@@ -67,9 +67,10 @@ pub fn rotate_signers_handler(
     ctx: Context<RotateSigners>,
     new_verifier_set_merkle_root: [u8; 32],
 ) -> Result<()> {
+    let gateway_root_pda = &mut ctx.accounts.gateway_root_pda.load_mut()?;
     // Check current verifier set isn't expired
     let epoch = ctx.accounts.verifier_set_tracker_pda.epoch;
-    ctx.accounts.gateway_root_pda.assert_valid_epoch(epoch)?;
+    gateway_root_pda.assert_valid_epoch(epoch)?;
 
     // we always enforce the delay unless the operator has been provided and
     // its also the Gateway operator
@@ -77,14 +78,13 @@ pub fn rotate_signers_handler(
     let operator = ctx.accounts.operator.clone();
 
     let enforce_rotation_delay = operator.map_or(true, |operator| {
-        let operator_matches = *operator.key == ctx.accounts.gateway_root_pda.operator;
+        let operator_matches = *operator.key == gateway_root_pda.operator;
         let operator_is_signer = operator.is_signer;
         // if the operator matches and is also the signer - disable rotation delay
         !(operator_matches && operator_is_signer)
     });
 
-    let is_latest =
-        ctx.accounts.gateway_root_pda.current_epoch == ctx.accounts.verifier_set_tracker_pda.epoch;
+    let is_latest = gateway_root_pda.current_epoch == ctx.accounts.verifier_set_tracker_pda.epoch;
 
     // Check: proof is signed by latest verifiers
     if enforce_rotation_delay && !is_latest {
@@ -99,35 +99,27 @@ pub fn rotate_signers_handler(
             ProgramError::ArithmeticOverflow
         })?;
 
-    if enforce_rotation_delay
-        && !enough_time_till_next_rotation(current_time, &ctx.accounts.gateway_root_pda)
-    {
+    // Check: enough time has passed since last rotation (if enforced)
+    if enforce_rotation_delay && !enough_time_till_next_rotation(current_time, &gateway_root_pda) {
         return err!(GatewayError::RotationCooldownNotDone);
     }
 
-    ctx.accounts.gateway_root_pda.last_rotation_timestamp = current_time;
-
-    rotate_signers(ctx, new_verifier_set_merkle_root)
-}
-
-fn rotate_signers(
-    ctx: Context<RotateSigners>,
-    new_verifier_set_merkle_root: [u8; 32],
-) -> Result<()> {
     // Update Gateway config:
+
+    // Update the last rotation timestamp
+    gateway_root_pda.last_rotation_timestamp = current_time;
     // Increment the current epoch
-    ctx.accounts.gateway_root_pda.current_epoch = ctx
-        .accounts
-        .gateway_root_pda
+    gateway_root_pda.current_epoch = gateway_root_pda
         .current_epoch
         .checked_add(U256::ONE)
         .ok_or(GatewayError::EpochCalculationOverflow)?;
 
     // Initialize the new verifier set tracker
     ctx.accounts.new_verifier_set_tracker.bump = ctx.bumps.new_verifier_set_tracker;
-    ctx.accounts.new_verifier_set_tracker.epoch = ctx.accounts.gateway_root_pda.current_epoch;
+    ctx.accounts.new_verifier_set_tracker.epoch = gateway_root_pda.current_epoch;
     ctx.accounts.new_verifier_set_tracker.verifier_set_hash = new_verifier_set_merkle_root;
 
+    // Emit event
     emit_cpi!(VerifierSetRotatedEvent {
         verifier_set_hash: new_verifier_set_merkle_root,
         epoch: ctx.accounts.new_verifier_set_tracker.epoch,

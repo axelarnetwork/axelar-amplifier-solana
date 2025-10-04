@@ -9,6 +9,7 @@ edition.workspace = true
 
 [dependencies]
 udigest.workspace = true
+bytemuck.workspace = true
 anchor-lang.workspace = true
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 borsh.workspace = true
@@ -19,6 +20,7 @@ bincode.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
+axelar-message-primitives.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 rand.workspace = true

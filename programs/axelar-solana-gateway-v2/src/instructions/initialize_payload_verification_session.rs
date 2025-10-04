@@ -8,10 +8,10 @@ pub struct InitializePayloadVerificationSession<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
-            seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump
-        )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+        seeds = [GATEWAY_SEED],
+        bump = gateway_root_pda.load()?.bump
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
     #[account(
             init,
             payer = payer,

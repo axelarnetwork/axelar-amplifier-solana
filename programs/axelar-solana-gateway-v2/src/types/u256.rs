@@ -1,9 +1,21 @@
 use anchor_lang::prelude::*;
+use bytemuck::{Pod, Zeroable};
 
 /// Custom U256 implementation that works with Anchor
 #[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    AnchorSerialize,
+    AnchorDeserialize,
+    Pod,
+    Zeroable,
 )]
+#[repr(transparent)]
 pub struct U256 {
     // Use little-endian: [least_significant, ..., most_significant]
     inner: [u64; 4],

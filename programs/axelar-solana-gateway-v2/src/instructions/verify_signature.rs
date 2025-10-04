@@ -11,10 +11,10 @@ use axelar_solana_gateway::seed_prefixes::{
 #[instruction(merkle_root: [u8; 32])]
 pub struct VerifySignature<'info> {
     #[account(
-            seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump
-        )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+        seeds = [GATEWAY_SEED],
+        bump = gateway_root_pda.load()?.bump
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
     #[account(
             mut,
             seeds = [SIGNATURE_VERIFICATION_SEED, merkle_root.as_ref()],
@@ -30,24 +30,20 @@ pub fn verify_signature_handler(
     verifier_info: SigningVerifierSetInfo,
 ) -> Result<()> {
     let epoch = ctx.accounts.verifier_set_tracker_pda.epoch;
-    let current_epoch = ctx.accounts.gateway_root_pda.current_epoch;
+    let gateway_root_pda = ctx.accounts.gateway_root_pda.load()?;
+    let current_epoch = gateway_root_pda.current_epoch;
 
     let elapsed = current_epoch
         .checked_sub(epoch)
         .ok_or(GatewayError::EpochCalculationOverflow)?;
 
     // Check: Verifier set isn't expired
-    if elapsed
-        >= ctx
-            .accounts
-            .gateway_root_pda
-            .previous_verifier_set_retention
-    {
+    if elapsed >= gateway_root_pda.previous_verifier_set_retention {
         return err!(GatewayError::VerifierSetTooOld);
     }
 
     // Check: Verifier domain separator matches the gateway's domain separator
-    if verifier_info.leaf.domain_separator != ctx.accounts.gateway_root_pda.domain_separator {
+    if verifier_info.leaf.domain_separator != gateway_root_pda.domain_separator {
         return err!(GatewayError::InvalidDomainSeparator);
     }
 

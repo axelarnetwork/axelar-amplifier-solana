@@ -20,13 +20,15 @@ pub struct SendMemo<'info> {
     pub memo_program: UncheckedAccount<'info>,
     /// Reference to the axelar gateway program
     pub axelar_gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+
     /// The gateway configuration PDA being initialized
     #[account(
             seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump,
+            bump = gateway_root_pda.load()?.bump,
             seeds::program = axelar_gateway_program.key()
         )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+
     /// Event authority - derived from gateway program
     #[account(
             seeds = [b"__event_authority"],

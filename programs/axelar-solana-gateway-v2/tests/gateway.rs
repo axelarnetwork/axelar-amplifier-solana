@@ -572,10 +572,28 @@ fn test_fails_when_verifier_submits_signature_twice() {
         payload_merkle_root,
         verifier_info.clone(),
         verification_session_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.gateway_root_pda).unwrap().1.clone(),
-        session_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == verification_session_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .unwrap()
+            .1
+            .clone(),
+        session_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == verification_session_pda)
+            .unwrap()
+            .1
+            .clone(),
         setup.verifier_set_tracker_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+            .unwrap()
+            .1
+            .clone(),
     );
     assert!(!verify_result_1.program_result.is_err());
 
@@ -585,10 +603,28 @@ fn test_fails_when_verifier_submits_signature_twice() {
         payload_merkle_root,
         verifier_info,
         verification_session_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.gateway_root_pda).unwrap().1.clone(),
-        verify_result_1.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == verification_session_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .unwrap()
+            .1
+            .clone(),
+        verify_result_1
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == verification_session_pda)
+            .unwrap()
+            .1
+            .clone(),
         setup.verifier_set_tracker_pda,
-        init_result.resulting_accounts.iter().find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda).unwrap().1.clone(),
+        init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+            .unwrap()
+            .1
+            .clone(),
     );
 
     // Should fail with SlotAlreadyVerified error

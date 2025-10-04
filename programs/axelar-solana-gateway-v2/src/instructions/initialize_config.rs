@@ -15,21 +15,21 @@ pub struct InitializeConfigAccounts<'info> {
     /// CHECK: correct program_data pda is given
     /// CHECK: upgrade authority in program_data matches the one passed as signer
     #[account(
-            seeds = [crate::ID.as_ref()],
-            bump,
-            seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
-            constraint = program_data.upgrade_authority_address == Some(upgrade_authority.key()) @ GatewayError::InvalidUpgradeAuthority
-        )]
+        seeds = [crate::ID.as_ref()],
+        bump,
+        seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
+        constraint = program_data.upgrade_authority_address == Some(upgrade_authority.key()) @ GatewayError::InvalidUpgradeAuthority
+    )]
     pub program_data: Account<'info, ProgramData>,
     /// The gateway configuration PDA being initialized
     #[account(
-            init,
-            payer = payer,
-            space = GatewayConfig::DISCRIMINATOR.len() + std::mem::size_of::<GatewayConfig>(),
-            seeds = [GATEWAY_SEED],
-            bump
-        )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+        init,
+        payer = payer,
+        space = GatewayConfig::DISCRIMINATOR.len() + std::mem::size_of::<GatewayConfig>(),
+        seeds = [GATEWAY_SEED],
+        bump
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
     pub system_program: Program<'info, System>,
     #[account(
             init,
@@ -50,7 +50,7 @@ pub fn initialize_config_handler(
 ) -> Result<()> {
     msg!("initialize_config_handler");
 
-    let config = &mut ctx.accounts.gateway_root_pda;
+    let config = &mut ctx.accounts.gateway_root_pda.load_init()?;
 
     // Initialize GatewayConfig (i.e. gateway config pda) state
     config.current_epoch = U256::from(1);

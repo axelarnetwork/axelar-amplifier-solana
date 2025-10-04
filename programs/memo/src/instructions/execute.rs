@@ -18,6 +18,7 @@ pub struct Execute<'info> {
         seeds::program = axelar_gateway_program.key()
     )]
     pub incoming_message_pda: Account<'info, IncomingMessage>,
+
     /// Signing PDA for this program - used to validate with gateway
     #[account(
            mut,
@@ -26,8 +27,10 @@ pub struct Execute<'info> {
            bump = incoming_message_pda.signing_pda_bump,
        )]
     pub signing_pda: AccountInfo<'info>,
+
     /// Reference to the axelar gateway program
     pub axelar_gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+
     /// for event_cpi
     /// Event authority - derived from gateway program
     #[account(
@@ -36,6 +39,7 @@ pub struct Execute<'info> {
             seeds::program = axelar_gateway_program.key()
         )]
     pub event_authority: SystemAccount<'info>,
+
     pub system_program: Program<'info, System>,
 }
 

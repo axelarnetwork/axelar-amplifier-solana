@@ -1181,12 +1181,14 @@ name = "axelar-solana-gateway-v2"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "axelar-message-primitives",
  "axelar-solana-encoding",
  "axelar-solana-gateway",
  "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "bitvec",
  "borsh 1.5.7",
+ "bytemuck",
  "hex",
  "libsecp256k1",
  "mollusk-svm",

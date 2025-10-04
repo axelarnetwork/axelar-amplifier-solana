@@ -15,9 +15,9 @@ use std::str::FromStr;
 pub struct ApproveMessage<'info> {
     #[account(
         seeds = [GATEWAY_SEED],
-        bump = gateway_root_pda.bump
+        bump = gateway_root_pda.load()?.bump
     )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
     #[account(mut)]
     pub funder: Signer<'info>,
@@ -47,7 +47,7 @@ pub fn approve_message_handler(
 ) -> Result<()> {
     msg!("Approving message!");
 
-    let gateway_config = &ctx.accounts.gateway_root_pda;
+    let gateway_config = &ctx.accounts.gateway_root_pda.load()?;
     let verification_session = &ctx.accounts.verification_session_account;
     let incoming_message_pda = &mut ctx.accounts.incoming_message_pda;
 

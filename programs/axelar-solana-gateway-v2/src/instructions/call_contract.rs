@@ -13,10 +13,10 @@ pub struct CallContract<'info> {
     pub signing_pda: UncheckedAccount<'info>,
     /// The gateway configuration PDA (read-only)
     #[account(
-            seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump
-        )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+        seeds = [GATEWAY_SEED],
+        bump = gateway_root_pda.load()?.bump
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 }
 
 pub fn call_contract_handler(

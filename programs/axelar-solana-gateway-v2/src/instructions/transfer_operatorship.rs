@@ -6,11 +6,11 @@ use axelar_solana_gateway::seed_prefixes::GATEWAY_SEED;
 #[event_cpi]
 pub struct TransferOperatorship<'info> {
     #[account(
-            mut,
-            seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump
-        )]
-    pub gateway_root_pda: Account<'info, GatewayConfig>,
+        mut,
+        seeds = [GATEWAY_SEED],
+        bump = gateway_root_pda.load()?.bump
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
     pub operator_or_upgrade_authority: Signer<'info>,
     #[account(
         constraint = programdata_account.key() ==
@@ -22,6 +22,8 @@ pub struct TransferOperatorship<'info> {
 }
 
 pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Result<()> {
+    let mut gateway_root_pda = ctx.accounts.gateway_root_pda.load_mut()?;
+
     // Check: the programda state is valid
     let loader_state = ctx
         .accounts
@@ -44,16 +46,16 @@ pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Resu
     };
 
     // Check: the signer matches either the current operator or the upgrade authority
-    if !(ctx.accounts.gateway_root_pda.operator == *ctx.accounts.operator_or_upgrade_authority.key
+    if !(gateway_root_pda.operator == *ctx.accounts.operator_or_upgrade_authority.key
         || upgrade_authority_address == Some(*ctx.accounts.operator_or_upgrade_authority.key))
     {
         return err!(GatewayError::InvalidOperatorOrAuthorityAccount);
     }
 
-    ctx.accounts.gateway_root_pda.operator = *ctx.accounts.new_operator.key;
+    gateway_root_pda.operator = *ctx.accounts.new_operator.key;
 
     emit_cpi!(OperatorshipTransferredEvent {
-        new_operator: ctx.accounts.gateway_root_pda.operator.to_bytes()
+        new_operator: gateway_root_pda.operator.to_bytes()
     });
 
     Ok(())
