@@ -52,7 +52,7 @@ pub fn initialize_config_handler(
 
     let config = &mut ctx.accounts.gateway_root_pda;
 
-    // Initialize GatewayConfig (i.e. root pda) state
+    // Initialize GatewayConfig (i.e. gateway config pda) state
     config.current_epoch = U256::from(1);
     config.previous_verifier_set_retention = params.previous_verifier_retention;
     config.minimum_rotation_delay = params.minimum_rotation_delay;

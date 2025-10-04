@@ -84,15 +84,15 @@ pub fn rotate_signers_handler(
     ctx.accounts.gateway_root_pda.assert_valid_epoch(epoch)?;
 
     // we always enforce the delay unless the operator has been provided and
-    // its also the Gateway opreator
+    // its also the Gateway operator
     // reference: https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/c290c7337fd447ecbb7426e52ac381175e33f602/contracts/gateway/AxelarAmplifierGateway.sol#L98-L101
     let operator = ctx.accounts.operator.clone();
 
     let enforce_rotation_delay = operator.map_or(true, |operator| {
         let operator_matches = *operator.key == ctx.accounts.gateway_root_pda.operator;
-        let operator_is_sigener = operator.is_signer;
+        let operator_is_signer = operator.is_signer;
         // if the operator matches and is also the signer - disable rotation delay
-        !(operator_matches && operator_is_sigener)
+        !(operator_matches && operator_is_signer)
     });
 
     let is_latest =

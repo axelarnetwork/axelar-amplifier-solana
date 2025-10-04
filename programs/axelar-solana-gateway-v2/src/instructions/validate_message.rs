@@ -1,4 +1,7 @@
-use crate::{GatewayError, IncomingMessage, Message, MessageExecuted, MessageStatus};
+use crate::{
+    GatewayError, IncomingMessage, Message, MessageExecuted, MessageStatus,
+    VALIDATE_MESSAGE_SIGNING_SEED,
+};
 use anchor_lang::prelude::*;
 use axelar_solana_gateway::seed_prefixes::INCOMING_MESSAGE_SEED;
 use std::str::FromStr;
@@ -58,10 +61,14 @@ fn validate_caller_pda(
 
     let command_id = message.command_id();
 
-    // Pubkey::create_program_address(&[command_id, &[signing_pda_bump]], destination_address)
+    // Pubkey::create_program_address(&[prefix, command_id, &[signing_pda_bump]], destination_address)
     // each message has its own signing pda for a given executable
     let expected_signing_pda = Pubkey::create_program_address(
-        &[command_id.as_ref(), &[incoming_message.signing_pda_bump]],
+        &[
+            VALIDATE_MESSAGE_SIGNING_SEED,
+            command_id.as_ref(),
+            &[incoming_message.signing_pda_bump],
+        ],
         &destination_address,
     )
     .map_err(|_| GatewayError::InvalidSigningPDA)?;

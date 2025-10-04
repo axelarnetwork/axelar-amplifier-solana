@@ -6,12 +6,12 @@ use axelar_solana_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_S
 #[derive(Accounts)]
 #[event_cpi]
 pub struct CallContract<'info> {
-    /// The program that wants to call us - must be executable
-    /// CHECK: Anchor constraint verifies this is an executable program
+    /// The program that wants to call us - can be a direct signer or program
+    /// CHECK: We validate the caller using is_signer flag and signing PDA verification
     pub calling_program: UncheckedAccount<'info>,
     /// The standardized PDA that must sign - derived from the calling program
     pub signing_pda: UncheckedAccount<'info>,
-    /// The gateway configuration PDA being initialized
+    /// The gateway configuration PDA (read-only)
     #[account(
             seeds = [GATEWAY_SEED],
             bump = gateway_root_pda.bump
@@ -30,30 +30,31 @@ pub fn call_contract_handler(
     let signing_pda = &ctx.accounts.signing_pda;
     let sender = &ctx.accounts.calling_program;
 
-    // Check: sender is a program
-    if sender.executable {
-        // If so, check that signing PDA is valid
-        let expected_signing_pda = Pubkey::create_program_address(
+    if sender.is_signer {
+        // Direct signer, so not a program, continue
+    } else {
+        // Case of a program, so a valid signing PDA must be provided
+        let Ok(expected_signing_pda) = Pubkey::create_program_address(
             &[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]],
             sender.key,
-        )
-        .map_err(|_| GatewayError::InvalidSigningPDA)?;
+        ) else {
+            msg!("Invalid call: sender must be a direct signer or a valid signing PDA must be provided");
+            return err!(GatewayError::CallerNotSigner);
+        };
 
         if &expected_signing_pda != signing_pda.key {
-            msg!("Invalid signing PDA");
+            // Signing PDA mismatch
+            msg!("Invalid call: a valid signing PDA must be provided");
             return err!(GatewayError::InvalidSigningPDA);
         }
 
         if !signing_pda.is_signer {
+            // Signing PDA is correct but not a signer
             msg!("Signing PDA must be a signer");
             return err!(GatewayError::CallerNotSigner);
         }
-    } else {
-        // Otherwise, the sender must be a signer
-        if !sender.is_signer {
-            msg!("Sender must be a signer or a program + signing PDA");
-            return Err(GatewayError::CallerNotSigner.into());
-        }
+
+        // A valid signing PDA was provided and it's a signer, continue
     }
 
     emit_cpi!(CallContractEvent {

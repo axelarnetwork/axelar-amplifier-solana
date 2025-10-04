@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
+#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
 pub struct ApproveMessage<'info> {
     #[account(
             seeds = [GATEWAY_SEED],
@@ -29,7 +29,7 @@ pub struct ApproveMessage<'info> {
         init,
         payer = funder,
         space = IncomingMessage::DISCRIMINATOR.len() + std::mem::size_of::<IncomingMessage>(),
-        seeds = [INCOMING_MESSAGE_SEED, message.leaf.message.command_id().as_ref()],
+        seeds = [INCOMING_MESSAGE_SEED, merkleised_message.leaf.message.command_id().as_ref()],
         bump
     )]
     pub incoming_message_pda: Account<'info, IncomingMessage>,
@@ -38,7 +38,7 @@ pub struct ApproveMessage<'info> {
 
 pub fn approve_message_handler(
     ctx: Context<ApproveMessage>,
-    message: MerkleisedMessage,
+    merkleised_message: MerkleisedMessage,
     payload_merkle_root: [u8; 32],
 ) -> Result<()> {
     msg!("Approving message!");
@@ -53,7 +53,7 @@ pub fn approve_message_handler(
     }
 
     // Validate message signing verifier set matches verification session
-    if message.leaf.signing_verifier_set
+    if merkleised_message.leaf.signing_verifier_set
         != verification_session
             .signature_verification
             .signing_verifier_set_hash
@@ -62,53 +62,71 @@ pub fn approve_message_handler(
     }
 
     // Validate domain separator matches gateway config
-    if message.leaf.domain_separator != gateway_config.domain_separator {
+    if merkleised_message.leaf.domain_separator != gateway_config.domain_separator {
         return err!(GatewayError::InvalidDomainSeparator);
     }
 
-    let leaf_hash = message.leaf.hash();
-    let message_hash = message.leaf.message.hash();
-    let proof = rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&message.proof)
-        .map_err(|_err| GatewayError::InvalidMerkleProof)?;
+    let leaf_hash = merkleised_message.leaf.hash();
+    let message_hash = merkleised_message.leaf.message.hash();
+    let proof =
+        rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&merkleised_message.proof)
+            .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
     // Check: leaf node is part of the payload merkle root
     if !proof.verify(
         payload_merkle_root,
-        &[message.leaf.position.into()],
+        &[merkleised_message.leaf.position.into()],
         &[leaf_hash],
-        message.leaf.set_size.into(),
+        merkleised_message.leaf.set_size.into(),
     ) {
         return err!(GatewayError::LeafNodeNotPartOfMerkleRoot);
     }
 
-    let command_id = message.leaf.message.command_id();
+    let command_id = merkleised_message.leaf.message.command_id();
 
     // Parse destination address
-    let destination_address = Pubkey::from_str(&message.leaf.message.destination_address)
-        .map_err(|_| GatewayError::InvalidDestinationAddress)?;
+    let destination_address =
+        Pubkey::from_str(&merkleised_message.leaf.message.destination_address)
+            .map_err(|_| GatewayError::InvalidDestinationAddress)?;
 
     // Calculate signing PDA bump
-    let (_, signing_pda_bump) =
-        axelar_solana_gateway::get_validate_message_signing_pda(destination_address, command_id);
+    let (_, signing_pda_bump) = get_validate_message_signing_pda(destination_address, command_id);
 
     // Store data in the PDA
     incoming_message_pda.bump = ctx.bumps.incoming_message_pda;
     incoming_message_pda.signing_pda_bump = signing_pda_bump;
     incoming_message_pda.status = MessageStatus::approved();
     incoming_message_pda.message_hash = message_hash;
-    incoming_message_pda.payload_hash = message.leaf.message.payload_hash;
+    incoming_message_pda.payload_hash = merkleised_message.leaf.message.payload_hash;
 
-    let cc_id = &message.leaf.message.cc_id;
+    let cc_id = &merkleised_message.leaf.message.cc_id;
 
     emit_cpi!(MessageApprovedEvent {
         command_id,
         destination_address,
-        payload_hash: message.leaf.message.payload_hash,
+        payload_hash: merkleised_message.leaf.message.payload_hash,
         source_chain: cc_id.chain.clone(),
         message_id: cc_id.id.clone(),
-        source_address: message.leaf.message.source_address.clone(),
-        destination_chain: message.leaf.message.destination_chain.clone(),
+        source_address: merkleised_message.leaf.message.source_address.clone(),
+        destination_chain: merkleised_message.leaf.message.destination_chain.clone(),
     });
 
     Ok(())
+}
+
+// TODO move somewhere else
+/// Seed prefix for message signing PDAs (matches axelar-solana-gateway)
+pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = b"gtw-validate-msg";
+
+/// Create a new Signing PDA that is used for validating that a message has
+/// reached the destination program (matches axelar-solana-gateway implementation)
+#[inline]
+pub fn get_validate_message_signing_pda(
+    destination_address: Pubkey,
+    command_id: [u8; 32],
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
+        &destination_address,
+    )
 }
