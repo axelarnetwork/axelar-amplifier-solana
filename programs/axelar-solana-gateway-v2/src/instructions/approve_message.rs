@@ -5,7 +5,7 @@ use crate::{
 use anchor_lang::prelude::*;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use axelar_solana_gateway::seed_prefixes::{
-    GATEWAY_SEED, INCOMING_MESSAGE_SEED, SIGNATURE_VERIFICATION_SEED,
+    GATEWAY_SEED, INCOMING_MESSAGE_SEED, SIGNATURE_VERIFICATION_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
 };
 use std::str::FromStr;
 
@@ -14,17 +14,20 @@ use std::str::FromStr;
 #[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
 pub struct ApproveMessage<'info> {
     #[account(
-            seeds = [GATEWAY_SEED],
-            bump = gateway_root_pda.bump
-        )]
+        seeds = [GATEWAY_SEED],
+        bump = gateway_root_pda.bump
+    )]
     pub gateway_root_pda: Account<'info, GatewayConfig>,
+
     #[account(mut)]
     pub funder: Signer<'info>,
+
     #[account(
-            seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
-            bump = verification_session_account.bump
-        )]
+        seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
+        bump = verification_session_account.bump
+    )]
     pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
+
     #[account(
         init,
         payer = funder,
@@ -33,6 +36,7 @@ pub struct ApproveMessage<'info> {
         bump
     )]
     pub incoming_message_pda: Account<'info, IncomingMessage>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -89,8 +93,14 @@ pub fn approve_message_handler(
         Pubkey::from_str(&merkleised_message.leaf.message.destination_address)
             .map_err(|_| GatewayError::InvalidDestinationAddress)?;
 
+    // Create a new Signing PDA that is used for validating that a message has
+    // reached the destination program
+    //
     // Calculate signing PDA bump
-    let (_, signing_pda_bump) = get_validate_message_signing_pda(destination_address, command_id);
+    let (_, signing_pda_bump) = Pubkey::find_program_address(
+        &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
+        &destination_address,
+    );
 
     // Store data in the PDA
     incoming_message_pda.bump = ctx.bumps.incoming_message_pda;
@@ -112,21 +122,4 @@ pub fn approve_message_handler(
     });
 
     Ok(())
-}
-
-// TODO move somewhere else
-/// Seed prefix for message signing PDAs (matches axelar-solana-gateway)
-pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = b"gtw-validate-msg";
-
-/// Create a new Signing PDA that is used for validating that a message has
-/// reached the destination program (matches axelar-solana-gateway implementation)
-#[inline]
-pub fn get_validate_message_signing_pda(
-    destination_address: Pubkey,
-    command_id: [u8; 32],
-) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
-        &destination_address,
-    )
 }
