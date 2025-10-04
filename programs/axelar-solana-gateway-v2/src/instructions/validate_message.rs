@@ -38,7 +38,7 @@ pub fn validate_message_handler(ctx: Context<ValidateMessage>, message: Message)
         destination_address,
         payload_hash: message.payload_hash,
         source_chain: cc_id.chain.clone(),
-        message_id: cc_id.id.clone(),
+        cc_id: cc_id.id.clone(),
         source_address: message.source_address.clone(),
         destination_chain: message.destination_chain.clone(),
     });

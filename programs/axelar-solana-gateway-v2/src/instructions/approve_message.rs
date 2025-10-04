@@ -116,7 +116,7 @@ pub fn approve_message_handler(
         destination_address,
         payload_hash: merkleised_message.leaf.message.payload_hash,
         source_chain: cc_id.chain.clone(),
-        message_id: cc_id.id.clone(),
+        cc_id: cc_id.id.clone(),
         source_address: merkleised_message.leaf.message.source_address.clone(),
         destination_chain: merkleised_message.leaf.message.destination_chain.clone(),
     });
