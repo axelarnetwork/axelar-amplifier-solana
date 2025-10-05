@@ -385,7 +385,7 @@ mod tests {
         let alignment = std::mem::align_of::<SignatureVerificationSessionData>();
         assert!(
                alignment <= 8,
-               "Struct alignment ({alignment}) must be ≤ 8 bytes for zero-copy compatibility with Anchor discriminator",
+               "Struct alignment ({alignment}) must be <= 8 bytes for zero-copy compatibility with Anchor discriminator",
            );
     }
 }
