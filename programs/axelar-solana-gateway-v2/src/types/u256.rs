@@ -46,20 +46,22 @@ impl U256 {
 
     /// Convert to u64 (panics if too large)
     pub fn as_u64(self) -> u64 {
-        if self.inner[1] != 0 || self.inner[2] != 0 || self.inner[3] != 0 {
-            panic!("U256 value too large for u64");
-        }
+        assert!(
+            !(self.inner[1] != 0 || self.inner[2] != 0 || self.inner[3] != 0),
+            "U256 value too large for u64"
+        );
         self.inner[0]
     }
 
     /// Checked addition
+    #[allow(clippy::indexing_slicing)]
     pub fn checked_add(self, other: U256) -> Option<U256> {
         let mut result = [0u64; 4];
         let mut carry = 0u64;
 
-        for i in 0..4 {
+        for (i, item) in result.iter_mut().enumerate() {
             let sum = (self.inner[i] as u128) + (other.inner[i] as u128) + (carry as u128);
-            result[i] = sum as u64;
+            *item = u64::try_from(sum).ok()?;
             carry = (sum >> 64) as u64;
         }
 
@@ -71,6 +73,7 @@ impl U256 {
     }
 
     /// Checked subtraction
+    #[allow(clippy::indexing_slicing)]
     pub fn checked_sub(self, other: U256) -> Option<U256> {
         if self < other {
             return None; // Would underflow
@@ -79,15 +82,15 @@ impl U256 {
         let mut result = [0u64; 4];
         let mut borrow = 0u64;
 
-        for i in 0..4 {
+        for (i, item) in result.iter_mut().enumerate() {
             let a = self.inner[i] as u128;
             let b = (other.inner[i] as u128) + (borrow as u128);
 
             if a >= b {
-                result[i] = (a - b) as u64;
+                *item = u64::try_from(a - b).ok()?;
                 borrow = 0;
             } else {
-                result[i] = ((a + (1u128 << 64)) - b) as u64;
+                *item = u64::try_from((a + (1u128 << 64)) - b).ok()?;
                 borrow = 1;
             }
         }
@@ -139,8 +142,8 @@ impl From<[u64; 4]> for U256 {
     }
 }
 
-impl Into<[u64; 4]> for U256 {
-    fn into(self) -> [u64; 4] {
-        self.inner
+impl From<U256> for [u64; 4] {
+    fn from(val: U256) -> Self {
+        val.inner
     }
 }

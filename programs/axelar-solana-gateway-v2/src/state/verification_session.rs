@@ -20,6 +20,7 @@ impl SignatureVerification {
 
 #[account]
 #[derive(Debug, PartialEq, Eq)]
+#[allow(clippy::pub_underscore_fields)]
 pub struct SignatureVerificationSessionData {
     pub signature_verification: SignatureVerification,
     pub bump: u8,
@@ -45,7 +46,7 @@ impl SignatureVerificationSessionData {
 
         let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
             PublicKey::Secp256k1(key) => key,
-            _ => return err!(GatewayError::UnsupportedSignatureScheme),
+            PublicKey::Ed25519(_) => return err!(GatewayError::UnsupportedSignatureScheme),
         };
 
         if !Self::verify_ecdsa_signature(
@@ -190,8 +191,9 @@ impl SignatureVerificationSessionData {
 pub type Signature = [u8; 65];
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
+#[allow(clippy::pub_underscore_fields)]
 pub struct SigningVerifierSetInfo {
-    _padding: u8,
+    pub _padding: u8,
     pub signature: Signature,
     pub leaf: VerifierSetLeaf,
     pub merkle_proof: Vec<u8>,

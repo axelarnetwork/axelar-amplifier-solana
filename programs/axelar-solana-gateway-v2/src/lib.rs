@@ -1,3 +1,4 @@
+#![allow(clippy::empty_structs_with_brackets)]
 use anchor_lang::prelude::*;
 
 pub mod instructions;

@@ -1,7 +1,9 @@
 use anchor_lang::{prelude::*, solana_program};
 use axelar_solana_gateway_v2::{
-    cpi::accounts::ValidateMessage, program::AxelarSolanaGatewayV2,
-    seed_prefixes::INCOMING_MESSAGE_SEED, IncomingMessage, Message,
+    cpi::accounts::ValidateMessage,
+    program::AxelarSolanaGatewayV2,
+    seed_prefixes::{INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED},
+    IncomingMessage, Message,
 };
 
 #[error_code]
@@ -17,13 +19,14 @@ pub struct Execute<'info> {
         bump = incoming_message_pda.load()?.bump,
         seeds::program = axelar_gateway_program.key()
     )]
+
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
     /// Signing PDA for this program - used to validate with gateway
     #[account(
         mut,
         signer,
-        seeds = [message.command_id().as_ref()],
+        seeds = [VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.signing_pda_bump,
     )]
     pub signing_pda: AccountInfo<'info>,
