@@ -638,4 +638,95 @@ mod tests {
         // Should fail with SlotAlreadyVerified error
         assert!(verify_result_2.program_result.is_err());
     }
+
+    #[test]
+    fn test_fails_when_approving_message_with_insufficient_signatures() {
+        // Step 1: Setup gateway with real signers
+        let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
+            setup_test_with_real_signers();
+
+        // Step 2: Initialize gateway
+        let init_result = initialize_gateway(&setup);
+        assert!(!init_result.program_result.is_err());
+
+        // Step 3: Create messages and payload merkle root
+        let verifier_set_merkle_root = setup.verifier_set_hash;
+        let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
+            setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+        // Step 4: Initialize payload verification session
+        let (session_result, verification_session_pda) =
+            initialize_payload_verification_session_with_root(
+                &setup,
+                &init_result,
+                payload_merkle_root,
+            );
+        assert!(!session_result.program_result.is_err());
+
+        // Step 5: Get existing accounts
+        let gateway_account = init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        let verifier_set_tracker_account = init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        let verification_session_account = session_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == verification_session_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        // Step 6: Sign the payload with ONLY ONE signer (not enough to make session valid)
+        let verifier_info_1 = create_verifier_info(
+            &secret_key_1,
+            payload_merkle_root,
+            verifier_leaves.first().unwrap(),
+            0, // Position 0
+            &verifier_merkle_tree,
+        );
+
+        let verify_result_1 = verify_signature_helper(
+            &setup,
+            payload_merkle_root,
+            verifier_info_1,
+            verification_session_pda,
+            gateway_account,
+            verification_session_account,
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account,
+        );
+        assert!(!verify_result_1.program_result.is_err());
+
+        // Step 7: Now try to approve a message with only one signature (insufficient)
+        // The verification session should not be valid since we need both signers
+        let (approve_result, _) = approve_message_helper(
+            &setup,
+            message_merkle_tree,
+            message_leaves,
+            &messages,
+            payload_merkle_root,
+            verification_session_pda,
+            verify_result_1, // Only one signature, not two
+            0,               // Try to approve the first message
+        );
+
+        // Should fail because the verification session is not valid (insufficient signatures)
+        assert!(
+            approve_result.program_result.is_err(),
+            "Approving message with insufficient signatures should fail, but got: {:?}",
+            approve_result.program_result
+        );
+    }
 }
