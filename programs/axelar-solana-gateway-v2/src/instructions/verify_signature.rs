@@ -16,7 +16,7 @@ pub struct VerifySignature<'info> {
         constraint = gateway_root_pda.load()?.domain_separator == verifier_info.leaf.domain_separator
         	@ GatewayError::InvalidDomainSeparator,
         // Check: Verifier set isn't expired
-        constraint = gateway_root_pda.load()?.assert_valid_epoch(verifier_set_tracker_pda.epoch).is_ok()
+        constraint = gateway_root_pda.load()?.assert_valid_epoch(verifier_set_tracker_pda.load()?.epoch).is_ok()
         	@ GatewayError::VerifierSetTooOld,
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
@@ -30,10 +30,10 @@ pub struct VerifySignature<'info> {
 
     #[account(
 		// The verifier set tracker PDA is derived from the verifier set hash
-		seeds = [VERIFIER_SET_TRACKER_SEED, verifier_set_tracker_pda.verifier_set_hash.as_slice()],
+		seeds = [VERIFIER_SET_TRACKER_SEED, verifier_set_tracker_pda.load()?.verifier_set_hash.as_slice()],
 		bump,
 	)]
-    pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
+    pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
 }
 
 pub fn verify_signature_handler(
@@ -41,13 +41,15 @@ pub fn verify_signature_handler(
     payload_merkle_root: [u8; 32],
     verifier_info: SigningVerifierSetInfo,
 ) -> Result<()> {
+    let verifier_set_tracker_pda = ctx.accounts.verifier_set_tracker_pda.load()?;
+
     // Verify signature
     ctx.accounts
         .verification_session_account
         .load_mut()?
         .process_signature(
             payload_merkle_root,
-            &ctx.accounts.verifier_set_tracker_pda.verifier_set_hash,
+            &verifier_set_tracker_pda.verifier_set_hash,
             verifier_info,
         )?;
 

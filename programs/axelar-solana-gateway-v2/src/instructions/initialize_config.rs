@@ -12,16 +12,19 @@ use anchor_lang::prelude::*;
 pub struct InitializeConfigAccounts<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     pub upgrade_authority: Signer<'info>,
-    /// CHECK: correct program_data pda is given
-    /// CHECK: upgrade authority in program_data matches the one passed as signer
+
     #[account(
         seeds = [crate::ID.as_ref()],
         bump,
+        // CHECK: correct program_data pda is given
         seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
+        // CHECK: upgrade authority in program_data matches the one passed as signer
         constraint = program_data.upgrade_authority_address == Some(upgrade_authority.key()) @ GatewayError::InvalidUpgradeAuthority
     )]
     pub program_data: Account<'info, ProgramData>,
+
     /// The gateway configuration PDA being initialized
     #[account(
         init,
@@ -31,18 +34,20 @@ pub struct InitializeConfigAccounts<'info> {
         bump
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+
     pub system_program: Program<'info, System>,
+
     #[account(
-            init,
-            payer = payer,
-            space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
-            seeds = [
-                VERIFIER_SET_TRACKER_SEED,
-                params.initial_verifier_set.hash.as_slice()
-            ],
-            bump
-        )]
-    pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
+	    init,
+	    payer = payer,
+	    space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
+	    seeds = [
+	        VERIFIER_SET_TRACKER_SEED,
+	        params.initial_verifier_set.hash.as_slice()
+	    ],
+	    bump
+	)]
+    pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
 }
 
 #[allow(clippy::cast_sign_loss)]
@@ -63,7 +68,7 @@ pub fn initialize_config_handler(
     config.domain_separator = params.domain_separator;
     config.bump = ctx.bumps.gateway_root_pda;
 
-    let set_tracker = &mut ctx.accounts.verifier_set_tracker_pda;
+    let set_tracker = &mut ctx.accounts.verifier_set_tracker_pda.load_init()?;
 
     // Initialize verifier set tracker pda state
     set_tracker.bump = ctx.bumps.verifier_set_tracker_pda;

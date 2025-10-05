@@ -38,15 +38,15 @@ pub struct RotateSigners<'info> {
             verification_session_account.load()?
             	.signature_verification.signing_verifier_set_hash.as_slice()
         ],
-        bump = verifier_set_tracker_pda.bump,
+        bump = verifier_set_tracker_pda.load()?.bump,
         // Check: we got the expected verifier hash
-        constraint = verifier_set_tracker_pda.verifier_set_hash == verification_session_account.load()?.signature_verification
+        constraint = verifier_set_tracker_pda.load()?.verifier_set_hash == verification_session_account.load()?.signature_verification
 			.signing_verifier_set_hash @ GatewayError::InvalidVerifierSetTrackerProvided,
 		// Check: we aren't rotating to an already existing set
-		constraint = verifier_set_tracker_pda.verifier_set_hash != new_verifier_set_merkle_root
+		constraint = verifier_set_tracker_pda.load()?.verifier_set_hash != new_verifier_set_merkle_root
 			@ GatewayError::DuplicateVerifierSetRotation,
     )]
-    pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
+    pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
 
     #[account(
         init,
@@ -58,7 +58,7 @@ pub struct RotateSigners<'info> {
         ],
         bump
     )]
-    pub new_verifier_set_tracker: Account<'info, VerifierSetTracker>,
+    pub new_verifier_set_tracker: AccountLoader<'info, VerifierSetTracker>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -73,8 +73,10 @@ pub fn rotate_signers_handler(
     new_verifier_set_merkle_root: [u8; 32],
 ) -> Result<()> {
     let gateway_root_pda = &mut ctx.accounts.gateway_root_pda.load_mut()?;
+    let verifier_set_tracker_pda = &ctx.accounts.verifier_set_tracker_pda.load()?;
+
     // Check current verifier set isn't expired
-    let epoch = ctx.accounts.verifier_set_tracker_pda.epoch;
+    let epoch = verifier_set_tracker_pda.epoch;
     gateway_root_pda.assert_valid_epoch(epoch)?;
 
     // we always enforce the delay unless the operator has been provided and
@@ -89,7 +91,7 @@ pub fn rotate_signers_handler(
         !(operator_matches && operator_is_signer)
     });
 
-    let is_latest = gateway_root_pda.current_epoch == ctx.accounts.verifier_set_tracker_pda.epoch;
+    let is_latest = gateway_root_pda.current_epoch == verifier_set_tracker_pda.epoch;
 
     // Check: proof is signed by latest verifiers
     if enforce_rotation_delay && !is_latest {
@@ -120,14 +122,15 @@ pub fn rotate_signers_handler(
         .ok_or(GatewayError::EpochCalculationOverflow)?;
 
     // Initialize the new verifier set tracker
-    ctx.accounts.new_verifier_set_tracker.bump = ctx.bumps.new_verifier_set_tracker;
-    ctx.accounts.new_verifier_set_tracker.epoch = gateway_root_pda.current_epoch;
-    ctx.accounts.new_verifier_set_tracker.verifier_set_hash = new_verifier_set_merkle_root;
+    let new_verifier_set_tracker = &mut ctx.accounts.new_verifier_set_tracker.load_init()?;
+    new_verifier_set_tracker.bump = ctx.bumps.new_verifier_set_tracker;
+    new_verifier_set_tracker.epoch = gateway_root_pda.current_epoch;
+    new_verifier_set_tracker.verifier_set_hash = new_verifier_set_merkle_root;
 
     // Emit event
     emit_cpi!(VerifierSetRotatedEvent {
         verifier_set_hash: new_verifier_set_merkle_root,
-        epoch: ctx.accounts.new_verifier_set_tracker.epoch,
+        epoch: new_verifier_set_tracker.epoch,
     });
 
     Ok(())
