@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use anchor_lang::{
     prelude::{borsh::BorshSerialize, UpgradeableLoaderState},
     solana_program, Discriminator, InstructionData,
@@ -404,10 +406,10 @@ pub fn initialize_payload_verification_session(
         data: instruction_data,
     };
 
-    return (
+    (
         setup.mollusk.process_instruction(&instruction, &accounts),
         verification_session_pda,
-    );
+    )
 }
 
 pub fn generate_random_signer() -> (SecretKey, [u8; 33]) {
@@ -418,7 +420,7 @@ pub fn generate_random_signer() -> (SecretKey, [u8; 33]) {
     let public_key = libsecp256k1::PublicKey::from_secret_key(&secret_key);
     let compressed_pubkey = public_key.serialize_compressed();
 
-    return (secret_key, compressed_pubkey);
+    (secret_key, compressed_pubkey)
 }
 
 pub fn create_test_message(
@@ -535,7 +537,7 @@ pub fn create_verifier_info(
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
 
-    SigningVerifierSetInfo::new(signature_array, verifier_leaf.clone(), merkle_proof_bytes)
+    SigningVerifierSetInfo::new(signature_array, *verifier_leaf, merkle_proof_bytes)
 }
 
 pub fn call_contract_helper(
@@ -626,7 +628,7 @@ pub fn call_contract_helper(
         data: ix_data,
     };
 
-    return setup.mollusk.process_instruction(&ix, &accounts);
+    setup.mollusk.process_instruction(&ix, &accounts)
 }
 
 pub fn verify_signature_helper(
@@ -892,7 +894,7 @@ pub fn transfer_operatorship_helper(
     };
 
     // Execute the instruction
-    return setup.mollusk.process_instruction(&instruction, &accounts);
+    setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
 pub fn setup_message_merkle_tree(
@@ -938,12 +940,12 @@ pub fn setup_message_merkle_tree(
 
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 
-    return (
+    (
         messages,
         message_leaves,
         message_merkle_tree,
         payload_merkle_root,
-    );
+    )
 }
 
 pub fn setup_signer_rotation_payload(
@@ -960,7 +962,7 @@ pub fn approve_message_helper(
     setup: &TestSetup,
     message_merkle_tree: MerkleTree<SolanaSyscallHasher>,
     message_leaves: Vec<MessageLeaf>,
-    messages: &Vec<Message>,
+    messages: &[Message],
     payload_merkle_root: [u8; 32],
     verification_session_pda: Pubkey,
     verify_result_2: InstructionResult,
@@ -1077,10 +1079,10 @@ pub fn approve_message_helper(
         data: approve_instruction_data,
     };
 
-    return (
+    (
         setup
             .mollusk
             .process_instruction(&approve_instruction, &approve_accounts),
         incoming_message_pda,
-    );
+    )
 }

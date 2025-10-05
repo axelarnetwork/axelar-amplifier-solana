@@ -89,7 +89,7 @@ mod tests {
         let current_epoch = U256::from(42u64);
         let previous_verifier_set_retention = U256::from(10u64);
         let minimum_rotation_delay = 86400u64; // 1 day
-        let last_rotation_timestamp = 1234567890u64;
+        let last_rotation_timestamp = 1_234_567_890_u64;
         let operator = Pubkey::new_unique();
         let domain_separator = [0x42u8; 32];
         let bump = 255u8;
