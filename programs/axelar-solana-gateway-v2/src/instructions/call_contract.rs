@@ -9,8 +9,10 @@ pub struct CallContract<'info> {
     /// The program that wants to call us - can be a direct signer or program
     /// CHECK: We validate the caller using is_signer flag and signing PDA verification
     pub calling_program: UncheckedAccount<'info>,
+
     /// The standardized PDA that must sign - derived from the calling program
     pub signing_pda: UncheckedAccount<'info>,
+
     /// The gateway configuration PDA (read-only)
     #[account(
         seeds = [GATEWAY_SEED],

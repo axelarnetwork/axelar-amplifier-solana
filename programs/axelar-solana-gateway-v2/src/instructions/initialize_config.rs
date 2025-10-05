@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[instruction(params: InitializeConfigParams)]
-pub struct InitializeConfigAccounts<'info> {
+pub struct InitializeConfig<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -52,7 +52,7 @@ pub struct InitializeConfigAccounts<'info> {
 
 #[allow(clippy::cast_sign_loss)]
 pub fn initialize_config_handler(
-    ctx: Context<InitializeConfigAccounts>,
+    ctx: Context<InitializeConfig>,
     params: InitializeConfigParams,
 ) -> Result<()> {
     msg!("initialize_config_handler");
