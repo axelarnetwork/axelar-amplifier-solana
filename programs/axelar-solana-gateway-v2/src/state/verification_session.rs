@@ -356,21 +356,37 @@ mod tests {
             std::mem::size_of::<V1>()
         );
 
+        // Data
+        // Use a value with varying bytes: 0x0102030405060708090a0b0c0d0e0f10
+        let threshold_value = 0x0102_0304_0506_0708_090a_0b0c_0d0e_0f10_u128;
+
+        // Create distinct patterns for signature slots and hash
+        let signature_slots = [
+            0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
+            0xff, 0x00, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xa0, 0xb0, 0xc0,
+            0xd0, 0xe0, 0xf0, 0x01,
+        ];
+        let signing_verifier_set_hash = [
+            0xa1, 0xb2, 0xc3, 0xd4, 0xe5, 0xf6, 0x07, 0x18, 0x29, 0x3a, 0x4b, 0x5c, 0x6d, 0x7e,
+            0x8f, 0x90, 0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f, 0x70, 0x81, 0x92, 0xa3, 0xb4, 0xc5,
+            0xd6, 0xe7, 0xf8, 0x09,
+        ];
+        let bump = 0xfe_u8;
+
         // Make v2
         let signature_verification = SignatureVerification {
-            accumulated_threshold: U128::new(42),
-            signature_slots: [1; 32],
-            signing_verifier_set_hash: [2; 32],
+            accumulated_threshold: U128::new(threshold_value),
+            signature_slots,
+            signing_verifier_set_hash,
         };
-        let bump = 255u8;
         let v2_state = SignatureVerificationSessionData::new(signature_verification, bump);
 
         // Make v1
         let mut v1_state = V1::default();
         v1_state.signature_verification = SignatureVerificationV1 {
-            accumulated_threshold: 42_u128,
-            signature_slots: [1; 32],
-            signing_verifier_set_hash: [2; 32],
+            accumulated_threshold: threshold_value,
+            signature_slots,
+            signing_verifier_set_hash,
         };
         v1_state.bump = bump;
 

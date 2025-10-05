@@ -100,3 +100,64 @@ impl std::fmt::Display for U128 {
         write!(f, "{}", self.get())
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::little_endian_bytes)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_byte_layout_compatibility() {
+        // Verify U128 has identical byte representation to u128
+        let test_value = 0x0102_0304_0506_0708_090a_0b0c_0d0e_0f10_u128;
+
+        let u128_bytes = test_value.to_le_bytes();
+        let custom_u128 = U128::new(test_value);
+
+        assert_eq!(custom_u128.0, u128_bytes);
+        assert_eq!(custom_u128.get(), test_value);
+    }
+
+    #[test]
+    fn test_constants() {
+        assert_eq!(U128::ZERO.get(), 0);
+        assert_eq!(U128::MAX.get(), u128::MAX);
+    }
+
+    #[test]
+    fn test_arithmetic() {
+        let a = U128::new(100);
+        let b = U128::new(50);
+
+        assert_eq!(a.saturating_add(b).get(), 150);
+        assert_eq!(a.saturating_sub(b).get(), 50);
+        assert_eq!(a.checked_add(b).unwrap().get(), 150);
+        assert_eq!(a.checked_sub(b).unwrap().get(), 50);
+
+        // Test overflow
+        assert_eq!(U128::MAX.saturating_add(U128::new(1)), U128::MAX);
+        assert!(U128::MAX.checked_add(U128::new(1)).is_none());
+
+        // Test underflow
+        assert_eq!(U128::ZERO.saturating_sub(U128::new(1)), U128::ZERO);
+        assert!(U128::ZERO.checked_sub(U128::new(1)).is_none());
+    }
+
+    #[test]
+    fn test_conversions() {
+        #[allow(clippy::unreadable_literal)]
+        let value = 0x123456789abcdef0_u128;
+
+        // From u128
+        let custom: U128 = value.into();
+        assert_eq!(custom.get(), value);
+
+        // To u128
+        let back: u128 = custom.into();
+        assert_eq!(back, value);
+
+        // From u64
+        let from_u64: U128 = 42u64.into();
+        assert_eq!(from_u64.get(), 42u128);
+    }
+}
