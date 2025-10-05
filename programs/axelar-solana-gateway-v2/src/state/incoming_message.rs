@@ -1,8 +1,21 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
+use bytemuck::{Pod, Zeroable};
 use udigest::{encoding::EncodeValue, Digestable};
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize)]
+#[account(zero_copy)]
+#[derive(Debug, PartialEq, Eq)]
+pub struct IncomingMessage {
+    pub bump: u8,
+    pub signing_pda_bump: u8,
+    _pad: [u8; 3],
+    pub status: MessageStatus,
+    pub message_hash: [u8; 32],
+    pub payload_hash: [u8; 32],
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize, Pod, Zeroable)]
 pub struct MessageStatus(u8);
 
 impl MessageStatus {
@@ -107,15 +120,4 @@ impl Message {
         let cc_id = &self.cc_id;
         solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0
     }
-}
-
-#[account]
-#[derive(Debug, PartialEq, Eq)]
-pub struct IncomingMessage {
-    pub bump: u8,
-    pub signing_pda_bump: u8,
-    _pad: [u8; 3],
-    pub status: MessageStatus,
-    pub message_hash: [u8; 32],
-    pub payload_hash: [u8; 32],
 }

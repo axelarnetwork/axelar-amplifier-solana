@@ -35,7 +35,7 @@ pub struct ApproveMessage<'info> {
         seeds = [INCOMING_MESSAGE_SEED, merkleised_message.leaf.message.command_id().as_ref()],
         bump
     )]
-    pub incoming_message_pda: Account<'info, IncomingMessage>,
+    pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
     pub system_program: Program<'info, System>,
 }
@@ -49,7 +49,7 @@ pub fn approve_message_handler(
 
     let gateway_config = &ctx.accounts.gateway_root_pda.load()?;
     let verification_session = &ctx.accounts.verification_session_account;
-    let incoming_message_pda = &mut ctx.accounts.incoming_message_pda;
+    let incoming_message_pda = &mut ctx.accounts.incoming_message_pda.load_init()?;
 
     // Validate signature verification session is complete
     if !verification_session.signature_verification.is_valid() {

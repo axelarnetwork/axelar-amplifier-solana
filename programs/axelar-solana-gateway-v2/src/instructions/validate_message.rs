@@ -9,11 +9,11 @@ use std::str::FromStr;
 pub struct ValidateMessage<'info> {
     #[account(
         seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
-        bump = incoming_message_pda.bump,
-        constraint = incoming_message_pda.status.is_approved() @ GatewayError::MessageNotApproved,
-                constraint = incoming_message_pda.message_hash == message.hash() @ GatewayError::InvalidMessageHash
+        bump = incoming_message_pda.load()?.bump,
+        constraint = incoming_message_pda.load()?.status.is_approved() @ GatewayError::MessageNotApproved,
+        constraint = incoming_message_pda.load()?.message_hash == message.hash() @ GatewayError::InvalidMessageHash
     )]
-    pub incoming_message_pda: Account<'info, IncomingMessage>,
+    pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
     /// The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
     #[account(
         mut,
@@ -24,7 +24,8 @@ pub struct ValidateMessage<'info> {
 }
 
 pub fn validate_message_handler(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {
-    ctx.accounts.incoming_message_pda.status = MessageStatus::executed();
+    let incoming_message_pda = &mut ctx.accounts.incoming_message_pda.load_mut()?;
+    incoming_message_pda.status = MessageStatus::executed();
 
     // Parse destination address
     let destination_address = Pubkey::from_str(&message.destination_address)
@@ -49,7 +50,7 @@ pub fn validate_message_handler(ctx: Context<ValidateMessage>, message: Message)
 fn validate_caller_pda(
     caller: &AccountInfo,
     message: &Message,
-    incoming_message: &IncomingMessage,
+    incoming_message: &AccountLoader<'_, IncomingMessage>,
 ) -> Result<bool> {
     use std::str::FromStr;
 
@@ -64,7 +65,7 @@ fn validate_caller_pda(
         &[
             VALIDATE_MESSAGE_SIGNING_SEED,
             command_id.as_ref(),
-            &[incoming_message.signing_pda_bump],
+            &[incoming_message.load()?.signing_pda_bump],
         ],
         &destination_address,
     )

@@ -1,6 +1,6 @@
 use anchor_lang::{
     prelude::{borsh::BorshSerialize, UpgradeableLoaderState},
-    solana_program,
+    solana_program, Discriminator, InstructionData,
 };
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use axelar_solana_gateway_v2::seed_prefixes::{
@@ -241,9 +241,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
         previous_verifier_retention: setup.previous_verifier_retention,
     };
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
-        .try_into()
-        .unwrap();
+    let discriminator = axelar_solana_gateway_v2::instruction::InitializeConfig::DISCRIMINATOR;
 
     let mut instruction_data = discriminator.to_vec();
     instruction_data.extend_from_slice(&params.try_to_vec().unwrap());
@@ -972,7 +970,7 @@ pub fn approve_message_helper(
     let message_proof = message_merkle_tree.proof(&[position]);
     let message_proof_bytes = message_proof.to_bytes();
 
-    let merkelised_message = MerkleisedMessage {
+    let merkleised_message = MerkleisedMessage {
         leaf: message_leaves[position].clone(),
         proof: message_proof_bytes,
     };
@@ -989,13 +987,11 @@ pub fn approve_message_helper(
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
-    let discriminator: [u8; 8] = hash::hash(b"global:approve_message").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut approve_instruction_data = discriminator.to_vec();
-    approve_instruction_data.extend_from_slice(&merkelised_message.try_to_vec().unwrap());
-    approve_instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+    let approve_instruction_data = axelar_solana_gateway_v2::instruction::ApproveMessage {
+        merkleised_message: merkleised_message.clone(),
+        payload_merkle_root,
+    }
+    .data();
 
     let final_gateway_account = verify_result_2
         .resulting_accounts

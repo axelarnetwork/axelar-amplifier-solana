@@ -14,18 +14,18 @@ pub enum ExecutableError {
 pub struct Execute<'info> {
     #[account(
         seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
-        bump = incoming_message_pda.bump,
+        bump = incoming_message_pda.load()?.bump,
         seeds::program = axelar_gateway_program.key()
     )]
-    pub incoming_message_pda: Account<'info, IncomingMessage>,
+    pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
     /// Signing PDA for this program - used to validate with gateway
     #[account(
-           mut,
-           signer,
-           seeds = [message.command_id().as_ref()],
-           bump = incoming_message_pda.signing_pda_bump,
-       )]
+        mut,
+        signer,
+        seeds = [message.command_id().as_ref()],
+        bump = incoming_message_pda.load()?.signing_pda_bump,
+    )]
     pub signing_pda: AccountInfo<'info>,
 
     /// Reference to the axelar gateway program
@@ -34,10 +34,10 @@ pub struct Execute<'info> {
     /// for event_cpi
     /// Event authority - derived from gateway program
     #[account(
-            seeds = [b"__event_authority"],
-            bump,
-            seeds::program = axelar_gateway_program.key()
-        )]
+        seeds = [b"__event_authority"],
+        bump,
+        seeds::program = axelar_gateway_program.key()
+    )]
     pub event_authority: SystemAccount<'info>,
 
     pub system_program: Program<'info, System>,
@@ -71,7 +71,7 @@ pub fn execute_handler(
         cpi_accounts,
     );
 
-    axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message.clone())?;
+    axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message)?;
 
     msg!("Message validated successfully!");
 
