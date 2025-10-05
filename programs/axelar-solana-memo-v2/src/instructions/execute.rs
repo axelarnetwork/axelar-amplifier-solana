@@ -19,12 +19,10 @@ pub struct Execute<'info> {
         bump = incoming_message_pda.load()?.bump,
         seeds::program = axelar_gateway_program.key()
     )]
-
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
     /// Signing PDA for this program - used to validate with gateway
     #[account(
-        mut,
         signer,
         seeds = [VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.signing_pda_bump,

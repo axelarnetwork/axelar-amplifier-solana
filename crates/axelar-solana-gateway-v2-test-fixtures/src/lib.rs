@@ -599,20 +599,19 @@ pub fn call_contract_helper(
         .clone();
     accounts.push((setup.gateway_root_pda, gateway_account));
 
-    let discriminator: [u8; 8] = solana_sdk::hash::hash(b"global:call_contract").to_bytes()[..8]
-        .try_into()
-        .unwrap();
     let destination_chain = "ethereum".to_string();
     let destination_contract_address = "0xdeadbeef".to_string();
     let payload = b"memo test".to_vec();
 
     let signing_pda_bump = setup.gateway_caller_bump.unwrap();
 
-    let mut ix_data = discriminator.to_vec();
-    ix_data.extend_from_slice(&destination_chain.try_to_vec().unwrap());
-    ix_data.extend_from_slice(&destination_contract_address.try_to_vec().unwrap());
-    ix_data.extend_from_slice(&payload.try_to_vec().unwrap());
-    ix_data.push(signing_pda_bump);
+    let ix_data = axelar_solana_gateway_v2::instruction::CallContract {
+        destination_chain,
+        destination_contract_address,
+        payload,
+        signing_pda_bump,
+    }
+    .data();
 
     // Full account metas (must include event_authority + program)
     let ix = Instruction {

@@ -8,15 +8,16 @@ use std::str::FromStr;
 #[instruction(message: Message)]
 pub struct ValidateMessage<'info> {
     #[account(
+    	mut,
         seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
         constraint = incoming_message_pda.load()?.status.is_approved() @ GatewayError::MessageNotApproved,
         constraint = incoming_message_pda.load()?.message_hash == message.hash() @ GatewayError::InvalidMessageHash
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
+
     /// The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
     #[account(
-        mut,
         signer,
         constraint = validate_caller_pda(&caller, &message, &incoming_message_pda)? @ GatewayError::InvalidSigningPDA
     )]
