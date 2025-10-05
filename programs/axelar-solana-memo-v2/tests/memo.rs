@@ -1,7 +1,10 @@
 use anchor_lang::prelude::borsh::BorshSerialize;
 use anchor_lang::solana_program;
+use anchor_lang::AccountDeserialize;
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
+use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+use axelar_solana_gateway_v2::IncomingMessage;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2::{CrossChainId, Message, MessageLeaf};
 use axelar_solana_gateway_v2_test_fixtures::{
@@ -34,7 +37,7 @@ fn test_execute() {
     // Add the memo program to the Mollusk instance
     setup.mollusk.add_program(
         &MEMO_PROGRAM_ID,
-        "axelar_solana_memo_v2",
+        "../../target/deploy/axelar_solana_memo_v2",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
@@ -171,14 +174,6 @@ fn test_execute() {
         "Message approval should succeed"
     );
 
-    // Step 7: Execute the message
-    let message = &messages[0];
-    let command_id = message.command_id();
-    let (signing_pda, _signing_pda_bump) =
-        Pubkey::find_program_address(&[&command_id], &MEMO_PROGRAM_ID);
-    let (event_authority_pda, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
-
     let incoming_message_account = approve_result
         .resulting_accounts
         .iter()
@@ -186,6 +181,26 @@ fn test_execute() {
         .unwrap()
         .1
         .clone();
+
+    let incoming_message =
+        IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
+
+    // Step 7: Execute the message
+    let message = &messages[0];
+    let command_id = message.command_id();
+
+    let signing_pda = Pubkey::create_program_address(
+        &[
+            VALIDATE_MESSAGE_SIGNING_SEED,
+            command_id.as_ref(),
+            &[incoming_message.signing_pda_bump],
+        ],
+        &MEMO_PROGRAM_ID,
+    )
+    .unwrap();
+
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
     let discriminator: [u8; 8] = hash::hash(b"global:execute").to_bytes()[..8]
         .try_into()
