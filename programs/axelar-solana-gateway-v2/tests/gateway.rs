@@ -1,3 +1,5 @@
+#![cfg(test)]
+
 use anchor_lang::AccountDeserialize;
 use axelar_solana_gateway_v2::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
 use axelar_solana_gateway_v2::u256::U256;
@@ -98,14 +100,8 @@ fn test_initialize_payload_verification_session() {
     )
     .unwrap();
 
-    let expected_verification_account = SignatureVerificationSessionData::new(
-        SignatureVerification {
-            accumulated_threshold: 0,
-            signature_slots: [0u8; 32],
-            signing_verifier_set_hash: [0u8; 32],
-        },
-        255,
-    );
+    let expected_verification_account =
+        SignatureVerificationSessionData::new(SignatureVerification::default(), 255);
 
     assert_eq!(expected_verification_account, actual_verification_account);
 }
@@ -306,7 +302,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 }
 
 #[test]
-fn test_rotate_signers() {
+fn test_rotate_signerstest_rotate_signers() {
     // Step 1: Setup gateway with real signers (current verifier set)
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();

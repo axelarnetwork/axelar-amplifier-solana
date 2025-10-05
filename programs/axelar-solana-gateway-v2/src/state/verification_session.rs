@@ -1,30 +1,60 @@
+use crate::U128;
 use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use bitvec::prelude::*;
+use bytemuck::{Pod, Zeroable};
 use udigest::{encoding::EncodeValue, Digestable};
 
-#[derive(Debug, Clone, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
+/// This PDA tracks that all the signatures for a given payload get verified
+#[account(zero_copy)]
+#[derive(Debug, PartialEq, Eq, Default)]
+#[allow(clippy::pub_underscore_fields)]
+pub struct SignatureVerificationSessionData {
+    /// Signature verification session
+    pub signature_verification: SignatureVerification,
+    /// Seed bump for this account's PDA
+    pub bump: u8,
+    /// Padding for memory alignment.
+    pub _pad: [u8; 15],
+}
+
+/// Controls the signature verification session for a given payload.
+#[repr(C)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Pod, Zeroable)]
 pub struct SignatureVerification {
-    pub accumulated_threshold: u128,
+    /// Accumulated signer threshold required to validate the payload.
+    ///
+    /// Is incremented on each successful verification.
+    ///
+    /// Set to [`U128::MAX`] once the accumulated threshold is greater than or
+    /// equal the current verifier set threshold.
+    pub accumulated_threshold: U128,
+
+    /// A bit field used to track which signatures have been verified.
+    ///
+    /// Initially, all bits are set to zero. When a signature is verified, its
+    /// corresponding bit is flipped to one. This prevents the same signature
+    /// from being verified more than once, avoiding deliberate attempts to
+    /// decrement the remaining threshold.
+    ///
+    /// Currently supports 256 slots. If the signer set maximum size needs to be
+    /// increased in the future, this value must change to make roof for
+    /// them.
     pub signature_slots: [u8; 32],
+
+    /// Upon the first successful signature validation, we set the hash of the
+    /// signing verifier set.
+    /// This data is later used when rotating signers to figure out which
+    /// verifier set was the one that actually performed the validation.
     pub signing_verifier_set_hash: VerifierSetHash,
 }
 
 impl SignatureVerification {
     pub fn is_valid(&self) -> bool {
-        self.accumulated_threshold == u128::MAX
+        self.accumulated_threshold == U128::MAX
     }
-}
-
-#[account]
-#[derive(Debug, PartialEq, Eq)]
-#[allow(clippy::pub_underscore_fields)]
-pub struct SignatureVerificationSessionData {
-    pub signature_verification: SignatureVerification,
-    pub bump: u8,
-    pub _pad: [u8; 15],
 }
 
 impl SignatureVerificationSessionData {
@@ -32,8 +62,12 @@ impl SignatureVerificationSessionData {
         SignatureVerificationSessionData {
             signature_verification,
             bump,
-            _pad: [0u8; 15],
+            ..Default::default()
         }
+    }
+
+    pub fn is_valid(&self) -> bool {
+        self.signature_verification.is_valid()
     }
 
     pub fn process_signature(
@@ -42,8 +76,10 @@ impl SignatureVerificationSessionData {
         verifier_set_merkle_root: &[u8; 32],
         verifier_info: SigningVerifierSetInfo,
     ) -> Result<()> {
+        // Check: Slot is already verified
         self.check_slot_is_done(&verifier_info.leaf)?;
 
+        // Check: Digital signature
         let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
             PublicKey::Secp256k1(key) => key,
             PublicKey::Ed25519(_) => return err!(GatewayError::UnsupportedSignatureScheme),
@@ -57,6 +93,7 @@ impl SignatureVerificationSessionData {
             return err!(GatewayError::SignatureVerificationFailed);
         }
 
+        // Check: Merkle proof
         let merkle_proof =
             rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&verifier_info.merkle_proof)
                 .map_err(|_err| GatewayError::InvalidMerkleProof)?;
@@ -72,10 +109,9 @@ impl SignatureVerificationSessionData {
             return err!(GatewayError::InvalidMerkleProof);
         }
 
-        self.mark_slot_done(&verifier_info.leaf)?;
+        // Update state
         self.accumulate_threshold(&verifier_info.leaf)?;
-
-        // Check that verifier belogs to
+        self.mark_slot_done(&verifier_info.leaf)?;
         self.verify_or_initialize_verifier_set(verifier_set_merkle_root)?;
 
         Ok(())
@@ -164,11 +200,11 @@ impl SignatureVerificationSessionData {
         self.signature_verification.accumulated_threshold = self
             .signature_verification
             .accumulated_threshold
-            .saturating_add(signature_node.signer_weight);
+            .saturating_add(U128::new(signature_node.signer_weight));
 
         // Check threshold
-        if self.signature_verification.accumulated_threshold >= signature_node.quorum {
-            self.signature_verification.accumulated_threshold = u128::MAX;
+        if self.signature_verification.accumulated_threshold.get() >= signature_node.quorum {
+            self.signature_verification.accumulated_threshold = U128::MAX;
         }
 
         Ok(())
@@ -262,5 +298,94 @@ impl VerifierSetLeaf {
             set_size,
             domain_separator,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use core::mem::size_of;
+
+    use super::*;
+
+    #[test]
+    fn test_initialization() {
+        let buffer = [0_u8; size_of::<SignatureVerificationSessionData>()];
+        let from_pod: &SignatureVerificationSessionData = bytemuck::cast_ref(&buffer);
+        let default = &SignatureVerificationSessionData::default();
+        assert_eq!(from_pod, default);
+        assert_eq!(
+            from_pod.signature_verification.accumulated_threshold.get(),
+            0
+        );
+        assert_eq!(from_pod.signature_verification.signature_slots, [0_u8; 32]);
+        assert!(!from_pod.signature_verification.is_valid());
+    }
+
+    #[test]
+    fn test_serialization() {
+        let mut buffer: [u8; size_of::<SignatureVerificationSessionData>()] =
+            [42; size_of::<SignatureVerificationSessionData>()];
+
+        let original_state;
+
+        let updated_state = {
+            let deserialized: &mut SignatureVerificationSessionData =
+                bytemuck::cast_mut(&mut buffer);
+            original_state = *deserialized;
+            let new_threshold = deserialized
+                .signature_verification
+                .accumulated_threshold
+                .saturating_add(U128::new(1));
+            deserialized.signature_verification.accumulated_threshold = new_threshold;
+            *deserialized
+        };
+        assert_ne!(updated_state, original_state); // confidence check
+
+        let deserialized: &SignatureVerificationSessionData = bytemuck::cast_ref(&buffer);
+        assert_eq!(&updated_state, deserialized);
+    }
+
+    #[test]
+    fn test_v1_compat() {
+        use axelar_solana_gateway::state::{
+            signature_verification::SignatureVerification as SignatureVerificationV1,
+            signature_verification_pda::SignatureVerificationSessionData as V1,
+        };
+        assert_eq!(
+            std::mem::size_of::<SignatureVerificationSessionData>(),
+            std::mem::size_of::<V1>()
+        );
+
+        // Make v2
+        let signature_verification = SignatureVerification {
+            accumulated_threshold: U128::new(42),
+            signature_slots: [1; 32],
+            signing_verifier_set_hash: [2; 32],
+        };
+        let bump = 255u8;
+        let v2_state = SignatureVerificationSessionData::new(signature_verification, bump);
+
+        // Make v1
+        let mut v1_state = V1::default();
+        v1_state.signature_verification = SignatureVerificationV1 {
+            accumulated_threshold: 42_u128,
+            signature_slots: [1; 32],
+            signing_verifier_set_hash: [2; 32],
+        };
+        v1_state.bump = bump;
+
+        // Compare byte representations
+        assert_eq!(bytemuck::bytes_of(&v1_state), bytemuck::bytes_of(&v2_state));
+    }
+
+    #[test]
+    fn test_alignment_compatibility() {
+        // Critical: alignment must be ≤ 8 to work with Anchor's 8-byte discriminator
+        // The struct data starts at byte offset 8, which is 8-byte aligned but NOT 16-byte aligned
+        let alignment = std::mem::align_of::<SignatureVerificationSessionData>();
+        assert!(
+               alignment <= 8,
+               "Struct alignment ({alignment}) must be ≤ 8 bytes for zero-copy compatibility with Anchor discriminator",
+           );
     }
 }

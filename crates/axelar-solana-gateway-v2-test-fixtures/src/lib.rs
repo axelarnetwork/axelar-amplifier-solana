@@ -351,13 +351,9 @@ pub fn initialize_payload_verification_session(
         &GATEWAY_PROGRAM_ID,
     );
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&merkle_root.try_to_vec().unwrap());
+    let instruction_data =
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { merkle_root }
+            .data();
 
     let accounts = vec![
         (

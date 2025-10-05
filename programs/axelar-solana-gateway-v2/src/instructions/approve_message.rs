@@ -24,9 +24,11 @@ pub struct ApproveMessage<'info> {
 
     #[account(
         seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
-        bump = verification_session_account.bump
+        bump = verification_session_account.load()?.bump,
+        // Validate signature verification session is complete
+        constraint = verification_session_account.load()?.is_valid() @ GatewayError::SigningSessionNotValid
     )]
-    pub verification_session_account: Account<'info, SignatureVerificationSessionData>,
+    pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,
 
     #[account(
         init,
@@ -48,13 +50,8 @@ pub fn approve_message_handler(
     msg!("Approving message!");
 
     let gateway_config = &ctx.accounts.gateway_root_pda.load()?;
-    let verification_session = &ctx.accounts.verification_session_account;
+    let verification_session = &ctx.accounts.verification_session_account.load()?;
     let incoming_message_pda = &mut ctx.accounts.incoming_message_pda.load_init()?;
-
-    // Validate signature verification session is complete
-    if !verification_session.signature_verification.is_valid() {
-        return err!(GatewayError::SigningSessionNotValid);
-    }
 
     // Validate message signing verifier set matches verification session
     if merkleised_message.leaf.signing_verifier_set
