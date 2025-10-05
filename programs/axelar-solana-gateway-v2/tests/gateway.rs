@@ -729,4 +729,84 @@ mod tests {
             approve_result.program_result
         );
     }
+
+    #[test]
+    fn test_fails_when_verifying_invalid_signature() {
+        // Step 1: Setup gateway with real signers
+        let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
+            setup_test_with_real_signers();
+
+        // Step 2: Initialize gateway
+        let init_result = initialize_gateway(&setup);
+        assert!(!init_result.program_result.is_err());
+
+        // Step 3: Create messages and payload merkle root
+        let verifier_set_merkle_root = setup.verifier_set_hash;
+        let (_, _message_leaves, _message_merkle_tree, payload_merkle_root) =
+            setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+        // Step 4: Initialize payload verification session with the correct payload root
+        let (session_result, verification_session_pda) =
+            initialize_payload_verification_session_with_root(
+                &setup,
+                &init_result,
+                payload_merkle_root,
+            );
+        assert!(!session_result.program_result.is_err());
+
+        // Step 5: Get existing accounts
+        let gateway_account = init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        let verifier_set_tracker_account = init_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        let verification_session_account = session_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == verification_session_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        // Step 6: Create an INVALID signature by signing a different (fake) payload merkle root
+        let fake_payload_merkle_root = [0x42u8; 32]; // Wrong payload root
+
+        // Create verifier info with the wrong payload
+        let invalid_verifier_info = create_verifier_info(
+            &secret_key_1,
+            fake_payload_merkle_root,
+            verifier_leaves.first().unwrap(),
+            0, // Position 0
+            &verifier_merkle_tree,
+        );
+
+        // Step 7: Try to verify the invalid signature against the correct payload root
+        let verify_result = verify_signature_helper(
+            &setup,
+            payload_merkle_root,
+            invalid_verifier_info,
+            verification_session_pda,
+            gateway_account,
+            verification_session_account,
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account,
+        );
+
+        assert!(
+            verify_result.program_result.is_err(),
+            "Verifying invalid signature should fail, but got: {:?}",
+            verify_result.program_result
+        );
+    }
 }
