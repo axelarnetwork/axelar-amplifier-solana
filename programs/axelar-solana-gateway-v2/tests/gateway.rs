@@ -1,4 +1,5 @@
 #![cfg(test)]
+#![allow(clippy::too_many_lines)]
 
 use anchor_lang::AccountDeserialize;
 use axelar_solana_gateway_v2::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
@@ -160,7 +161,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     let verifier_info_1 = create_verifier_info(
         &secret_key_1,
         payload_merkle_root,
-        &verifier_leaves[0],
+        verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
     );
@@ -196,6 +197,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     let verifier_info_2 = create_verifier_info(
         &secret_key_2,
         payload_merkle_root,
+        #[allow(clippy::indexing_slicing)]
         &verifier_leaves[1],
         1, // Position 1
         &verifier_merkle_tree,
@@ -292,7 +294,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 
     assert_eq!(
         incoming_message_account_data.message_hash,
-        messages[0].hash()
+        messages.first().unwrap().hash()
     );
 
     assert_eq!(
@@ -302,7 +304,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 }
 
 #[test]
-fn test_rotate_signerstest_rotate_signers() {
+fn test_rotate_signers() {
     // Step 1: Setup gateway with real signers (current verifier set)
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -359,7 +361,7 @@ fn test_rotate_signerstest_rotate_signers() {
     let verifier_info_1 = create_verifier_info(
         &secret_key_1,
         rotation_payload_hash,
-        &verifier_leaves[0],
+        verifier_leaves.first().unwrap(),
         0,
         &verifier_merkle_tree,
     );
@@ -390,6 +392,7 @@ fn test_rotate_signerstest_rotate_signers() {
     let verifier_info_2 = create_verifier_info(
         &secret_key_2,
         rotation_payload_hash,
+        #[allow(clippy::indexing_slicing)]
         &verifier_leaves[1],
         1,
         &verifier_merkle_tree,
@@ -555,7 +558,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
     let verifier_info = create_verifier_info(
         &secret_key_1,
         payload_merkle_root,
-        &verifier_leaves[0],
+        verifier_leaves.first().unwrap(),
         0,
         &verifier_merkle_tree,
     );
@@ -623,4 +626,175 @@ fn test_fails_when_verifier_submits_signature_twice() {
 
     // Should fail with SlotAlreadyVerified error
     assert!(verify_result_2.program_result.is_err());
+}
+
+#[test]
+fn test_fails_when_approving_message_with_insufficient_signatures() {
+    // Step 1: Setup gateway with real signers
+    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
+        setup_test_with_real_signers();
+
+    // Step 2: Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(!init_result.program_result.is_err());
+
+    // Step 3: Create messages and payload merkle root
+    let verifier_set_merkle_root = setup.verifier_set_hash;
+    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
+        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+    // Step 4: Initialize payload verification session
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(
+            &setup,
+            &init_result,
+            payload_merkle_root,
+        );
+    assert!(!session_result.program_result.is_err());
+
+    // Step 5: Get existing accounts
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verification_session_account = session_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Step 6: Sign the payload with ONLY ONE signer (not enough to make session valid)
+    let verifier_info_1 = create_verifier_info(
+        &secret_key_1,
+        payload_merkle_root,
+        verifier_leaves.first().unwrap(),
+        0, // Position 0
+        &verifier_merkle_tree,
+    );
+
+    let verify_result_1 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_1,
+        verification_session_pda,
+        gateway_account,
+        verification_session_account,
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account,
+    );
+    assert!(!verify_result_1.program_result.is_err());
+
+    // Step 7: Now try to approve a message with only one signature (insufficient)
+    // The verification session should not be valid since we need both signers
+    let (approve_result, _) = approve_message_helper(
+        &setup,
+        message_merkle_tree,
+        message_leaves,
+        &messages,
+        payload_merkle_root,
+        verification_session_pda,
+        verify_result_1, // Only one signature, not two
+        0,               // Try to approve the first message
+    );
+
+    // Should fail because the verification session is not valid (insufficient signatures)
+    assert!(
+        approve_result.program_result.is_err(),
+        "Approving message with insufficient signatures should fail, but got: {:?}",
+        approve_result.program_result
+    );
+}
+
+#[test]
+fn test_fails_when_verifying_invalid_signature() {
+    // Step 1: Setup gateway with real signers
+    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
+        setup_test_with_real_signers();
+
+    // Step 2: Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(!init_result.program_result.is_err());
+
+    // Step 3: Create messages and payload merkle root
+    let verifier_set_merkle_root = setup.verifier_set_hash;
+    let (_, _message_leaves, _message_merkle_tree, payload_merkle_root) =
+        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+    // Step 4: Initialize payload verification session with the correct payload root
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(
+            &setup,
+            &init_result,
+            payload_merkle_root,
+        );
+    assert!(!session_result.program_result.is_err());
+
+    // Step 5: Get existing accounts
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verification_session_account = session_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Step 6: Create an INVALID signature by signing a different (fake) payload merkle root
+    let fake_payload_merkle_root = [0x42u8; 32]; // Wrong payload root
+
+    // Create verifier info with the wrong payload
+    let invalid_verifier_info = create_verifier_info(
+        &secret_key_1,
+        fake_payload_merkle_root,
+        verifier_leaves.first().unwrap(),
+        0, // Position 0
+        &verifier_merkle_tree,
+    );
+
+    // Step 7: Try to verify the invalid signature against the correct payload root
+    let verify_result = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        invalid_verifier_info,
+        verification_session_pda,
+        gateway_account,
+        verification_session_account,
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account,
+    );
+
+    assert!(
+        verify_result.program_result.is_err(),
+        "Verifying invalid signature should fail, but got: {:?}",
+        verify_result.program_result
+    );
 }
