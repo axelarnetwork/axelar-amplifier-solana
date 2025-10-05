@@ -1,9 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
-use anchor_lang::{
-    prelude::{borsh::BorshSerialize, UpgradeableLoaderState},
-    solana_program, Discriminator, InstructionData,
-};
+use anchor_lang::{prelude::UpgradeableLoaderState, solana_program, InstructionData};
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use axelar_solana_gateway_v2::seed_prefixes::{
     self, CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
@@ -20,7 +17,6 @@ use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_sdk::{
     account::Account,
-    hash,
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
     pubkey::Pubkey,
@@ -243,10 +239,8 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
         previous_verifier_retention: setup.previous_verifier_retention,
     };
 
-    let discriminator = axelar_solana_gateway_v2::instruction::InitializeConfig::DISCRIMINATOR;
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&params.try_to_vec().unwrap());
+    let instruction_data =
+        axelar_solana_gateway_v2::instruction::InitializeConfig { params }.data();
 
     let program_data_state = UpgradeableLoaderState::ProgramData {
         slot: 0,
@@ -353,13 +347,9 @@ pub fn initialize_payload_verification_session(
         &GATEWAY_PROGRAM_ID,
     );
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&merkle_root.try_to_vec().unwrap());
+    let instruction_data =
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { merkle_root }
+            .data();
 
     let accounts = vec![
         (
@@ -462,13 +452,11 @@ pub fn initialize_payload_verification_session_with_root(
         &GATEWAY_PROGRAM_ID,
     );
 
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_payload_verification_session")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
+    let instruction_data =
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
+            merkle_root: payload_merkle_root,
+        }
+        .data();
 
     let accounts = vec![
         (
@@ -641,13 +629,11 @@ pub fn verify_signature_helper(
     verifier_set_tracker_pda: Pubkey,
     verifier_set_tracker_account: Account,
 ) -> InstructionResult {
-    let discriminator: [u8; 8] = hash::hash(b"global:verify_signature").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&payload_merkle_root.try_to_vec().unwrap());
-    instruction_data.extend_from_slice(&verifier_info.try_to_vec().unwrap());
+    let instruction_data = axelar_solana_gateway_v2::instruction::VerifySignature {
+        payload_merkle_root,
+        verifier_info,
+    }
+    .data();
 
     let accounts = vec![
         (setup.gateway_root_pda, gateway_account),
@@ -675,12 +661,10 @@ pub fn rotate_signers_helper(
     verification_session_pda: Pubkey,
     verify_result: InstructionResult,
 ) -> InstructionResult {
-    let discriminator: [u8; 8] = hash::hash(b"global:rotate_signers").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&new_verifier_set_hash.try_to_vec().unwrap());
+    let instruction_data = axelar_solana_gateway_v2::instruction::RotateSigners {
+        new_verifier_set_merkle_root: new_verifier_set_hash,
+    }
+    .data();
 
     let (new_verifier_set_tracker_pda, _) = Pubkey::find_program_address(
         &[VERIFIER_SET_TRACKER_SEED, new_verifier_set_hash.as_slice()],
@@ -807,12 +791,7 @@ pub fn transfer_operatorship_helper(
     init_result: InstructionResult,
     new_operator: Pubkey,
 ) -> InstructionResult {
-    // Create the instruction discriminator for transfer_operatorship
-    let discriminator: [u8; 8] = hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let instruction_data = discriminator.to_vec();
+    let instruction_data = axelar_solana_gateway_v2::instruction::TransferOperatorship {}.data();
 
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
