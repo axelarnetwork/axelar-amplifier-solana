@@ -25,7 +25,7 @@ pub struct ApproveMessage<'info> {
     #[account(
         seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
         bump = verification_session_account.load()?.bump,
-        // Validate signature verification session is complete
+        // CHECK: Validate signature verification session is complete
         constraint = verification_session_account.load()?.is_valid() @ GatewayError::SigningSessionNotValid
     )]
     pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,

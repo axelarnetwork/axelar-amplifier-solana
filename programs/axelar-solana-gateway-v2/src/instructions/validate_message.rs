@@ -11,7 +11,9 @@ pub struct ValidateMessage<'info> {
     	mut,
         seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
+        // CHECK: message must be already approved
         constraint = incoming_message_pda.load()?.status.is_approved() @ GatewayError::MessageNotApproved,
+        // CHECK: message hash must match
         constraint = incoming_message_pda.load()?.message_hash == message.hash() @ GatewayError::InvalidMessageHash
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
