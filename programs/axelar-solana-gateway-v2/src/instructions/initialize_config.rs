@@ -1,3 +1,4 @@
+#![allow(clippy::missing_asserts_for_indexing)]
 use crate::seed_prefixes::{GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     state::config::{GatewayConfig, InitializeConfigParams},
@@ -44,6 +45,7 @@ pub struct InitializeConfigAccounts<'info> {
     pub verifier_set_tracker_pda: Account<'info, VerifierSetTracker>,
 }
 
+#[allow(clippy::cast_sign_loss)]
 pub fn initialize_config_handler(
     ctx: Context<InitializeConfigAccounts>,
     params: InitializeConfigParams,

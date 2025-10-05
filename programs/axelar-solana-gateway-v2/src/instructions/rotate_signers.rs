@@ -75,7 +75,7 @@ pub fn rotate_signers_handler(
     // reference: https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/c290c7337fd447ecbb7426e52ac381175e33f602/contracts/gateway/AxelarAmplifierGateway.sol#L98-L101
     let operator = ctx.accounts.operator.clone();
 
-    let enforce_rotation_delay = operator.map_or(true, |operator| {
+    let enforce_rotation_delay = operator.is_none_or(|operator| {
         let operator_matches = *operator.key == gateway_root_pda.operator;
         let operator_is_signer = operator.is_signer;
         // if the operator matches and is also the signer - disable rotation delay
@@ -98,7 +98,7 @@ pub fn rotate_signers_handler(
         })?;
 
     // Check: enough time has passed since last rotation (if enforced)
-    if enforce_rotation_delay && !enough_time_till_next_rotation(current_time, &gateway_root_pda) {
+    if enforce_rotation_delay && !enough_time_till_next_rotation(current_time, gateway_root_pda) {
         return err!(GatewayError::RotationCooldownNotDone);
     }
 

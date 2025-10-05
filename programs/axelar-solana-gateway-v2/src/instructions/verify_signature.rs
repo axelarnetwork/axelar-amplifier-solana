@@ -1,3 +1,4 @@
+#![allow(clippy::empty_structs_with_brackets)]
 use crate::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     verification_session::SigningVerifierSetInfo, GatewayConfig, GatewayError,

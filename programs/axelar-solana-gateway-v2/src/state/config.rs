@@ -10,6 +10,7 @@ pub type VerifierSetEpoch = U256;
 
 #[account(zero_copy)]
 #[derive(Debug, PartialEq, Eq)]
+#[allow(clippy::pub_underscore_fields)]
 pub struct GatewayConfig {
     /// current epoch points to the latest signer set hash
     pub current_epoch: VerifierSetEpoch,
