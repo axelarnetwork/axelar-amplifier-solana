@@ -1,6 +1,8 @@
 use crate::seed_prefixes::GATEWAY_SEED;
 use crate::{GatewayConfig, GatewayError, OperatorshipTransferredEvent};
 use anchor_lang::prelude::*;
+#[allow(deprecated)]
+use anchor_lang::solana_program::bpf_loader_upgradeable;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -11,47 +13,33 @@ pub struct TransferOperatorship<'info> {
         bump = gateway_root_pda.load()?.bump
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
-    pub operator_or_upgrade_authority: Signer<'info>,
+
     #[account(
-        constraint = programdata_account.key() ==
-            Pubkey::find_program_address(&[crate::ID.as_ref()], &anchor_lang::solana_program::bpf_loader_upgradeable::id()).0
-            @ GatewayError::InvalidUpgradeAuthority
+    	// CHECK: This is either the current operator or the upgrade authority
+		constraint = gateway_root_pda.load()?.operator == *operator_or_upgrade_authority.key
+			|| program_data.upgrade_authority_address == Some(*operator_or_upgrade_authority.key)
+			@ GatewayError::InvalidOperatorOrAuthorityAccount
     )]
-    pub programdata_account: UncheckedAccount<'info>,
+    pub operator_or_upgrade_authority: Signer<'info>,
+
+    #[account(
+	    seeds = [crate::ID.as_ref()],
+	    bump,
+	    seeds::program = bpf_loader_upgradeable::ID,
+	)]
+    pub program_data: Account<'info, ProgramData>,
+
+    #[account(
+    	// CHECK: The new operator must be different
+    	constraint = new_operator.key() != gateway_root_pda.load()?.operator.key()
+     		@ ProgramError::InvalidInstructionData
+    )]
     pub new_operator: UncheckedAccount<'info>,
 }
 
 pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Result<()> {
+    // Update the operator in the gateway config
     let mut gateway_root_pda = ctx.accounts.gateway_root_pda.load_mut()?;
-
-    // Check: the programda state is valid
-    let loader_state = ctx
-        .accounts
-        .programdata_account
-        .data
-        .borrow()
-        .get(0..UpgradeableLoaderState::size_of_programdata_metadata())
-        .ok_or(GatewayError::InvalidLoaderContent)
-        .and_then(|bytes: &[u8]| {
-            bincode::deserialize::<UpgradeableLoaderState>(bytes)
-                .map_err(|_err| GatewayError::InvalidLoaderContent)
-        })?;
-
-    let UpgradeableLoaderState::ProgramData {
-        upgrade_authority_address,
-        ..
-    } = loader_state
-    else {
-        return err!(GatewayError::InvalidLoaderState);
-    };
-
-    // Check: the signer matches either the current operator or the upgrade authority
-    if !(gateway_root_pda.operator == *ctx.accounts.operator_or_upgrade_authority.key
-        || upgrade_authority_address == Some(*ctx.accounts.operator_or_upgrade_authority.key))
-    {
-        return err!(GatewayError::InvalidOperatorOrAuthorityAccount);
-    }
-
     gateway_root_pda.operator = *ctx.accounts.new_operator.key;
 
     emit_cpi!(OperatorshipTransferredEvent {
