@@ -10,7 +10,6 @@ edition.workspace = true
 [dependencies]
 anchor-lang.workspace = true
 axelar-solana-gateway-v2 = { workspace = true, features = ["cpi"] }
-borsh.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }

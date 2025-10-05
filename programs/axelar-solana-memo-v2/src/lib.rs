@@ -9,7 +9,6 @@ declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
 
 #[program]
 pub mod memo {
-
     use super::*;
 
     /// Send a memo message cross-chain via Axelar
