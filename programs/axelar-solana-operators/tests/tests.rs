@@ -1,3 +1,4 @@
+#![cfg(test)]
 use anchor_lang::{AccountDeserialize, Key};
 use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};

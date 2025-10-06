@@ -1,3 +1,4 @@
+#![cfg(test)]
 use anchor_lang::prelude::ProgramError;
 use mollusk_svm::result::Check;
 use solana_sdk::account::WritableAccount;

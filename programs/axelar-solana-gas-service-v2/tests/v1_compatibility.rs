@@ -1,3 +1,4 @@
+#![cfg(test)]
 use anchor_lang::InstructionData;
 use axelar_solana_gas_service::instructions as v1_instructions;
 use axelar_solana_gas_service_v2::instruction;

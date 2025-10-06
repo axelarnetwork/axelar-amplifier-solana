@@ -63,7 +63,7 @@ pub struct OwnershipTransferred {
 #[error_code]
 pub enum ErrorCode {
     #[msg("Only the master operator can perform this action")]
-    UnauthorizedMaster,
+    UnauthorizedOwner,
     #[msg("Invalid operator account")]
     InvalidOperator,
     #[msg("New master cannot be the same as current master")]

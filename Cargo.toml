@@ -94,6 +94,7 @@ unused_trait_names = "allow"
 unwrap_used = "allow"
 use_self = "allow"
 unneeded_field_pattern = "allow"
+empty_structs_with_brackets = "allow" # Anchor generates empty structs at many places, mostly for Bumps
 
 [workspace.lints.rust]
 rust_2018_idioms = { level = "allow", priority = 0 }
