@@ -1,3 +1,4 @@
+#![cfg(test)]
 use mollusk_svm::result::Check;
 use solana_sdk::account::WritableAccount;
 use {
@@ -58,7 +59,7 @@ fn test_refund_native_fees() {
             receiver,
             treasury,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }

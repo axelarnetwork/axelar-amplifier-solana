@@ -1,3 +1,5 @@
+#![cfg(test)]
+#![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{solana_program, AccountDeserialize, InstructionData};
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
@@ -20,6 +22,7 @@ use solana_sdk::{
 };
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn test_execute() {
     // Step 0: Example payload
     let test_payload =
@@ -62,15 +65,17 @@ fn test_execute() {
         .enumerate()
         .map(|(i, msg)| MessageLeaf {
             message: msg.clone(),
-            position: i as u16,
-            set_size: messages.len() as u16,
+            position: u16::try_from(i).unwrap(),
+            set_size: u16::try_from(messages.len()).unwrap(),
             domain_separator: setup.domain_separator,
             signing_verifier_set: verifier_set_merkle_root,
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> =
-        message_leaves.iter().map(|leaf| leaf.hash()).collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
+        .iter()
+        .map(axelar_solana_gateway_v2::MessageLeaf::hash)
+        .collect();
 
     let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
     let payload_merkle_root = message_merkle_tree.root().unwrap();
