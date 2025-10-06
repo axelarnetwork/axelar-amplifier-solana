@@ -15,7 +15,6 @@ borsh.workspace = true
 axelar-solana-encoding = { workspace = true, features = ["solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
-bincode.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }

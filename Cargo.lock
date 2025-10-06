@@ -1185,7 +1185,6 @@ dependencies = [
  "axelar-solana-encoding",
  "axelar-solana-gateway",
  "axelar-solana-gateway-v2-test-fixtures",
- "bincode",
  "bitvec",
  "borsh 1.5.7",
  "bytemuck",
