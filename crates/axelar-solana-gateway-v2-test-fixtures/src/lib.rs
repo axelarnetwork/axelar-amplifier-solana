@@ -1079,15 +1079,11 @@ pub fn approve_messages_on_gateway(
     // Step 4: Create messages and payload merkle root
     let verifier_set_merkle_root = setup.verifier_set_hash;
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree_from_messages(&setup, verifier_set_merkle_root, messages);
+        setup_message_merkle_tree_from_messages(setup, verifier_set_merkle_root, messages);
 
     // Step 5: Initialize payload verification session
     let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            &init_result,
-            payload_merkle_root,
-        );
+        initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
     assert!(!session_result.program_result.is_err());
 
     // Step 6: Get existing accounts
@@ -1117,7 +1113,7 @@ pub fn approve_messages_on_gateway(
 
     // Step 7: Sign the payload with both signers
     let verifier_info_1 = create_verifier_info(
-        &secret_key_1,
+        secret_key_1,
         payload_merkle_root,
         &verifier_leaves[0],
         0,
@@ -1125,7 +1121,7 @@ pub fn approve_messages_on_gateway(
     );
 
     let verify_result_1 = verify_signature_helper(
-        &setup,
+        setup,
         payload_merkle_root,
         verifier_info_1,
         verification_session_pda,
@@ -1144,7 +1140,7 @@ pub fn approve_messages_on_gateway(
         .clone();
 
     let verifier_info_2 = create_verifier_info(
-        &secret_key_2,
+        secret_key_2,
         payload_merkle_root,
         &verifier_leaves[1],
         1,
@@ -1152,7 +1148,7 @@ pub fn approve_messages_on_gateway(
     );
 
     let verify_result_2 = verify_signature_helper(
-        &setup,
+        setup,
         payload_merkle_root,
         verifier_info_2,
         verification_session_pda,
@@ -1168,7 +1164,7 @@ pub fn approve_messages_on_gateway(
     for i in 0..messages.len() {
         // Step 8: Approve the message
         let (approve_result, incoming_message_pda) = approve_message_helper(
-            &setup,
+            setup,
             message_merkle_tree.clone(),
             message_leaves.clone(),
             &messages,
