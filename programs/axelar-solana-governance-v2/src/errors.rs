@@ -1,0 +1,32 @@
+use anchor_lang::prelude::*;
+
+#[error_code]
+pub enum GovernanceError {
+    InvalidUpgradeAuthority,
+    InvalidArgument,
+    NotOperator,
+    MessageNotApproved,
+    InvalidMessageHash,
+    InvalidSigningPDA,
+    InvalidPayloadHash,
+    ArithmeticOverflow,
+    NotSigner,
+    ProposalPdaRequired,
+    UnauthorizedChain,
+    UnauthorizedAddress,
+    InvalidInstructionData,
+    ProposalNotReady,
+    InvalidTargetAccounts,
+    InvalidTargetProgram,
+    TargetAccountNotFound,
+    MissingNativeValueReceiver,
+    InvalidNativeValue,
+    InsufficientFunds,
+    UnauthorizedOperator,
+    UnauthorizedOperatorTransfer,
+    MissingRequiredSignature,
+    UnauthorizedWithdrawal,
+    InvalidEta,
+    InvalidCallData,
+    GovernanceConfigMissing,
+}

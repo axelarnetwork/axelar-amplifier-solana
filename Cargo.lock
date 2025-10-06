@@ -1228,6 +1228,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-governance-v2"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "axelar-solana-governance",
+ "axelar-solana-governance-v2-test-fixtures",
+ "axelar-solana-memo-v2",
+ "bincode",
+ "governance-gmp",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "solana-program",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-governance-v2-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-governance",
+ "axelar-solana-governance-v2",
+ "bincode",
+ "governance-gmp",
+ "mollusk-svm",
+ "solana-sdk",
+]
+
+[[package]]
 name = "axelar-solana-its"
 version = "0.1.0"
 dependencies = [
