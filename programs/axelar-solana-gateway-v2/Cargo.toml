@@ -18,7 +18,7 @@ bitvec.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
-axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }
+axelar-solana-gateway-v2-test-fixtures.workspace = true
 axelar-message-primitives.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
