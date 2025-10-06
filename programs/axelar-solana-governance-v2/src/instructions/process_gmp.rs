@@ -184,6 +184,7 @@ fn process_proposal_gmp(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn extract_proposal_data(
     cmd_payload: GovernanceCommandPayload,
 ) -> Result<(u64, Vec<u8>, Vec<u8>, Vec<u8>)> {
@@ -296,7 +297,7 @@ fn approve_operator_proposal(
     let (_, native_value, call_data, target) = extract_proposal_data(cmd_payload)?;
 
     let instruction_data = crate::instruction::ApproveOperatorProposalInstruction {
-        proposal_hash: proposal_hash,
+        proposal_hash,
         native_value,
         call_data,
         target,
@@ -345,7 +346,7 @@ fn cancel_operator_proposal(
     let (_, native_value, call_data, target) = extract_proposal_data(cmd_payload)?;
 
     let instruction_data = crate::instruction::CancelOperatorProposalInstruction {
-        proposal_hash: proposal_hash,
+        proposal_hash,
         native_value,
         call_data,
         target,

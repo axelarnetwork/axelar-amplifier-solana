@@ -1,8 +1,5 @@
-use anchor_lang::{
-    prelude::{AccountMeta, UpgradeableLoaderState},
-    solana_program::bpf_loader_upgradeable,
-    AnchorSerialize,
-};
+use anchor_lang::prelude::{AccountMeta, UpgradeableLoaderState};
+use anchor_lang::InstructionData;
 use axelar_solana_gateway_v2::Message;
 use axelar_solana_gateway_v2::{
     seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
@@ -18,11 +15,12 @@ use axelar_solana_governance_v2::{
 };
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_sdk::{
-    account::Account, hash, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
-    pubkey::Pubkey, system_program::ID as SYSTEM_PROGRAM_ID,
+    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
+    system_program::ID as SYSTEM_PROGRAM_ID,
 };
 
-pub use crate::gmp::GmpContext;
+mod gmp;
+pub use gmp::*;
 
 pub struct TestSetup {
     pub mollusk: Mollusk,
@@ -36,24 +34,12 @@ pub struct TestSetup {
     pub event_authority_bump: u8,
 }
 
-mod gmp;
-
 fn initialize_instruction(params: GovernanceConfig) -> Vec<u8> {
-    let discriminator: [u8; 8] = hash::hash(b"global:initialize_config").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&params.try_to_vec().unwrap());
-    instruction_data
+    axelar_solana_governance_v2::instruction::InitializeConfig { params }.data()
 }
 
 fn update_config_instruction(params: GovernanceConfigUpdate) -> Vec<u8> {
-    let discriminator: [u8; 8] = hash::hash(b"global:update_config").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&params.try_to_vec().unwrap());
-    instruction_data
+    axelar_solana_governance_v2::instruction::UpdateConfig { params }.data()
 }
 
 pub fn mock_setup_test() -> TestSetup {
@@ -72,7 +58,7 @@ pub fn mock_setup_test() -> TestSetup {
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GOVERNANCE_PROGRAM_ID.as_ref()],
-        &bpf_loader_upgradeable::id(),
+        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     let (event_authority_pda, event_authority_bump) =
@@ -127,7 +113,7 @@ pub fn initialize_governance(setup: &TestSetup, params: GovernanceConfig) -> Ins
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: serialized_program_data,
-                owner: bpf_loader_upgradeable::id(),
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
                 executable: false,
                 rent_epoch: 0,
             },
@@ -212,13 +198,7 @@ pub fn update_config(
 }
 
 fn process_gmp_instruction(message: Message, payload: Vec<u8>) -> Vec<u8> {
-    let discriminator: [u8; 8] = hash::hash(b"global:process_gmp").to_bytes()[..8]
-        .try_into()
-        .unwrap();
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&message.try_to_vec().unwrap());
-    instruction_data.extend_from_slice(&payload.try_to_vec().unwrap());
-    instruction_data
+    axelar_solana_governance_v2::instruction::ProcessGmp { message, payload }.data()
 }
 
 #[allow(clippy::too_many_lines)]
@@ -371,13 +351,8 @@ pub fn get_memo_instruction_data(
     memo: String,
     value_receiver: SolanaAccountMetadata,
 ) -> ExecuteProposalCallData {
-    let discriminator: [u8; 8] = anchor_lang::solana_program::hash::hash(b"global:emit_memo")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut memo_instruction_data = discriminator.to_vec();
-    memo_instruction_data.extend_from_slice(&memo.try_to_vec().unwrap());
+    let memo_instruction_data =
+        axelar_solana_memo_v2::instruction::EmitMemo { message: memo }.data();
 
     let (governance_config_pda, _) =
         Pubkey::find_program_address(&[seed_prefixes::GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
@@ -402,13 +377,10 @@ pub fn get_withdraw_tokens_instruction_data(
     receiver: Pubkey,
     target_bytes: [u8; 32],
 ) -> ExecuteProposalCallData {
-    let discriminator: [u8; 8] = anchor_lang::solana_program::hash::hash(b"global:withdraw_tokens")
-        .to_bytes()[..8]
-        .try_into()
-        .unwrap();
-
-    let mut withdraw_instruction_data = discriminator.to_vec();
-    withdraw_instruction_data.extend_from_slice(&withdraw_amount.try_to_vec().unwrap());
+    let withdraw_instruction_data = axelar_solana_governance_v2::instruction::WithdrawTokens {
+        amount: withdraw_amount,
+    }
+    .data();
 
     // The withdraw_tokens instruction expects exactly 3 accounts matching the WithdrawTokens struct:
     // 1. system_program: Program<'info, System>
@@ -489,7 +461,7 @@ pub fn create_operator_proposal_pda(proposal_hash: &[u8]) -> Pubkey {
 pub fn create_governance_program_data_pda() -> Pubkey {
     Pubkey::find_program_address(
         &[GOVERNANCE_PROGRAM_ID.as_ref()],
-        &bpf_loader_upgradeable::id(),
+        &solana_sdk::bpf_loader_upgradeable::id(),
     )
     .0
 }
@@ -517,14 +489,10 @@ pub fn create_execute_proposal_instruction_data(
         native_value,
     };
 
-    let discriminator: [u8; 8] =
-        anchor_lang::solana_program::hash::hash(b"global:execute_proposal").to_bytes()[..8]
-            .try_into()
-            .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&execute_proposal_data.try_to_vec().unwrap());
-    instruction_data
+    axelar_solana_governance_v2::instruction::ExecuteProposal {
+        execute_proposal_data,
+    }
+    .data()
 }
 
 pub fn create_execute_operator_proposal_instruction_data(
@@ -538,24 +506,15 @@ pub fn create_execute_operator_proposal_instruction_data(
         native_value,
     };
 
-    let discriminator: [u8; 8] =
-        anchor_lang::solana_program::hash::hash(b"global:execute_operator_proposal").to_bytes()
-            [..8]
-            .try_into()
-            .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&execute_proposal_data.try_to_vec().unwrap());
-    instruction_data
+    axelar_solana_governance_v2::instruction::ExecuteOperatorProposal {
+        execute_proposal_data,
+    }
+    .data()
 }
 
 pub fn create_transfer_operatorship_instruction_data(new_operator: Pubkey) -> Vec<u8> {
-    let discriminator: [u8; 8] =
-        anchor_lang::solana_program::hash::hash(b"global:transfer_operatorship").to_bytes()[..8]
-            .try_into()
-            .unwrap();
-
-    let mut instruction_data = discriminator.to_vec();
-    instruction_data.extend_from_slice(&new_operator.to_bytes().try_to_vec().unwrap());
-    instruction_data
+    axelar_solana_governance_v2::instruction::TransferOperatorship {
+        new_operator: new_operator.to_bytes(),
+    }
+    .data()
 }

@@ -9,6 +9,7 @@ edition.workspace = true
 
 [dependencies]
 governance-gmp = {workspace = true}
+axelar-solana-memo-v2 = { path = "../../programs/axelar-solana-memo-v2", features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway-v2 = { path = "../../programs/axelar-solana-gateway-v2", features = ["no-entrypoint"], default-features = false }
 axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }

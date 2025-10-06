@@ -1258,6 +1258,7 @@ dependencies = [
  "axelar-solana-gateway-v2",
  "axelar-solana-governance",
  "axelar-solana-governance-v2",
+ "axelar-solana-memo-v2",
  "bincode",
  "governance-gmp",
  "mollusk-svm",
