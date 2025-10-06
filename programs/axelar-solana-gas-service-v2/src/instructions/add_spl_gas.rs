@@ -31,9 +31,9 @@ pub struct AddSplGas<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 
     #[account(
         mut,
@@ -52,7 +52,8 @@ pub fn add_spl_gas<'info>(
     // see more: https://solana.stackexchange.com/questions/13275/cpicontext-with-remaining-accounts-is-not-working-because-of-lifetimes
     ctx: Context<'_, '_, '_, 'info, AddSplGas<'info>>,
     tx_hash: [u8; 64],
-    log_index: u64,
+    ix_index: u8,
+    event_ix_index: u8,
     gas_fee_amount: u64,
     decimals: u8,
     refund_address: Pubkey,
@@ -65,7 +66,11 @@ pub fn add_spl_gas<'info>(
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
         from: ctx.accounts.sender_token_account.to_account_info().clone(),
-        to: ctx.accounts.treasury_token_account.to_account_info().clone(),
+        to: ctx
+            .accounts
+            .treasury_token_account
+            .to_account_info()
+            .clone(),
         authority: ctx.accounts.sender.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -80,7 +85,8 @@ pub fn add_spl_gas<'info>(
         mint: *ctx.accounts.mint.to_account_info().key,
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,
-        log_index,
+        ix_index,
+        event_ix_index,
         refund_address,
         gas_fee_amount,
     });

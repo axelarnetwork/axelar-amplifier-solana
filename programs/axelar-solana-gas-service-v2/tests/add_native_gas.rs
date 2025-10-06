@@ -39,7 +39,8 @@ fn test_add_native_gas() {
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
     let tx_hash = [0u8; 64];
-    let log_index = 0u64;
+    let ix_index = 1u8;
+    let event_ix_index = 2u8;
     let gas_fee_amount = 300_000_000u64; // 0.3 SOL
     let refund_address = Pubkey::new_unique();
 
@@ -61,7 +62,8 @@ fn test_add_native_gas() {
         .to_account_metas(None),
         data: axelar_solana_gas_service_v2::instruction::AddNativeGas {
             tx_hash,
-            log_index,
+            ix_index,
+            event_ix_index,
             gas_fee_amount,
             refund_address,
         }
@@ -134,7 +136,8 @@ fn test_add_native_gas_fails_for_zero() {
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
     let tx_hash = [0u8; 64];
-    let log_index = 0u64;
+    let ix_index = 1u8;
+    let event_ix_index = 2u8;
     let gas_fee_amount = 0u64; // 0 SOL
     let refund_address = Pubkey::new_unique();
 
@@ -156,7 +159,8 @@ fn test_add_native_gas_fails_for_zero() {
         .to_account_metas(None),
         data: axelar_solana_gas_service_v2::instruction::AddNativeGas {
             tx_hash,
-            log_index,
+            ix_index,
+            event_ix_index,
             gas_fee_amount,
             refund_address,
         }
@@ -225,7 +229,8 @@ fn test_add_native_gas_fails_insufficient_balance() {
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
     let tx_hash = [0u8; 64];
-    let log_index = 0u64;
+    let ix_index = 1u8;
+    let event_ix_index = 2u8;
     let gas_fee_amount = 500_000_000u64; // 0.3 SOL
     let refund_address = Pubkey::new_unique();
 
@@ -247,7 +252,8 @@ fn test_add_native_gas_fails_insufficient_balance() {
         .to_account_metas(None),
         data: axelar_solana_gas_service_v2::instruction::AddNativeGas {
             tx_hash,
-            log_index,
+            ix_index,
+            event_ix_index,
             gas_fee_amount,
             refund_address,
         }

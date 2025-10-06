@@ -29,15 +29,16 @@ pub struct RefundNativeFees<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 }
 
 pub fn refund_native_fees(
     ctx: Context<RefundNativeFees>,
     tx_hash: [u8; 64],
-    log_index: u64,
+    ix_index: u8,
+    event_ix_index: u8,
     fees: u64,
 ) -> Result<()> {
     if fees == 0 {
@@ -54,7 +55,8 @@ pub fn refund_native_fees(
     emit_cpi!(NativeGasRefundedEvent {
         tx_hash,
         treasury: *ctx.accounts.treasury.to_account_info().key,
-        log_index,
+        ix_index,
+        event_ix_index,
         receiver: *ctx.accounts.receiver.to_account_info().key,
         fees,
     });

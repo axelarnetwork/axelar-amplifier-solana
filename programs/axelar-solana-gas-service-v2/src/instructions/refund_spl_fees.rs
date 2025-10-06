@@ -39,9 +39,9 @@ pub struct RefundSplFees<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 
     #[account(
         mut,
@@ -58,7 +58,8 @@ pub struct RefundSplFees<'info> {
 pub fn refund_spl_fees(
     ctx: Context<RefundSplFees>,
     tx_hash: [u8; 64],
-    log_index: u64,
+    ix_index: u8,
+    event_ix_index: u8,
     fees: u64,
     decimals: u8,
 ) -> Result<()> {
@@ -67,12 +68,21 @@ pub fn refund_spl_fees(
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    let signer_seeds: &[&[&[u8]]] = &[&[Treasury::SEED_PREFIX, &[ctx.accounts.treasury.bump]]];
+    let signer_seeds: &[&[&[u8]]] =
+        &[&[Treasury::SEED_PREFIX, &[ctx.accounts.treasury.load()?.bump]]];
 
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
-        from: ctx.accounts.treasury_token_account.to_account_info().clone(),
-        to: ctx.accounts.receiver_token_account.to_account_info().clone(),
+        from: ctx
+            .accounts
+            .treasury_token_account
+            .to_account_info()
+            .clone(),
+        to: ctx
+            .accounts
+            .receiver_token_account
+            .to_account_info()
+            .clone(),
         authority: ctx.accounts.treasury.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();
@@ -86,7 +96,8 @@ pub fn refund_spl_fees(
         token_program_id: *ctx.accounts.token_program.to_account_info().key,
         tx_hash,
         treasury: *ctx.accounts.treasury.to_account_info().key,
-        log_index,
+        ix_index,
+        event_ix_index,
         receiver: *ctx.accounts.receiver_token_account.to_account_info().key,
         fees,
     });

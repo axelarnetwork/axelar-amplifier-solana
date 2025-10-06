@@ -19,9 +19,9 @@ pub struct PayNativeForContractCall<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 
     pub system_program: Program<'info, System>,
 }

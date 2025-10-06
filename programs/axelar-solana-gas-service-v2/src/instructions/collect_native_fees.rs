@@ -28,9 +28,9 @@ pub struct CollectNativeFees<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 
     /// CHECK: Can be any account to receive funds
     #[account(mut)]
