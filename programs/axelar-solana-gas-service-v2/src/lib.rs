@@ -61,7 +61,8 @@ pub mod axelar_solana_gas_service_v2 {
     pub fn add_spl_gas<'info>(
         ctx: Context<'_, '_, '_, 'info, AddSplGas<'info>>,
         tx_hash: [u8; 64],
-        log_index: u64,
+        ix_index: u8,
+        event_ix_index: u8,
         gas_fee_amount: u64,
         decimals: u8,
         refund_address: Pubkey,
@@ -69,7 +70,8 @@ pub mod axelar_solana_gas_service_v2 {
         instructions::add_spl_gas::add_spl_gas(
             ctx,
             tx_hash,
-            log_index,
+            ix_index,
+            event_ix_index,
             gas_fee_amount,
             decimals,
             refund_address,
@@ -83,11 +85,19 @@ pub mod axelar_solana_gas_service_v2 {
     pub fn refund_spl_fees(
         ctx: Context<RefundSplFees>,
         tx_hash: [u8; 64],
-        log_index: u64,
+        ix_index: u8,
+        event_ix_index: u8,
         fees: u64,
         decimals: u8,
     ) -> Result<()> {
-        instructions::refund_spl_fees::refund_spl_fees(ctx, tx_hash, log_index, fees, decimals)
+        instructions::refund_spl_fees::refund_spl_fees(
+            ctx,
+            tx_hash,
+            ix_index,
+            event_ix_index,
+            fees,
+            decimals,
+        )
     }
 
     //
@@ -115,14 +125,16 @@ pub mod axelar_solana_gas_service_v2 {
     pub fn add_native_gas(
         ctx: Context<AddNativeGas>,
         tx_hash: [u8; 64],
-        log_index: u64,
+        ix_index: u8,
+        event_ix_index: u8,
         gas_fee_amount: u64,
         refund_address: Pubkey,
     ) -> Result<()> {
         instructions::add_native_gas::add_native_gas(
             ctx,
             tx_hash,
-            log_index,
+            ix_index,
+            event_ix_index,
             gas_fee_amount,
             refund_address,
         )
@@ -135,9 +147,16 @@ pub mod axelar_solana_gas_service_v2 {
     pub fn refund_native_fees(
         ctx: Context<RefundNativeFees>,
         tx_hash: [u8; 64],
-        log_index: u64,
+        ix_index: u8,
+        event_ix_index: u8,
         fees: u64,
     ) -> Result<()> {
-        instructions::refund_native_fees::refund_native_fees(ctx, tx_hash, log_index, fees)
+        instructions::refund_native_fees::refund_native_fees(
+            ctx,
+            tx_hash,
+            ix_index,
+            event_ix_index,
+            fees,
+        )
     }
 }
