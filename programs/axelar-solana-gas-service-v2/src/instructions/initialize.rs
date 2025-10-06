@@ -31,11 +31,12 @@ pub struct Initialize<'info> {
         ],
         bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 }
 
 pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-    ctx.accounts.treasury.bump = ctx.bumps.treasury;
+    let treasury = &mut ctx.accounts.treasury.load_init()?;
+    treasury.bump = ctx.bumps.treasury;
 
     Ok(())
 }

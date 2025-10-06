@@ -29,9 +29,9 @@ pub struct CollectSplFees<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 
     #[account(
         mut,
@@ -51,12 +51,21 @@ pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8)
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    let signer_seeds: &[&[&[u8]]] = &[&[Treasury::SEED_PREFIX, &[ctx.accounts.treasury.bump]]];
+    let signer_seeds: &[&[&[u8]]] =
+        &[&[Treasury::SEED_PREFIX, &[ctx.accounts.treasury.load()?.bump]]];
 
     let cpi_accounts = TransferChecked {
         mint: ctx.accounts.mint.to_account_info().clone(),
-        from: ctx.accounts.treasury_token_account.to_account_info().clone(),
-        to: ctx.accounts.receiver_token_account.to_account_info().clone(),
+        from: ctx
+            .accounts
+            .treasury_token_account
+            .to_account_info()
+            .clone(),
+        to: ctx
+            .accounts
+            .receiver_token_account
+            .to_account_info()
+            .clone(),
         authority: ctx.accounts.treasury.to_account_info().clone(),
     };
     let cpi_program = ctx.accounts.token_program.to_account_info();

@@ -44,7 +44,8 @@ fn test_refund_native_fees() {
     let receiver_account = Account::new(receiver_balance, 0, &system_program::ID);
 
     let tx_hash = [0u8; 64];
-    let log_index = 0u64;
+    let ix_index = 1u8;
+    let event_ix_index = 2u8;
     let fees = 500_000_000u64; // 0.5 SOL
 
     let (event_authority, _bump) =
@@ -66,7 +67,8 @@ fn test_refund_native_fees() {
         .to_account_metas(None),
         data: axelar_solana_gas_service_v2::instruction::RefundNativeFees {
             tx_hash,
-            log_index,
+            ix_index,
+            event_ix_index,
             fees,
         }
         .data(),

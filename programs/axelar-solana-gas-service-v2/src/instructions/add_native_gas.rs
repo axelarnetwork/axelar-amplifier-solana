@@ -14,9 +14,9 @@ pub struct AddNativeGas<'info> {
         seeds = [
             Treasury::SEED_PREFIX,
         ],
-        bump = treasury.bump,
+        bump = treasury.load()?.bump,
     )]
-    pub treasury: Account<'info, Treasury>,
+    pub treasury: AccountLoader<'info, Treasury>,
 
     pub system_program: Program<'info, System>,
 }
@@ -24,7 +24,8 @@ pub struct AddNativeGas<'info> {
 pub fn add_native_gas(
     ctx: Context<AddNativeGas>,
     tx_hash: [u8; 64],
-    log_index: u64,
+    ix_index: u8,
+    event_ix_index: u8,
     gas_fee_amount: u64,
     refund_address: Pubkey,
 ) -> Result<()> {
@@ -49,7 +50,8 @@ pub fn add_native_gas(
     emit_cpi!(NativeGasAddedEvent {
         treasury: *treasury_account_info.key,
         tx_hash,
-        log_index,
+        ix_index,
+        event_ix_index,
         refund_address,
         gas_fee_amount,
     });

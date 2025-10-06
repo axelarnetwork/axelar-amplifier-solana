@@ -47,8 +47,10 @@ pub struct NativeGasAddedEvent {
     pub treasury: Pubkey,
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
-    /// index of the log
-    pub log_index: u64,
+    /// Index of the CallContract instruction
+    pub ix_index: u8,
+    /// Index of the CPI event inside inner instructions
+    pub event_ix_index: u8,
     /// The refund address
     pub refund_address: Pubkey,
     /// amount of SOL
@@ -63,8 +65,10 @@ pub struct NativeGasRefundedEvent {
     pub tx_hash: [u8; 64],
     /// The Gas service treasury PDA
     pub treasury: Pubkey,
-    /// The log index
-    pub log_index: u64,
+    /// Index of the CallContract instruction
+    pub ix_index: u8,
+    /// Index of the CPI event inside inner instructions
+    pub event_ix_index: u8,
     /// The receiver of the refund
     pub receiver: Pubkey,
     /// amount of SOL
@@ -109,8 +113,10 @@ pub struct SplGasAddedEvent {
     pub token_program_id: Pubkey,
     /// Solana transaction signature
     pub tx_hash: [u8; 64],
-    /// index of the log
-    pub log_index: u64,
+    /// Index of the CallContract instruction
+    pub ix_index: u8,
+    /// Index of the CPI event inside inner instructions
+    pub event_ix_index: u8,
     /// The refund address
     pub refund_address: Pubkey,
     /// amount of SOL
@@ -131,8 +137,10 @@ pub struct SplGasRefundedEvent {
     pub tx_hash: [u8; 64],
     /// The Gas service treasury PDA
     pub treasury: Pubkey,
-    /// The log index
-    pub log_index: u64,
+    /// Index of the CallContract instruction
+    pub ix_index: u8,
+    /// Index of the CPI event inside inner instructions
+    pub event_ix_index: u8,
     /// The receiver of the refund
     pub receiver: Pubkey,
     /// amount of SOL
