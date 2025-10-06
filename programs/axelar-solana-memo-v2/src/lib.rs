@@ -30,4 +30,8 @@ pub mod memo {
     ) -> Result<()> {
         instructions::execute_handler(ctx, message, source_chain, source_address, payload)
     }
+
+    pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {
+        instructions::emit_memo_handler(ctx, message)
+    }
 }
