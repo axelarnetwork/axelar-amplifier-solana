@@ -12,13 +12,12 @@ pub struct PaySplForContractCall<'info> {
 
     #[account(
         mut,
-        associated_token::mint = mint,
-        associated_token::authority = sender,
+        token::mint = mint,
+        token::authority = sender,
     )]
     pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
-        mut,
         seeds = [
             Treasury::SEED_PREFIX,
         ],

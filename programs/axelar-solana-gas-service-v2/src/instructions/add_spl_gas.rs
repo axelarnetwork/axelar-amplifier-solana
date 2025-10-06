@@ -4,15 +4,6 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 /// Add more gas (SPL tokens) to an existing contract call.
-///
-/// Accounts expected:
-/// 0. `[signer, writable]` The account (`sender`) paying the gas fee in SPL tokens.
-/// 1. `[writable]` The sender's associated token account for the mint.
-/// 2. `[writable]` The `treasury` account.
-/// 3. `[writable]` The treasury's associated token account for the mint.
-/// 4. `[]` The mint account for the SPL token.
-/// 5. `[]` The SPL token program.
-/// 6+. `[signer, writable]` Optional additional accounts required by the SPL token program for the transfer.
 #[event_cpi]
 #[derive(Accounts)]
 pub struct AddSplGas<'info> {
@@ -21,13 +12,12 @@ pub struct AddSplGas<'info> {
 
     #[account(
         mut,
-        associated_token::mint = mint,
-        associated_token::authority = sender,
+        token::mint = mint,
+        token::authority = sender,
     )]
     pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
-        mut,
         seeds = [
             Treasury::SEED_PREFIX,
         ],
