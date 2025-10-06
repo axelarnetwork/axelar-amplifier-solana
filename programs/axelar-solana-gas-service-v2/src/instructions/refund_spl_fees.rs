@@ -5,14 +5,6 @@ use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, Tran
 use axelar_solana_operators::OperatorAccount;
 
 /// Refund previously collected SPL token fees (operator only).
-///
-/// Accounts expected:
-/// 0. `[signer, read-only]` The `operator` account authorized to collect fees.
-/// 1. `[writable]` The `receiver` account where the tokens will be sent.
-/// 2. `[writable]` The `treasury` account.
-/// 3. `[writable]` The treasury's associated token account for the mint.
-/// 4. `[]` The mint account for the SPL token.
-/// 5. `[]` The SPL token program.
 #[event_cpi]
 #[derive(Accounts)]
 pub struct RefundSplFees<'info> {
@@ -35,7 +27,6 @@ pub struct RefundSplFees<'info> {
     pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
-        mut,
         seeds = [
             Treasury::SEED_PREFIX,
         ],
