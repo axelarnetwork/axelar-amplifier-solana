@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 pub struct RemoveOperator<'info> {
     #[account(
         mut,
-        address = registry.owner @ ErrorCode::UnauthorizedMaster
+        address = registry.owner @ ErrorCode::UnauthorizedOwner
     )]
     pub owner: Signer<'info>,
 
@@ -39,7 +39,7 @@ pub fn remove_operator(ctx: Context<RemoveOperator>) -> Result<()> {
         .operator_count
         .checked_sub(1)
         // Should never happen if the Operator PDA exists
-        .ok_or::<Error>(ProgramError::InvalidAccountData.into())?;
+        .ok_or_else(|| -> Error { ProgramError::InvalidAccountData.into() })?;
 
     Ok(())
 }

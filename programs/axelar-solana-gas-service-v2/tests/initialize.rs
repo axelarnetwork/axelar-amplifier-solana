@@ -1,4 +1,4 @@
-// #![cfg(feature = "test-sbf")]
+#![cfg(test)]
 
 use anchor_lang::Key;
 use axelar_solana_gas_service_v2::state::Treasury;
@@ -189,6 +189,7 @@ fn test_initialize_success() {
 }
 
 #[test]
+#[allow(clippy::should_panic_without_expect)]
 #[should_panic]
 fn test_initialize_unauthorized() {
     let program_id = axelar_solana_gas_service_v2::id();

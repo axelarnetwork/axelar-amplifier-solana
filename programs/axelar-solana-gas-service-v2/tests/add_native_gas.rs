@@ -1,3 +1,4 @@
+#![cfg(test)]
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use {
     anchor_lang::{
@@ -53,7 +54,7 @@ fn test_add_native_gas() {
             treasury,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }
@@ -148,7 +149,7 @@ fn test_add_native_gas_fails_for_zero() {
             treasury,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }
@@ -239,7 +240,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
             treasury,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }

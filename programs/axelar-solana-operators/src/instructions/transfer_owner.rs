@@ -7,13 +7,13 @@ use anchor_lang::prelude::*;
 pub struct TransferOwner<'info> {
     #[account(
         mut,
-        address = registry.owner @ ErrorCode::UnauthorizedMaster
+        address = registry.owner @ ErrorCode::UnauthorizedOwner
     )]
     pub owner: Signer<'info>,
 
-    /// CHECK: The new master operator pubkey
+    /// CHECK: The new owner pubkey
     #[account(
-    	// Ensure the new master is not the same as the current master
+    	// Ensure the new owner is not the same as the current owner
 		constraint = new_owner.key() != registry.owner @ ErrorCode::SameMaster
     )]
     pub new_owner: UncheckedAccount<'info>,
@@ -29,7 +29,7 @@ pub struct TransferOwner<'info> {
 pub fn transfer_owner(ctx: Context<TransferOwner>) -> Result<()> {
     let registry = &mut ctx.accounts.registry;
 
-    // Update the master operator
+    // Update the owner
     registry.owner = ctx.accounts.new_owner.key();
 
     emit!(OwnershipTransferred {

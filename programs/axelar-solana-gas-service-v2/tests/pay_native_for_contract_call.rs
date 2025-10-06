@@ -1,3 +1,5 @@
+#![cfg(test)]
+#![allow(clippy::str_to_string)]
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use {
     anchor_lang::{
@@ -50,7 +52,7 @@ fn test_pay_native_contract_call() {
             treasury,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }

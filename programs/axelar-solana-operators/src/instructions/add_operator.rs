@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 pub struct AddOperator<'info> {
     #[account(
         mut,
-        address = registry.owner @ ErrorCode::UnauthorizedMaster
+        address = registry.owner @ ErrorCode::UnauthorizedOwner
     )]
     pub owner: Signer<'info>,
 
@@ -45,7 +45,7 @@ pub fn add_operator(ctx: Context<AddOperator>) -> Result<()> {
     registry.operator_count = registry
         .operator_count
         .checked_add(1)
-        .ok_or::<anchor_lang::error::Error>(ProgramError::ArithmeticOverflow.into())?;
+        .ok_or_else(|| -> Error { ProgramError::ArithmeticOverflow.into() })?;
 
     Ok(())
 }

@@ -1,3 +1,9 @@
+#![cfg(test)]
+#![allow(
+    clippy::non_ascii_literal,
+    clippy::indexing_slicing,
+    clippy::str_to_string
+)]
 use anchor_lang::prelude::*;
 use anchor_spl::token::spl_token;
 use axelar_solana_gas_service::instructions::*;
@@ -121,6 +127,4 @@ fn test_discriminators_backwards_compatible() {
         .unwrap(),
         instruction::RefundSplFees::DISCRIMINATOR
     );
-
-    println!("🎉 All discriminators validated using helper functions!");
 }
