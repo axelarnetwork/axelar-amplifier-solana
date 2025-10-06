@@ -25,7 +25,6 @@ pub struct CollectSplFees<'info> {
     pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
-        mut,
         seeds = [
             Treasury::SEED_PREFIX,
         ],
