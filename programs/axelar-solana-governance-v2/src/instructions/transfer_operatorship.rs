@@ -12,9 +12,9 @@ pub struct TransferOperatorship<'info> {
     #[account(
         mut,
         seeds = [seed_prefixes::GOVERNANCE_CONFIG],
-        bump = governance_config.bump,
+        bump = governance_config.load()?.bump,
     )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
 }
 
 pub fn transfer_operatorship_handler(
@@ -30,13 +30,14 @@ pub fn transfer_operatorship_handler(
         return err!(GovernanceError::MissingRequiredSignature);
     }
 
-    if operator_account.is_signer && operator_account.key.to_bytes() != config.operator {
+    if operator_account.is_signer && operator_account.key.to_bytes() != config.load_mut()?.operator
+    {
         msg!("Operator account must sign the transaction");
         return err!(GovernanceError::MissingRequiredSignature);
     }
 
-    let old_operator = config.operator;
-    config.operator = new_operator;
+    let old_operator = config.load()?.operator;
+    config.load_mut()?.operator = new_operator;
 
     emit_cpi!(OperatorshipTransferred {
         old_operator: old_operator.to_vec(),
