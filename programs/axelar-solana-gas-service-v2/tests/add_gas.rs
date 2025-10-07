@@ -14,7 +14,6 @@ use initialize::{init_gas_service, setup_mollusk, setup_operator};
 #[test]
 fn test_add_native_gas() {
     // Setup
-
     let program_id = axelar_solana_gas_service_v2::id();
     let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service_v2");
 
@@ -38,10 +37,8 @@ fn test_add_native_gas() {
     let sender_balance = 1_000_000_000u64; // 1 SOL
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
-    let tx_hash = [0u8; 64];
-    let ix_index = 1u8;
-    let event_ix_index = 2u8;
-    let gas_fee_amount = 300_000_000u64; // 0.3 SOL
+    let message_id = "tx-sig-2.1".to_owned();
+    let amount = 300_000_000u64; // 0.3 SOL
     let refund_address = Pubkey::new_unique();
 
     let (event_authority, _bump) =
@@ -50,7 +47,7 @@ fn test_add_native_gas() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::AddNativeGas {
+        accounts: axelar_solana_gas_service_v2::accounts::AddGas {
             sender,
             treasury,
             system_program: system_program::ID,
@@ -60,11 +57,9 @@ fn test_add_native_gas() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::AddNativeGas {
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            gas_fee_amount,
+        data: axelar_solana_gas_service_v2::instruction::AddGas {
+            message_id,
+            amount,
             refund_address,
         }
         .data(),
@@ -95,11 +90,11 @@ fn test_add_native_gas() {
         Check::success(),
         // Balance subtracted
         Check::account(&sender)
-            .lamports(sender_balance - gas_fee_amount)
+            .lamports(sender_balance - amount)
             .build(),
         // Balance added
         Check::account(&treasury)
-            .lamports(treasury_pda.lamports + gas_fee_amount)
+            .lamports(treasury_pda.lamports + amount)
             .build(),
     ];
 
@@ -135,9 +130,7 @@ fn test_add_native_gas_fails_for_zero() {
     let sender_balance = 1_000_000_000u64; // 1 SOL
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
-    let tx_hash = [0u8; 64];
-    let ix_index = 1u8;
-    let event_ix_index = 2u8;
+    let message_id = "tx-sig-2.1".to_owned();
     let gas_fee_amount = 0u64; // 0 SOL
     let refund_address = Pubkey::new_unique();
 
@@ -147,7 +140,7 @@ fn test_add_native_gas_fails_for_zero() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::AddNativeGas {
+        accounts: axelar_solana_gas_service_v2::accounts::AddGas {
             sender,
             treasury,
             system_program: system_program::ID,
@@ -157,11 +150,9 @@ fn test_add_native_gas_fails_for_zero() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::AddNativeGas {
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            gas_fee_amount,
+        data: axelar_solana_gas_service_v2::instruction::AddGas {
+            message_id,
+            amount: gas_fee_amount,
             refund_address,
         }
         .data(),
@@ -228,9 +219,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
     let sender_balance = 300_000_000u64; // 0.3 SOL
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
-    let tx_hash = [0u8; 64];
-    let ix_index = 1u8;
-    let event_ix_index = 2u8;
+    let message_id = "tx-sig-2.1".to_owned();
     let gas_fee_amount = 500_000_000u64; // 0.3 SOL
     let refund_address = Pubkey::new_unique();
 
@@ -240,7 +229,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::AddNativeGas {
+        accounts: axelar_solana_gas_service_v2::accounts::AddGas {
             sender,
             treasury,
             system_program: system_program::ID,
@@ -250,11 +239,9 @@ fn test_add_native_gas_fails_insufficient_balance() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::AddNativeGas {
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            gas_fee_amount,
+        data: axelar_solana_gas_service_v2::instruction::AddGas {
+            message_id,
+            amount: gas_fee_amount,
             refund_address,
         }
         .data(),
