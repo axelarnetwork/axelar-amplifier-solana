@@ -1,6 +1,7 @@
 use crate::{
     seed_prefixes::{GOVERNANCE_CONFIG, PROPOSAL_PDA},
-    ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError, ProposalExecuted,
+    transfer_lamports, ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError,
+    ProposalExecuted,
 };
 use anchor_lang::prelude::*;
 use solana_program::instruction::Instruction;
@@ -179,26 +180,13 @@ fn manual_lamport_transfer(
 
     let target_account_info = target_account_info.ok_or(GovernanceError::TargetAccountNotFound)?;
 
-    // Manual lamport transfer - extract AccountInfo references first
+    // Note: We need manual lamport transfer because we are dealing with
+    // governance_config which is a data account
     let governance_account = governance_config.to_account_info();
     let target_account = target_account_info;
 
-    // Now do the transfer
-    {
-        let mut governance_lamports = governance_account.try_borrow_mut_lamports()?;
-        let mut target_lamports = target_account.try_borrow_mut_lamports()?;
+    transfer_lamports(&governance_account, target_account, native_value_u64)?;
 
-        if **governance_lamports < native_value_u64 {
-            return Err(GovernanceError::InsufficientFunds.into());
-        }
-
-        **governance_lamports = governance_lamports
-            .checked_sub(native_value_u64)
-            .ok_or(GovernanceError::InsufficientFunds)?;
-        **target_lamports = target_lamports
-            .checked_add(native_value_u64)
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
-    }
     Ok(())
 }
 

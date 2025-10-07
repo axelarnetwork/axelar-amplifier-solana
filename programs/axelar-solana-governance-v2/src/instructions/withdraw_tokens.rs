@@ -1,4 +1,4 @@
-use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError};
+use crate::{seed_prefixes::GOVERNANCE_CONFIG, transfer_lamports, GovernanceConfig};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -20,28 +20,11 @@ pub fn withdraw_tokens_handler(ctx: Context<WithdrawTokens>, amount: u64) -> Res
     let governance_config = &ctx.accounts.governance_config;
     let receiver = &ctx.accounts.receiver;
 
-    // Check if governance config has sufficient lamports
     let governance_account_info = governance_config.to_account_info();
-    let current_lamports = governance_account_info.lamports();
 
-    require!(
-        current_lamports >= amount,
-        GovernanceError::InsufficientFunds
-    );
-
-    // Perform the transfer
-    {
-        let mut governance_lamports = governance_account_info.try_borrow_mut_lamports()?;
-        let mut receiver_lamports = receiver.try_borrow_mut_lamports()?;
-
-        **governance_lamports = governance_lamports
-            .checked_sub(amount)
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
-
-        **receiver_lamports = receiver_lamports
-            .checked_add(amount)
-            .ok_or(GovernanceError::ArithmeticOverflow)?;
-    }
+    // Note: We need manual lamport transfer because we are dealing with
+    // governance_config which is a data account
+    transfer_lamports(&governance_account_info, receiver, amount)?;
 
     msg!(
         "{} lamports were transferred from {}",
