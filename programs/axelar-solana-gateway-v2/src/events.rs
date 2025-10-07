@@ -2,6 +2,7 @@ use crate::u256::U256;
 use anchor_lang::prelude::*;
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MessageApprovedEvent {
     pub command_id: [u8; 32],
     pub destination_address: Pubkey,
@@ -13,6 +14,7 @@ pub struct MessageApprovedEvent {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MessageExecutedEvent {
     pub command_id: [u8; 32],
     pub destination_address: Pubkey,
@@ -24,6 +26,7 @@ pub struct MessageExecutedEvent {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VerifierSetRotatedEvent {
     pub epoch: U256,
     pub verifier_set_hash: [u8; 32],
@@ -40,6 +43,7 @@ pub struct CallContractEvent {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct OperatorshipTransferredEvent {
     pub new_operator: [u8; 32],
 }
