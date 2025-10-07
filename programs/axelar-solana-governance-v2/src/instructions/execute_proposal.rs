@@ -28,9 +28,9 @@ pub struct ExecuteProposal<'info> {
                 )
             }
         ],
-        bump = proposal_pda.bump
+        bump = proposal_pda.load()?.bump
     )]
-    pub proposal_pda: Account<'info, crate::ExecutableProposal>,
+    pub proposal_pda: AccountLoader<'info, crate::ExecutableProposal>,
 }
 
 pub fn execute_proposal_handler(
@@ -42,7 +42,7 @@ pub fn execute_proposal_handler(
 
     let clock = Clock::get()?;
     require!(
-        clock.unix_timestamp as u64 >= proposal.eta,
+        clock.unix_timestamp as u64 >= proposal.load()?.eta,
         GovernanceError::ProposalNotReady
     );
 
@@ -77,7 +77,7 @@ pub fn execute_proposal_handler(
         target_address: execute_proposal_data.target_address.to_vec(),
         call_data: execute_proposal_data.call_data.call_data,
         native_value: execute_proposal_data.native_value.to_vec(),
-        eta: proposal.eta,
+        eta: proposal.load()?.eta,
     });
 
     Ok(())
@@ -163,6 +163,7 @@ fn manual_lamport_transfer(
     native_value_u64: u64,
     governance_config: &AccountLoader<'_, GovernanceConfig>,
 ) -> Result<()> {
+    msg!("HERE2");
     let target_native_value_account = execute_proposal_data
         .call_data
         .solana_native_value_receiver_account

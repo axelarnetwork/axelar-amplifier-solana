@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-#[account]
+#[account(zero_copy)]
 #[derive(Debug)]
 pub struct ExecutableProposal {
     /// Represent the le bytes containing unix timestamp from when the proposal
@@ -10,6 +10,7 @@ pub struct ExecutableProposal {
     pub bump: u8,
     /// The bump seed for the operator managed proposal PDA.
     pub managed_bump: u8,
+    _padding: [u8; 6],
 }
 
 type Uint256 = [u8; 32];
@@ -83,6 +84,6 @@ pub struct SolanaAccountMetadata {
     pub is_writable: bool,
 }
 
-#[account]
+#[account(zero_copy)]
 #[derive(Debug)]
 pub struct OperatorProposal {}

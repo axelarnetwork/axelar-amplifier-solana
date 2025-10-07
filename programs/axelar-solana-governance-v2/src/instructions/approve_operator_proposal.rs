@@ -18,9 +18,9 @@ pub struct ApproveOperatorProposal<'info> {
     pub payer: Signer<'info>,
     #[account(
             seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
-            bump = proposal_pda.bump
+            bump = proposal_pda.load()?.bump
         )]
-    pub proposal_pda: Account<'info, ExecutableProposal>,
+    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
     #[account(
             init,
             payer = payer,
@@ -28,7 +28,7 @@ pub struct ApproveOperatorProposal<'info> {
             seeds = [axelar_solana_governance::seed_prefixes::OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
             bump
         )]
-    pub operator_proposal_pda: Account<'info, OperatorProposal>,
+    pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,
 }
 
 pub fn approve_operator_proposal_instruction_handler(
@@ -38,7 +38,7 @@ pub fn approve_operator_proposal_instruction_handler(
     target: Vec<u8>,
     call_data: Vec<u8>,
 ) -> Result<()> {
-    if ctx.accounts.proposal_pda.managed_bump != ctx.bumps.operator_proposal_pda {
+    if ctx.accounts.proposal_pda.load()?.managed_bump != ctx.bumps.operator_proposal_pda {
         return err!(GovernanceError::InvalidArgument);
     }
 

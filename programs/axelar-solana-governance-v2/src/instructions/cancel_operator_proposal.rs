@@ -12,16 +12,16 @@ pub struct CancelOperatorProposal<'info> {
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(
             seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
-            bump = proposal_pda.bump
+            bump = proposal_pda.load()?.bump
         )]
-    pub proposal_pda: Account<'info, ExecutableProposal>,
+    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
     #[account(
             mut,
             close = governance_config,
             seeds = [axelar_solana_governance::seed_prefixes::OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
-            bump = proposal_pda.managed_bump
+            bump = proposal_pda.load()?.managed_bump
         )]
-    pub operator_proposal_pda: Account<'info, OperatorProposal>,
+    pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,
 }
 
 pub fn cancel_operator_proposal_instruction_handler(
