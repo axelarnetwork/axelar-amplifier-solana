@@ -49,9 +49,9 @@ pub struct ProcessGmpAccounts<'info> {
     pub system_program: Program<'info, System>,
     #[account(
             seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
-            bump = governance_config.bump
+            bump = governance_config.load()?.bump
         )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
     // Variable accounts as kept as unchecked. We self-CPI and check them for each separate instruction
@@ -98,7 +98,10 @@ pub fn process_gmp_handler(
 
     axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message.clone())?;
 
-    ensure_authorized_gmp_command(&ctx.accounts.governance_config, &message)?;
+    {
+        let config = ctx.accounts.governance_config.load()?;
+        ensure_authorized_gmp_command(&config, &message)?;
+    }
 
     let (cmd_payload, _, _, proposal_hash) = calculate_gmp_context(payload)?;
 
@@ -241,7 +244,7 @@ fn schedule_timelock_proposal(
     invoke_signed_with_governance_config(
         &schedule_instruction,
         &account_infos,
-        ctx.accounts.governance_config.bump,
+        ctx.accounts.governance_config.load()?.bump,
     )
 }
 
@@ -285,7 +288,7 @@ fn cancel_timelock_proposal(
     invoke_signed_with_governance_config(
         &cancel_instruction,
         &account_infos,
-        ctx.accounts.governance_config.bump,
+        ctx.accounts.governance_config.load()?.bump,
     )
 }
 
@@ -334,7 +337,7 @@ fn approve_operator_proposal(
     invoke_signed_with_governance_config(
         &approve_instruction,
         &account_infos,
-        ctx.accounts.governance_config.bump,
+        ctx.accounts.governance_config.load()?.bump,
     )
 }
 
@@ -379,7 +382,7 @@ fn cancel_operator_proposal(
     invoke_signed_with_governance_config(
         &cancel_instruction,
         &account_infos,
-        ctx.accounts.governance_config.bump,
+        ctx.accounts.governance_config.load()?.bump,
     )
 }
 

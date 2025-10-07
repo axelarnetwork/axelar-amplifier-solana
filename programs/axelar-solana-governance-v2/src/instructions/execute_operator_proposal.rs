@@ -13,9 +13,9 @@ pub struct ExecuteOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         seeds = [seed_prefixes::GOVERNANCE_CONFIG],
-        bump = governance_config.bump,
+        bump = governance_config.load()?.bump,
     )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(
         mut,
         close = governance_config,
@@ -34,7 +34,7 @@ pub struct ExecuteOperatorProposal<'info> {
     pub proposal_pda: Account<'info, crate::ExecutableProposal>,
     /// The operator account that must sign this transaction
     #[account(
-        constraint = operator.key().to_bytes() == governance_config.operator @ GovernanceError::UnauthorizedOperator
+        constraint = operator.key().to_bytes() == governance_config.load()?.operator @ GovernanceError::UnauthorizedOperator
     )]
     pub operator: Signer<'info>,
     #[account(
@@ -73,10 +73,12 @@ pub fn execute_operator_proposal_handler(
 
     check_target_program_presence(remaining_accounts, &target_program)?;
 
+    let governance_config_bump = governance_config.load()?.bump;
     execute_proposal_cpi(
         &execute_proposal_data,
         remaining_accounts,
         governance_config,
+        governance_config_bump,
     )?;
 
     let proposal_hash = ExecutableProposal::calculate_hash(

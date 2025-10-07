@@ -17,27 +17,31 @@ pub struct InitializeConfigAccounts<'info> {
     #[account(
             init,
             payer = payer,
-            space = 8 + std::mem::size_of::<GovernanceConfig>(),
+            space = GovernanceConfig::DISCRIMINATOR.len() + std::mem::size_of::<GovernanceConfig>(),
             seeds = [seed_prefixes::GOVERNANCE_CONFIG],
             bump
         )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     pub system_program: Program<'info, System>,
 }
 
 pub fn initialize_config_handler(
     ctx: Context<InitializeConfigAccounts>,
-    config: GovernanceConfig,
+    params: GovernanceConfig,
 ) -> Result<()> {
-    config.validate_config()?;
+    msg!("initialize_config_handler");
+
+    // Validate the config
+    params.validate_config()?;
+
+    let config = &mut ctx.accounts.governance_config.load_init()?;
 
     // Initialize account data
-    ctx.accounts.governance_config.bump = ctx.bumps.governance_config;
-
-    ctx.accounts.governance_config.chain_hash = config.chain_hash;
-    ctx.accounts.governance_config.address_hash = config.address_hash;
-    ctx.accounts.governance_config.minimum_proposal_eta_delay = config.minimum_proposal_eta_delay;
-    ctx.accounts.governance_config.operator = config.operator;
+    config.bump = ctx.bumps.governance_config;
+    config.chain_hash = params.chain_hash;
+    config.address_hash = params.address_hash;
+    config.minimum_proposal_eta_delay = params.minimum_proposal_eta_delay;
+    config.operator = params.operator;
 
     Ok(())
 }
