@@ -13,6 +13,9 @@ pub use errors::*;
 pub mod events;
 pub use events::*;
 
+pub mod utils;
+pub use utils::*;
+
 declare_id!("8sWy2bidXuwtZHfpJ2Ko5AiCsGQyFMf8MKwazB16wmJV");
 
 /// Seed prefixes for different PDAs initialized by the Governance program.
