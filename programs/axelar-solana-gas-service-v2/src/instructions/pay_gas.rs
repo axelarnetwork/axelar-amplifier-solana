@@ -1,11 +1,11 @@
-use crate::events::NativeGasAddedEvent;
+use crate::events::GasPaidEvent;
 use crate::state::Treasury;
 use anchor_lang::{prelude::*, system_program};
 
-/// Add more native SOL gas to an existing transaction.
+/// Pay gas fees for a contract call using native SOL.
 #[event_cpi]
 #[derive(Accounts)]
-pub struct AddNativeGas<'info> {
+pub struct PayGas<'info> {
     #[account(mut)]
     pub sender: Signer<'info>,
 
@@ -21,39 +21,43 @@ pub struct AddNativeGas<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn add_native_gas(
-    ctx: Context<AddNativeGas>,
-    tx_hash: [u8; 64],
-    ix_index: u8,
-    event_ix_index: u8,
-    gas_fee_amount: u64,
+pub fn pay_gas(
+    ctx: Context<PayGas>,
+    destination_chain: String,
+    destination_address: String,
+    payload_hash: [u8; 32],
+    amount: u64,
     refund_address: Pubkey,
 ) -> Result<()> {
-    if gas_fee_amount == 0 {
+    if amount == 0 {
         msg!("Gas fee amount cannot be zero");
         return Err(ProgramError::InvalidInstructionData.into());
     }
 
-    let treasury_account_info = &ctx.accounts.treasury.to_account_info();
+    let sender = ctx.accounts.sender.to_account_info();
+    let treasury_account_info = ctx.accounts.treasury.to_account_info();
 
     system_program::transfer(
         CpiContext::new(
             ctx.accounts.system_program.to_account_info(),
             system_program::Transfer {
-                from: ctx.accounts.sender.to_account_info(),
-                to: treasury_account_info.clone(),
+                from: sender,
+                to: treasury_account_info,
             },
         ),
-        gas_fee_amount,
+        amount,
     )?;
 
-    emit_cpi!(NativeGasAddedEvent {
-        treasury: *treasury_account_info.key,
-        tx_hash,
-        ix_index,
-        event_ix_index,
+    emit_cpi!(GasPaidEvent {
+        sender: ctx.accounts.sender.key(),
+        destination_chain,
+        destination_address,
+        payload_hash,
+        amount,
         refund_address,
-        gas_fee_amount,
+        mint: None,
+        token_program_id: None,
+        sender_token_account: None,
     });
 
     Ok(())

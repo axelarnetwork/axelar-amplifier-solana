@@ -35,128 +35,41 @@ pub mod axelar_solana_gas_service_v2 {
     }
 
     //
-    // Gas-related operations with SPL tokens
-    //
-
-    pub fn pay_spl_for_contract_call<'info>(
-        ctx: Context<'_, '_, '_, 'info, PaySplForContractCall<'info>>,
-        destination_chain: String,
-        destination_address: String,
-        payload_hash: [u8; 32],
-        gas_fee_amount: u64,
-        decimals: u8,
-        refund_address: Pubkey,
-    ) -> Result<()> {
-        instructions::pay_spl_for_contract_call::pay_spl_for_contract_call(
-            ctx,
-            destination_chain,
-            destination_address,
-            payload_hash,
-            gas_fee_amount,
-            decimals,
-            refund_address,
-        )
-    }
-
-    pub fn add_spl_gas<'info>(
-        ctx: Context<'_, '_, '_, 'info, AddSplGas<'info>>,
-        tx_hash: [u8; 64],
-        ix_index: u8,
-        event_ix_index: u8,
-        gas_fee_amount: u64,
-        decimals: u8,
-        refund_address: Pubkey,
-    ) -> Result<()> {
-        instructions::add_spl_gas::add_spl_gas(
-            ctx,
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            gas_fee_amount,
-            decimals,
-            refund_address,
-        )
-    }
-
-    pub fn collect_spl_fees(ctx: Context<CollectSplFees>, amount: u64, decimals: u8) -> Result<()> {
-        instructions::collect_spl_fees::collect_spl_fees(ctx, amount, decimals)
-    }
-
-    pub fn refund_spl_fees(
-        ctx: Context<RefundSplFees>,
-        tx_hash: [u8; 64],
-        ix_index: u8,
-        event_ix_index: u8,
-        fees: u64,
-        decimals: u8,
-    ) -> Result<()> {
-        instructions::refund_spl_fees::refund_spl_fees(
-            ctx,
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            fees,
-            decimals,
-        )
-    }
-
-    //
     // Gas-related operations with native token SOL
     //
 
-    pub fn pay_native_for_contract_call(
-        ctx: Context<PayNativeForContractCall>,
+    pub fn pay_gas(
+        ctx: Context<PayGas>,
         destination_chain: String,
         destination_address: String,
         payload_hash: [u8; 32],
-        gas_fee_amount: u64,
+        amount: u64,
         refund_address: Pubkey,
     ) -> Result<()> {
-        instructions::pay_native_for_contract_call::pay_native_for_contract_call(
+        instructions::pay_gas::pay_gas(
             ctx,
             destination_chain,
             destination_address,
             payload_hash,
-            gas_fee_amount,
+            amount,
             refund_address,
         )
     }
 
-    pub fn add_native_gas(
-        ctx: Context<AddNativeGas>,
-        tx_hash: [u8; 64],
-        ix_index: u8,
-        event_ix_index: u8,
-        gas_fee_amount: u64,
+    pub fn add_gas(
+        ctx: Context<AddGas>,
+        message_id: String,
+        amount: u64,
         refund_address: Pubkey,
     ) -> Result<()> {
-        instructions::add_native_gas::add_native_gas(
-            ctx,
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            gas_fee_amount,
-            refund_address,
-        )
+        instructions::add_gas::add_gas(ctx, message_id, amount, refund_address)
     }
 
-    pub fn collect_native_fees(ctx: Context<CollectNativeFees>, amount: u64) -> Result<()> {
-        instructions::collect_native_fees::collect_native_fees(ctx, amount)
+    pub fn collect_fees(ctx: Context<CollectFees>, amount: u64) -> Result<()> {
+        instructions::collect_fees::collect_native_fees(ctx, amount)
     }
 
-    pub fn refund_native_fees(
-        ctx: Context<RefundNativeFees>,
-        tx_hash: [u8; 64],
-        ix_index: u8,
-        event_ix_index: u8,
-        fees: u64,
-    ) -> Result<()> {
-        instructions::refund_native_fees::refund_native_fees(
-            ctx,
-            tx_hash,
-            ix_index,
-            event_ix_index,
-            fees,
-        )
+    pub fn refund_fees(ctx: Context<RefundFees>, message_id: String, amount: u64) -> Result<()> {
+        instructions::refund_fees::refund_native_fees(ctx, message_id, amount)
     }
 }

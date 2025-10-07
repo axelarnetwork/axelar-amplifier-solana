@@ -1,11 +1,12 @@
-use crate::state::Treasury;
+use crate::{events::GasCollectedEvent, state::Treasury};
 use anchor_lang::prelude::*;
 use axelar_solana_operators::OperatorAccount;
 use program_utils::transfer_lamports_anchor;
 
 /// Collect accrued native SOL fees (operator only).
 #[derive(Accounts)]
-pub struct CollectNativeFees<'info> {
+#[event_cpi]
+pub struct CollectFees<'info> {
     pub operator: Signer<'info>,
 
     #[account(
@@ -32,7 +33,7 @@ pub struct CollectNativeFees<'info> {
     pub receiver: UncheckedAccount<'info>,
 }
 
-pub fn collect_native_fees(ctx: Context<CollectNativeFees>, amount: u64) -> Result<()> {
+pub fn collect_native_fees(ctx: Context<CollectFees>, amount: u64) -> Result<()> {
     if amount == 0 {
         msg!("Gas fee amount cannot be zero");
         return Err(ProgramError::InvalidInstructionData.into());
@@ -43,6 +44,14 @@ pub fn collect_native_fees(ctx: Context<CollectNativeFees>, amount: u64) -> Resu
         ctx.accounts.receiver.to_account_info(),
         amount
     );
+
+    emit_cpi!(GasCollectedEvent {
+        receiver: ctx.accounts.receiver.key(),
+        amount,
+        mint: None,
+        token_program_id: None,
+        receiver_token_account: None,
+    });
 
     Ok(())
 }
