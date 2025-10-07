@@ -1,6 +1,5 @@
-use crate::{GovernanceConfig, GovernanceError, Hash};
+use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError, Hash};
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 pub struct UpdateConfigAccounts<'info> {
@@ -8,7 +7,7 @@ pub struct UpdateConfigAccounts<'info> {
     pub payer: Signer<'info>,
     #[account(
             mut,
-            seeds = [seed_prefixes::GOVERNANCE_CONFIG],
+            seeds = [GOVERNANCE_CONFIG],
             bump
         )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,

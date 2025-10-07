@@ -1,4 +1,5 @@
 use crate::{
+    seed_prefixes::{GOVERNANCE_CONFIG, OPERATOR_MANAGED_PROPOSAL, PROPOSAL_PDA},
     ExecutableProposal, GovernanceConfig, GovernanceError, OperatorProposal,
     OperatorProposalApproved,
 };
@@ -10,14 +11,14 @@ use anchor_lang::prelude::*;
 pub struct ApproveOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
-            seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
+            seeds = [GOVERNANCE_CONFIG],
             bump = governance_config.load()?.bump,
         )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
-            seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
+            seeds = [PROPOSAL_PDA, &proposal_hash],
             bump = proposal_pda.load()?.bump
         )]
     pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
@@ -25,7 +26,7 @@ pub struct ApproveOperatorProposal<'info> {
             init,
             payer = payer,
             space = OperatorProposal::DISCRIMINATOR.len() + std::mem::size_of::<OperatorProposal>(),
-            seeds = [axelar_solana_governance::seed_prefixes::OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
+            seeds = [OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
             bump
         )]
     pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,

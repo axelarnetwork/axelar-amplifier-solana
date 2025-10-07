@@ -1,10 +1,13 @@
+use std::ops::RangeInclusive;
+
 use crate::{GovernanceConfigUpdate, GovernanceError};
 use anchor_lang::prelude::*;
-use axelar_solana_governance::state::VALID_PROPOSAL_DELAY_RANGE;
 
 pub type Hash = [u8; 32];
 /// The [`solana_program::pubkey::Pubkey`] bytes.
 pub type Address = [u8; 32];
+
+pub const VALID_PROPOSAL_DELAY_RANGE: RangeInclusive<u32> = 3600..=86400;
 
 /// Governance configuration type.
 #[account(zero_copy)]

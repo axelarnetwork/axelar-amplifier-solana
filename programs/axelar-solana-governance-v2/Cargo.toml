@@ -31,16 +31,17 @@ mainnet = [
 ]
 
 [dependencies]
+alloy-sol-types.workspace = true
 governance-gmp = {workspace = true}
 axelar-solana-encoding = {workspace = true}
-axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway-v2 = { path = "../../programs/axelar-solana-gateway-v2", features = ["no-entrypoint", "cpi"], default-features = false }
-axelar-solana-gateway = { path = "../../programs/axelar-solana-gateway" }
 anchor-lang = "0.31.1"
 solana-program.workspace = true
 bytemuck.workspace = true
 
 [dev-dependencies]
+axelar-solana-gateway = { path = "../../programs/axelar-solana-gateway" }
+axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 libsecp256k1.workspace = true
 bincode.workspace = true
 alloy-sol-types.workspace = true

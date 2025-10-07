@@ -1,16 +1,15 @@
 use crate::program::AxelarSolanaGovernanceV2;
-use crate::{GovernanceConfig, GovernanceError};
+use crate::seed_prefixes::GOVERNANCE_CONFIG;
+use crate::{
+    decode_payload, decode_payload_call_data, decode_payload_target, ExecutableProposal,
+    ExecuteProposalCallData, GovernanceConfig, GovernanceError,
+};
 use anchor_lang::{prelude::*, solana_program, InstructionData};
-use axelar_solana_gateway::seed_prefixes::INCOMING_MESSAGE_SEED;
-use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+use axelar_solana_gateway_v2::seed_prefixes::{
+    INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
+};
 use axelar_solana_gateway_v2::{
     cpi::accounts::ValidateMessage, program::AxelarSolanaGatewayV2, IncomingMessage, Message,
-};
-use axelar_solana_governance::seed_prefixes;
-use axelar_solana_governance::state::proposal::ExecuteProposalCallData;
-use axelar_solana_governance::{
-    processor::gmp::payload_conversions,
-    state::proposal::ExecutableProposal as ExecutableProposalV1,
 };
 use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 use solana_program::instruction::Instruction;
@@ -48,7 +47,7 @@ pub struct ProcessGmpAccounts<'info> {
     pub event_authority: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
     #[account(
-            seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
+            seeds = [GOVERNANCE_CONFIG],
             bump = governance_config.load()?.bump
         )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
@@ -141,14 +140,13 @@ fn calculate_gmp_context(
     ExecuteProposalCallData,
     [u8; 32],
 )> {
-    let cmd_payload = payload_conversions::decode_payload(&payload).unwrap();
+    let cmd_payload = decode_payload(&payload).unwrap();
 
-    let target = payload_conversions::decode_payload_target(&cmd_payload.target)?;
+    let target = decode_payload_target(&cmd_payload.target)?;
 
-    let execute_proposal_call_data =
-        payload_conversions::decode_payload_call_data(&cmd_payload.call_data)?;
+    let execute_proposal_call_data = decode_payload_call_data(&cmd_payload.call_data)?;
 
-    let proposal_hash = ExecutableProposalV1::calculate_hash(
+    let proposal_hash = ExecutableProposal::calculate_hash(
         &target,
         &execute_proposal_call_data,
         &cmd_payload.native_value.to_le_bytes(),
@@ -391,7 +389,7 @@ fn invoke_signed_with_governance_config(
     account_infos: &[AccountInfo],
     governance_config_bump: u8,
 ) -> Result<()> {
-    let seeds = &[seed_prefixes::GOVERNANCE_CONFIG, &[governance_config_bump]];
+    let seeds = &[GOVERNANCE_CONFIG, &[governance_config_bump]];
     let signer_seeds = &[&seeds[..]];
 
     solana_program::program::invoke_signed(instruction, account_infos, signer_seeds)?;

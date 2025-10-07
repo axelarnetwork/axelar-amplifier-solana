@@ -1,8 +1,8 @@
 use crate::{
+    seed_prefixes::{GOVERNANCE_CONFIG, PROPOSAL_PDA},
     ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError, ProposalExecuted,
 };
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 use solana_program::instruction::Instruction;
 
 #[derive(Accounts)]
@@ -11,7 +11,7 @@ use solana_program::instruction::Instruction;
 pub struct ExecuteProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
-        seeds = [seed_prefixes::GOVERNANCE_CONFIG],
+        seeds = [GOVERNANCE_CONFIG],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
@@ -19,7 +19,7 @@ pub struct ExecuteProposal<'info> {
         mut,
         close = governance_config,
         seeds = [
-            seed_prefixes::PROPOSAL_PDA,
+            PROPOSAL_PDA,
             &{
                 ExecutableProposal::calculate_hash(
                     &Pubkey::new_from_array(execute_proposal_data.target_address),
@@ -109,7 +109,7 @@ pub fn execute_proposal_cpi(
             data: execute_proposal_data.call_data.call_data.clone(),
         },
         remaining_accounts,
-        &[&[seed_prefixes::GOVERNANCE_CONFIG, &[governance_config_bump]]],
+        &[&[GOVERNANCE_CONFIG, &[governance_config_bump]]],
     )?;
 
     Ok(())
@@ -163,7 +163,6 @@ fn manual_lamport_transfer(
     native_value_u64: u64,
     governance_config: &AccountLoader<'_, GovernanceConfig>,
 ) -> Result<()> {
-    msg!("HERE2");
     let target_native_value_account = execute_proposal_data
         .call_data
         .solana_native_value_receiver_account

@@ -7,7 +7,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use axelar_solana_governance::seed_prefixes;
+use axelar_solana_governance_v2::seed_prefixes::GOVERNANCE_CONFIG;
 use axelar_solana_governance_v2::ExecutableProposal;
 use axelar_solana_governance_v2::SolanaAccountMetadata;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
@@ -705,7 +705,7 @@ fn should_execute_scheduled_proposal() {
     let operator = Pubkey::new_unique();
 
     let (governance_config_pda, governance_config_bump) =
-        Pubkey::find_program_address(&[seed_prefixes::GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
+        Pubkey::find_program_address(&[GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
 
     let program_data_pda = create_governance_program_data_pda();
 
@@ -1510,7 +1510,7 @@ fn should_execute_withdraw_tokens_through_proposal() {
     let operator = Pubkey::new_unique();
 
     let (governance_config_pda, governance_config_bump) =
-        Pubkey::find_program_address(&[seed_prefixes::GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
+        Pubkey::find_program_address(&[GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
 
     let governance_config_bytes: [u8; 32] = governance_config_pda.to_bytes();
     let native_value = U256::from(native_value_u64);

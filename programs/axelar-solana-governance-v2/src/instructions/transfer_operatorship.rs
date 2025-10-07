@@ -1,6 +1,7 @@
-use crate::{GovernanceConfig, GovernanceError, OperatorshipTransferred};
+use crate::{
+    seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError, OperatorshipTransferred,
+};
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -11,7 +12,7 @@ pub struct TransferOperatorship<'info> {
     pub operator_account: AccountInfo<'info>,
     #[account(
         mut,
-        seeds = [seed_prefixes::GOVERNANCE_CONFIG],
+        seeds = [GOVERNANCE_CONFIG],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,

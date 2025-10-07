@@ -1,4 +1,7 @@
-use crate::{ExecutableProposal, GovernanceConfig, ProposalCancelled};
+use crate::{
+    seed_prefixes::{GOVERNANCE_CONFIG, PROPOSAL_PDA},
+    ExecutableProposal, GovernanceConfig, ProposalCancelled,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -6,14 +9,14 @@ use anchor_lang::prelude::*;
 #[instruction(proposal_hash: [u8; 32], eta: u64, native_value: Vec<u8>, target: Vec<u8>, call_data: Vec<u8>)]
 pub struct CancelTimelockProposal<'info> {
     #[account(
-            seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
+            seeds = [GOVERNANCE_CONFIG],
             bump = governance_config.load()?.bump,
         )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(
             mut,
             close = governance_config,
-            seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
+            seeds = [PROPOSAL_PDA, &proposal_hash],
             bump = proposal_pda.load()?.bump
         )]
     pub proposal_pda: AccountLoader<'info, ExecutableProposal>,

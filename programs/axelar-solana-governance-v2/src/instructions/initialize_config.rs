@@ -1,6 +1,5 @@
-use crate::{GovernanceConfig, GovernanceError};
+use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError};
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 pub struct InitializeConfigAccounts<'info> {
@@ -18,7 +17,7 @@ pub struct InitializeConfigAccounts<'info> {
             init,
             payer = payer,
             space = GovernanceConfig::DISCRIMINATOR.len() + std::mem::size_of::<GovernanceConfig>(),
-            seeds = [seed_prefixes::GOVERNANCE_CONFIG],
+            seeds = [GOVERNANCE_CONFIG],
             bump
         )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,

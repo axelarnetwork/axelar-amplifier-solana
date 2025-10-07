@@ -1117,17 +1117,14 @@ pub fn approve_messages_on_gateway(
     verifier_leaves: Vec<VerifierSetLeaf>,
     verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
 ) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
-    // Step 4: Create messages and payload merkle root
     let verifier_set_merkle_root = setup.verifier_set_hash;
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
         setup_message_merkle_tree_from_messages(setup, verifier_set_merkle_root, messages);
 
-    // Step 5: Initialize payload verification session
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
     assert!(!session_result.program_result.is_err());
 
-    // Step 6: Get existing accounts
     let gateway_account = init_result
         .resulting_accounts
         .iter()
@@ -1152,7 +1149,6 @@ pub fn approve_messages_on_gateway(
         .1
         .clone();
 
-    // Step 7: Sign the payload with both signers
     let verifier_info_1 = create_verifier_info(
         secret_key_1,
         payload_merkle_root,
