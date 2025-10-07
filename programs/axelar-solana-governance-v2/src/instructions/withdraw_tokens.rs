@@ -1,13 +1,12 @@
-use crate::{GovernanceConfig, GovernanceError};
+use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError};
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 pub struct WithdrawTokens<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         mut,
-        seeds = [seed_prefixes::GOVERNANCE_CONFIG],
+        seeds = [GOVERNANCE_CONFIG],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,

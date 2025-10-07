@@ -1,6 +1,8 @@
-use crate::{ExecutableProposal, GovernanceConfig, GovernanceError, ProposalScheduled};
+use crate::{
+    seed_prefixes::{GOVERNANCE_CONFIG, OPERATOR_MANAGED_PROPOSAL, PROPOSAL_PDA},
+    ExecutableProposal, GovernanceConfig, GovernanceError, ProposalScheduled,
+};
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -8,7 +10,7 @@ use axelar_solana_governance::seed_prefixes;
 pub struct ScheduleTimelockProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
-            seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
+            seeds = [GOVERNANCE_CONFIG],
             bump = governance_config.load()?.bump,
         )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
@@ -18,7 +20,7 @@ pub struct ScheduleTimelockProposal<'info> {
             init,
             payer = payer,
             space = ExecutableProposal::DISCRIMINATOR.len() + std::mem::size_of::<ExecutableProposal>(),
-            seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
+            seeds = [PROPOSAL_PDA, &proposal_hash],
             bump
         )]
     pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
@@ -32,10 +34,8 @@ pub fn schedule_timelock_proposal_instruction_handler(
     target: Vec<u8>,
     call_data: Vec<u8>,
 ) -> Result<()> {
-    let (_, managed_bump) = Pubkey::find_program_address(
-        &[seed_prefixes::OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
-        &crate::ID,
-    );
+    let (_, managed_bump) =
+        Pubkey::find_program_address(&[OPERATOR_MANAGED_PROPOSAL, &proposal_hash], &crate::ID);
 
     // Enforce min delay
     let eta = at_least_default_eta_delay(

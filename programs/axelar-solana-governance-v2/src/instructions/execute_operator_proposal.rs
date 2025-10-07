@@ -1,10 +1,10 @@
 use crate::{
     check_governance_config_presence, check_target_program_presence, execute_proposal_cpi,
+    seed_prefixes::{GOVERNANCE_CONFIG, OPERATOR_MANAGED_PROPOSAL, PROPOSAL_PDA},
     ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError,
     OperatorProposalExecuted,
 };
 use anchor_lang::prelude::*;
-use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -12,7 +12,7 @@ use axelar_solana_governance::seed_prefixes;
 pub struct ExecuteOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
-        seeds = [seed_prefixes::GOVERNANCE_CONFIG],
+        seeds = [GOVERNANCE_CONFIG],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
@@ -20,7 +20,7 @@ pub struct ExecuteOperatorProposal<'info> {
         mut,
         close = governance_config,
         seeds = [
-            seed_prefixes::PROPOSAL_PDA,
+            PROPOSAL_PDA,
             &{
                 ExecutableProposal::calculate_hash(
                     &Pubkey::new_from_array(execute_proposal_data.target_address),
@@ -41,7 +41,7 @@ pub struct ExecuteOperatorProposal<'info> {
         mut,
         close = governance_config,
         seeds = [
-            seed_prefixes::OPERATOR_MANAGED_PROPOSAL,
+            OPERATOR_MANAGED_PROPOSAL,
             &{
                 ExecutableProposal::calculate_hash(
                     &Pubkey::new_from_array(execute_proposal_data.target_address),
