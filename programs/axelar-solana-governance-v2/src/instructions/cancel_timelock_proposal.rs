@@ -14,9 +14,9 @@ pub struct CancelTimelockProposal<'info> {
             mut,
             close = governance_config,
             seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
-            bump = proposal_pda.bump
+            bump = proposal_pda.load()?.bump
         )]
-    pub proposal_pda: Account<'info, ExecutableProposal>,
+    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
 }
 
 pub fn cancel_timelock_proposal_instruction_handler(

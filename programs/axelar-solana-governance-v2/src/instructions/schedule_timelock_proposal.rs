@@ -21,7 +21,7 @@ pub struct ScheduleTimelockProposal<'info> {
             seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
             bump
         )]
-    pub proposal_pda: Account<'info, ExecutableProposal>,
+    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
 }
 
 pub fn schedule_timelock_proposal_instruction_handler(
@@ -46,9 +46,10 @@ pub fn schedule_timelock_proposal_instruction_handler(
             .minimum_proposal_eta_delay,
     )?;
 
-    ctx.accounts.proposal_pda.eta = eta;
-    ctx.accounts.proposal_pda.managed_bump = managed_bump;
-    ctx.accounts.proposal_pda.bump = ctx.bumps.proposal_pda;
+    let proposal_pda = &mut ctx.accounts.proposal_pda.load_init()?;
+    proposal_pda.eta = eta;
+    proposal_pda.managed_bump = managed_bump;
+    proposal_pda.bump = ctx.bumps.proposal_pda;
 
     emit_cpi!(ProposalScheduled {
         hash: proposal_hash,

@@ -29,9 +29,9 @@ pub struct ExecuteOperatorProposal<'info> {
                 )
             }
         ],
-        bump = proposal_pda.bump
+        bump = proposal_pda.load()?.bump
     )]
-    pub proposal_pda: Account<'info, crate::ExecutableProposal>,
+    pub proposal_pda: AccountLoader<'info, crate::ExecutableProposal>,
     /// The operator account that must sign this transaction
     #[account(
         constraint = operator.key().to_bytes() == governance_config.load()?.operator @ GovernanceError::UnauthorizedOperator
@@ -52,7 +52,7 @@ pub struct ExecuteOperatorProposal<'info> {
         ],
         bump
     )]
-    pub operator_pda_marker_account: Account<'info, crate::OperatorProposal>,
+    pub operator_pda_marker_account: AccountLoader<'info, crate::OperatorProposal>,
 }
 
 pub fn execute_operator_proposal_handler(
