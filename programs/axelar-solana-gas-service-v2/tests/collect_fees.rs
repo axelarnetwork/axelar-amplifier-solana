@@ -7,6 +7,7 @@ use {
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
     },
     solana_sdk::{account::Account, pubkey::Pubkey},
+    solana_sdk_ids::bpf_loader_upgradeable,
 };
 mod initialize;
 use initialize::{init_gas_service, setup_mollusk, setup_operator};
@@ -45,16 +46,22 @@ fn test_collect_native_fees() {
 
     let amount = 500_000_000u64; // 0.5 SOL
 
+    let (event_authority, _bump) =
+        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let event_authority_account = Account::new(0, 0, &system_program::ID);
+
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::CollectNativeFees {
+        accounts: axelar_solana_gas_service_v2::accounts::CollectFees {
             operator,
             operator_pda,
             receiver,
             treasury,
+            event_authority,
+            program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::CollectNativeFees { amount }.data(),
+        data: axelar_solana_gas_service_v2::instruction::CollectFees { amount }.data(),
     };
 
     let accounts = vec![
@@ -62,6 +69,19 @@ fn test_collect_native_fees() {
         (operator_pda, operator_pda_account.clone()),
         (receiver, receiver_account.clone()),
         (treasury, treasury_pda.clone()),
+        // Event authority
+        (event_authority, event_authority_account),
+        // Current program account (executable)
+        (
+            program_id,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: bpf_loader_upgradeable::ID,
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
     ];
 
     // Checks
@@ -117,16 +137,22 @@ fn test_collect_native_fees_insufficient_funds() {
 
     let amount = 50_000_000_000u64; // 50 SOL
 
+    let (event_authority, _bump) =
+        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let event_authority_account = Account::new(0, 0, &system_program::ID);
+
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::CollectNativeFees {
+        accounts: axelar_solana_gas_service_v2::accounts::CollectFees {
             operator,
             operator_pda,
             receiver,
             treasury,
+            event_authority,
+            program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::CollectNativeFees { amount }.data(),
+        data: axelar_solana_gas_service_v2::instruction::CollectFees { amount }.data(),
     };
 
     let accounts = vec![
@@ -134,6 +160,19 @@ fn test_collect_native_fees_insufficient_funds() {
         (operator_pda, operator_pda_account.clone()),
         (receiver, receiver_account.clone()),
         (treasury, treasury_pda.clone()),
+        // Event authority
+        (event_authority, event_authority_account),
+        // Current program account (executable)
+        (
+            program_id,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: bpf_loader_upgradeable::ID,
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
     ];
 
     // Checks

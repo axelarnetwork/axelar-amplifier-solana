@@ -1,4 +1,4 @@
-use crate::events::NativeGasRefundedEvent;
+use crate::events::GasRefundedEvent;
 use crate::state::Treasury;
 use anchor_lang::prelude::*;
 use axelar_solana_operators::OperatorAccount;
@@ -7,7 +7,7 @@ use program_utils::transfer_lamports_anchor;
 /// Refund previously collected native SOL fees (operator only).
 #[event_cpi]
 #[derive(Accounts)]
-pub struct RefundNativeFees<'info> {
+pub struct RefundFees<'info> {
     pub operator: Signer<'info>,
 
     #[account(
@@ -34,14 +34,8 @@ pub struct RefundNativeFees<'info> {
     pub treasury: AccountLoader<'info, Treasury>,
 }
 
-pub fn refund_native_fees(
-    ctx: Context<RefundNativeFees>,
-    tx_hash: [u8; 64],
-    ix_index: u8,
-    event_ix_index: u8,
-    fees: u64,
-) -> Result<()> {
-    if fees == 0 {
+pub fn refund_native_fees(ctx: Context<RefundFees>, message_id: String, amount: u64) -> Result<()> {
+    if amount == 0 {
         msg!("Gas fee amount cannot be zero");
         return Err(ProgramError::InvalidInstructionData.into());
     }
@@ -49,16 +43,16 @@ pub fn refund_native_fees(
     transfer_lamports_anchor!(
         ctx.accounts.treasury.to_account_info(),
         ctx.accounts.receiver.to_account_info(),
-        fees
+        amount
     );
 
-    emit_cpi!(NativeGasRefundedEvent {
-        tx_hash,
-        treasury: *ctx.accounts.treasury.to_account_info().key,
-        ix_index,
-        event_ix_index,
-        receiver: *ctx.accounts.receiver.to_account_info().key,
-        fees,
+    emit_cpi!(GasRefundedEvent {
+        receiver: ctx.accounts.receiver.key(),
+        message_id,
+        amount,
+        mint: None,
+        token_program_id: None,
+        receiver_token_account: None,
     });
 
     Ok(())
