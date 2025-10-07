@@ -11,9 +11,9 @@ pub struct ApproveOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
             seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
-            bump = governance_config.bump,
+            bump = governance_config.load()?.bump,
         )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
@@ -24,7 +24,7 @@ pub struct ApproveOperatorProposal<'info> {
     #[account(
             init,
             payer = payer,
-            space = 8 + std::mem::size_of::<OperatorProposal>(),
+            space = OperatorProposal::DISCRIMINATOR.len() + std::mem::size_of::<OperatorProposal>(),
             seeds = [axelar_solana_governance::seed_prefixes::OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
             bump
         )]

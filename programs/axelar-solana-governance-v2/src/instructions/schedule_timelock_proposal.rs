@@ -9,15 +9,15 @@ pub struct ScheduleTimelockProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
             seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
-            bump = governance_config.bump,
+            bump = governance_config.load()?.bump,
         )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
             init,
             payer = payer,
-            space = 8 + std::mem::size_of::<ExecutableProposal>(),
+            space = ExecutableProposal::DISCRIMINATOR.len() + std::mem::size_of::<ExecutableProposal>(),
             seeds = [axelar_solana_governance::seed_prefixes::PROPOSAL_PDA, &proposal_hash],
             bump
         )]
@@ -40,7 +40,10 @@ pub fn schedule_timelock_proposal_instruction_handler(
     // Enforce min delay
     let eta = at_least_default_eta_delay(
         eta,
-        ctx.accounts.governance_config.minimum_proposal_eta_delay,
+        ctx.accounts
+            .governance_config
+            .load()?
+            .minimum_proposal_eta_delay,
     )?;
 
     ctx.accounts.proposal_pda.eta = eta;

@@ -12,9 +12,9 @@ pub struct ExecuteProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         seeds = [seed_prefixes::GOVERNANCE_CONFIG],
-        bump = governance_config.bump,
+        bump = governance_config.load()?.bump,
     )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(
         mut,
         close = governance_config,
@@ -57,10 +57,13 @@ pub fn execute_proposal_handler(
 
     check_target_program_presence(remaining_accounts, &target_program)?;
 
+    let governance_config_bump = governance_config.load()?.bump;
+
     execute_proposal_cpi(
         &execute_proposal_data,
         remaining_accounts,
         governance_config,
+        governance_config_bump,
     )?;
 
     let proposal_hash = ExecutableProposal::calculate_hash(
@@ -83,7 +86,8 @@ pub fn execute_proposal_handler(
 pub fn execute_proposal_cpi(
     execute_proposal_data: &ExecuteProposalData,
     remaining_accounts: &[AccountInfo<'_>],
-    governance_config: Account<'_, GovernanceConfig>,
+    governance_config: AccountLoader<'_, GovernanceConfig>,
+    governance_config_bump: u8,
 ) -> Result<()> {
     let native_value_u64 = checked_from_u256_le_bytes_to_u64(&execute_proposal_data.native_value)?;
     if native_value_u64 > 0 {
@@ -105,7 +109,7 @@ pub fn execute_proposal_cpi(
             data: execute_proposal_data.call_data.call_data.clone(),
         },
         remaining_accounts,
-        &[&[seed_prefixes::GOVERNANCE_CONFIG, &[governance_config.bump]]],
+        &[&[seed_prefixes::GOVERNANCE_CONFIG, &[governance_config_bump]]],
     )?;
 
     Ok(())
@@ -157,7 +161,7 @@ fn manual_lamport_transfer(
     execute_proposal_data: ExecuteProposalData,
     remaining_accounts: &[AccountInfo<'_>],
     native_value_u64: u64,
-    governance_config: &Account<'_, GovernanceConfig>,
+    governance_config: &AccountLoader<'_, GovernanceConfig>,
 ) -> Result<()> {
     let target_native_value_account = execute_proposal_data
         .call_data

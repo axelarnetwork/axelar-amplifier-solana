@@ -7,9 +7,9 @@ use anchor_lang::prelude::*;
 pub struct CancelTimelockProposal<'info> {
     #[account(
             seeds = [axelar_solana_governance::seed_prefixes::GOVERNANCE_CONFIG],
-            bump = governance_config.bump,
+            bump = governance_config.load()?.bump,
         )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
     #[account(
             mut,
             close = governance_config,

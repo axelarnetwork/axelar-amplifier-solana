@@ -4,14 +4,14 @@ use axelar_solana_governance::seed_prefixes;
 
 #[derive(Accounts)]
 pub struct UpdateConfigAccounts<'info> {
-    #[account(mut, constraint = governance_config.operator == payer.key().to_bytes() @ GovernanceError::NotOperator)]
+    #[account(mut, constraint = governance_config.load()?.operator == payer.key().to_bytes() @ GovernanceError::NotOperator)]
     pub payer: Signer<'info>,
     #[account(
             mut,
             seeds = [seed_prefixes::GOVERNANCE_CONFIG],
             bump
         )]
-    pub governance_config: Account<'info, GovernanceConfig>,
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
@@ -26,5 +26,5 @@ pub fn update_config_handler(
     params: GovernanceConfigUpdate,
 ) -> Result<()> {
     let config = &mut ctx.accounts.governance_config;
-    config.update(params)
+    config.load_mut()?.update(params)
 }

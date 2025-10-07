@@ -45,7 +45,7 @@ fn should_initialize_config() {
         setup.operator.to_bytes(),
     );
 
-    let result = initialize_governance(&setup, governance_config.clone());
+    let result = initialize_governance(&setup, governance_config);
     assert!(!result.program_result.is_err());
 
     let governance_config_account = result
@@ -81,7 +81,7 @@ fn should_update_config() {
         setup.operator.to_bytes(),
     );
 
-    let result = initialize_governance(&setup, governance_config.clone());
+    let result = initialize_governance(&setup, governance_config);
     assert!(!result.program_result.is_err());
 
     let governance_config_account = result
@@ -201,7 +201,7 @@ fn should_schedule_timelock_proposal() {
         operator.to_bytes(),
     );
 
-    let result = initialize_governance(&governance_setup, governance_config.clone());
+    let result = initialize_governance(&governance_setup, governance_config);
     assert!(!result.program_result.is_err());
 
     let governance_config_account = result
@@ -414,8 +414,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
         operator.to_bytes(),
     );
 
-    let init_governance_result =
-        initialize_governance(&governance_setup, governance_config.clone());
+    let init_governance_result = initialize_governance(&governance_setup, governance_config);
     assert!(!init_governance_result.program_result.is_err());
 
     let governance_config_account = init_governance_result
@@ -737,7 +736,7 @@ fn should_execute_scheduled_proposal() {
         operator.to_bytes(),
     );
 
-    let result = initialize_governance(&governance_setup, governance_config.clone());
+    let result = initialize_governance(&governance_setup, governance_config);
     assert!(!result.program_result.is_err());
 
     let governance_config_account = result
@@ -1381,7 +1380,7 @@ fn should_transfer_operatorship() {
         setup.operator.to_bytes(),
     );
 
-    let result = initialize_governance(&setup, governance_config.clone());
+    let result = initialize_governance(&setup, governance_config);
     assert!(!result.program_result.is_err());
 
     let new_operator = Pubkey::new_unique();

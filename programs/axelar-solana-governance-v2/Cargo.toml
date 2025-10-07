@@ -38,6 +38,7 @@ axelar-solana-gateway-v2 = { path = "../../programs/axelar-solana-gateway-v2", f
 axelar-solana-gateway = { path = "../../programs/axelar-solana-gateway" }
 anchor-lang = "0.31.1"
 solana-program.workspace = true
+bytemuck.workspace = true
 
 [dev-dependencies]
 libsecp256k1.workspace = true

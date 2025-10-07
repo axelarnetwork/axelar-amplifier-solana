@@ -1,18 +1,18 @@
+use crate::{GovernanceConfigUpdate, GovernanceError};
 use anchor_lang::prelude::*;
 use axelar_solana_governance::state::VALID_PROPOSAL_DELAY_RANGE;
-
-use crate::{GovernanceConfigUpdate, GovernanceError};
 
 pub type Hash = [u8; 32];
 /// The [`solana_program::pubkey::Pubkey`] bytes.
 pub type Address = [u8; 32];
 
 /// Governance configuration type.
-#[account]
-#[derive(Debug)]
+#[account(zero_copy)]
+#[derive(Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct GovernanceConfig {
     /// The bump for this account.
     pub bump: u8,
+    pub _padding: [u8; 7],
     /// The name hash of the governance chain of the remote GMP contract. This
     /// param is used for validating the incoming GMP governance message.
     pub chain_hash: Hash,
@@ -41,6 +41,7 @@ impl GovernanceConfig {
     ) -> Self {
         Self {
             bump: 0, // This will be set by the program
+            _padding: [0u8; 7],
             chain_hash,
             address_hash,
             minimum_proposal_eta_delay,

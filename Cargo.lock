@@ -1241,6 +1241,7 @@ dependencies = [
  "axelar-solana-governance-v2-test-fixtures",
  "axelar-solana-memo-v2",
  "bincode",
+ "bytemuck",
  "governance-gmp",
  "hex",
  "libsecp256k1",
