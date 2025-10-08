@@ -1803,3 +1803,130 @@ fn should_execute_withdraw_tokens_through_proposal() {
 
     assert!(governance_config_after.1.lamports < initial_governance_lamports);
 }
+
+#[test]
+fn should_fail_direct_schedule_timelock_proposal_call() {
+    let setup = mock_setup_test();
+    let chain_hash = [1u8; 32];
+    let address_hash = [2u8; 32];
+    let minimum_proposal_eta_delay = 3600;
+
+    let governance_config = GovernanceConfig::new(
+        chain_hash,
+        address_hash,
+        minimum_proposal_eta_delay,
+        setup.operator.to_bytes(),
+    );
+
+    let init_result = initialize_governance(&setup, governance_config);
+    assert!(!init_result.program_result.is_err());
+
+    let proposal_hash = [42u8; 32];
+    let eta = 1000000000u64;
+    let native_value = vec![0u8; 32];
+    let target = setup.payer.to_bytes().to_vec();
+    let call_data = vec![1, 2, 3, 4];
+
+    let (proposal_pda, _proposal_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_governance_v2::seed_prefixes::PROPOSAL_PDA,
+            &proposal_hash,
+        ],
+        &GOVERNANCE_PROGRAM_ID,
+    );
+
+    let instruction_data = {
+        use anchor_lang::InstructionData;
+        axelar_solana_governance_v2::instruction::ScheduleTimelockProposalInstruction {
+            proposal_hash,
+            eta,
+            native_value: native_value.clone(),
+            target: target.clone(),
+            call_data: call_data.clone(),
+        }
+        .data()
+    };
+
+    let accounts = vec![
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        AccountMeta::new_readonly(setup.governance_config, false), // if an external entity calls it directly
+        AccountMeta::new(setup.payer, true),
+        AccountMeta::new(proposal_pda, false),
+        AccountMeta::new_readonly(setup.event_authority_pda, false),
+        AccountMeta::new_readonly(GOVERNANCE_PROGRAM_ID, false),
+    ];
+
+    let instruction = Instruction {
+        program_id: GOVERNANCE_PROGRAM_ID,
+        accounts,
+        data: instruction_data,
+    };
+
+    let governance_config_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.governance_config)
+        .unwrap()
+        .1
+        .clone();
+
+    let result = setup.mollusk.process_instruction(
+        &instruction,
+        &[
+            (
+                SYSTEM_PROGRAM_ID,
+                Account {
+                    lamports: 1,
+                    data: vec![],
+                    owner: solana_sdk::native_loader::id(),
+                    executable: true,
+                    rent_epoch: 0,
+                },
+            ),
+            (setup.governance_config, governance_config_account),
+            (
+                setup.payer,
+                Account {
+                    lamports: LAMPORTS_PER_SOL,
+                    data: vec![],
+                    owner: SYSTEM_PROGRAM_ID,
+                    executable: false,
+                    rent_epoch: 0,
+                },
+            ),
+            (
+                proposal_pda,
+                Account {
+                    lamports: 0,
+                    data: vec![],
+                    owner: SYSTEM_PROGRAM_ID,
+                    executable: false,
+                    rent_epoch: 0,
+                },
+            ),
+            // for emit cpi
+            (
+                setup.event_authority_pda,
+                Account {
+                    lamports: 0,
+                    data: vec![],
+                    owner: SYSTEM_PROGRAM_ID,
+                    executable: false,
+                    rent_epoch: 0,
+                },
+            ),
+            (
+                GOVERNANCE_PROGRAM_ID,
+                Account {
+                    lamports: 0,
+                    data: vec![],
+                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    executable: true,
+                    rent_epoch: 0,
+                },
+            ),
+        ],
+    );
+
+    assert!(result.program_result.is_err());
+}
