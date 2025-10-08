@@ -219,7 +219,7 @@ fn schedule_timelock_proposal(
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
             AccountMeta::new(ctx.accounts.payer.key(), true),
             AccountMeta::new(ctx.accounts.proposal_pda.key(), false),
             // for emit cpi
@@ -265,7 +265,7 @@ fn cancel_timelock_proposal(
     let cancel_instruction = Instruction {
         program_id: crate::ID,
         accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
             AccountMeta::new(ctx.accounts.proposal_pda.key(), false),
             // for emit cpi
             AccountMeta::new_readonly(ctx.accounts.governance_event_authority.key(), false),
@@ -309,7 +309,7 @@ fn approve_operator_proposal(
         program_id: crate::ID,
         accounts: vec![
             AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
             AccountMeta::new(ctx.accounts.payer.key(), true),
             AccountMeta::new(ctx.accounts.proposal_pda.key(), false),
             AccountMeta::new(ctx.accounts.operator_proposal_pda.key(), false),
@@ -357,7 +357,7 @@ fn cancel_operator_proposal(
     let cancel_instruction = Instruction {
         program_id: crate::ID,
         accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
             AccountMeta::new_readonly(ctx.accounts.proposal_pda.key(), false),
             AccountMeta::new(ctx.accounts.operator_proposal_pda.key(), false),
             // for emit cpi
