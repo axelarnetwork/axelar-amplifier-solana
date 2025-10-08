@@ -9,18 +9,6 @@ use anchor_lang::prelude::{
 
 type MessageId = String;
 
-/// SPL Token information if payment was made with an SPL token
-/// Currently not supported
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize)]
-pub struct SplTokenInfo {
-    /// The mint of the token
-    /// Token program can be derived from the mint owner
-    pub mint: Pubkey,
-    /// The token account used for the transaction
-    /// Either sender or receiver, depending on the event
-    pub token_account: Pubkey,
-}
-
 /// Event emitted by the Axelar Solana Gas service
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum GasServiceEvent {
@@ -50,8 +38,8 @@ pub struct GasPaidEvent {
     pub amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
-    /// Optional SPL token info
-    pub spl_token_info: Option<SplTokenInfo>,
+    /// Optional SPL token account (sender)
+    pub spl_token_account: Option<Pubkey>,
 }
 
 /// Represents the event emitted when gas is added.
@@ -66,8 +54,8 @@ pub struct GasAddedEvent {
     pub amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
-    /// Optional SPL token info
-    pub spl_token_info: Option<SplTokenInfo>,
+    /// Optional SPL token account (sender)
+    pub spl_token_account: Option<Pubkey>,
 }
 
 /// Represents the event emitted when gas is refunded.
@@ -80,8 +68,8 @@ pub struct GasRefundedEvent {
     pub message_id: MessageId,
     /// The amount of SOL refunded
     pub amount: u64,
-    /// Optional SPL token info
-    pub spl_token_info: Option<SplTokenInfo>,
+    /// Optional SPL token account (receiver)
+    pub spl_token_account: Option<Pubkey>,
 }
 
 /// Represents the event emitted when accumulated gas is collected.
@@ -92,6 +80,6 @@ pub struct GasCollectedEvent {
     pub receiver: Pubkey,
     /// The amount of SOL refunded
     pub amount: u64,
-    /// Optional SPL token info
-    pub spl_token_info: Option<SplTokenInfo>,
+    /// Optional SPL token account (receiver)
+    pub spl_token_account: Option<Pubkey>,
 }

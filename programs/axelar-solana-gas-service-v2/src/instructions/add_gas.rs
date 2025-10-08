@@ -51,7 +51,7 @@ pub fn add_gas(
         message_id,
         amount,
         refund_address,
-        spl_token_info: None,
+        spl_token_account: None,
     });
 
     Ok(())

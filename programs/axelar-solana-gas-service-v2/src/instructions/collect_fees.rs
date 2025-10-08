@@ -48,7 +48,7 @@ pub fn collect_native_fees(ctx: Context<CollectFees>, amount: u64) -> Result<()>
     emit_cpi!(GasCollectedEvent {
         receiver: ctx.accounts.receiver.key(),
         amount,
-        spl_token_info: None,
+        spl_token_account: None,
     });
 
     Ok(())

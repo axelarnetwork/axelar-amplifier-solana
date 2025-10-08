@@ -55,7 +55,7 @@ pub fn pay_gas(
         payload_hash,
         amount,
         refund_address,
-        spl_token_info: None,
+        spl_token_account: None,
     });
 
     Ok(())

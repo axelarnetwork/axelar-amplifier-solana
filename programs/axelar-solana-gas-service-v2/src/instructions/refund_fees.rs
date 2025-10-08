@@ -50,7 +50,7 @@ pub fn refund_native_fees(ctx: Context<RefundFees>, message_id: String, amount: 
         receiver: ctx.accounts.receiver.key(),
         message_id,
         amount,
-        spl_token_info: None,
+        spl_token_account: None,
     });
 
     Ok(())
