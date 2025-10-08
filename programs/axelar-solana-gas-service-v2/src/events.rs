@@ -13,7 +13,7 @@ type MessageId = String;
 /// Currently not supported
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize)]
 pub struct SplTokenInfo {
-    /// The mint of  the token
+    /// The mint of the token
     /// Token program can be derived from the mint owner
     pub mint: Pubkey,
     /// The token account used for the transaction
