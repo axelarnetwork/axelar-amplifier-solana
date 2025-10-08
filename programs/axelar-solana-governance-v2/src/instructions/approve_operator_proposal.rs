@@ -11,6 +11,7 @@ use anchor_lang::prelude::*;
 pub struct ApproveOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
     #[account(
+            signer,
             seeds = [GOVERNANCE_CONFIG],
             bump = governance_config.load()?.bump,
         )]
