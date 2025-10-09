@@ -38,15 +38,8 @@ pub struct GasPaidEvent {
     pub amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
-    //
-    // SPL token fields
-    //
-    /// Mint of the token
-    pub mint: Option<Pubkey>,
-    /// Token program id
-    pub token_program_id: Option<Pubkey>,
-    /// Sender token account
-    pub sender_token_account: Option<Pubkey>,
+    /// Optional SPL token account (sender)
+    pub spl_token_account: Option<Pubkey>,
 }
 
 /// Represents the event emitted when gas is added.
@@ -61,15 +54,8 @@ pub struct GasAddedEvent {
     pub amount: u64,
     /// The refund address
     pub refund_address: Pubkey,
-    //
-    // SPL token fields
-    //
-    /// Mint of the token
-    pub mint: Option<Pubkey>,
-    /// Token program id
-    pub token_program_id: Option<Pubkey>,
-    /// Sender token account
-    pub sender_token_account: Option<Pubkey>,
+    /// Optional SPL token account (sender)
+    pub spl_token_account: Option<Pubkey>,
 }
 
 /// Represents the event emitted when gas is refunded.
@@ -82,15 +68,8 @@ pub struct GasRefundedEvent {
     pub message_id: MessageId,
     /// The amount of SOL refunded
     pub amount: u64,
-    //
-    // SPL token fields
-    //
-    /// Mint of the token
-    pub mint: Option<Pubkey>,
-    /// Token program id
-    pub token_program_id: Option<Pubkey>,
-    /// Receiver token account
-    pub receiver_token_account: Option<Pubkey>,
+    /// Optional SPL token account (receiver)
+    pub spl_token_account: Option<Pubkey>,
 }
 
 /// Represents the event emitted when accumulated gas is collected.
@@ -101,13 +80,6 @@ pub struct GasCollectedEvent {
     pub receiver: Pubkey,
     /// The amount of SOL refunded
     pub amount: u64,
-    //
-    // SPL token fields
-    //
-    /// Mint of the token
-    pub mint: Option<Pubkey>,
-    /// Token program id
-    pub token_program_id: Option<Pubkey>,
-    /// Receiver token account
-    pub receiver_token_account: Option<Pubkey>,
+    /// Optional SPL token account (receiver)
+    pub spl_token_account: Option<Pubkey>,
 }
