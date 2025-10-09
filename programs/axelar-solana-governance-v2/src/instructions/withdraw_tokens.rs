@@ -1,0 +1,37 @@
+use crate::{seed_prefixes::GOVERNANCE_CONFIG, transfer_lamports, GovernanceConfig};
+use anchor_lang::prelude::*;
+
+#[derive(Accounts)]
+pub struct WithdrawTokens<'info> {
+    pub system_program: Program<'info, System>,
+    #[account(
+        mut,
+        seeds = [GOVERNANCE_CONFIG],
+        bump = governance_config.load()?.bump,
+    )]
+    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    /// The account that will receive the withdrawn lamports
+    /// CHECK: This can be any account that should receive the funds
+    #[account(mut)]
+    pub receiver: AccountInfo<'info>,
+}
+
+pub fn withdraw_tokens_handler(ctx: Context<WithdrawTokens>, amount: u64) -> Result<()> {
+    let governance_config = &ctx.accounts.governance_config;
+    let receiver = &ctx.accounts.receiver;
+
+    let governance_account_info = governance_config.to_account_info();
+
+    // Note: We need manual lamport transfer because we are dealing with
+    // governance_config which is a data account
+    transfer_lamports(&governance_account_info, receiver, amount)?;
+
+    msg!(
+        "{} lamports were transferred from {}",
+        amount,
+        governance_config.key()
+    );
+    msg!("{} lamports were transferred to {}", amount, receiver.key());
+
+    Ok(())
+}
