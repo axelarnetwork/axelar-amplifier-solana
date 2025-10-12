@@ -2,7 +2,7 @@ use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError}
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct InitializeConfigAccounts<'info> {
+pub struct InitializeConfig<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub upgrade_authority: Signer<'info>,
@@ -25,7 +25,7 @@ pub struct InitializeConfigAccounts<'info> {
 }
 
 pub fn initialize_config_handler(
-    ctx: Context<InitializeConfigAccounts>,
+    ctx: Context<InitializeConfig>,
     params: GovernanceConfig,
 ) -> Result<()> {
     msg!("initialize_config_handler");

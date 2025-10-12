@@ -19,8 +19,8 @@ pub use approve_operator_proposal::*;
 pub mod cancel_operator_proposal;
 pub use cancel_operator_proposal::*;
 
-pub mod execute_proposal;
-pub use execute_proposal::*;
+pub mod execute_timelock_proposal;
+pub use execute_timelock_proposal::*;
 
 pub mod execute_operator_proposal;
 pub use execute_operator_proposal::*;
@@ -30,6 +30,3 @@ pub use transfer_operatorship::*;
 
 pub mod withdraw_tokens;
 pub use withdraw_tokens::*;
-
-pub mod payload_conventions;
-pub use payload_conventions::*;

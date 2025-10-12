@@ -16,6 +16,8 @@ pub use events::*;
 pub mod utils;
 pub use utils::*;
 
+pub mod payload_conversions;
+
 declare_id!("8sWy2bidXuwtZHfpJ2Ko5AiCsGQyFMf8MKwazB16wmJV");
 
 /// Seed prefixes for different PDAs initialized by the Governance program.
@@ -35,28 +37,25 @@ pub mod axelar_solana_governance_v2 {
     use super::*;
 
     pub fn initialize_config(
-        ctx: Context<InitializeConfigAccounts>,
+        ctx: Context<InitializeConfig>,
         params: GovernanceConfig,
     ) -> Result<()> {
         instructions::initialize_config_handler(ctx, params)
     }
 
-    pub fn update_config(
-        ctx: Context<UpdateConfigAccounts>,
-        params: GovernanceConfigUpdate,
-    ) -> Result<()> {
+    pub fn update_config(ctx: Context<UpdateConfig>, params: GovernanceConfigUpdate) -> Result<()> {
         instructions::update_config_handler(ctx, params)
     }
 
     pub fn process_gmp(
-        ctx: Context<ProcessGmpAccounts>,
+        ctx: Context<ProcessGmp>,
         message: axelar_solana_gateway_v2::Message,
         payload: Vec<u8>,
     ) -> Result<()> {
         instructions::process_gmp_handler(ctx, message, payload)
     }
 
-    pub fn schedule_timelock_proposal_instruction(
+    pub fn schedule_timelock_proposal(
         ctx: Context<ScheduleTimelockProposal>,
         proposal_hash: [u8; 32],
         eta: u64,
@@ -64,7 +63,7 @@ pub mod axelar_solana_governance_v2 {
         target: Vec<u8>,
         call_data: Vec<u8>,
     ) -> Result<()> {
-        instructions::schedule_timelock_proposal_instruction_handler(
+        instructions::schedule_timelock_proposal_handler(
             ctx,
             proposal_hash,
             eta,
@@ -74,7 +73,7 @@ pub mod axelar_solana_governance_v2 {
         )
     }
 
-    pub fn cancel_timelock_proposal_instruction(
+    pub fn cancel_timelock_proposal(
         ctx: Context<CancelTimelockProposal>,
         proposal_hash: [u8; 32],
         eta: u64,
@@ -82,7 +81,7 @@ pub mod axelar_solana_governance_v2 {
         target: Vec<u8>,
         call_data: Vec<u8>,
     ) -> Result<()> {
-        instructions::cancel_timelock_proposal_instruction_handler(
+        instructions::cancel_timelock_proposal_handler(
             ctx,
             proposal_hash,
             eta,
@@ -92,14 +91,14 @@ pub mod axelar_solana_governance_v2 {
         )
     }
 
-    pub fn approve_operator_proposal_instruction(
+    pub fn approve_operator_proposal(
         ctx: Context<ApproveOperatorProposal>,
         proposal_hash: [u8; 32],
         native_value: Vec<u8>,
         target: Vec<u8>,
         call_data: Vec<u8>,
     ) -> Result<()> {
-        instructions::approve_operator_proposal_instruction_handler(
+        instructions::approve_operator_proposal_handler(
             ctx,
             proposal_hash,
             native_value,
@@ -108,14 +107,14 @@ pub mod axelar_solana_governance_v2 {
         )
     }
 
-    pub fn cancel_operator_proposal_instruction(
+    pub fn cancel_operator_proposal(
         ctx: Context<CancelOperatorProposal>,
         proposal_hash: [u8; 32],
         native_value: Vec<u8>,
         target: Vec<u8>,
         call_data: Vec<u8>,
     ) -> Result<()> {
-        instructions::cancel_operator_proposal_instruction_handler(
+        instructions::cancel_operator_proposal_handler(
             ctx,
             proposal_hash,
             native_value,

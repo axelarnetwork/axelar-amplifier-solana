@@ -28,7 +28,7 @@ pub struct CancelOperatorProposal<'info> {
     pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,
 }
 
-pub fn cancel_operator_proposal_instruction_handler(
+pub fn cancel_operator_proposal_handler(
     ctx: Context<CancelOperatorProposal>,
     proposal_hash: [u8; 32],
     native_value: Vec<u8>,

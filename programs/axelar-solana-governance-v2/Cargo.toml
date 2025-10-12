@@ -32,20 +32,20 @@ mainnet = [
 
 [dependencies]
 alloy-sol-types.workspace = true
-governance-gmp = {workspace = true}
-axelar-solana-encoding = {workspace = true}
-axelar-solana-gateway-v2 = { path = "../../programs/axelar-solana-gateway-v2", features = ["no-entrypoint", "cpi"], default-features = false }
+governance-gmp.workspace = true
+axelar-solana-encoding.workspace = true
+axelar-solana-gateway-v2 = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 anchor-lang = "0.31.1"
 solana-program.workspace = true
 bytemuck.workspace = true
 
 [dev-dependencies]
-axelar-solana-gateway = { path = "../../programs/axelar-solana-gateway" }
+axelar-solana-gateway.workspace = true
 axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 libsecp256k1.workspace = true
 bincode.workspace = true
 alloy-sol-types.workspace = true
-governance-gmp = {workspace = true}
+governance-gmp.workspace = true
 axelar-solana-memo-v2 = { path = "../../programs/axelar-solana-memo-v2", features = ["no-entrypoint", "cpi"], default-features = false }
 solana-sdk.workspace = true
 axelar-solana-gateway-v2-test-fixtures = { path = "../../crates/axelar-solana-gateway-v2-test-fixtures" }

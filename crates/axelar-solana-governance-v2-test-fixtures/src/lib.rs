@@ -375,7 +375,7 @@ pub fn get_memo_instruction_data(
 pub fn get_withdraw_tokens_instruction_data(
     withdraw_amount: u64,
     receiver: Pubkey,
-    target_bytes: [u8; 32],
+    governance_config_pda: [u8; 32],
 ) -> ExecuteProposalCallData {
     let withdraw_instruction_data = axelar_solana_governance_v2::instruction::WithdrawTokens {
         amount: withdraw_amount,
@@ -393,8 +393,8 @@ pub fn get_withdraw_tokens_instruction_data(
             is_writable: false,
         },
         SolanaAccountMetadata {
-            pubkey: target_bytes,
-            is_signer: false,
+            pubkey: governance_config_pda,
+            is_signer: true,
             is_writable: true,
         },
         SolanaAccountMetadata {
