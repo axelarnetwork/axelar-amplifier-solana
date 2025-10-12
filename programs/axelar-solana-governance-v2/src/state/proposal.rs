@@ -83,7 +83,3 @@ pub struct SolanaAccountMetadata {
     /// [`solana_program::instruction::AccountMeta::is_writable`].
     pub is_writable: bool,
 }
-
-#[account(zero_copy)]
-#[derive(Debug)]
-pub struct OperatorProposal {}

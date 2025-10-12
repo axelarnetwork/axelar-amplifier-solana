@@ -1,9 +1,6 @@
 use crate::program::AxelarSolanaGovernanceV2;
 use crate::seed_prefixes::GOVERNANCE_CONFIG;
-use crate::{
-    decode_payload, decode_payload_call_data, decode_payload_target, ExecutableProposal,
-    ExecuteProposalCallData, GovernanceConfig, GovernanceError,
-};
+use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, GovernanceError};
 use anchor_lang::{prelude::*, solana_program, InstructionData};
 use axelar_solana_gateway_v2::seed_prefixes::{
     INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
@@ -16,7 +13,7 @@ use solana_program::instruction::Instruction;
 
 #[derive(Accounts)]
 #[instruction(message: Message, payload: Vec<u8>)]
-pub struct ProcessGmpAccounts<'info> {
+pub struct ProcessGmp<'info> {
     #[account(
         seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
@@ -44,7 +41,7 @@ pub struct ProcessGmpAccounts<'info> {
             bump,
             seeds::program = axelar_gateway_program.key()
         )]
-    pub event_authority: SystemAccount<'info>,
+    pub gateway_event_authority: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
     #[account(
             seeds = [GOVERNANCE_CONFIG],
@@ -61,7 +58,7 @@ pub struct ProcessGmpAccounts<'info> {
 }
 
 pub fn process_gmp_handler(
-    ctx: Context<ProcessGmpAccounts>,
+    ctx: Context<ProcessGmp>,
     message: Message,
     payload: Vec<u8>,
 ) -> Result<()> {
@@ -75,7 +72,7 @@ pub fn process_gmp_handler(
         incoming_message_pda: ctx.accounts.incoming_message_pda.to_account_info(),
         caller: ctx.accounts.signing_pda.to_account_info(),
         // for emit cpi
-        event_authority: ctx.accounts.event_authority.to_account_info(),
+        event_authority: ctx.accounts.gateway_event_authority.to_account_info(),
         program: ctx.accounts.axelar_gateway_program.to_account_info(),
     };
 
@@ -140,11 +137,11 @@ fn calculate_gmp_context(
     ExecuteProposalCallData,
     [u8; 32],
 )> {
-    let cmd_payload = decode_payload(&payload).unwrap();
+    let cmd_payload = crate::decode_payload(&payload).unwrap();
 
-    let target = decode_payload_target(&cmd_payload.target)?;
+    let target = crate::decode_payload_target(&cmd_payload.target)?;
 
-    let execute_proposal_call_data = decode_payload_call_data(&cmd_payload.call_data)?;
+    let execute_proposal_call_data = crate::decode_payload_call_data(&cmd_payload.call_data)?;
 
     let proposal_hash = ExecutableProposal::calculate_hash(
         &target,
@@ -161,7 +158,7 @@ fn calculate_gmp_context(
 }
 
 fn process_proposal_gmp(
-    ctx: Context<ProcessGmpAccounts>,
+    ctx: Context<ProcessGmp>,
     proposal_hash: [u8; 32],
     cmd_payload: GovernanceCommandPayload,
 ) -> Result<()> {
@@ -201,13 +198,13 @@ fn extract_proposal_data(
 }
 
 fn schedule_timelock_proposal(
-    ctx: Context<ProcessGmpAccounts>,
+    ctx: Context<ProcessGmp>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
     let (eta, native_value, call_data, target) = extract_proposal_data(cmd_payload)?;
 
-    let instruction_data = crate::instruction::ScheduleTimelockProposalInstruction {
+    let instruction_data = crate::instruction::ScheduleTimelockProposal {
         proposal_hash,
         eta,
         target,
@@ -217,15 +214,16 @@ fn schedule_timelock_proposal(
 
     let schedule_instruction = Instruction {
         program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
-            AccountMeta::new(ctx.accounts.payer.key(), true),
-            AccountMeta::new(ctx.accounts.proposal_pda.key(), false),
-            // for emit cpi
-            AccountMeta::new_readonly(ctx.accounts.governance_event_authority.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.axelar_governance_program.key(), false),
-        ],
+        accounts: crate::accounts::ScheduleTimelockProposal {
+            system_program: ctx.accounts.system_program.key(),
+            governance_config: ctx.accounts.governance_config.key(),
+            payer: ctx.accounts.payer.key(),
+            proposal_pda: ctx.accounts.proposal_pda.key(),
+            // for event cpi
+            event_authority: ctx.accounts.governance_event_authority.key(),
+            program: ctx.accounts.axelar_governance_program.key(),
+        }
+        .to_account_metas(None),
         data: instruction_data.data(),
     };
 
@@ -247,13 +245,13 @@ fn schedule_timelock_proposal(
 }
 
 fn cancel_timelock_proposal(
-    ctx: Context<ProcessGmpAccounts>,
+    ctx: Context<ProcessGmp>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
     let (eta, native_value, call_data, target) = extract_proposal_data(cmd_payload)?;
 
-    let instruction_data = crate::instruction::CancelTimelockProposalInstruction {
+    let instruction_data = crate::instruction::CancelTimelockProposal {
         proposal_hash,
         eta,
         native_value,
@@ -264,13 +262,14 @@ fn cancel_timelock_proposal(
     // Create the instruction with accounts matching CancelTimelockProposal
     let cancel_instruction = Instruction {
         program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
-            AccountMeta::new(ctx.accounts.proposal_pda.key(), false),
-            // for emit cpi
-            AccountMeta::new_readonly(ctx.accounts.governance_event_authority.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.axelar_governance_program.key(), false),
-        ],
+        accounts: crate::accounts::CancelTimelockProposal {
+            governance_config: ctx.accounts.governance_config.key(),
+            proposal_pda: ctx.accounts.proposal_pda.key(),
+            // for event cpi
+            event_authority: ctx.accounts.governance_event_authority.key(),
+            program: ctx.accounts.axelar_governance_program.key(),
+        }
+        .to_account_metas(None),
         data: instruction_data.data(),
     };
 
@@ -291,13 +290,13 @@ fn cancel_timelock_proposal(
 }
 
 fn approve_operator_proposal(
-    ctx: Context<ProcessGmpAccounts>,
+    ctx: Context<ProcessGmp>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
     let (_, native_value, call_data, target) = extract_proposal_data(cmd_payload)?;
 
-    let instruction_data = crate::instruction::ApproveOperatorProposalInstruction {
+    let instruction_data = crate::instruction::ApproveOperatorProposal {
         proposal_hash,
         native_value,
         call_data,
@@ -307,16 +306,17 @@ fn approve_operator_proposal(
     // Create the instruction with accounts matching ApproveOperatorProposal
     let approve_instruction = Instruction {
         program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.system_program.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
-            AccountMeta::new(ctx.accounts.payer.key(), true),
-            AccountMeta::new(ctx.accounts.proposal_pda.key(), false),
-            AccountMeta::new(ctx.accounts.operator_proposal_pda.key(), false),
-            // for emit cpi
-            AccountMeta::new_readonly(ctx.accounts.governance_event_authority.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.axelar_governance_program.key(), false),
-        ],
+        accounts: crate::accounts::ApproveOperatorProposal {
+            system_program: ctx.accounts.system_program.key(),
+            governance_config: ctx.accounts.governance_config.key(),
+            payer: ctx.accounts.payer.key(),
+            proposal_pda: ctx.accounts.proposal_pda.key(),
+            operator_proposal_pda: ctx.accounts.operator_proposal_pda.key(),
+            // for event cpi
+            event_authority: ctx.accounts.governance_event_authority.key(),
+            program: ctx.accounts.axelar_governance_program.key(),
+        }
+        .to_account_metas(None),
         data: instruction_data.data(),
     };
 
@@ -340,13 +340,13 @@ fn approve_operator_proposal(
 }
 
 fn cancel_operator_proposal(
-    ctx: Context<ProcessGmpAccounts>,
+    ctx: Context<ProcessGmp>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
     let (_, native_value, call_data, target) = extract_proposal_data(cmd_payload)?;
 
-    let instruction_data = crate::instruction::CancelOperatorProposalInstruction {
+    let instruction_data = crate::instruction::CancelOperatorProposal {
         proposal_hash,
         native_value,
         call_data,
@@ -356,14 +356,15 @@ fn cancel_operator_proposal(
     // Create the instruction with accounts matching CancelOperatorProposal
     let cancel_instruction = Instruction {
         program_id: crate::ID,
-        accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.governance_config.key(), true),
-            AccountMeta::new_readonly(ctx.accounts.proposal_pda.key(), false),
-            AccountMeta::new(ctx.accounts.operator_proposal_pda.key(), false),
-            // for emit cpi
-            AccountMeta::new_readonly(ctx.accounts.governance_event_authority.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.axelar_governance_program.key(), false),
-        ],
+        accounts: crate::accounts::CancelOperatorProposal {
+            governance_config: ctx.accounts.governance_config.key(),
+            proposal_pda: ctx.accounts.proposal_pda.key(),
+            operator_proposal_pda: ctx.accounts.operator_proposal_pda.key(),
+            // for event cpi
+            event_authority: ctx.accounts.governance_event_authority.key(),
+            program: ctx.accounts.axelar_governance_program.key(),
+        }
+        .to_account_metas(None),
         data: instruction_data.data(),
     };
 

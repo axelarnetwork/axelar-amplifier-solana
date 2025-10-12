@@ -28,12 +28,12 @@ pub struct ApproveOperatorProposal<'info> {
             payer = payer,
             space = OperatorProposal::DISCRIMINATOR.len() + std::mem::size_of::<OperatorProposal>(),
             seeds = [OPERATOR_MANAGED_PROPOSAL, &proposal_hash],
-            bump
+            bump,
         )]
     pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,
 }
 
-pub fn approve_operator_proposal_instruction_handler(
+pub fn approve_operator_proposal_handler(
     ctx: Context<ApproveOperatorProposal>,
     proposal_hash: [u8; 32],
     native_value: Vec<u8>,

@@ -2,7 +2,7 @@ use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError,
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct UpdateConfigAccounts<'info> {
+pub struct UpdateConfig<'info> {
     #[account(mut, constraint = governance_config.load()?.operator == payer.key().to_bytes() @ GovernanceError::NotOperator)]
     pub payer: Signer<'info>,
     #[account(
@@ -21,7 +21,7 @@ pub struct GovernanceConfigUpdate {
 }
 
 pub fn update_config_handler(
-    ctx: Context<UpdateConfigAccounts>,
+    ctx: Context<UpdateConfig>,
     params: GovernanceConfigUpdate,
 ) -> Result<()> {
     let config = &mut ctx.accounts.governance_config;

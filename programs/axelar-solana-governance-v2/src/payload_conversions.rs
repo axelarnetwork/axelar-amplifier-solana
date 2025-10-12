@@ -1,3 +1,4 @@
+use crate::ExecuteProposalCallData;
 use alloy_sol_types::SolType;
 use anchor_lang::AnchorDeserialize;
 /// A module to convert the payload data of a governance GMP command.
@@ -6,8 +7,6 @@ use governance_gmp::GovernanceCommandPayload;
 use solana_program::msg;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;
-
-use crate::ExecuteProposalCallData;
 
 /// Decodes the payload of a governance GMP command.
 ///

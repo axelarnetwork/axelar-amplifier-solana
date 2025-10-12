@@ -6,6 +6,7 @@ pub struct WithdrawTokens<'info> {
     pub system_program: Program<'info, System>,
     #[account(
         mut,
+        signer,
         seeds = [GOVERNANCE_CONFIG],
         bump = governance_config.load()?.bump,
     )]
@@ -16,6 +17,7 @@ pub struct WithdrawTokens<'info> {
     pub receiver: AccountInfo<'info>,
 }
 
+// Note: this should be called by the governance through a proposal
 pub fn withdraw_tokens_handler(ctx: Context<WithdrawTokens>, amount: u64) -> Result<()> {
     let governance_config = &ctx.accounts.governance_config;
     let receiver = &ctx.accounts.receiver;

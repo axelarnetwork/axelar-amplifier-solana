@@ -27,7 +27,7 @@ pub struct ScheduleTimelockProposal<'info> {
     pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
 }
 
-pub fn schedule_timelock_proposal_instruction_handler(
+pub fn schedule_timelock_proposal_handler(
     ctx: Context<ScheduleTimelockProposal>,
     proposal_hash: [u8; 32],
     eta: u64,
