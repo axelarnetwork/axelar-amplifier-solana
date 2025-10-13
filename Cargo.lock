@@ -1332,16 +1332,19 @@ dependencies = [
 name = "axelar-solana-its-v2"
 version = "0.1.0"
 dependencies = [
+ "alloy-primitives",
  "anchor-lang",
  "anchor-spl",
  "axelar-solana-gas-service",
  "axelar-solana-gas-service-v2",
  "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-gateway-v2",
  "axelar-solana-operators",
  "bincode",
  "bitflags 2.9.4",
  "bytemuck",
  "hex",
+ "interchain-token-transfer-gmp",
  "mollusk-svm 0.5.1",
  "mollusk-svm-programs-token",
  "mollusk-test-utils",

@@ -20,6 +20,8 @@ pub const CHAIN_NAME_HASH: [u8; 32] = [
     222, 187, 187, 25, 30, 121, 52, 235, 103, 11, 169,
 ]; // keccak256("solana-devnet")
 
+pub(crate) const ITS_HUB_CHAIN_NAME: &str = "axelar";
+
 #[cfg(feature = "stagenet")]
 declare_id!("itsediSVCwwKc6UuxfrsEiF8AEuEFk34RFAscPEDEpJ");
 
@@ -93,5 +95,21 @@ pub mod axelar_solana_its_v2 {
         params: DeployInterchainTokenData,
     ) -> Result<()> {
         instructions::deploy_interchain_token_handler(ctx, params)
+    }
+
+    pub fn deploy_remote_interchain_token(
+        ctx: Context<DeployRemoteInterchainToken>,
+        salt: [u8; 32],
+        destination_chain: String,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::deploy_remote_interchain_token_handler(
+            ctx,
+            salt,
+            destination_chain,
+            gas_value,
+            signing_pda_bump,
+        )
     }
 }
