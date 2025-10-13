@@ -30,9 +30,17 @@ pub fn call_contract_handler(
 ) -> Result<()> {
     let sender = &ctx.accounts.calling_program;
     let signing_pda = &ctx.accounts.signing_pda;
+    let payload_hash = keccak::hash(&payload);
 
     if sender.is_signer {
         // Direct signer, so not a program, continue
+        emit_cpi!(CallContractEvent {
+            sender: sender.key(),
+            payload_hash: payload_hash.to_bytes(),
+            destination_chain,
+            destination_contract_address,
+            payload,
+        });
     } else {
         // Case of a program, so a valid signing PDA must be provided
         let Ok(expected_signing_pda) = Pubkey::create_program_address(
@@ -56,17 +64,14 @@ pub fn call_contract_handler(
         }
 
         // A valid signing PDA was provided and it's a signer, continue
+        emit_cpi!(CallContractEvent {
+            sender: ctx.accounts.signing_pda.key(),
+            payload_hash: payload_hash.to_bytes(),
+            destination_chain,
+            destination_contract_address,
+            payload,
+        });
     }
-
-    let payload_hash = keccak::hash(&payload);
-
-    emit_cpi!(CallContractEvent {
-        sender: ctx.accounts.signing_pda.key(),
-        payload_hash: payload_hash.to_bytes(),
-        destination_chain,
-        destination_contract_address,
-        payload,
-    });
 
     Ok(())
 }
