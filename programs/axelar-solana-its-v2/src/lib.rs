@@ -112,4 +112,20 @@ pub mod axelar_solana_its_v2 {
             signing_pda_bump,
         )
     }
+
+    pub fn approve_deploy_remote_interchain_token(
+        ctx: Context<ApproveDeployRemoteInterchainToken>,
+        deployer: Pubkey,
+        salt: [u8; 32],
+        destination_chain: String,
+        destination_minter: Vec<u8>,
+    ) -> Result<()> {
+        instructions::approve_deploy_remote_interchain_token(
+            ctx,
+            deployer,
+            salt,
+            destination_chain,
+            destination_minter,
+        )
+    }
 }

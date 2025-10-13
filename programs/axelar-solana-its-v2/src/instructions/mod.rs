@@ -15,3 +15,6 @@ pub use deploy_interchain_token::*;
 
 pub mod deploy_remote_interchain_token;
 pub use deploy_remote_interchain_token::*;
+
+pub mod approve_deploy_remote_interchain_token;
+pub use approve_deploy_remote_interchain_token::*;
