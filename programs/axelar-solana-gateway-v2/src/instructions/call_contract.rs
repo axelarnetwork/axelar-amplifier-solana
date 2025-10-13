@@ -48,7 +48,7 @@ pub fn call_contract_handler(
             sender.key,
         ) else {
             msg!("Invalid call: sender must be a direct signer or a valid signing PDA must be provided");
-            return err!(GatewayError::CallerNotSigner);
+            return err!(GatewayError::InvalidSigningPDABump);
         };
 
         if &expected_signing_pda != signing_pda.key {
