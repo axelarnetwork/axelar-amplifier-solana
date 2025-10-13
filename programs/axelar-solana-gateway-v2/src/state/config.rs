@@ -31,6 +31,12 @@ pub struct GatewayConfig {
 }
 
 impl GatewayConfig {
+    pub const SEED_PREFIX: &'static [u8] = b"gateway";
+
+    pub fn get_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+    }
+
     pub fn assert_valid_epoch(&self, epoch: U256) -> Result<()> {
         let current_epoch = self.current_epoch;
         let elapsed = current_epoch

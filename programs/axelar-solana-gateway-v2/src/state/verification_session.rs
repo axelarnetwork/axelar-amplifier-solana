@@ -20,44 +20,23 @@ pub struct SignatureVerificationSessionData {
     pub _pad: [u8; 15],
 }
 
-/// Controls the signature verification session for a given payload.
-#[repr(C)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Pod, Zeroable)]
-pub struct SignatureVerification {
-    /// Accumulated signer threshold required to validate the payload.
-    ///
-    /// Is incremented on each successful verification.
-    ///
-    /// Set to [`U128::MAX`] once the accumulated threshold is greater than or
-    /// equal the current verifier set threshold.
-    pub accumulated_threshold: U128,
-
-    /// A bit field used to track which signatures have been verified.
-    ///
-    /// Initially, all bits are set to zero. When a signature is verified, its
-    /// corresponding bit is flipped to one. This prevents the same signature
-    /// from being verified more than once, avoiding deliberate attempts to
-    /// decrement the remaining threshold.
-    ///
-    /// Currently supports 256 slots. If the signer set maximum size needs to be
-    /// increased in the future, this value must change to make roof for
-    /// them.
-    pub signature_slots: [u8; 32],
-
-    /// Upon the first successful signature validation, we set the hash of the
-    /// signing verifier set.
-    /// This data is later used when rotating signers to figure out which
-    /// verifier set was the one that actually performed the validation.
-    pub signing_verifier_set_hash: VerifierSetHash,
-}
-
-impl SignatureVerification {
-    pub fn is_valid(&self) -> bool {
-        self.accumulated_threshold == U128::MAX
-    }
-}
-
 impl SignatureVerificationSessionData {
+    pub const SEED_PREFIX: &'static [u8] = b"gtw-sig-verif";
+
+    pub fn get_pda(
+        payload_merkle_root: &[u8; 32],
+        signing_verifier_set_hash: &[u8; 32],
+    ) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                Self::SEED_PREFIX,
+                payload_merkle_root,
+                signing_verifier_set_hash,
+            ],
+            &crate::ID,
+        )
+    }
+
     pub fn new(signature_verification: SignatureVerification, bump: u8) -> Self {
         SignatureVerificationSessionData {
             signature_verification,
@@ -240,6 +219,43 @@ impl SignatureVerificationSessionData {
         }
 
         Ok(())
+    }
+}
+
+/// Controls the signature verification session for a given payload.
+#[repr(C)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Pod, Zeroable)]
+pub struct SignatureVerification {
+    /// Accumulated signer threshold required to validate the payload.
+    ///
+    /// Is incremented on each successful verification.
+    ///
+    /// Set to [`U128::MAX`] once the accumulated threshold is greater than or
+    /// equal the current verifier set threshold.
+    pub accumulated_threshold: U128,
+
+    /// A bit field used to track which signatures have been verified.
+    ///
+    /// Initially, all bits are set to zero. When a signature is verified, its
+    /// corresponding bit is flipped to one. This prevents the same signature
+    /// from being verified more than once, avoiding deliberate attempts to
+    /// decrement the remaining threshold.
+    ///
+    /// Currently supports 256 slots. If the signer set maximum size needs to be
+    /// increased in the future, this value must change to make roof for
+    /// them.
+    pub signature_slots: [u8; 32],
+
+    /// Upon the first successful signature validation, we set the hash of the
+    /// signing verifier set.
+    /// This data is later used when rotating signers to figure out which
+    /// verifier set was the one that actually performed the validation.
+    pub signing_verifier_set_hash: VerifierSetHash,
+}
+
+impl SignatureVerification {
+    pub fn is_valid(&self) -> bool {
+        self.accumulated_threshold == U128::MAX
     }
 }
 

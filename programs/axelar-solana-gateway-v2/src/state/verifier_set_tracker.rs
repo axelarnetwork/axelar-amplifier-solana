@@ -17,3 +17,11 @@ pub struct VerifierSetTracker {
     /// The verifier set hash
     pub verifier_set_hash: VerifierSetHash,
 }
+
+impl VerifierSetTracker {
+    pub const SEED_PREFIX: &'static [u8] = b"ver-set-tracker";
+
+    pub fn get_pda(verifier_set_hash: &[u8; 32]) -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX, verifier_set_hash], &crate::ID)
+    }
+}

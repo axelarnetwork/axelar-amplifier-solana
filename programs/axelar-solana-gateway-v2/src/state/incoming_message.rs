@@ -15,6 +15,14 @@ pub struct IncomingMessage {
     pub payload_hash: [u8; 32],
 }
 
+impl IncomingMessage {
+    pub const SEED_PREFIX: &'static [u8] = b"incoming message";
+
+    pub fn get_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX, command_id], &crate::ID)
+    }
+}
+
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize, Pod, Zeroable)]
 pub struct MessageStatus(u8);
