@@ -7,7 +7,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo)]
+#[instruction(merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32], verifier_info: SigningVerifierSetInfo)]
 pub struct VerifySignature<'info> {
     #[account(
         seeds = [GATEWAY_SEED],
@@ -23,14 +23,14 @@ pub struct VerifySignature<'info> {
 
     #[account(
         mut,
-        seeds = [SIGNATURE_VERIFICATION_SEED, merkle_root.as_ref()],
+        seeds = [SIGNATURE_VERIFICATION_SEED, merkle_root.as_ref(), signing_verifier_set_hash.as_ref()],
         bump = verification_session_account.load()?.bump
     )]
     pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,
 
     #[account(
 		// The verifier set tracker PDA is derived from the verifier set hash
-		seeds = [VERIFIER_SET_TRACKER_SEED, verifier_set_tracker_pda.load()?.verifier_set_hash.as_slice()],
+		seeds = [VERIFIER_SET_TRACKER_SEED, signing_verifier_set_hash.as_ref()],
 		bump,
 	)]
     pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
@@ -39,6 +39,7 @@ pub struct VerifySignature<'info> {
 pub fn verify_signature_handler(
     ctx: Context<VerifySignature>,
     payload_merkle_root: [u8; 32],
+    _signing_verifier_set_hash: [u8; 32],
     verifier_info: SigningVerifierSetInfo,
 ) -> Result<()> {
     let verifier_set_tracker_pda = ctx.accounts.verifier_set_tracker_pda.load()?;

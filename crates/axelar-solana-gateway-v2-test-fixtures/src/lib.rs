@@ -340,15 +340,27 @@ pub fn initialize_payload_verification_session(
         .1
         .clone();
 
+    let initialized_verifier_set_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
     let merkle_root = [3u8; 32];
+    let signing_verifier_set_hash = setup.verifier_set_hash;
 
     let (verification_session_pda, _verification_bump) = Pubkey::find_program_address(
-        &[seed_prefixes::SIGNATURE_VERIFICATION_SEED, &merkle_root],
+        &[seed_prefixes::SIGNATURE_VERIFICATION_SEED, &merkle_root, &signing_verifier_set_hash],
         &GATEWAY_PROGRAM_ID,
     );
 
     let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { merkle_root }
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { 
+            merkle_root,
+            signing_verifier_set_hash,
+        }
             .data();
 
     let accounts = vec![
@@ -373,6 +385,7 @@ pub fn initialize_payload_verification_session(
                 rent_epoch: 0,
             },
         ),
+        (setup.verifier_set_tracker_pda, initialized_verifier_set_account),
         (
             SYSTEM_PROGRAM_ID,
             Account {
@@ -391,6 +404,7 @@ pub fn initialize_payload_verification_session(
             AccountMeta::new(setup.payer, true),
             AccountMeta::new_readonly(setup.gateway_root_pda, false),
             AccountMeta::new(verification_session_pda, false),
+            AccountMeta::new_readonly(setup.verifier_set_tracker_pda, false),
             AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
         ],
         data: instruction_data,
@@ -444,10 +458,21 @@ pub fn initialize_payload_verification_session_with_root(
         .1
         .clone();
 
+    let initialized_verifier_set_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let signing_verifier_set_hash = setup.verifier_set_hash;
+
     let (verification_session_pda, _) = Pubkey::find_program_address(
         &[
             seed_prefixes::SIGNATURE_VERIFICATION_SEED,
             &payload_merkle_root,
+            &signing_verifier_set_hash,
         ],
         &GATEWAY_PROGRAM_ID,
     );
@@ -455,6 +480,7 @@ pub fn initialize_payload_verification_session_with_root(
     let instruction_data =
         axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
+            signing_verifier_set_hash,
         }
         .data();
 
@@ -480,6 +506,7 @@ pub fn initialize_payload_verification_session_with_root(
                 rent_epoch: 0,
             },
         ),
+        (setup.verifier_set_tracker_pda, initialized_verifier_set_account),
         (
             SYSTEM_PROGRAM_ID,
             Account {
@@ -498,6 +525,7 @@ pub fn initialize_payload_verification_session_with_root(
             AccountMeta::new(setup.payer, true),
             AccountMeta::new_readonly(setup.gateway_root_pda, false),
             AccountMeta::new(verification_session_pda, false),
+            AccountMeta::new_readonly(setup.verifier_set_tracker_pda, false),
             AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
         ],
         data: instruction_data,
@@ -631,6 +659,7 @@ pub fn verify_signature_helper(
 ) -> InstructionResult {
     let instruction_data = axelar_solana_gateway_v2::instruction::VerifySignature {
         payload_merkle_root,
+        signing_verifier_set_hash: setup.verifier_set_hash,
         verifier_info,
     }
     .data();
@@ -878,7 +907,7 @@ pub fn transfer_operatorship_helper(
 
 pub fn setup_message_merkle_tree(
     setup: &TestSetup,
-    verifier_set_merkle_root: [u8; 32],
+    _verifier_set_merkle_root: [u8; 32],
 ) -> (
     Vec<Message>,
     Vec<MessageLeaf>,
@@ -908,7 +937,6 @@ pub fn setup_message_merkle_tree(
             position: i as u16,
             set_size: messages.len() as u16,
             domain_separator: setup.domain_separator,
-            signing_verifier_set: verifier_set_merkle_root,
         })
         .collect();
 
@@ -970,6 +998,7 @@ pub fn approve_message_helper(
     let approve_instruction_data = axelar_solana_gateway_v2::instruction::ApproveMessage {
         merkleised_message: merkleised_message.clone(),
         payload_merkle_root,
+        signing_verifier_set_hash: setup.verifier_set_hash,
     }
     .data();
 
