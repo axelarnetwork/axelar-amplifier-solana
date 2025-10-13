@@ -26,3 +26,13 @@ pub struct InterchainTokenDeployed {
     pub symbol: String,
     pub decimals: u8,
 }
+
+#[event]
+pub struct InterchainTokenDeploymentStarted {
+    pub token_id: [u8; 32],
+    pub token_name: String,
+    pub token_symbol: String,
+    pub token_decimals: u8,
+    pub minter: Vec<u8>,
+    pub destination_chain: String,
+}

@@ -12,3 +12,6 @@ pub use remove_trusted_chain::*;
 
 pub mod deploy_interchain_token;
 pub use deploy_interchain_token::*;
+
+pub mod deploy_remote_interchain_token;
+pub use deploy_remote_interchain_token::*;

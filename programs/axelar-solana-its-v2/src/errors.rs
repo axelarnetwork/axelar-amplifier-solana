@@ -4,4 +4,6 @@ use anchor_lang::prelude::*;
 pub enum ITSError {
     InvalidArgument,
     Paused,
+    InvalidInstructionData,
+    InvalidAccountOwner,
 }
