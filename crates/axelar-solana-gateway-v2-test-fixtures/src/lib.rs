@@ -544,7 +544,17 @@ pub fn create_verifier_info(
     position: usize,
     verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
 ) -> SigningVerifierSetInfo {
-    let message = libsecp256k1::Message::parse(&payload_merkle_root);
+    // Add Solana offchain prefix to the message before signing
+    // This follows the Axelar convention for prefixing signed messages
+    const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
+    let mut prefixed_message = Vec::with_capacity(SOLANA_OFFCHAIN_PREFIX.len() + payload_merkle_root.len());
+    prefixed_message.extend_from_slice(SOLANA_OFFCHAIN_PREFIX);
+    prefixed_message.extend_from_slice(&payload_merkle_root);
+    
+    // Hash the prefixed message to get a 32-byte digest
+    let hashed_message = solana_program::keccak::hash(&prefixed_message).to_bytes();
+    
+    let message = libsecp256k1::Message::parse(&hashed_message);
     let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
     let mut signature_bytes = signature.serialize().to_vec();
     signature_bytes.push(recovery_id.serialize() + 27);

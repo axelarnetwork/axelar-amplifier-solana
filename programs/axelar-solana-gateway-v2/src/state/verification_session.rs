@@ -122,6 +122,16 @@ impl SignatureVerificationSessionData {
         signature: &axelar_solana_encoding::types::pubkey::EcdsaRecoverableSignature,
         message: &[u8; 32],
     ) -> bool {
+        // Add Solana offchain prefix to the message before verification
+        // This follows the Axelar convention for prefixing signed messages
+        const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
+        let mut prefixed_message = Vec::with_capacity(SOLANA_OFFCHAIN_PREFIX.len() + message.len());
+        prefixed_message.extend_from_slice(SOLANA_OFFCHAIN_PREFIX);
+        prefixed_message.extend_from_slice(message);
+        
+        // Hash the prefixed message to get a 32-byte digest
+        let hashed_message = solana_program::keccak::hash(&prefixed_message).to_bytes();
+
         // The recovery bit in the signature's bytes is placed at the end, as per the
         // 'multisig-prover' contract by Axelar. Unwrap: we know the 'signature'
         // slice exact size, and it isn't empty.
@@ -141,7 +151,7 @@ impl SignatureVerificationSessionData {
 
         // This is results in a Solana syscall.
         let secp256k1_recover =
-            solana_program::secp256k1_recover::secp256k1_recover(message, recovery_id, signature);
+            solana_program::secp256k1_recover::secp256k1_recover(&hashed_message, recovery_id, signature);
         let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
             solana_program::msg!("Failed to recover ECDSA signature");
             return false;
