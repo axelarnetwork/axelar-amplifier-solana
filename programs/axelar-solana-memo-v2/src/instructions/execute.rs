@@ -44,13 +44,7 @@ pub struct Execute<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn execute_handler(
-    ctx: Context<Execute>,
-    message: Message,
-    _source_chain: String,
-    _source_address: String,
-    payload: Vec<u8>,
-) -> Result<()> {
+pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
     msg!("Executing payload of: {} bytes", payload.len());
 
     // Check that provided payload matches the approved message

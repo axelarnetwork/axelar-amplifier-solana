@@ -21,13 +21,7 @@ pub mod memo {
         instructions::send_memo_handler(ctx, destination_chain, destination_contract_address, memo)
     }
 
-    pub fn execute(
-        ctx: Context<Execute>,
-        message: Message,
-        source_chain: String,
-        source_address: String,
-        payload: Vec<u8>,
-    ) -> Result<()> {
-        instructions::execute_handler(ctx, message, source_chain, source_address, payload)
+    pub fn execute(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
+        instructions::execute_handler(ctx, message, payload)
     }
 }
