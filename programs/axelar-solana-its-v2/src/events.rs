@@ -36,3 +36,12 @@ pub struct InterchainTokenDeploymentStarted {
     pub minter: Vec<u8>,
     pub destination_chain: String,
 }
+
+#[event]
+pub struct DeployRemoteInterchainTokenApproval {
+    pub minter: Pubkey,
+    pub deployer: Pubkey,
+    pub token_id: [u8; 32],
+    pub destination_chain: String,
+    pub destination_minter: Vec<u8>,
+}

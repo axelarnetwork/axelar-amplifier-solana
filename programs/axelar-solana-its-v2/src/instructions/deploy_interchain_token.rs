@@ -46,7 +46,7 @@ pub struct DeployInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + std::mem::size_of::<TokenManager>(),
+        space = TokenManager::DISCRIMINATOR.len() + std::mem::size_of::<TokenManager>(),
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
