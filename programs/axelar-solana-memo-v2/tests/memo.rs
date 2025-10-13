@@ -68,7 +68,6 @@ fn test_execute() {
             position: u16::try_from(i).unwrap(),
             set_size: u16::try_from(messages.len()).unwrap(),
             domain_separator: setup.domain_separator,
-            signing_verifier_set: verifier_set_merkle_root,
         })
         .collect();
 
