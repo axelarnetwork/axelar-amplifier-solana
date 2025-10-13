@@ -79,20 +79,6 @@ impl SignatureVerificationSessionData {
         // Check: Slot is already verified
         self.check_slot_is_done(&verifier_info.leaf)?;
 
-        // Check: Digital signature
-        let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
-            PublicKey::Secp256k1(key) => key,
-            PublicKey::Ed25519(_) => return err!(GatewayError::UnsupportedSignatureScheme),
-        };
-
-        if !Self::verify_ecdsa_signature(
-            &pubkey_bytes,
-            &verifier_info.signature,
-            &payload_merkle_root,
-        ) {
-            return err!(GatewayError::SignatureVerificationFailed);
-        }
-
         // Check: Merkle proof
         let merkle_proof =
             rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&verifier_info.merkle_proof)
@@ -107,6 +93,20 @@ impl SignatureVerificationSessionData {
             verifier_info.leaf.set_size.into(),
         ) {
             return err!(GatewayError::InvalidMerkleProof);
+        }
+
+        // Check: Digital signature
+        let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
+            PublicKey::Secp256k1(key) => key,
+            PublicKey::Ed25519(_) => return err!(GatewayError::UnsupportedSignatureScheme),
+        };
+
+        if !Self::verify_ecdsa_signature(
+            &pubkey_bytes,
+            &verifier_info.signature,
+            &payload_merkle_root,
+        ) {
+            return err!(GatewayError::SignatureVerificationFailed);
         }
 
         // Update state
