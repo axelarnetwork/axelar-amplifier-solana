@@ -6,8 +6,7 @@ use anchor_spl::{
     token_2022::spl_token_2022::{self},
 };
 use axelar_solana_its_v2::{
-    seed_prefixes::DEPLOYMENT_APPROVAL_SEED,
-    state::{deploy_approval::DeployApproval},
+    seed_prefixes::DEPLOYMENT_APPROVAL_SEED, state::deploy_approval::DeployApproval,
 };
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
@@ -173,7 +172,6 @@ fn test_approve_deploy_remote_interchain_token() {
         accounts: axelar_solana_its_v2::accounts::ApproveDeployRemoteInterchainToken {
             payer,
             minter,
-            its_root_pda,
             token_manager_pda,
             minter_roles: minter_roles_pda,
             deploy_approval_pda,
@@ -189,14 +187,6 @@ fn test_approve_deploy_remote_interchain_token() {
         .find(|(pubkey, _)| *pubkey == payer)
         .map(|(_, account)| account.clone())
         .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
-
-    let updated_its_root_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == its_root_pda)
-        .unwrap()
-        .1
-        .clone();
 
     let updated_token_manager_account = result
         .resulting_accounts
@@ -217,7 +207,6 @@ fn test_approve_deploy_remote_interchain_token() {
     let approve_accounts = vec![
         (payer, updated_payer_account),
         (minter, Account::new(0, 0, &system_program::ID)),
-        (its_root_pda, updated_its_root_account),
         (token_manager_pda, updated_token_manager_account),
         (minter_roles_pda, updated_minter_roles_account),
         (deploy_approval_pda, Account::new(0, 0, &system_program::ID)),

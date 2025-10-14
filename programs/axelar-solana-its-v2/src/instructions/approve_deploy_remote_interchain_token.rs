@@ -22,19 +22,11 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
     /// The minter who is approving the deployment (must be a signer with minter role)
     pub minter: Signer<'info>,
 
-    /// ITS root configuration PDA
-    #[account(
-        seeds = [InterchainTokenService::SEED_PREFIX],
-        bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
-    )]
-    pub its_root_pda: Account<'info, InterchainTokenService>,
-
     /// Token Manager PDA for this token
     #[account(
         seeds = [
             TOKEN_MANAGER_SEED,
-            its_root_pda.key().as_ref(),
+            find_its_root_pda().key().as_ref(),
             &interchain_token_id(&deployer, &salt)
         ],
         bump = token_manager_pda.bump
@@ -98,4 +90,10 @@ pub fn approve_deploy_remote_interchain_token(
     });
 
     Ok(())
+}
+
+fn find_its_root_pda() -> Pubkey {
+    let (its_root_pda, _bump) =
+        Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &crate::ID);
+    return its_root_pda;
 }
