@@ -3,17 +3,14 @@ use anchor_lang::Discriminator;
 use anchor_lang::InstructionData;
 use anchor_lang::Space;
 use anchor_lang::ToAccountMetas;
-use anchor_spl::{
-    token::spl_token,
-    token_2022::spl_token_2022::{self},
-};
 use axelar_solana_gas_service_v2::state::Treasury;
-use axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::initialize_gateway;
 use axelar_solana_gateway_v2_test_fixtures::setup_test_with_real_signers;
 use axelar_solana_its_v2::state::InterchainTokenService;
+use axelar_solana_its_v2_test_fixtures::deploy_remote_interchain_token_with_no_minter_helper;
+use axelar_solana_its_v2_test_fixtures::DeployRemoteInterchainTokenContext;
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
@@ -22,7 +19,6 @@ use axelar_solana_operators::OperatorRegistry;
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_svm::Mollusk;
-use mollusk_svm_programs_token;
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
@@ -289,46 +285,7 @@ fn test_deploy_remote_interchain_token() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = axelar_solana_its_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
-
-    mollusk.add_program(
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        "../../target/deploy/mpl_token_metadata",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
-
-    let spl_token_elf = mollusk_svm_programs_token::token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token::ID,
-        &spl_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let token_2022_elf = mollusk_svm_programs_token::token2022::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token_2022::ID,
-        &token_2022_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let associated_token_elf = mollusk_svm_programs_token::associated_token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &anchor_spl::associated_token::ID,
-        &associated_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    mollusk.add_program(
-        &axelar_solana_gas_service_v2::ID,
-        "../../target/deploy/axelar_solana_gas_service_v2",
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    mollusk.add_program(
-        &axelar_solana_gateway_v2::ID,
-        "../../target/deploy/axelar_solana_gateway_v2",
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
+    let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
@@ -399,163 +356,26 @@ fn test_deploy_remote_interchain_token() {
     let destination_chain = "ethereum".to_string();
     let gas_value = 0u64;
 
-    let (gateway_root_pda, _) = Pubkey::find_program_address(
-        &[axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED],
-        &axelar_solana_gateway_v2::ID,
+    let ctx = DeployRemoteInterchainTokenContext::new(
+        result,
+        mollusk,
+        program_id,
+        payer,
+        deployer,
+        token_mint_pda,
+        metadata_account,
+        token_manager_pda,
+        its_root_pda,
+        treasury_pda,
+        gateway_root_pda_account.clone(),
     );
 
-    let (gas_treasury, _) =
-        Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &axelar_solana_gas_service_v2::ID);
-
-    let (call_contract_signing_pda, signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &program_id);
-
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &axelar_solana_gateway_v2::ID);
-
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &axelar_solana_gas_service_v2::ID);
-
-    let (its_event_authority, its_event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let ix = Instruction {
-        program_id,
-        accounts: axelar_solana_its_v2::accounts::DeployRemoteInterchainToken {
-            payer,
-            deployer,
-            token_mint: token_mint_pda,
-            metadata_account,
-            token_manager_pda,
-            gateway_root_pda,
-            axelar_gateway_program: axelar_solana_gateway_v2::ID,
-            gas_treasury,
-            gas_service: axelar_solana_gas_service_v2::ID,
-            system_program: system_program::ID,
-            its_root_pda,
-            call_contract_signing_pda,
-            its_program: program_id,
-            gateway_event_authority,
-            gas_event_authority,
-            event_authority: its_event_authority,
-            program: program_id,
-        }
-        .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::DeployRemoteInterchainToken {
-            salt,
-            destination_chain: destination_chain.clone(),
-            gas_value,
-            signing_pda_bump,
-        }
-        .data(),
-    };
-
-    // Get the updated accounts from the first instruction result
-    let updated_mollusk = mollusk;
-    let updated_payer_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == payer)
-        .map(|(_, account)| account.clone())
-        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
-
-    let updated_its_root_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == its_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let updated_token_mint_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == token_mint_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let updated_metadata_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == metadata_account)
-        .unwrap()
-        .1
-        .clone();
-
-    let updated_token_manager_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == token_manager_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    // Accounts for the deploy remote instruction
-    let accounts = vec![
-        (payer, updated_payer_account),
-        (
-            deployer,
-            Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID),
-        ),
-        (token_mint_pda, updated_token_mint_account),
-        (metadata_account, updated_metadata_account),
-        (token_manager_pda, updated_token_manager_account),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            axelar_solana_gateway_v2::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (gas_treasury, treasury_pda),
-        (
-            axelar_solana_gas_service_v2::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (its_root_pda, updated_its_root_account),
-        (call_contract_signing_pda, Account::new(0, 0, &program_id)),
-        (
-            program_id,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &system_program::ID),
-        ),
-        (gas_event_authority, Account::new(0, 0, &system_program::ID)),
-        // For event cpi
-        (its_event_authority, its_event_authority_account),
-        (program_id, its_program_account),
-    ];
-
-    let remote_result = updated_mollusk.process_instruction(&ix, &accounts);
+    let remote_result = deploy_remote_interchain_token_with_no_minter_helper(
+        salt,
+        destination_chain.clone(),
+        gas_value,
+        ctx,
+    );
 
     assert!(
         remote_result.program_result.is_ok(),

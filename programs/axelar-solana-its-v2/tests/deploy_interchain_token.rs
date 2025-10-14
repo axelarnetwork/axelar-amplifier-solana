@@ -24,34 +24,7 @@ mod initialize;
 #[test]
 fn test_deploy_interchain_token() {
     let program_id = axelar_solana_its_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
-
-    mollusk.add_program(
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        "../../target/deploy/mpl_token_metadata",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
-
-    let spl_token_elf = mollusk_svm_programs_token::token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token::ID,
-        &spl_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let token_2022_elf = mollusk_svm_programs_token::token2022::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token_2022::ID,
-        &token_2022_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let associated_token_elf = mollusk_svm_programs_token::associated_token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &anchor_spl::associated_token::ID,
-        &associated_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
+    let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);

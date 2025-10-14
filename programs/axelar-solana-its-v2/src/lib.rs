@@ -121,6 +121,25 @@ pub mod axelar_solana_its_v2 {
             destination_chain,
             gas_value,
             signing_pda_bump,
+            None,
+        )
+    }
+
+    pub fn deploy_remote_interchain_token_with_minter(
+        ctx: Context<DeployRemoteInterchainToken>,
+        salt: [u8; 32],
+        destination_chain: String,
+        gas_value: u64,
+        signing_pda_bump: u8,
+        destination_minter: Vec<u8>,
+    ) -> Result<()> {
+        instructions::deploy_remote_interchain_token_handler(
+            ctx,
+            salt,
+            destination_chain,
+            gas_value,
+            signing_pda_bump,
+            Some(destination_minter),
         )
     }
 
