@@ -4,7 +4,7 @@ use anchor_spl::{
     token_2022::spl_token_2022::{self, extension::StateWithExtensions},
 };
 use axelar_solana_its_v2::{
-    state::TokenManager,
+    state::{TokenManager, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id_internal},
 };
 use axelar_solana_its_v2_test_fixtures::{
@@ -18,8 +18,8 @@ use solana_sdk::{
 };
 use spl_token_2022::state::Account as Token2022Account;
 
+#[path = "initialize.rs"]
 mod initialize;
-use initialize::init_its_service;
 
 #[test]
 fn test_deploy_interchain_token() {
@@ -73,7 +73,7 @@ fn test_deploy_interchain_token() {
         _user_roles_account,
         _program_data,
         _program_data_account,
-    ) = init_its_service(
+    ) = initialize::init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -90,7 +90,26 @@ fn test_deploy_interchain_token() {
     let symbol = "TEST".to_string();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
-    let minter = None;
+
+    let minter = Pubkey::new_unique();
+
+    let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+    let (minter_roles_pda, minter_roles_pda_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(),
+        ],
+        &program_id,
+    );
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
@@ -101,6 +120,8 @@ fn test_deploy_interchain_token() {
         program_id,
         payer,
         payer_account,
+        Some(minter),
+        Some(minter_roles_pda),
     );
 
     let (
@@ -117,7 +138,6 @@ fn test_deploy_interchain_token() {
         symbol.clone(),
         decimals,
         initial_supply,
-        minter,
         ctx,
     );
 
@@ -126,6 +146,14 @@ fn test_deploy_interchain_token() {
         "Deploy interchain token instruction should succeed: {:?}",
         result.program_result
     );
+
+    let minter_roles_account = result.get_account(&minter_roles_pda).unwrap();
+    let minter_roles = UserRoles::try_deserialize(&mut minter_roles_account.data.as_ref()).unwrap();
+    // Minter gets all 3 roles
+    assert!(minter_roles.has_minter_role());
+    assert!(minter_roles.has_operator_role());
+    assert!(minter_roles.has_flow_limiter_role());
+    assert_eq!(minter_roles.bump, minter_roles_pda_bump);
 
     let token_manager_account = result.get_account(&token_manager_pda).unwrap();
     let token_manager =

@@ -92,9 +92,20 @@ pub mod axelar_solana_its_v2 {
 
     pub fn deploy_interchain_token(
         ctx: Context<DeployInterchainToken>,
-        params: DeployInterchainTokenData,
+        salt: [u8; 32],
+        name: String,
+        symbol: String,
+        decimals: u8,
+        initial_supply: u64,
     ) -> Result<()> {
-        instructions::deploy_interchain_token_handler(ctx, params)
+        instructions::deploy_interchain_token_handler(
+            ctx,
+            salt,
+            name,
+            symbol,
+            decimals,
+            initial_supply,
+        )
     }
 
     pub fn deploy_remote_interchain_token(

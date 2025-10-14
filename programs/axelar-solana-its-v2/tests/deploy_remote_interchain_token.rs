@@ -27,9 +27,10 @@ use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk
 use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
 };
-
-mod initialize;
 use spl_token_metadata_interface::solana_instruction::Instruction;
+
+#[path = "initialize.rs"]
+mod initialize;
 
 pub(crate) fn setup_operator(
     mollusk: &mut Mollusk,
@@ -196,7 +197,7 @@ pub fn init_its_service_with_ethereum_trusted(
         _user_roles_account,
         program_data,
         program_data_account,
-    ) = crate::initialize::init_its_service(
+    ) = initialize::init_its_service(
         mollusk,
         payer,
         payer_account,
@@ -358,7 +359,6 @@ fn test_deploy_remote_interchain_token() {
     let symbol = "TEST".to_string();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
-    let minter = None;
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
@@ -369,6 +369,8 @@ fn test_deploy_remote_interchain_token() {
         program_id,
         payer,
         payer_account,
+        None,
+        None,
     );
 
     let (
@@ -385,7 +387,6 @@ fn test_deploy_remote_interchain_token() {
         symbol.clone(),
         decimals,
         initial_supply,
-        minter,
         ctx,
     );
 
