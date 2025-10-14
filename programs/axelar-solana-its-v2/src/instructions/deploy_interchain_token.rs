@@ -2,27 +2,24 @@ use crate::{
     errors::ITSError,
     events::{InterchainTokenDeployed, InterchainTokenIdClaimed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{InterchainTokenService, TokenManager},
+    state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
+use anchor_spl::token_2022::spl_token_2022::extension::BaseStateWithExtensions;
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
+};
+use anchor_spl::{
+    token_2022::spl_token_2022::extension::ExtensionType,
+    token_interface::{Mint, TokenAccount, TokenInterface},
+};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct DeployInterchainTokenData {
-    pub salt: [u8; 32],
-    pub name: String,
-    pub symbol: String,
-    pub decimals: u8,
-    pub initial_supply: u64,
-    pub minter: Option<Pubkey>,
-}
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(params: DeployInterchainTokenData)]
+#[instruction(salt: [u8; 32], name: String, symbol: String, decimals: u8, initial_supply: u64)]
 pub struct DeployInterchainToken<'info> {
     /// Payer for the transaction and account initialization
     #[account(mut)]
@@ -50,7 +47,7 @@ pub struct DeployInterchainToken<'info> {
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &params.salt)
+            &interchain_token_id(&deployer.key(), &salt)
         ],
         bump
     )]
@@ -60,14 +57,14 @@ pub struct DeployInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        mint::decimals = params.decimals,
+        mint::decimals = decimals,
         mint::authority = token_manager_pda,
         mint::freeze_authority = token_manager_pda,
         mint::token_program = token_program,
         seeds = [
             INTERCHAIN_TOKEN_SEED,
             its_root_pda.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &params.salt)
+            &interchain_token_id(&deployer.key(), &salt)
         ],
         bump,
     )]
@@ -122,22 +119,43 @@ pub struct DeployInterchainToken<'info> {
         associated_token::token_program = token_program
     )]
     pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
+
+    // Minter accounts
+    pub minter: Option<UncheckedAccount<'info>>,
+    #[account(
+        init,
+        payer = payer,
+        space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
+        seeds = [
+            UserRoles::SEED_PREFIX,
+            token_manager_pda.key().as_ref(),
+            minter.as_ref().unwrap().key().as_ref()
+        ],
+        bump
+    )]
+    pub minter_roles_pda: Option<Account<'info, UserRoles>>,
 }
 
 pub fn deploy_interchain_token_handler(
     ctx: Context<DeployInterchainToken>,
-    params: DeployInterchainTokenData,
+    salt: [u8; 32],
+    name: String,
+    symbol: String,
+    decimals: u8,
+    initial_supply: u64,
 ) -> Result<()> {
-    let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &params.salt);
+    let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
-    let cpi_token_id = interchain_token_id(ctx.accounts.deployer.key, &params.salt);
+    let cpi_token_id = interchain_token_id(ctx.accounts.deployer.key, &salt);
 
-    if params.initial_supply == 0 && params.minter.is_none() {
+    if initial_supply == 0
+        && (ctx.accounts.minter.is_none() || ctx.accounts.minter_roles_pda.is_none())
+    {
         return err!(ITSError::InvalidArgument);
     }
 
-    if params.name.len() > mpl_token_metadata::MAX_NAME_LENGTH
-        || params.symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
+    if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
+        || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
         return err!(ITSError::InvalidArgument);
     }
@@ -156,18 +174,40 @@ pub fn deploy_interchain_token_handler(
         ctx.bumps.token_manager_pda,
     )?;
 
+    validate_mint_extensions(
+        Type::NativeInterchainToken,
+        &ctx.accounts.token_mint.to_account_info(),
+    )?;
+
+    // Initialize UserRoles
+    if ctx.accounts.minter.is_some() && ctx.accounts.minter_roles_pda.is_some() {
+        let minter_roles_pda = &mut ctx.accounts.minter_roles_pda.as_mut().unwrap();
+
+        minter_roles_pda.bump = ctx.bumps.minter_roles_pda.unwrap();
+
+        // Base roles for any minter
+        let mut roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
+
+        if ctx.accounts.token_manager_pda.ty == Type::NativeInterchainToken {
+            roles |= Roles::MINTER;
+        }
+
+        minter_roles_pda.roles = roles;
+    }
+
     create_token_metadata(
         &ctx.accounts,
-        &params,
+        name.clone(),
+        symbol.clone(),
         cpi_token_id,
         ctx.bumps.token_manager_pda,
     )?;
 
-    if params.initial_supply > 0 {
+    if initial_supply > 0 {
         mint_initial_supply(
             &ctx.accounts,
             cpi_token_id,
-            params.initial_supply,
+            initial_supply,
             ctx.bumps.token_manager_pda,
         )?;
     }
@@ -175,10 +215,15 @@ pub fn deploy_interchain_token_handler(
     emit_cpi!(InterchainTokenDeployed {
         token_id,
         token_address: *ctx.accounts.token_mint.to_account_info().key,
-        minter: params.minter.unwrap_or_default(),
-        name: params.name.clone(),
-        symbol: params.symbol.clone(),
-        decimals: params.decimals,
+        minter: ctx
+            .accounts
+            .minter
+            .clone()
+            .map(|account| *account.key)
+            .unwrap_or_default(),
+        name: name.clone(),
+        symbol: symbol.clone(),
+        decimals: decimals,
     });
 
     anchor_lang::solana_program::program::set_return_data(&token_id);
@@ -242,21 +287,22 @@ fn mint_initial_supply<'info>(
 
 fn create_token_metadata<'info>(
     accounts: &DeployInterchainToken<'info>,
-    params: &DeployInterchainTokenData,
+    name: String,
+    symbol: String,
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
     // Truncate name and symbol to fit Metaplex limits
-    let truncated_name = if params.name.len() > mpl_token_metadata::MAX_NAME_LENGTH {
-        params.name[..mpl_token_metadata::MAX_NAME_LENGTH].to_string()
+    let truncated_name = if name.len() > mpl_token_metadata::MAX_NAME_LENGTH {
+        name[..mpl_token_metadata::MAX_NAME_LENGTH].to_string()
     } else {
-        params.name.clone()
+        name.clone()
     };
 
-    let truncated_symbol = if params.symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
-        params.symbol[..mpl_token_metadata::MAX_SYMBOL_LENGTH].to_string()
+    let truncated_symbol = if symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
+        symbol[..mpl_token_metadata::MAX_SYMBOL_LENGTH].to_string()
     } else {
-        params.symbol.clone()
+        symbol.clone()
     };
 
     // Create the token metadata using Metaplex CPI
@@ -280,6 +326,25 @@ fn create_token_metadata<'info>(
             token_id.as_ref(),
             &[token_manager_bump],
         ]])?;
+
+    Ok(())
+}
+
+fn validate_mint_extensions(ty: token_manager::Type, token_mint: &AccountInfo<'_>) -> Result<()> {
+    let mint_data = token_mint.try_borrow_data()?;
+    let mint = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
+
+    if matches!(
+        (
+            ty,
+            mint.get_extension_types()?
+                .contains(&ExtensionType::TransferFeeConfig)
+        ),
+        (token_manager::Type::LockUnlock, true) | (token_manager::Type::LockUnlockFee, false)
+    ) {
+        msg!("The mint is not compatible with the type");
+        return err!(ITSError::InvalidInstructionData);
+    }
 
     Ok(())
 }

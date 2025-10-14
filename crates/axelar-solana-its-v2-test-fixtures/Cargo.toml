@@ -8,6 +8,8 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
+axelar-solana-gas-service-v2 = { workspace = true, features = ["no-entrypoint"] }
+axelar-solana-gateway-v2 = { workspace = true, features = ["no-entrypoint"] }
 axelar-solana-its-v2 = { workspace = true, features = ["no-entrypoint"] }
 mollusk-svm-programs-token = "0.4.1"
 solana-program.workspace = true
