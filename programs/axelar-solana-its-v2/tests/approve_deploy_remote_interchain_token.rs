@@ -1,23 +1,14 @@
 use anchor_lang::AccountDeserialize;
-use anchor_lang::InstructionData;
-use anchor_lang::ToAccountMetas;
-use anchor_spl::{
-    token::spl_token,
-    token_2022::spl_token_2022::{self},
-};
 use axelar_solana_its_v2::{
     seed_prefixes::DEPLOYMENT_APPROVAL_SEED, state::deploy_approval::DeployApproval,
 };
+use axelar_solana_its_v2_test_fixtures::approve_deploy_remote_interchain_token_helper;
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
-use mollusk_svm_programs_token;
-use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
 };
-
-use spl_token_metadata_interface::solana_instruction::Instruction;
 
 #[path = "initialize.rs"]
 mod initialize;
@@ -25,34 +16,7 @@ mod initialize;
 #[test]
 fn test_approve_deploy_remote_interchain_token() {
     let program_id = axelar_solana_its_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
-
-    mollusk.add_program(
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        "../../target/deploy/mpl_token_metadata",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
-
-    let spl_token_elf = mollusk_svm_programs_token::token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token::ID,
-        &spl_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let token_2022_elf = mollusk_svm_programs_token::token2022::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token_2022::ID,
-        &token_2022_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let associated_token_elf = mollusk_svm_programs_token::associated_token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &anchor_spl::associated_token::ID,
-        &associated_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
+    let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
@@ -156,76 +120,20 @@ fn test_approve_deploy_remote_interchain_token() {
         &program_id,
     );
 
-    let (event_authority, event_authority_account, program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let approve_ix_data = axelar_solana_its_v2::instruction::ApproveDeployRemoteInterchainToken {
+    let approve_result = approve_deploy_remote_interchain_token_helper(
+        &mollusk,
+        result,
+        destination_chain.clone(),
+        minter,
         deployer,
         salt,
-        destination_chain: destination_chain.clone(),
-        destination_minter: destination_minter.clone(),
-    }
-    .data();
-
-    let approve_ix = Instruction {
+        destination_minter.clone(),
         program_id,
-        accounts: axelar_solana_its_v2::accounts::ApproveDeployRemoteInterchainToken {
-            payer,
-            minter,
-            token_manager_pda,
-            minter_roles: minter_roles_pda,
-            deploy_approval_pda,
-            system_program: system_program::ID,
-        }
-        .to_account_metas(None),
-        data: approve_ix_data,
-    };
-
-    let updated_payer_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == payer)
-        .map(|(_, account)| account.clone())
-        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
-
-    let updated_token_manager_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == token_manager_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let updated_minter_roles_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == minter_roles_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let approve_accounts = vec![
-        (payer, updated_payer_account),
-        (minter, Account::new(0, 0, &system_program::ID)),
-        (token_manager_pda, updated_token_manager_account),
-        (minter_roles_pda, updated_minter_roles_account),
-        (deploy_approval_pda, Account::new(0, 0, &system_program::ID)),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        // For event CPI
-        (event_authority, event_authority_account),
-        (program_id, program_account),
-    ];
-
-    let approve_result = mollusk.process_instruction(&approve_ix, &approve_accounts);
+        payer,
+        token_manager_pda,
+        minter_roles_pda,
+        deploy_approval_pda,
+    );
 
     assert!(
         approve_result.program_result.is_ok(),

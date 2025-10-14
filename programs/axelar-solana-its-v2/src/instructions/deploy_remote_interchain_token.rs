@@ -1,4 +1,7 @@
 use crate::deploy_remote_interchain_token::solana_program::program::invoke_signed;
+use crate::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
+use crate::state::deploy_approval::DeployApproval;
+use crate::state::UserRoles;
 use crate::{
     errors::ITSError,
     events::InterchainTokenDeploymentStarted,
@@ -70,6 +73,29 @@ pub struct DeployRemoteInterchainToken<'info> {
         bump
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
+
+    // Optional Minter accounts
+    pub minter: Option<Signer<'info>>,
+    #[account(
+        seeds = [
+            DEPLOYMENT_APPROVAL_SEED,
+            minter.clone().unwrap().key().as_ref(),
+            &interchain_token_id(&deployer.key(), &salt),
+            &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
+        ],
+        bump
+    )]
+    pub deploy_approval_pda: Option<Account<'info, DeployApproval>>,
+    #[account(
+        seeds = [
+            UserRoles::SEED_PREFIX,
+            token_manager_pda.key().as_ref(),
+            minter.clone().unwrap().key().as_ref()
+        ],
+        bump = minter_roles.bump,
+        constraint = minter_roles.has_minter_role() @ ITSError::InvalidArgument
+    )]
+    pub minter_roles: Option<Account<'info, UserRoles>>,
 
     /// The GMP gateway root account
     #[account(
@@ -145,6 +171,7 @@ pub fn deploy_remote_interchain_token_handler(
     destination_chain: String,
     gas_value: u64,
     signing_pda_bump: u8,
+    maybe_destination_minter: Option<Vec<u8>>,
 ) -> Result<()> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
@@ -155,6 +182,20 @@ pub fn deploy_remote_interchain_token_handler(
     }
 
     msg!("Instruction: OutboundDeploy");
+
+    let destination_minter_data = if let Some(destination_minter) = maybe_destination_minter {
+        let deploy_approval = ctx
+            .accounts
+            .deploy_approval_pda
+            .clone()
+            .unwrap()
+            .to_account_info();
+        let minter = ctx.accounts.minter.clone().unwrap().to_account_info();
+
+        Some((Bytes::from(destination_minter), deploy_approval, minter))
+    } else {
+        None
+    };
 
     // get token metadata
     let (name, symbol) = get_token_metadata(
@@ -173,7 +214,10 @@ pub fn deploy_remote_interchain_token_handler(
         token_name: name.clone(),
         token_symbol: symbol.clone(),
         token_decimals: decimals,
-        minter: Vec::new(),
+        minter: destination_minter_data
+            .as_ref()
+            .map(|data| data.0.to_vec())
+            .unwrap_or_default(),
         destination_chain: destination_chain.clone(),
     });
 
@@ -185,7 +229,10 @@ pub fn deploy_remote_interchain_token_handler(
         name,
         symbol,
         decimals,
-        minter: Bytes::new(),
+        minter: destination_minter_data
+            .as_ref()
+            .map(|data| data.0.clone())
+            .unwrap_or_default(),
     });
 
     if !ctx
