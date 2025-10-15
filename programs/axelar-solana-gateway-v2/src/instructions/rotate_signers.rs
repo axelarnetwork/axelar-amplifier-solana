@@ -23,7 +23,8 @@ pub struct RotateSigners<'info> {
         	construct_payload_hash(
          		new_verifier_set_merkle_root,
            		verification_session_account.load()?.signature_verification.signing_verifier_set_hash,
-         	).as_ref()
+         	).as_ref(),
+         	verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref(),
         ],
         bump = verification_session_account.load()?.bump,
         // Check: signature session is complete/valid

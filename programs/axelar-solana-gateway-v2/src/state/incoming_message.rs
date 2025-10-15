@@ -49,10 +49,6 @@ pub struct MessageLeaf {
     /// A domain separator used to ensure the uniqueness of hashes across
     /// different contexts.
     pub domain_separator: [u8; 32],
-
-    /// The Merkle root of the signing verifier set, used for verifying
-    /// signatures.
-    pub signing_verifier_set: [u8; 32],
 }
 
 pub(crate) struct VecBuf(pub(crate) Vec<u8>);
