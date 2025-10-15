@@ -30,6 +30,7 @@ pub fn call_contract_handler(
 ) -> Result<()> {
     let caller = &ctx.accounts.caller;
     let signing_pda = &ctx.accounts.signing_pda;
+    let payload_hash = keccak::hash(&payload);
 
     if caller.is_signer {
         // Direct signer, so not a program, continue
@@ -58,8 +59,7 @@ pub fn call_contract_handler(
 
     // A valid signing PDA was provided and it's a signer, continue
 
-    let payload_hash = keccak::hash(&payload);
-
+    // A valid signing PDA was provided and it's a signer, continue
     emit_cpi!(CallContractEvent {
         sender: caller.key(),
         payload_hash: payload_hash.to_bytes(),
