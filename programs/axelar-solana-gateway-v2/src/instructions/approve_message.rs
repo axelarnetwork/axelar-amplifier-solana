@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
+#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32])]
 pub struct ApproveMessage<'info> {
     #[account(
         seeds = [GatewayConfig::SEED_PREFIX],
@@ -48,6 +48,7 @@ pub fn approve_message_handler(
     ctx: Context<ApproveMessage>,
     merkleised_message: MerkleisedMessage,
     payload_merkle_root: [u8; 32],
+    _signing_verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     msg!("Approving message!");
 

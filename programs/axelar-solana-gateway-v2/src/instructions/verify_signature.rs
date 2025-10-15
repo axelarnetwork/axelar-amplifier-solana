@@ -6,7 +6,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo)]
+#[instruction(merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32], verifier_info: SigningVerifierSetInfo)]
 pub struct VerifySignature<'info> {
     #[account(
         seeds = [GatewayConfig::SEED_PREFIX],
@@ -45,6 +45,7 @@ pub struct VerifySignature<'info> {
 pub fn verify_signature_handler(
     ctx: Context<VerifySignature>,
     payload_merkle_root: [u8; 32],
+    _signing_verifier_set_hash: [u8; 32],
     verifier_info: SigningVerifierSetInfo,
 ) -> Result<()> {
     let verifier_set_tracker_pda = ctx.accounts.verifier_set_tracker_pda.load()?;

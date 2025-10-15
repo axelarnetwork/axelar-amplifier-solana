@@ -5,7 +5,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32])]
+#[instruction(merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32])]
 pub struct InitializePayloadVerificationSession<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -44,6 +44,7 @@ pub struct InitializePayloadVerificationSession<'info> {
 pub fn initialize_payload_verification_session_handler(
     ctx: Context<InitializePayloadVerificationSession>,
     _merkle_root: [u8; 32],
+    _signing_verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     let verification_session_account =
         &mut ctx.accounts.verification_session_account.load_init()?;
