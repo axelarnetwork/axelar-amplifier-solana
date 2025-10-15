@@ -30,6 +30,7 @@ pub fn call_contract_handler(
 ) -> Result<()> {
     let sender = &ctx.accounts.calling_program;
     let signing_pda = &ctx.accounts.signing_pda;
+    let payload_hash = keccak::hash(&payload);
 
     if sender.is_signer {
         // Direct signer, so not a program, continue
@@ -40,7 +41,7 @@ pub fn call_contract_handler(
             sender.key,
         ) else {
             msg!("Invalid call: sender must be a direct signer or a valid signing PDA must be provided");
-            return err!(GatewayError::CallerNotSigner);
+            return err!(GatewayError::InvalidSigningPDABump);
         };
 
         if &expected_signing_pda != signing_pda.key {
@@ -54,14 +55,15 @@ pub fn call_contract_handler(
             msg!("Signing PDA must be a signer");
             return err!(GatewayError::CallerNotSigner);
         }
-
-        // A valid signing PDA was provided and it's a signer, continue
     }
 
-    let payload_hash = keccak::hash(&payload);
-
+    // A valid signing PDA was provided and it's a signer, continue
     emit_cpi!(CallContractEvent {
-        sender: ctx.accounts.signing_pda.key(),
+        sender: if sender.is_signer {
+            *sender.key
+        } else {
+            *signing_pda.key
+        },
         payload_hash: payload_hash.to_bytes(),
         destination_chain,
         destination_contract_address,
