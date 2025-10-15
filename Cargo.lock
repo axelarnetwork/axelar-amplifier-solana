@@ -1109,6 +1109,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-gas-service-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-gas-service",
+ "axelar-solana-gateway-test-fixtures",
+ "bytemuck",
+ "program-utils",
+]
+
+[[package]]
 name = "axelar-solana-gateway"
 version = "0.1.0"
 dependencies = [
