@@ -97,6 +97,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub minter_roles: Option<Account<'info, UserRoles>>,
 
+    // GMP Accounts
     /// The GMP gateway root account
     #[account(
         seeds = [
@@ -162,6 +163,41 @@ pub struct DeployRemoteInterchainToken<'info> {
         seeds::program = gas_service.key()
     )]
     pub gas_event_authority: SystemAccount<'info>,
+}
+
+impl<'info> DeployRemoteInterchainToken<'info> {
+    /// Convert to GMPAccounts for common GMP operations
+    pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
+        GMPAccounts {
+            payer: self.payer.to_account_info(),
+            gateway_root_pda: self.gateway_root_pda.to_account_info(),
+            axelar_gateway_program: self.axelar_gateway_program.clone(),
+            gas_treasury: self.gas_treasury.to_account_info(),
+            gas_service: self.gas_service.clone(),
+            system_program: self.system_program.to_account_info(),
+            its_root_pda: self.its_root_pda.clone(),
+            call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
+            its_program: self.its_program.clone(),
+            gateway_event_authority: self.gateway_event_authority.to_account_info(),
+            gas_event_authority: self.gas_event_authority.to_account_info(),
+        }
+    }
+}
+
+/// Common GMP accounts needed for outbound operations
+#[derive(Clone)]
+pub struct GMPAccounts<'info> {
+    pub payer: AccountInfo<'info>,
+    pub gateway_root_pda: AccountInfo<'info>,
+    pub axelar_gateway_program: AccountInfo<'info>,
+    pub gas_treasury: AccountInfo<'info>,
+    pub gas_service: AccountInfo<'info>,
+    pub system_program: AccountInfo<'info>,
+    pub its_root_pda: Account<'info, InterchainTokenService>,
+    pub call_contract_signing_pda: AccountInfo<'info>,
+    pub its_program: AccountInfo<'info>,
+    pub gateway_event_authority: AccountInfo<'info>,
+    pub gas_event_authority: AccountInfo<'info>,
 }
 
 /// Instruction handler for deploying a remote interchain token
@@ -239,8 +275,26 @@ pub fn deploy_remote_interchain_token_handler(
             .unwrap_or_default(),
     });
 
-    if !ctx
-        .accounts
+    let gmp_accounts = ctx.accounts.to_gmp_accounts();
+    process_outbound(
+        gmp_accounts,
+        destination_chain,
+        gas_value,
+        signing_pda_bump,
+        inner_payload,
+    )?;
+
+    Ok(())
+}
+
+pub fn process_outbound(
+    gmp_accounts: GMPAccounts,
+    destination_chain: String,
+    gas_value: u64,
+    signing_pda_bump: u8,
+    inner_payload: GMPPayload,
+) -> Result<()> {
+    if !gmp_accounts
         .its_root_pda
         .is_trusted_chain(destination_chain.clone())
         && destination_chain != ITS_HUB_CHAIN_NAME
@@ -263,24 +317,24 @@ pub fn deploy_remote_interchain_token_handler(
 
     if gas_value > 0 {
         pay_gas_v2(
-            &ctx,
+            gmp_accounts.clone(),
             payload_hash,
             destination_chain.clone(),
-            ctx.accounts.its_root_pda.its_hub_address.clone(),
+            gmp_accounts.its_root_pda.its_hub_address.clone(),
             gas_value,
         )?;
     }
 
-    let destination_contract_address = ctx.accounts.its_root_pda.its_hub_address.clone();
+    let destination_contract_address = gmp_accounts.its_root_pda.its_hub_address.clone();
 
     let call_contract_ix = Instruction {
         program_id: axelar_solana_gateway_v2::ID,
         accounts: vec![
-            AccountMeta::new_readonly(ctx.accounts.its_program.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.call_contract_signing_pda.key(), true),
-            AccountMeta::new_readonly(ctx.accounts.gateway_root_pda.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.gateway_event_authority.key(), false),
-            AccountMeta::new_readonly(ctx.accounts.axelar_gateway_program.key(), false),
+            AccountMeta::new_readonly(gmp_accounts.its_program.key(), false),
+            AccountMeta::new_readonly(gmp_accounts.call_contract_signing_pda.key(), true),
+            AccountMeta::new_readonly(gmp_accounts.gateway_root_pda.key(), false),
+            AccountMeta::new_readonly(gmp_accounts.gateway_event_authority.key(), false),
+            AccountMeta::new_readonly(gmp_accounts.axelar_gateway_program.key(), false),
         ],
         data: axelar_solana_gateway_v2::instruction::CallContract {
             destination_chain,
@@ -292,11 +346,11 @@ pub fn deploy_remote_interchain_token_handler(
     };
 
     let accounts_for_invoke = &[
-        ctx.accounts.its_program.to_account_info(),
-        ctx.accounts.call_contract_signing_pda.to_account_info(),
-        ctx.accounts.gateway_root_pda.to_account_info(),
-        ctx.accounts.gateway_event_authority.to_account_info(),
-        ctx.accounts.axelar_gateway_program.to_account_info(),
+        gmp_accounts.its_program,
+        gmp_accounts.call_contract_signing_pda,
+        gmp_accounts.gateway_root_pda,
+        gmp_accounts.gateway_event_authority,
+        gmp_accounts.axelar_gateway_program,
     ];
 
     invoke_signed(
@@ -309,21 +363,21 @@ pub fn deploy_remote_interchain_token_handler(
 }
 
 fn pay_gas_v2(
-    ctx: &Context<DeployRemoteInterchainToken>,
+    gmp_accounts: GMPAccounts,
     payload_hash: [u8; 32],
     destination_chain: String,
     destination_address: String,
     gas_value: u64,
 ) -> Result<()> {
     let cpi_accounts = PayNativeForContractCall {
-        payer: ctx.accounts.payer.to_account_info(),
-        treasury: ctx.accounts.gas_treasury.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-        event_authority: ctx.accounts.gas_event_authority.to_account_info(),
-        program: ctx.accounts.gas_service.to_account_info(),
+        payer: gmp_accounts.payer.clone(),
+        treasury: gmp_accounts.gas_treasury,
+        system_program: gmp_accounts.system_program,
+        event_authority: gmp_accounts.gas_event_authority,
+        program: gmp_accounts.gas_service.clone(),
     };
 
-    let cpi_ctx = CpiContext::new(ctx.accounts.gas_service.to_account_info(), cpi_accounts);
+    let cpi_ctx = CpiContext::new(gmp_accounts.gas_service, cpi_accounts);
 
     pay_native_for_contract_call(
         cpi_ctx,
@@ -331,7 +385,7 @@ fn pay_gas_v2(
         destination_address,
         payload_hash,
         gas_value,
-        ctx.accounts.payer.key(), // refund_address
+        gmp_accounts.payer.key(), // refund_address
     )
 }
 

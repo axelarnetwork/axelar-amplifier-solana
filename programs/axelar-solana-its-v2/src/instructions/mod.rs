@@ -21,3 +21,6 @@ pub use approve_deploy_remote_interchain_token::*;
 
 pub mod revoke_deploy_remote_interchain_token;
 pub use revoke_deploy_remote_interchain_token::*;
+
+pub mod register_token_metadata;
+pub use register_token_metadata::*;
