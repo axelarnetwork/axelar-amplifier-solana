@@ -1,12 +1,13 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
-use anchor_lang::{solana_program, AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
 use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use axelar_solana_gateway_v2::IncomingMessage;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2::{CrossChainId, Message, MessageLeaf};
+use axelar_solana_gateway_v2::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
@@ -24,12 +25,17 @@ use solana_sdk::{
 
 #[test]
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::non_ascii_literal)]
 fn test_execute() {
     // Step 0: Example payload
-    let test_payload =
-        hex::decode("0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000087872706c2d64657600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000000192a012442953d881972bfc1eb1b77c6950b992b6b30b3798b47d666aa91704900000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000002386f26fc1000000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000014ba76c6980428a0b10cfc5d8ccb61949677a61233000000000000000000000000000000000000000000000000000000000000000000000000000000000000002272396d3975554341774d4c536e5272795859755542336347586f6a70527a6e61416f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        ).unwrap();
-    let test_payload_hash: [u8; 32] = solana_program::keccak::hashv(&[&test_payload]).to_bytes();
+    let memo_string = "🐪🐪🐪🐪";
+    let (counter_pda, _counter_pda_bump) = Counter::get_pda();
+    let test_payload = ExecutablePayload::new(
+        memo_string.as_bytes(),
+        &[AccountMeta::new(counter_pda, false)],
+        ExecutablePayloadEncodingScheme::AbiEncoding,
+    );
+    let test_payload_hash: [u8; 32] = *test_payload.hash().unwrap().0;
 
     // Step 1: Setup test with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
@@ -186,7 +192,6 @@ fn test_execute() {
         IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
 
     // Step 7.1: Init Counter PDA
-    let (counter_pda, _counter_pda_bump) = Counter::get_pda();
     let init_ix = axelar_solana_memo_v2::instruction::Init {};
     let init_accounts = axelar_solana_memo_v2::accounts::Init {
         counter: counter_pda,
@@ -264,7 +269,7 @@ fn test_execute() {
 
     let execute_instruction_data = axelar_solana_memo_v2::instruction::Execute {
         message: message.clone(),
-        payload: test_payload.clone(),
+        payload: test_payload.encode().unwrap(),
     }
     .data();
 

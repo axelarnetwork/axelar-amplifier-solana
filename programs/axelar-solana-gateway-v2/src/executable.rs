@@ -2,6 +2,8 @@ use anchor_lang::prelude::*;
 
 // Re-export Message
 pub use crate::Message;
+pub use axelar_message_primitives::DataPayload as ExecutablePayload;
+pub use axelar_message_primitives::EncodingScheme as ExecutablePayloadEncodingScheme;
 
 /// Macro to generate executable accounts and validation function.
 /// Usage:
@@ -67,7 +69,7 @@ macro_rules! executable_accounts {
         executable_accounts: &AxelarExecuteAccounts<'info>,
         message: Message,
         payload: &[u8],
-    ) -> Result<&[u8]> {
+    ) -> Result<()> {
         let compute_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
         if compute_payload_hash != message.payload_hash {
             return err!(ExecutableError::InvalidPayloadHash);
@@ -95,5 +97,6 @@ macro_rules! executable_accounts {
 
 #[error_code]
 pub enum ExecutableError {
+    #[msg("Payload hash does not match the computed hash of the payload")]
     InvalidPayloadHash,
 }
