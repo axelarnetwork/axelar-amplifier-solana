@@ -1,70 +1,96 @@
-use anchor_lang::{prelude::*, solana_program};
-
-use crate as axelar_solana_gateway_v2;
-use crate::cpi as axelar_solana_gateway_v2_cpi;
-
-use axelar_solana_gateway_v2::{program::AxelarSolanaGatewayV2, seed_prefixes, IncomingMessage};
+use anchor_lang::prelude::*;
 
 // Re-export Message
 pub use crate::Message;
 
-/// Accounts for executing an inbound Axelar GMP message.
-#[derive(Accounts)]
-#[instruction(message: Message)]
-pub struct AxelarExecuteAccounts<'info> {
-    #[account(
-        seeds = [IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
-        bump = incoming_message_pda.load()?.bump,
-        seeds::program = axelar_gateway_program.key()
-    )]
-    pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
+/// Macro to generate executable accounts and validation function.
+/// Usage:
+/// ```ignore
+/// use anchor_lang::prelude::*;
+/// use axelar_solana_gateway_v2::{executable::*, executable_accounts};
+///
+/// executable_accounts!();
+///
+/// #[derive(Accounts)]
+/// pub struct Execute<'info> {
+///     // GMP Accounts
+///     pub executable: AxelarExecuteAccounts<'info>,
+///
+///     // Your program accounts here
+/// }
+///
+/// pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
+///     validate_message(&ctx.accounts.executable, message, &payload)?;
+///
+///     Ok(())
+/// }
+/// ```
+// NOTE: This macro is nessecary because Anchor currently does not supporting importing
+// accounts from other crates. Once Anchor supports this, we can remove this macro and
+// export the accounts directly from axelar-solana-gateway-v2.
+// See: https://github.com/solana-foundation/anchor/issues/3811
+// It is also not-possible to use the `cpi` module inside the gateway crate.
+#[macro_export]
+macro_rules! executable_accounts {
+    () => {
+    /// Accounts for executing an inbound Axelar GMP message.
+    #[derive(Accounts)]
+    #[instruction(message: Message)]
+    pub struct AxelarExecuteAccounts<'info> {
+        #[account(
+            seeds = [axelar_solana_gateway_v2::IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
+            bump = incoming_message_pda.load()?.bump,
+            seeds::program = axelar_gateway_program.key()
+        )]
+        pub incoming_message_pda: AccountLoader<'info, axelar_solana_gateway_v2::IncomingMessage>,
 
-    #[account(
-        signer,
-        seeds = [seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
-        bump = incoming_message_pda.load()?.signing_pda_bump,
-    )]
-    pub signing_pda: AccountInfo<'info>,
+        #[account(
+            signer,
+            seeds = [axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
+            bump = incoming_message_pda.load()?.signing_pda_bump,
+        )]
+        pub signing_pda: AccountInfo<'info>,
 
-    pub axelar_gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+        pub axelar_gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = axelar_gateway_program.key()
-    )]
-    pub event_authority: SystemAccount<'info>,
+        #[account(
+            seeds = [b"__event_authority"],
+            bump,
+            seeds::program = axelar_gateway_program.key()
+        )]
+        pub event_authority: SystemAccount<'info>,
 
-    pub system_program: Program<'info, System>,
-}
-
-pub fn validate_message<'info>(
-    executable_accounts: &AxelarExecuteAccounts<'info>,
-    message: Message,
-    payload: &[u8],
-) -> Result<()> {
-    let compute_payload_hash = solana_program::keccak::hashv(&[payload]).to_bytes();
-    if compute_payload_hash != message.payload_hash {
-        return err!(ExecutableError::InvalidPayloadHash);
+        pub system_program: Program<'info, System>,
     }
 
-    let cpi_accounts = axelar_solana_gateway_v2_cpi::accounts::ValidateMessage {
-        incoming_message_pda: executable_accounts.incoming_message_pda.to_account_info(),
-        caller: executable_accounts.signing_pda.to_account_info(),
-        event_authority: executable_accounts.event_authority.to_account_info(),
-        program: executable_accounts.axelar_gateway_program.to_account_info(),
+    pub fn validate_message<'info>(
+        executable_accounts: &AxelarExecuteAccounts<'info>,
+        message: Message,
+        payload: &[u8],
+    ) -> Result<&[u8]> {
+        let compute_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
+        if compute_payload_hash != message.payload_hash {
+            return err!(ExecutableError::InvalidPayloadHash);
+        }
+
+        let cpi_accounts = axelar_solana_gateway_v2::cpi::accounts::ValidateMessage {
+            incoming_message_pda: executable_accounts.incoming_message_pda.to_account_info(),
+            caller: executable_accounts.signing_pda.to_account_info(),
+            event_authority: executable_accounts.event_authority.to_account_info(),
+            program: executable_accounts.axelar_gateway_program.to_account_info(),
+        };
+
+        let cpi_ctx = CpiContext::new(
+            executable_accounts.axelar_gateway_program.to_account_info(),
+            cpi_accounts,
+        );
+
+        axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message)?;
+
+        Ok(())
+    }
+
     };
-
-    let cpi_ctx = CpiContext::new(
-        executable_accounts.axelar_gateway_program.to_account_info(),
-        cpi_accounts,
-    );
-
-    axelar_solana_gateway_v2_cpi::validate_message(cpi_ctx, message)?;
-
-    msg!("Message validated successfully!");
-
-    Ok(())
 }
 
 #[error_code]

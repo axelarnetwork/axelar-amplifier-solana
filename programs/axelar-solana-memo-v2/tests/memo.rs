@@ -1,6 +1,6 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
-use anchor_lang::{solana_program, AccountDeserialize, InstructionData};
+use anchor_lang::{solana_program, AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
 use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
@@ -12,6 +12,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
     verify_signature_helper,
 };
+use axelar_solana_memo_v2::Counter;
 use axelar_solana_memo_v2::ID as MEMO_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
@@ -184,7 +185,67 @@ fn test_execute() {
     let incoming_message =
         IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
 
-    // Step 7: Execute the message
+    // Step 7.1: Init Counter PDA
+    let (counter_pda, _counter_pda_bump) = Counter::get_pda();
+    let init_ix = axelar_solana_memo_v2::instruction::Init {};
+    let init_accounts = axelar_solana_memo_v2::accounts::Init {
+        counter: counter_pda,
+        payer: setup.payer,
+        system_program: SYSTEM_PROGRAM_ID,
+    };
+    let init_instruction = Instruction {
+        program_id: MEMO_PROGRAM_ID,
+        accounts: init_accounts.to_account_metas(None),
+        data: init_ix.data(),
+    };
+    let init_accounts = vec![
+        (
+            counter_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let init_result = setup
+        .mollusk
+        .process_instruction(&init_instruction, &init_accounts);
+
+    assert!(init_result.program_result.is_ok());
+
+    let counter_pda_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == counter_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Step 7.2: Execute the message
     let message = &messages[0];
     let command_id = message.command_id();
 
@@ -259,6 +320,7 @@ fn test_execute() {
                 rent_epoch: 0,
             },
         ),
+        (counter_pda, counter_pda_account),
     ];
 
     let execute_instruction = Instruction {
@@ -269,6 +331,7 @@ fn test_execute() {
             AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
             AccountMeta::new_readonly(event_authority_pda, false),
             AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+            AccountMeta::new(counter_pda, false),
         ],
         data: execute_instruction_data,
     };
@@ -281,5 +344,19 @@ fn test_execute() {
         !execute_result.program_result.is_err(),
         "Execute instruction should succeed: {:?}",
         execute_result.program_result
+    );
+
+    let counter_pda_account = execute_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == counter_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let counter_data = Counter::try_deserialize(&mut counter_pda_account.data.as_slice()).unwrap();
+    assert_eq!(
+        counter_data.counter, 1,
+        "Counter should be incremented to 1"
     );
 }

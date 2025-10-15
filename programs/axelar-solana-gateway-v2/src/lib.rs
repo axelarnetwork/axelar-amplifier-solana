@@ -17,9 +17,7 @@ pub mod errors;
 pub use errors::*;
 
 pub mod executable;
-pub use executable::{
-    __client_accounts_axelar_execute_accounts, __cpi_client_accounts_axelar_execute_accounts,
-};
+pub use executable::*;
 
 declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
 

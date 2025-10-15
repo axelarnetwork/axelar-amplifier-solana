@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
-use axelar_solana_gateway_v2::executable::*;
+use axelar_solana_gateway_v2::{executable::*, executable_accounts};
 
-use crate::{accounts, Counter};
+executable_accounts!();
+
+use crate::Counter;
 
 #[derive(Accounts)]
 pub struct Execute<'info> {
@@ -14,11 +16,9 @@ pub struct Execute<'info> {
 }
 
 pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
-    msg!("Executing payload of: {} bytes", payload.len());
-
     validate_message(&ctx.accounts.executable, message, &payload)?;
 
-    // example action
+    // Increase counter
     ctx.accounts.counter.counter += 1;
 
     Ok(())

@@ -24,6 +24,10 @@ pub mod memo {
         instructions::send_memo_handler(ctx, destination_chain, destination_contract_address, memo)
     }
 
+    pub fn init(ctx: Context<Init>) -> Result<()> {
+        instructions::init_handler(ctx)
+    }
+
     pub fn execute(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
         instructions::execute_handler(ctx, message, payload)
     }
