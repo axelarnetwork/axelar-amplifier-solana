@@ -352,16 +352,20 @@ pub fn initialize_payload_verification_session(
     let signing_verifier_set_hash = setup.verifier_set_hash;
 
     let (verification_session_pda, _verification_bump) = Pubkey::find_program_address(
-        &[seed_prefixes::SIGNATURE_VERIFICATION_SEED, &merkle_root, &signing_verifier_set_hash],
+        &[
+            seed_prefixes::SIGNATURE_VERIFICATION_SEED,
+            &merkle_root,
+            &signing_verifier_set_hash,
+        ],
         &GATEWAY_PROGRAM_ID,
     );
 
     let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { 
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
             merkle_root,
             signing_verifier_set_hash,
         }
-            .data();
+        .data();
 
     let accounts = vec![
         (
@@ -385,7 +389,10 @@ pub fn initialize_payload_verification_session(
                 rent_epoch: 0,
             },
         ),
-        (setup.verifier_set_tracker_pda, initialized_verifier_set_account),
+        (
+            setup.verifier_set_tracker_pda,
+            initialized_verifier_set_account,
+        ),
         (
             SYSTEM_PROGRAM_ID,
             Account {
@@ -506,7 +513,10 @@ pub fn initialize_payload_verification_session_with_root(
                 rent_epoch: 0,
             },
         ),
-        (setup.verifier_set_tracker_pda, initialized_verifier_set_account),
+        (
+            setup.verifier_set_tracker_pda,
+            initialized_verifier_set_account,
+        ),
         (
             SYSTEM_PROGRAM_ID,
             Account {
@@ -544,16 +554,11 @@ pub fn create_verifier_info(
     position: usize,
     verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
 ) -> SigningVerifierSetInfo {
-    // Add Solana offchain prefix to the message before signing
-    // This follows the Axelar convention for prefixing signed messages
-    const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
-    let mut prefixed_message = Vec::with_capacity(SOLANA_OFFCHAIN_PREFIX.len() + payload_merkle_root.len());
-    prefixed_message.extend_from_slice(SOLANA_OFFCHAIN_PREFIX);
-    prefixed_message.extend_from_slice(&payload_merkle_root);
-    
-    // Hash the prefixed message to get a 32-byte digest
-    let hashed_message = solana_program::keccak::hash(&prefixed_message).to_bytes();
-    
+    let hashed_message =
+        axelar_solana_gateway_v2::SignatureVerificationSessionData::prefixed_message_hash(
+            &payload_merkle_root,
+        );
+
     let message = libsecp256k1::Message::parse(&hashed_message);
     let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
     let mut signature_bytes = signature.serialize().to_vec();

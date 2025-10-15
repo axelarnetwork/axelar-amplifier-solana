@@ -117,20 +117,26 @@ impl SignatureVerificationSessionData {
         Ok(())
     }
 
-    pub fn verify_ecdsa_signature(
-        pubkey: &axelar_solana_encoding::types::pubkey::Secp256k1Pubkey,
-        signature: &axelar_solana_encoding::types::pubkey::EcdsaRecoverableSignature,
-        message: &[u8; 32],
-    ) -> bool {
+    /// Prefix and hash the given message
+    pub fn prefixed_message_hash(message: &[u8; 32]) -> [u8; 32] {
         // Add Solana offchain prefix to the message before verification
         // This follows the Axelar convention for prefixing signed messages
         const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
         let mut prefixed_message = Vec::with_capacity(SOLANA_OFFCHAIN_PREFIX.len() + message.len());
         prefixed_message.extend_from_slice(SOLANA_OFFCHAIN_PREFIX);
         prefixed_message.extend_from_slice(message);
-        
+
         // Hash the prefixed message to get a 32-byte digest
-        let hashed_message = solana_program::keccak::hash(&prefixed_message).to_bytes();
+        solana_program::keccak::hash(&prefixed_message).to_bytes()
+    }
+
+    pub fn verify_ecdsa_signature(
+        pubkey: &axelar_solana_encoding::types::pubkey::Secp256k1Pubkey,
+        signature: &axelar_solana_encoding::types::pubkey::EcdsaRecoverableSignature,
+        message: &[u8; 32],
+    ) -> bool {
+        // Hash the prefixed message to get a 32-byte digest
+        let hashed_message = Self::prefixed_message_hash(message);
 
         // The recovery bit in the signature's bytes is placed at the end, as per the
         // 'multisig-prover' contract by Axelar. Unwrap: we know the 'signature'
@@ -150,8 +156,11 @@ impl SignatureVerificationSessionData {
         };
 
         // This is results in a Solana syscall.
-        let secp256k1_recover =
-            solana_program::secp256k1_recover::secp256k1_recover(&hashed_message, recovery_id, signature);
+        let secp256k1_recover = solana_program::secp256k1_recover::secp256k1_recover(
+            &hashed_message,
+            recovery_id,
+            signature,
+        );
         let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
             solana_program::msg!("Failed to recover ECDSA signature");
             return false;
