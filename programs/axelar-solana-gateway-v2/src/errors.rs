@@ -28,4 +28,5 @@ pub enum GatewayError {
     InvalidOperatorOrAuthorityAccount,
     CallerNotSigner,
     UnsupportedSignatureScheme,
+    InvalidSigningPDABump,
 }
