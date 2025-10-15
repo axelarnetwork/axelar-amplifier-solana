@@ -400,7 +400,7 @@ mod tests {
         // Make v1
         let mut v1_state = V1::default();
         v1_state.signature_verification = SignatureVerificationV1 {
-            accumulated_threshold: threshold_value,
+            accumulated_threshold: threshold_value.into(),
             signature_slots,
             signing_verifier_set_hash,
         };
