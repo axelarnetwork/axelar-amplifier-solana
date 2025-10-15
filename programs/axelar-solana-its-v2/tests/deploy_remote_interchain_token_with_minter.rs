@@ -1,12 +1,11 @@
-use crate::initialize::init_gas_service;
-use crate::initialize::init_its_service_with_ethereum_trusted;
-use crate::initialize::setup_operator;
 use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
-use axelar_solana_gateway_v2_test_fixtures::initialize_gateway;
-use axelar_solana_gateway_v2_test_fixtures::setup_test_with_real_signers;
-use axelar_solana_its_v2_test_fixtures::deploy_remote_interchain_token_helper;
-use axelar_solana_its_v2_test_fixtures::DeployRemoteInterchainTokenContext;
+use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
+use axelar_solana_its_v2::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
+use axelar_solana_its_v2_test_fixtures::{
+    approve_deploy_remote_interchain_token_helper, deploy_remote_interchain_token_helper,
+    ApproveDeployRemoteInterchainTokenContext, DeployRemoteInterchainTokenContext,
+};
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
@@ -15,11 +14,13 @@ use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
 };
 
+use crate::initialize::{init_gas_service, init_its_service_with_ethereum_trusted, setup_operator};
+
 #[path = "initialize.rs"]
 mod initialize;
 
 #[test]
-fn test_deploy_remote_interchain_token() {
+fn test_deploy_remote_interchain_token_with_minter() {
     // Initialize gateway
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
@@ -47,14 +48,10 @@ fn test_deploy_remote_interchain_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = axelar_solana_its_v2::id();
     let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
 
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
@@ -73,12 +70,41 @@ fn test_deploy_remote_interchain_token() {
         its_hub_address.clone(),
     );
 
+    let program_id = axelar_solana_its_v2::id();
+    let mollusk = initialize::initialize_mollusk();
+
+    let payer = Pubkey::new_unique();
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+
+    let deployer = Pubkey::new_unique();
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+
     // Create simple token deployment parameters
     let salt = [1u8; 32];
     let name = "Test Token".to_string();
     let symbol = "TEST".to_string();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
+
+    let minter = Pubkey::new_unique();
+
+    let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+    let (minter_roles_pda, _) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(),
+        ],
+        &program_id,
+    );
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
@@ -89,12 +115,12 @@ fn test_deploy_remote_interchain_token() {
         program_id,
         payer,
         payer_account,
-        None,
-        None,
+        Some(minter),
+        Some(minter_roles_pda),
     );
 
     let (
-        result,
+        deploy_result,
         token_manager_pda,
         token_mint_pda,
         _token_manager_ata,
@@ -111,16 +137,61 @@ fn test_deploy_remote_interchain_token() {
     );
 
     assert!(
-        result.program_result.is_ok(),
+        deploy_result.program_result.is_ok(),
         "Deploy interchain token instruction should succeed: {:?}",
-        result.program_result
+        deploy_result.program_result
     );
 
+    // Now test approve deploy remote interchain token
+    let destination_chain = "ethereum".to_string();
+    let destination_minter = b"0x1234567890abcdef1234567890abcdef12345678".to_vec();
+
+    let destination_chain_hash =
+        anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes();
+    let (deploy_approval_pda, _) = Pubkey::find_program_address(
+        &[
+            DEPLOYMENT_APPROVAL_SEED,
+            minter.as_ref(),
+            &token_id,
+            &destination_chain_hash,
+        ],
+        &program_id,
+    );
+
+    let ctx = ApproveDeployRemoteInterchainTokenContext::new(
+        mollusk,
+        deploy_result.clone(),
+        minter,
+        program_id,
+        payer,
+        token_manager_pda,
+        minter_roles_pda,
+        deploy_approval_pda,
+    );
+
+    let (approve_result, mollusk) = approve_deploy_remote_interchain_token_helper(
+        deployer,
+        salt,
+        destination_minter.clone(),
+        destination_chain.clone(),
+        ctx,
+    );
+
+    let deploy_approval_pda_account = approve_result.get_account(&deploy_approval_pda).unwrap();
+    let minter_roles_pda_account = approve_result.get_account(&minter_roles_pda).unwrap();
+
+    assert!(
+        approve_result.program_result.is_ok(),
+        "Approve deploy remote interchain token instruction should succeed: {:?}",
+        approve_result.program_result
+    );
+
+    // Now deploy remote interchain token with remote minter
     let destination_chain = "ethereum".to_string();
     let gas_value = 0u64;
 
-    let ctx = DeployRemoteInterchainTokenContext::new(
-        result,
+    let ctx = DeployRemoteInterchainTokenContext::new_with_minter(
+        deploy_result,
         mollusk,
         program_id,
         payer,
@@ -131,6 +202,11 @@ fn test_deploy_remote_interchain_token() {
         its_root_pda,
         treasury_pda,
         gateway_root_pda_account.clone(),
+        minter,
+        deploy_approval_pda,
+        deploy_approval_pda_account.clone(),
+        minter_roles_pda,
+        minter_roles_pda_account.clone(),
     );
 
     let remote_result =

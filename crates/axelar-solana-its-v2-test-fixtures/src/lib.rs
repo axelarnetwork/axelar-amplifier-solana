@@ -250,6 +250,12 @@ pub struct DeployRemoteInterchainTokenContext {
     its_root_pda: Pubkey,
     treasury_pda: Account,
     gateway_root_pda_account: Account,
+    // Optional minter fields
+    minter: Option<Pubkey>,
+    deploy_approval_pda: Option<Pubkey>,
+    deploy_approval_pda_account: Option<Account>,
+    minter_roles: Option<Pubkey>,
+    minter_roles_account: Option<Account>,
 }
 
 impl DeployRemoteInterchainTokenContext {
@@ -278,11 +284,54 @@ impl DeployRemoteInterchainTokenContext {
             its_root_pda,
             treasury_pda,
             gateway_root_pda_account,
+            minter: None,
+            deploy_approval_pda: None,
+            deploy_approval_pda_account: None,
+            minter_roles: None,
+            minter_roles_account: None,
+        }
+    }
+
+    pub fn new_with_minter(
+        result: InstructionResult,
+        mollusk: Mollusk,
+        program_id: Pubkey,
+        payer: Pubkey,
+        deployer: Pubkey,
+        token_mint_pda: Pubkey,
+        metadata_account: Pubkey,
+        token_manager_pda: Pubkey,
+        its_root_pda: Pubkey,
+        treasury_pda: Account,
+        gateway_root_pda_account: Account,
+        minter: Pubkey,
+        deploy_approval_pda: Pubkey,
+        deploy_approval_pda_account: Account,
+        minter_roles: Pubkey,
+        minter_roles_account: Account,
+    ) -> Self {
+        Self {
+            result,
+            mollusk,
+            program_id,
+            payer,
+            deployer,
+            token_mint_pda,
+            metadata_account,
+            token_manager_pda,
+            its_root_pda,
+            treasury_pda,
+            gateway_root_pda_account,
+            minter: Some(minter),
+            deploy_approval_pda: Some(deploy_approval_pda),
+            deploy_approval_pda_account: Some(deploy_approval_pda_account),
+            minter_roles: Some(minter_roles),
+            minter_roles_account: Some(minter_roles_account),
         }
     }
 }
 
-pub fn deploy_remote_interchain_token_with_no_minter_helper(
+pub fn deploy_remote_interchain_token_helper(
     salt: [u8; 32],
     destination_chain: String,
     gas_value: u64,
@@ -308,6 +357,24 @@ pub fn deploy_remote_interchain_token_with_no_minter_helper(
     let (its_event_authority, its_event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&ctx.program_id);
 
+    let data = match ctx.minter {
+        Some(minter) => axelar_solana_its_v2::instruction::DeployRemoteInterchainTokenWithMinter {
+            salt,
+            destination_chain: destination_chain.clone(),
+            gas_value,
+            signing_pda_bump,
+            destination_minter: minter.to_bytes().into(),
+        }
+        .data(),
+        None => axelar_solana_its_v2::instruction::DeployRemoteInterchainToken {
+            salt,
+            destination_chain: destination_chain.clone(),
+            gas_value,
+            signing_pda_bump,
+        }
+        .data(),
+    };
+
     let ix = Instruction {
         program_id: ctx.program_id,
         accounts: axelar_solana_its_v2::accounts::DeployRemoteInterchainToken {
@@ -316,9 +383,11 @@ pub fn deploy_remote_interchain_token_with_no_minter_helper(
             token_mint: ctx.token_mint_pda,
             metadata_account: ctx.metadata_account,
             token_manager_pda: ctx.token_manager_pda,
-            minter: None,
-            deploy_approval_pda: None,
-            minter_roles: None,
+            // optional minter accounts
+            minter: ctx.minter,
+            deploy_approval_pda: ctx.deploy_approval_pda,
+            minter_roles: ctx.minter_roles,
+            //
             gateway_root_pda,
             axelar_gateway_program: axelar_solana_gateway_v2::ID,
             gas_treasury,
@@ -333,13 +402,7 @@ pub fn deploy_remote_interchain_token_with_no_minter_helper(
             program: ctx.program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::DeployRemoteInterchainToken {
-            salt,
-            destination_chain: destination_chain.clone(),
-            gas_value,
-            signing_pda_bump,
-        }
-        .data(),
+        data,
     };
 
     // Get the updated accounts from the first instruction result
@@ -398,6 +461,25 @@ pub fn deploy_remote_interchain_token_with_no_minter_helper(
         (ctx.token_mint_pda, updated_token_mint_account),
         (ctx.metadata_account, updated_metadata_account),
         (ctx.token_manager_pda, updated_token_manager_account),
+        // Optional minter accounts
+        (
+            ctx.minter.unwrap_or(ctx.program_id),
+            Account::new(1_000_000_000, 0, &system_program::ID),
+        ),
+        (
+            ctx.deploy_approval_pda.unwrap_or(ctx.program_id),
+            ctx.deploy_approval_pda_account.unwrap_or(Account::new(
+                1_000_000_000,
+                0,
+                &system_program::ID,
+            )),
+        ),
+        (
+            ctx.minter_roles.unwrap_or(ctx.program_id),
+            ctx.minter_roles_account
+                .unwrap_or(Account::new(1_000_000_000, 0, &system_program::ID)),
+        ),
+        //
         (gateway_root_pda, ctx.gateway_root_pda_account.clone()),
         (
             axelar_solana_gateway_v2::ID,
@@ -458,22 +540,50 @@ pub fn deploy_remote_interchain_token_with_no_minter_helper(
     ctx.mollusk.process_instruction(&ix, &accounts)
 }
 
-pub fn approve_deploy_remote_interchain_token_helper(
-    mollusk: &Mollusk,
+pub struct ApproveDeployRemoteInterchainTokenContext {
+    mollusk: Mollusk,
     result: InstructionResult,
-    destination_chain: String,
     minter: Pubkey,
-    deployer: Pubkey,
-    salt: [u8; 32],
-    destination_minter: Vec<u8>,
     program_id: Pubkey,
     payer: Pubkey,
     token_manager_pda: Pubkey,
     minter_roles_pda: Pubkey,
     deploy_approval_pda: Pubkey,
-) -> InstructionResult {
+}
+
+impl ApproveDeployRemoteInterchainTokenContext {
+    pub fn new(
+        mollusk: Mollusk,
+        result: InstructionResult,
+        minter: Pubkey,
+        program_id: Pubkey,
+        payer: Pubkey,
+        token_manager_pda: Pubkey,
+        minter_roles_pda: Pubkey,
+        deploy_approval_pda: Pubkey,
+    ) -> Self {
+        Self {
+            mollusk,
+            result,
+            minter,
+            program_id,
+            payer,
+            token_manager_pda,
+            minter_roles_pda,
+            deploy_approval_pda,
+        }
+    }
+}
+
+pub fn approve_deploy_remote_interchain_token_helper(
+    deployer: Pubkey,
+    salt: [u8; 32],
+    destination_minter: Vec<u8>,
+    destination_chain: String,
+    ctx: ApproveDeployRemoteInterchainTokenContext,
+) -> (InstructionResult, Mollusk) {
     let (event_authority, event_authority_account, program_account) =
-        get_event_authority_and_program_accounts(&program_id);
+        get_event_authority_and_program_accounts(&ctx.program_id);
 
     let approve_ix_data = axelar_solana_its_v2::instruction::ApproveDeployRemoteInterchainToken {
         deployer,
@@ -484,48 +594,54 @@ pub fn approve_deploy_remote_interchain_token_helper(
     .data();
 
     let approve_ix = Instruction {
-        program_id,
+        program_id: ctx.program_id,
         accounts: axelar_solana_its_v2::accounts::ApproveDeployRemoteInterchainToken {
-            payer,
-            minter,
-            token_manager_pda,
-            minter_roles: minter_roles_pda,
-            deploy_approval_pda,
+            payer: ctx.payer,
+            minter: ctx.minter,
+            token_manager_pda: ctx.token_manager_pda,
+            minter_roles: ctx.minter_roles_pda,
+            deploy_approval_pda: ctx.deploy_approval_pda,
             system_program: system_program::ID,
         }
         .to_account_metas(None),
         data: approve_ix_data,
     };
 
-    let updated_payer_account = result
+    let updated_payer_account = ctx
+        .result
         .resulting_accounts
         .iter()
-        .find(|(pubkey, _)| *pubkey == payer)
+        .find(|(pubkey, _)| *pubkey == ctx.payer)
         .map(|(_, account)| account.clone())
         .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
 
-    let updated_token_manager_account = result
+    let updated_token_manager_account = ctx
+        .result
         .resulting_accounts
         .iter()
-        .find(|(pubkey, _)| *pubkey == token_manager_pda)
+        .find(|(pubkey, _)| *pubkey == ctx.token_manager_pda)
         .unwrap()
         .1
         .clone();
 
-    let updated_minter_roles_account = result
+    let updated_minter_roles_account = ctx
+        .result
         .resulting_accounts
         .iter()
-        .find(|(pubkey, _)| *pubkey == minter_roles_pda)
+        .find(|(pubkey, _)| *pubkey == ctx.minter_roles_pda)
         .unwrap()
         .1
         .clone();
 
     let approve_accounts = vec![
-        (payer, updated_payer_account),
-        (minter, Account::new(0, 0, &system_program::ID)),
-        (token_manager_pda, updated_token_manager_account),
-        (minter_roles_pda, updated_minter_roles_account),
-        (deploy_approval_pda, Account::new(0, 0, &system_program::ID)),
+        (ctx.payer, updated_payer_account),
+        (ctx.minter, Account::new(0, 0, &system_program::ID)),
+        (ctx.token_manager_pda, updated_token_manager_account),
+        (ctx.minter_roles_pda, updated_minter_roles_account),
+        (
+            ctx.deploy_approval_pda,
+            Account::new(0, 0, &system_program::ID),
+        ),
         (
             system_program::ID,
             Account {
@@ -538,8 +654,12 @@ pub fn approve_deploy_remote_interchain_token_helper(
         ),
         // For event CPI
         (event_authority, event_authority_account),
-        (program_id, program_account),
+        (ctx.program_id, program_account),
     ];
 
-    mollusk.process_instruction(&approve_ix, &approve_accounts)
+    (
+        ctx.mollusk
+            .process_instruction(&approve_ix, &approve_accounts),
+        ctx.mollusk,
+    )
 }

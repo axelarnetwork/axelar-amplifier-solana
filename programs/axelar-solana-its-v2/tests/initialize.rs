@@ -1,8 +1,12 @@
 use anchor_lang::AccountDeserialize;
 use anchor_spl::{token::spl_token, token_2022::spl_token_2022};
+use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
+use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use mollusk_test_utils::{create_program_data_account, setup_mollusk};
+use mollusk_test_utils::{
+    create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
+};
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, Discriminator, InstructionData,
@@ -151,6 +155,233 @@ pub(crate) fn init_its_service(
         program_data,
         program_data_account,
     )
+}
+
+pub(crate) fn setup_operator(
+    mollusk: &mut Mollusk,
+    operator: Pubkey,
+    operator_account: &Account,
+) -> (Pubkey, Account) {
+    let program_id = axelar_solana_operators::id();
+
+    // Load the operators program into mollusk
+    mollusk.add_program(
+        &program_id,
+        "axelar_solana_operators",
+        &solana_sdk::bpf_loader_upgradeable::ID,
+    );
+
+    // Derive the registry PDA
+    let (registry, _bump) = Pubkey::find_program_address(
+        &[axelar_solana_operators::OperatorRegistry::SEED_PREFIX],
+        &program_id,
+    );
+    // Derive the operator PDA
+    let (operator_pda, _bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_operators::OperatorAccount::SEED_PREFIX,
+            operator.as_ref(),
+        ],
+        &program_id,
+    );
+
+    // Initialize the registry instruction
+    let ix1 = Instruction {
+        program_id,
+        accounts: axelar_solana_operators::accounts::Initialize {
+            payer: operator,
+            owner: operator,
+            registry,
+            system_program: system_program::ID,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_operators::instruction::Initialize {}.data(),
+    };
+
+    let checks1 = vec![
+        Check::success(),
+        Check::account(&registry)
+            .space(OperatorRegistry::DISCRIMINATOR.len() + OperatorRegistry::INIT_SPACE)
+            .build(),
+        Check::all_rent_exempt(),
+    ];
+
+    // Add operator instruction
+    let ix2 = Instruction {
+        program_id,
+        accounts: axelar_solana_operators::accounts::AddOperator {
+            owner: operator,
+            operator_to_add: operator,
+            registry,
+            operator_account: operator_pda,
+            system_program: system_program::ID,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_operators::instruction::AddOperator {}.data(),
+    };
+
+    let checks2 = vec![
+        Check::success(),
+        Check::account(&operator_pda)
+            .space(OperatorAccount::DISCRIMINATOR.len() + OperatorAccount::INIT_SPACE)
+            .build(),
+        Check::all_rent_exempt(),
+    ];
+
+    // List accounts
+    let accounts = vec![
+        (operator, operator_account.clone()),
+        (registry, Account::new(0, 0, &system_program::ID)),
+        (operator_pda, Account::new(0, 0, &system_program::ID)),
+        keyed_account_for_system_program(),
+    ];
+
+    let result = mollusk.process_and_validate_instruction_chain(
+        &[
+            // Initialize the registry
+            (&ix1, &checks1),
+            // Add the operator
+            (&ix2, &checks2),
+        ],
+        &accounts,
+    );
+
+    let operator_pda_account = result
+        .get_account(&operator_pda)
+        .expect("Operator PDA should exist");
+
+    (operator_pda, operator_pda_account.clone())
+}
+
+pub(crate) fn init_gas_service(
+    mollusk: &Mollusk,
+    operator: Pubkey,
+    operator_account: &Account,
+    operator_pda: Pubkey,
+    operator_pda_account: &Account,
+) -> (Pubkey, Account) {
+    let program_id = axelar_solana_gas_service_v2::id();
+
+    // Derive the treasury PDA
+    let (treasury, _bump) = Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &program_id);
+
+    let ix = Instruction {
+        program_id,
+        accounts: axelar_solana_gas_service_v2::accounts::Initialize {
+            payer: operator,
+            operator,
+            operator_pda,
+            treasury,
+            system_program: system_program::ID,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_gas_service_v2::instruction::Initialize {}.data(),
+    };
+
+    let accounts = vec![
+        (operator, operator_account.clone()),
+        (operator_pda, operator_pda_account.clone()),
+        (treasury, Account::new(0, 0, &system_program::ID)),
+        keyed_account_for_system_program(),
+    ];
+
+    let checks = vec![
+        Check::success(),
+        Check::account(&treasury)
+            .space(Treasury::DISCRIMINATOR.len() + Treasury::INIT_SPACE)
+            .build(),
+        Check::all_rent_exempt(),
+    ];
+
+    let result = mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+
+    let treasury_pda = result
+        .get_account(&treasury)
+        .expect("Treasury PDA should exist");
+
+    (treasury, treasury_pda.clone())
+}
+
+pub(crate) fn init_its_service_with_ethereum_trusted(
+    mollusk: &Mollusk,
+    payer: Pubkey,
+    payer_account: &Account,
+    upgrade_authority: Pubkey,
+    operator: Pubkey,
+    operator_account: &Account,
+    chain_name: String,
+    its_hub_address: String,
+) -> (Pubkey, Account) {
+    let program_id = axelar_solana_its_v2::id();
+
+    // First initialize the ITS service
+    let (
+        its_root_pda,
+        its_root_account,
+        _user_roles_pda,
+        _user_roles_account,
+        program_data,
+        program_data_account,
+    ) = init_its_service(
+        mollusk,
+        payer,
+        payer_account,
+        upgrade_authority,
+        operator,
+        operator_account,
+        chain_name,
+        its_hub_address,
+    );
+
+    let (event_authority, event_authority_account, program_account) =
+        get_event_authority_and_program_accounts(&program_id);
+
+    // Add ethereum as a trusted chain
+    let trusted_chain_name = "ethereum".to_string();
+
+    let ix = Instruction {
+        program_id,
+        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+            payer,
+            user_roles: None,
+            program_data: Some(program_data),
+            its_root_pda,
+            system_program: system_program::ID,
+            event_authority: event_authority,
+            program: program_id,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+            chain_name: trusted_chain_name.clone(),
+        }
+        .data(),
+    };
+
+    let accounts = vec![
+        (payer, payer_account.clone()),
+        (program_data, program_data_account.clone()),
+        (its_root_pda, its_root_account.clone()),
+        keyed_account_for_system_program(),
+        (event_authority, event_authority_account),
+        (program_id, program_account),
+    ];
+
+    let checks = vec![Check::success()];
+
+    let result = mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+
+    let updated_its_account = result
+        .get_account(&its_root_pda)
+        .expect("ITS root PDA should exist");
+
+    // Verify ethereum was added as trusted chain
+    let updated_its_data =
+        InterchainTokenService::try_deserialize(&mut updated_its_account.data.as_slice())
+            .expect("Failed to deserialize updated ITS data");
+
+    assert!(updated_its_data.contains_trusted_chain("ethereum".to_string()));
+
+    (its_root_pda, updated_its_account.clone())
 }
 
 #[test]
