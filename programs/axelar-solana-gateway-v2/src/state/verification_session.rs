@@ -227,9 +227,7 @@ impl SignatureVerificationSessionData {
 pub type Signature = [u8; 65];
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
-#[allow(clippy::pub_underscore_fields)]
 pub struct SigningVerifierSetInfo {
-    pub _padding: u8,
     pub signature: Signature,
     pub leaf: VerifierSetLeaf,
     pub merkle_proof: Vec<u8>,
@@ -238,7 +236,6 @@ pub struct SigningVerifierSetInfo {
 impl SigningVerifierSetInfo {
     pub fn new(signature: Signature, leaf: VerifierSetLeaf, merkle_proof: Vec<u8>) -> Self {
         SigningVerifierSetInfo {
-            _padding: 0u8,
             signature,
             leaf,
             merkle_proof,
