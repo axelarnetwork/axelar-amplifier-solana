@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
+#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32])]
 pub struct ApproveMessage<'info> {
     #[account(
         seeds = [GATEWAY_SEED],
@@ -23,7 +23,7 @@ pub struct ApproveMessage<'info> {
     pub funder: Signer<'info>,
 
     #[account(
-        seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref()],
+        seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref(), signing_verifier_set_hash.as_ref()],
         bump = verification_session_account.load()?.bump,
         // CHECK: Validate signature verification session is complete
         constraint = verification_session_account.load()?.is_valid() @ GatewayError::SigningSessionNotValid
@@ -46,21 +46,12 @@ pub fn approve_message_handler(
     ctx: Context<ApproveMessage>,
     merkleised_message: MerkleisedMessage,
     payload_merkle_root: [u8; 32],
+    _signing_verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     msg!("Approving message!");
 
     let gateway_config = &ctx.accounts.gateway_root_pda.load()?;
-    let verification_session = &ctx.accounts.verification_session_account.load()?;
     let incoming_message_pda = &mut ctx.accounts.incoming_message_pda.load_init()?;
-
-    // Validate message signing verifier set matches verification session
-    if merkleised_message.leaf.signing_verifier_set
-        != verification_session
-            .signature_verification
-            .signing_verifier_set_hash
-    {
-        return err!(GatewayError::InvalidVerificationSessionPDA);
-    }
 
     // Validate domain separator matches gateway config
     if merkleised_message.leaf.domain_separator != gateway_config.domain_separator {
