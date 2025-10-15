@@ -34,13 +34,6 @@ pub fn call_contract_handler(
 
     if sender.is_signer {
         // Direct signer, so not a program, continue
-        emit_cpi!(CallContractEvent {
-            sender: sender.key(),
-            payload_hash: payload_hash.to_bytes(),
-            destination_chain,
-            destination_contract_address,
-            payload,
-        });
     } else {
         // Case of a program, so a valid signing PDA must be provided
         let Ok(expected_signing_pda) = Pubkey::create_program_address(
@@ -62,16 +55,20 @@ pub fn call_contract_handler(
             msg!("Signing PDA must be a signer");
             return err!(GatewayError::CallerNotSigner);
         }
-
-        // A valid signing PDA was provided and it's a signer, continue
-        emit_cpi!(CallContractEvent {
-            sender: ctx.accounts.signing_pda.key(),
-            payload_hash: payload_hash.to_bytes(),
-            destination_chain,
-            destination_contract_address,
-            payload,
-        });
     }
+
+    // A valid signing PDA was provided and it's a signer, continue
+    emit_cpi!(CallContractEvent {
+        sender: if sender.is_signer {
+            *sender.key
+        } else {
+            *signing_pda.key
+        },
+        payload_hash: payload_hash.to_bytes(),
+        destination_chain,
+        destination_contract_address,
+        payload,
+    });
 
     Ok(())
 }
