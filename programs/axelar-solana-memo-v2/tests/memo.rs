@@ -203,8 +203,6 @@ fn test_execute() {
 
     let execute_instruction_data = axelar_solana_memo_v2::instruction::Execute {
         message: message.clone(),
-        source_chain: message.cc_id.chain.clone(),
-        source_address: message.source_address.clone(),
         payload: test_payload.clone(),
     }
     .data();

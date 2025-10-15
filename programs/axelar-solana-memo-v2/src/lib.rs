@@ -3,6 +3,9 @@ use anchor_lang::prelude::*;
 pub mod instructions;
 pub use instructions::*;
 
+pub mod state;
+pub use state::*;
+
 use axelar_solana_gateway_v2::Message;
 
 declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
