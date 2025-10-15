@@ -602,6 +602,9 @@ pub fn approve_deploy_remote_interchain_token_helper(
             minter_roles: ctx.minter_roles_pda,
             deploy_approval_pda: ctx.deploy_approval_pda,
             system_program: system_program::ID,
+            // for event CPI
+            event_authority,
+            program: ctx.program_id,
         }
         .to_account_metas(None),
         data: approve_ix_data,
