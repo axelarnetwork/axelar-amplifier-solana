@@ -2,7 +2,9 @@ use anchor_lang::AccountDeserialize;
 use axelar_solana_its_v2::{
     seed_prefixes::DEPLOYMENT_APPROVAL_SEED, state::deploy_approval::DeployApproval,
 };
-use axelar_solana_its_v2_test_fixtures::approve_deploy_remote_interchain_token_helper;
+use axelar_solana_its_v2_test_fixtures::{
+    approve_deploy_remote_interchain_token_helper, ApproveDeployRemoteInterchainTokenContext,
+};
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
@@ -120,19 +122,23 @@ fn test_approve_deploy_remote_interchain_token() {
         &program_id,
     );
 
-    let approve_result = approve_deploy_remote_interchain_token_helper(
-        &mollusk,
+    let ctx = ApproveDeployRemoteInterchainTokenContext::new(
+        mollusk,
         result,
-        destination_chain.clone(),
         minter,
-        deployer,
-        salt,
-        destination_minter.clone(),
         program_id,
         payer,
         token_manager_pda,
         minter_roles_pda,
         deploy_approval_pda,
+    );
+
+    let (approve_result, _) = approve_deploy_remote_interchain_token_helper(
+        deployer,
+        salt,
+        destination_minter.clone(),
+        destination_chain.clone(),
+        ctx,
     );
 
     assert!(

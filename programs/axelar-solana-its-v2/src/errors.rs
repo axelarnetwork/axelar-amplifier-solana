@@ -6,4 +6,7 @@ pub enum ITSError {
     Paused,
     InvalidInstructionData,
     InvalidAccountOwner,
+    DeployApprovalPDANotProvided,
+    MinterNotProvided,
+    InvalidRole,
 }

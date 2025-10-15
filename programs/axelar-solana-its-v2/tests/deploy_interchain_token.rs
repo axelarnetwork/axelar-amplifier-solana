@@ -1,8 +1,5 @@
 use anchor_lang::AccountDeserialize;
-use anchor_spl::{
-    token::spl_token,
-    token_2022::spl_token_2022::{self, extension::StateWithExtensions},
-};
+use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
 use axelar_solana_its_v2::{
     state::{TokenManager, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id_internal},
@@ -10,8 +7,6 @@ use axelar_solana_its_v2::{
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
-use mollusk_svm_programs_token;
-use mollusk_test_utils::setup_mollusk;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,

@@ -79,7 +79,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     #[account(
         seeds = [
             DEPLOYMENT_APPROVAL_SEED,
-            minter.clone().unwrap().key().as_ref(),
+            minter.as_ref().ok_or(ITSError::MinterNotProvided)?.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt),
             &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
         ],
@@ -90,10 +90,10 @@ pub struct DeployRemoteInterchainToken<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.clone().unwrap().key().as_ref()
+            minter.as_ref().ok_or(ITSError::MinterNotProvided)?.key().as_ref()
         ],
         bump = minter_roles.bump,
-        constraint = minter_roles.has_minter_role() @ ITSError::InvalidArgument
+        constraint = minter_roles.has_minter_role() @ ITSError::InvalidRole
     )]
     pub minter_roles: Option<Account<'info, UserRoles>>,
 
@@ -187,10 +187,14 @@ pub fn deploy_remote_interchain_token_handler(
         let deploy_approval = ctx
             .accounts
             .deploy_approval_pda
-            .clone()
-            .unwrap()
+            .as_ref()
+            .ok_or(ITSError::DeployApprovalPDANotProvided)?;
+        let minter = ctx
+            .accounts
+            .minter
+            .as_ref()
+            .ok_or(ITSError::MinterNotProvided)?
             .to_account_info();
-        let minter = ctx.accounts.minter.clone().unwrap().to_account_info();
 
         Some((Bytes::from(destination_minter), deploy_approval, minter))
     } else {
