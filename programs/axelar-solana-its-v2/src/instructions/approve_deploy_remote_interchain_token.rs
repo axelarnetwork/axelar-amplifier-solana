@@ -8,12 +8,8 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(
-    deployer: Pubkey,
-    salt: [u8; 32],
-    destination_chain: String,
-    destination_minter: Vec<u8>,
-)]
+#[event_cpi]
+#[instruction(deployer: Pubkey, salt: [u8; 32], destination_chain: String, destination_minter: Vec<u8>)]
 pub struct ApproveDeployRemoteInterchainToken<'info> {
     /// Payer for the transaction and account initialization
     #[account(mut)]
@@ -80,8 +76,7 @@ pub fn approve_deploy_remote_interchain_token(
         anchor_lang::solana_program::keccak::hash(&destination_minter).to_bytes();
     deploy_approval.bump = ctx.bumps.deploy_approval_pda;
 
-    // Emit the event
-    emit!(DeployRemoteInterchainTokenApproval {
+    emit_cpi!(DeployRemoteInterchainTokenApproval {
         minter: ctx.accounts.minter.key(),
         deployer,
         token_id,
@@ -92,7 +87,7 @@ pub fn approve_deploy_remote_interchain_token(
     Ok(())
 }
 
-fn find_its_root_pda() -> Pubkey {
+pub fn find_its_root_pda() -> Pubkey {
     let (its_root_pda, _bump) =
         Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &crate::ID);
     return its_root_pda;

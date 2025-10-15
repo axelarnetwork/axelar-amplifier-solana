@@ -45,3 +45,11 @@ pub struct DeployRemoteInterchainTokenApproval {
     pub destination_chain: String,
     pub destination_minter: Vec<u8>,
 }
+
+#[event]
+pub struct RevokeDeployRemoteInterchainTokenApproval {
+    pub minter: Pubkey,
+    pub deployer: Pubkey,
+    pub token_id: [u8; 32],
+    pub destination_chain: String,
+}

@@ -158,4 +158,13 @@ pub mod axelar_solana_its_v2 {
             destination_minter,
         )
     }
+
+    pub fn revoke_deploy_remote_interchain_token(
+        ctx: Context<RevokeDeployRemoteInterchainToken>,
+        deployer: Pubkey,
+        salt: [u8; 32],
+        destination_chain: String,
+    ) -> Result<()> {
+        instructions::revoke_deploy_remote_interchain_token(ctx, deployer, salt, destination_chain)
+    }
 }
