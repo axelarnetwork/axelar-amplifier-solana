@@ -54,6 +54,18 @@ pub enum Type {
     MintBurn,
 }
 
+impl From<Type> for u8 {
+    fn from(value: Type) -> Self {
+        match value {
+            Type::NativeInterchainToken => 0,
+            Type::MintBurnFrom => 1,
+            Type::LockUnlock => 2,
+            Type::LockUnlockFee => 3,
+            Type::MintBurn => 4,
+        }
+    }
+}
+
 #[account]
 #[derive(Debug, Eq, PartialEq)]
 pub struct TokenManager {

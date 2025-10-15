@@ -28,6 +28,14 @@ pub struct InterchainTokenDeployed {
 }
 
 #[event]
+pub struct TokenManagerDeployed {
+    pub token_id: [u8; 32],
+    pub token_manager: Pubkey,
+    pub token_manager_type: u8,
+    pub params: Vec<u8>,
+}
+
+#[event]
 pub struct InterchainTokenDeploymentStarted {
     pub token_id: [u8; 32],
     pub token_name: String,
@@ -52,4 +60,10 @@ pub struct RevokeDeployRemoteInterchainTokenApproval {
     pub deployer: Pubkey,
     pub token_id: [u8; 32],
     pub destination_chain: String,
+}
+
+#[event]
+pub struct TokenMetadataRegistered {
+    pub token_address: Pubkey,
+    pub decimals: u8,
 }

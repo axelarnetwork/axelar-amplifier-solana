@@ -1,6 +1,6 @@
 use crate::{
     errors::ITSError,
-    events::{InterchainTokenDeployed, InterchainTokenIdClaimed},
+    events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
@@ -173,6 +173,18 @@ pub fn deploy_interchain_token_handler(
         *ctx.accounts.token_manager_ata.to_account_info().key,
         ctx.bumps.token_manager_pda,
     )?;
+
+    emit_cpi!(TokenManagerDeployed {
+        token_id,
+        token_manager: *ctx.accounts.token_manager_pda.to_account_info().key,
+        token_manager_type: Type::NativeInterchainToken.into(),
+        params: ctx
+            .accounts
+            .minter
+            .as_ref()
+            .map(|account| account.key().to_bytes().to_vec())
+            .unwrap_or_default(),
+    });
 
     validate_mint_extensions(
         Type::NativeInterchainToken,
