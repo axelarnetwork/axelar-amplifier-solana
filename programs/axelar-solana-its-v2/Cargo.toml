@@ -10,7 +10,6 @@ edition.workspace = true
 [dependencies]
 anchor-lang.workspace = true
 anchor-spl.workspace = true
-axelar-solana-gas-service-events.workspace = true
 axelar-solana-gas-service-v2 = { workspace = true, features = ["no-entrypoint"] }
 axelar-solana-operators = { workspace = true, features = ["no-entrypoint"] }
 program-utils.workspace = true
