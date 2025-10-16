@@ -30,8 +30,12 @@ impl MessageStatus {
         Self(1)
     }
 
-    pub fn is_approved(&self) -> bool {
+    pub const fn is_approved(&self) -> bool {
         self.0 == 0
+    }
+
+    pub const fn is_executed(&self) -> bool {
+        self.0 != 0
     }
 }
 
