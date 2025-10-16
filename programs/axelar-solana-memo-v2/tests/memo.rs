@@ -332,7 +332,7 @@ fn test_execute() {
         program_id: MEMO_PROGRAM_ID,
         accounts: vec![
             AccountMeta::new(incoming_message_pda, false),
-            AccountMeta::new_readonly(signing_pda, true),
+            AccountMeta::new_readonly(signing_pda, false),
             AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
             AccountMeta::new_readonly(event_authority_pda, false),
             AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),

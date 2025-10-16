@@ -12,16 +12,19 @@ pub struct ValidateMessage<'info> {
         seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
         // CHECK: message must be already approved
-        constraint = incoming_message_pda.load()?.status.is_approved() @ GatewayError::MessageNotApproved,
+        constraint = incoming_message_pda.load()?.status.is_approved()
+            @ GatewayError::MessageNotApproved,
         // CHECK: message hash must match
-        constraint = incoming_message_pda.load()?.message_hash == message.hash() @ GatewayError::InvalidMessageHash
+        constraint = incoming_message_pda.load()?.message_hash == message.hash()
+            @ GatewayError::InvalidMessageHash
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
     /// The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
     #[account(
         signer,
-        constraint = validate_caller_pda(&caller, &message, &incoming_message_pda)? @ GatewayError::InvalidSigningPDA
+        constraint = validate_caller_pda(&caller, &message, &incoming_message_pda)?
+            @ GatewayError::InvalidSigningPDA
     )]
     pub caller: AccountInfo<'info>,
 }

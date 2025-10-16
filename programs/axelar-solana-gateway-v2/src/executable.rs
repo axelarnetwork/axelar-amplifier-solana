@@ -76,7 +76,6 @@ macro_rules! executable_accounts {
         pub incoming_message_pda: AccountLoader<'info, axelar_solana_gateway_v2::IncomingMessage>,
 
         #[account(
-            signer,
             seeds = [axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
             bump = incoming_message_pda.load()?.signing_pda_bump,
         )]
@@ -99,6 +98,7 @@ macro_rules! executable_accounts {
         message: Message,
         payload: &[u8],
     ) -> Result<()> {
+    	// Verify that the payload hash matches the computed hash of the payload
         let computed_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
         if computed_payload_hash != message.payload_hash {
             return err!(ExecutableError::InvalidPayloadHash);
@@ -111,11 +111,27 @@ macro_rules! executable_accounts {
             program: executable_accounts.axelar_gateway_program.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(
+        // Prepare signer seeds
+        let command_id = message.command_id();
+        let signer_seeds = &[
+            axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
+            &command_id,
+            &[executable_accounts
+                .incoming_message_pda
+                .load()?
+                .signing_pda_bump],
+        ];
+        let signer_seeds = &[&signer_seeds[..]];
+
+        // Create CPI context
+        // with the signing PDA as the signer
+        let cpi_ctx = CpiContext::new_with_signer(
             executable_accounts.axelar_gateway_program.to_account_info(),
             cpi_accounts,
+            signer_seeds,
         );
 
+        // Call the validate_message CPI
         axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message)?;
 
         Ok(())
