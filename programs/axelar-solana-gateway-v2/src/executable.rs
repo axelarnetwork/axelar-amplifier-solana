@@ -9,13 +9,28 @@ pub use axelar_message_primitives::EncodingScheme as ExecutablePayloadEncodingSc
 /// sha256("global:execute")[..8]
 ///
 /// Useful for when the execute instruction has a different name in the program.
-/// Usage:
+/// # Example
 /// ```ignore
 /// use anchor_lang::prelude::*;
-/// use axelar_solana_gateway_v2::executable::EXECUTABLE_IX_DISC
+/// use axelar_solana_gateway_v2::executable::EXECUTE_IX_DISC;
+/// use axelar_solana_gateway_v2::Message;
 ///
-/// #[instruction(discriminator = EXECUTABLE_IX_DISC)]
-/// pub fn process_gmp(ctx: Context<ProcessGmp>)
+/// declare_id!("YourProgramId11111111111111111111111111111");
+///
+/// #[program]
+/// pub mod your_program {
+///     use super::*;
+///
+///     #[instruction(discriminator = EXECUTE_IX_DISC)]
+///     pub fn process_gmp(
+///         ctx: Context<ProcessGmp>,
+///         message: Message,
+///         payload: Vec<u8>
+///     ) -> Result<()> {
+///         // Your GMP message handling logic
+///         Ok(())
+///     }
+/// }
 /// ```
 pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 
@@ -41,7 +56,7 @@ pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 ///     Ok(())
 /// }
 /// ```
-// NOTE: This macro is nessecary because Anchor currently does not supporting importing
+// NOTE: This macro is necessary because Anchor currently does not supporting importing
 // accounts from other crates. Once Anchor supports this, we can remove this macro and
 // export the accounts directly from axelar-solana-gateway-v2.
 // See: https://github.com/solana-foundation/anchor/issues/3811
@@ -84,8 +99,8 @@ macro_rules! executable_accounts {
         message: Message,
         payload: &[u8],
     ) -> Result<()> {
-        let compute_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
-        if compute_payload_hash != message.payload_hash {
+        let computed_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
+        if computed_payload_hash != message.payload_hash {
             return err!(ExecutableError::InvalidPayloadHash);
         }
 

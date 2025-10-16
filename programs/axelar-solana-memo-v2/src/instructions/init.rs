@@ -9,11 +9,11 @@ pub struct Init<'info> {
 
     // The counter account
     #[account(
-    	init,
-    	space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
-     	payer = payer,
-      	seeds = [Counter::SEED_PREFIX],
-       	bump
+        init,
+        space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
+        payer = payer,
+        seeds = [Counter::SEED_PREFIX],
+        bump
     )]
     pub counter: Account<'info, Counter>,
 
