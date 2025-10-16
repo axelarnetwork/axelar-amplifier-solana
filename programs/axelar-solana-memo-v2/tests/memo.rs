@@ -45,8 +45,6 @@ fn test_execute() {
     let init_result = initialize_gateway(&setup);
 
     // Step 3: Create message merkle tree
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-
     let message = Message {
         cc_id: CrossChainId {
             chain: "ethereum".to_string(),
