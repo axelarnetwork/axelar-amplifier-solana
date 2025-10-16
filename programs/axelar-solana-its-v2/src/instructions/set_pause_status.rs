@@ -13,7 +13,8 @@ pub struct SetPauseStatus<'info> {
         seeds = [crate::ID.as_ref()],
         bump,
         seeds::program = bpf_loader_upgradeable::ID,
-        constraint = program_data.upgrade_authority_address == Some(payer.key()) @ ProgramError::InvalidAccountOwner
+        constraint = program_data.upgrade_authority_address == Some(payer.key())
+            @ ProgramError::InvalidAccountData
     )]
     pub program_data: Account<'info, ProgramData>,
 
@@ -21,7 +22,7 @@ pub struct SetPauseStatus<'info> {
     	mut,
      	seeds = [InterchainTokenService::SEED_PREFIX],
      	bump = its_root_pda.bump,
-      	// TODO(v2) check if this is nessecary as it differs from v1
+      	// TODO(v2) check if this is necessary as it differs from v1
       	// Check that the paused status is actually changing
       	constraint = its_root_pda.paused != paused @ ProgramError::InvalidArgument,
     )]

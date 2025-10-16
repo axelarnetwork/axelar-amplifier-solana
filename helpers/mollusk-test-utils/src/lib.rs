@@ -10,7 +10,8 @@ pub fn setup_mollusk(program_id: &Pubkey, program_name: &str) -> Mollusk {
 
 // TODO(v2) use create_program_data_account_loader_v3 once it supports
 // setting the upgrade authority
-// Insipired by https://github.com/anza-xyz/mollusk/blob/1cfdd642b3afa351068148d008c0b4f066ed09c6/harness/src/program.rs#L305
+// Inspired by https://github.com/anza-xyz/mollusk/blob/1cfdd642b3afa351068148d008c0b4f066ed09c6/harness/src/program.rs#L305
+#[allow(clippy::indexing_slicing)]
 pub fn create_program_data_account(upgrade_authority: Pubkey) -> Account {
     let elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
 
@@ -25,7 +26,7 @@ pub fn create_program_data_account(upgrade_authority: Pubkey) -> Account {
                 upgrade_authority_address: Some(upgrade_authority),
             },
         )
-        .unwrap();
+        .expect("Failed to serialize program data account");
         data[elf_offset..].copy_from_slice(&elf);
         data
     };
@@ -42,7 +43,7 @@ pub fn create_program_data_account(upgrade_authority: Pubkey) -> Account {
 
 pub fn get_event_authority_and_program_accounts(program_id: &Pubkey) -> (Pubkey, Account, Account) {
     let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+        Pubkey::find_program_address(&[b"__event_authority"], program_id);
     let event_authority_account = Account::new(0, 0, &system_program::ID);
 
     let program_account = mollusk_svm::program::create_program_account_loader_v3(program_id);

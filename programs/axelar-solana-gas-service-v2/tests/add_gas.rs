@@ -200,7 +200,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
     let sender_account = Account::new(sender_balance, 0, &system_program::ID);
 
     let message_id = "tx-sig-2.1".to_owned();
-    let gas_fee_amount = 500_000_000u64; // 0.3 SOL
+    let gas_fee_amount = 500_000_000u64; // 0.5 SOL
     let refund_address = Pubkey::new_unique();
 
     let (event_authority, event_authority_account, program_account) =

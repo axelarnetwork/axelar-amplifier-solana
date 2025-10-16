@@ -1,4 +1,4 @@
-//! Axelar Gas Service program for the Solana blockchain
+//! Axelar Interchain Token Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
 pub mod events;
 pub mod instructions;

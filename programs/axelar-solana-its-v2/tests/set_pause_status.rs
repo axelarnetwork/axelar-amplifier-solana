@@ -47,8 +47,6 @@ fn test_set_pause_status_success() {
         its_hub_address.clone(),
     );
 
-    println!("Program Data {:#?}", program_data_account);
-
     // Verify initial state is unpaused
     let its_data = InterchainTokenService::try_deserialize(&mut its_root_account.data.as_slice())
         .expect("Failed to deserialize ITS data");

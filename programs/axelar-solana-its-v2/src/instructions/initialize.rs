@@ -13,7 +13,8 @@ pub struct Initialize<'info> {
         seeds = [crate::ID.as_ref()],
         bump,
         seeds::program = bpf_loader_upgradeable::ID,
-        constraint = program_data.upgrade_authority_address == Some(payer.key()) @ ProgramError::InvalidAccountOwner
+        constraint = program_data.upgrade_authority_address == Some(payer.key())
+            @ ProgramError::InvalidAccountData
     )]
     pub program_data: Account<'info, ProgramData>,
 

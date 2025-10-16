@@ -34,8 +34,8 @@ impl InterchainTokenService {
 
     pub fn space(trusted_chains_len: usize) -> usize {
         InterchainTokenService::DISCRIMINATOR.len() + // Anchor account discriminator
-		4 + ITS_HUB_ADDRESS_MAX_LEN + // its_hub_address (String with max length 45)
-		4 + MAX_CHAIN_NAME_LEN + // chain_name (String with max length 45)
+		4 + ITS_HUB_ADDRESS_MAX_LEN + // its_hub_address
+		4 + MAX_CHAIN_NAME_LEN + // chain_name
 		1 + // paused (bool)
 		4 +
 			// number of trusted chains, min to reserve space
@@ -67,11 +67,11 @@ impl InterchainTokenService {
         self.paused = false;
     }
 
-    pub fn contains_trusted_chain(&self, chain_name: String) -> bool {
+    pub fn is_trusted_chain(&self, chain_name: String) -> bool {
         self.trusted_chains.iter().any(|chain| *chain == chain_name)
     }
 
-    //// Add a chain as trusted
+    /// Add a chain as trusted
     pub fn add_trusted_chain(&mut self, chain_name: String) {
         // Only add if not already present to avoid duplicates
         if !self.trusted_chains.iter().any(|chain| *chain == chain_name) {
@@ -82,12 +82,6 @@ impl InterchainTokenService {
     /// Remove a chain from trusted
     pub fn remove_trusted_chain(&mut self, chain_name: String) {
         self.trusted_chains.retain(|chain| *chain != chain_name);
-    }
-
-    /// Checks whether or not a given chain is trusted
-    #[must_use]
-    pub fn is_trusted_chain(&self, chain_name: String) -> bool {
-        self.trusted_chains.iter().any(|chain| *chain == chain_name)
     }
 }
 

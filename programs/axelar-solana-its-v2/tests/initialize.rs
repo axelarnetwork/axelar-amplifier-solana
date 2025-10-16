@@ -196,7 +196,7 @@ fn test_initialize_unauthorized_payer() {
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
 
-    // This should fail because unauthorized_payer is not the upgrade authority
+    // This should fail because payer is not the upgrade authority
     // The program data account was created with authorized_payer as authority
     let (
         _its_root_pda,

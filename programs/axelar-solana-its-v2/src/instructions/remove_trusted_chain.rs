@@ -36,7 +36,8 @@ pub struct RemoveTrustedChain<'info> {
         seeds = [crate::ID.as_ref()],
         bump,
         seeds::program = bpf_loader_upgradeable::ID,
-        constraint = program_data.upgrade_authority_address == Some(payer.key()) @ ProgramError::InvalidAccountOwner,
+        constraint = program_data.upgrade_authority_address == Some(payer.key())
+            @ ProgramError::InvalidAccountData,
     )]
     pub program_data: Option<Account<'info, ProgramData>>,
 
@@ -48,7 +49,7 @@ pub struct RemoveTrustedChain<'info> {
      	seeds = [InterchainTokenService::SEED_PREFIX],
      	bump = its_root_pda.bump,
       	// Ensure the chain is already trusted.
-      	constraint = its_root_pda.contains_trusted_chain(chain_name) @ ProgramError::InvalidArgument,
+      	constraint = its_root_pda.is_trusted_chain(chain_name) @ ProgramError::InvalidArgument,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -56,7 +57,8 @@ pub struct RemoveTrustedChain<'info> {
 }
 
 /// Removes a trusted chain from the Interchain Token Service configuration.
-/// To authorize this action, the payer must be either the program upgrade authority.
+/// To authorize this action, the payer must be either the program upgrade authority
+/// or have the OPERATOR role.
 ///
 /// If both accounts are passed, the payer must be the program upgrade authority *and*
 /// have the OPERATOR role.
