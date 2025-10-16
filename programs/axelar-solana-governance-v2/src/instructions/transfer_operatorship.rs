@@ -10,12 +10,17 @@ pub struct TransferOperatorship<'info> {
 
     /// The current operator account - may or may not be a signer
     /// CHECK: We manually validate this account based on signing requirements
-    pub operator_account: AccountInfo<'info>,
+    pub operator_account: Option<Signer<'info>>,
 
     #[account(
         mut,
         seeds = [GOVERNANCE_CONFIG],
         bump = governance_config.bump,
+        // Either the operator_account is a signer and matches the stored operator,
+		// or the governance_config account itself is a signer (program root)
+        constraint = operator_account.as_ref().is_some_and(|op| op.key.to_bytes() == governance_config.operator)
+            || governance_config.to_account_info().is_signer
+            @ GovernanceError::MissingRequiredSignature,
     )]
     pub governance_config: Account<'info, GovernanceConfig>,
 }
@@ -25,18 +30,6 @@ pub fn transfer_operatorship_handler(
     new_operator: [u8; 32],
 ) -> Result<()> {
     let config = &mut ctx.accounts.governance_config;
-    let operator_account = &ctx.accounts.operator_account;
-    let config_pda = &config.to_account_info();
-
-    if !(operator_account.is_signer || config_pda.is_signer) {
-        msg!("The operator account or program root account, must sign the transaction");
-        return err!(GovernanceError::MissingRequiredSignature);
-    }
-
-    if operator_account.is_signer && operator_account.key.to_bytes() != config.operator {
-        msg!("Operator account must sign the transaction");
-        return err!(GovernanceError::MissingRequiredSignature);
-    }
 
     let old_operator = config.operator;
     config.operator = new_operator;

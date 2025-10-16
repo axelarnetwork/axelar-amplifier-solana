@@ -6,6 +6,7 @@ use anchor_lang::prelude::*;
 #[instruction(proposal_hash: [u8; 32], native_value: Vec<u8>, target: Vec<u8>, call_data: Vec<u8>)]
 pub struct CancelOperatorProposal<'info> {
     #[account(
+        mut,
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump,

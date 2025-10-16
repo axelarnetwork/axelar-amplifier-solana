@@ -489,7 +489,7 @@ pub fn create_execute_proposal_instruction_data(
         native_value,
     };
 
-    axelar_solana_governance_v2::instruction::ExecuteProposal {
+    axelar_solana_governance_v2::instruction::ExecuteTimelockProposal {
         execute_proposal_data,
     }
     .data()
