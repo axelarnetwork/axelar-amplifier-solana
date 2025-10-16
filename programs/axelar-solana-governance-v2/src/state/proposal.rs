@@ -17,6 +17,19 @@ type Uint256 = [u8; 32];
 type Hash = [u8; 32];
 
 impl ExecutableProposal {
+    pub const SEED_PREFIX: &'static [u8] = b"proposal";
+
+    pub fn find_pda(proposal_hash: &[u8; 32]) -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX, proposal_hash], &crate::ID)
+    }
+
+    pub fn hash_from_data(data: &ExecuteProposalData) -> Hash {
+        let target = Pubkey::new_from_array(data.target_address);
+        let call_data = &data.call_data;
+        let native_value = &data.native_value;
+        Self::calculate_hash(&target, call_data, native_value)
+    }
+
     pub fn calculate_hash(
         target: &Pubkey,
         call_data: &ExecuteProposalCallData,

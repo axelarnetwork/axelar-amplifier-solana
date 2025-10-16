@@ -1,6 +1,5 @@
 use crate::{
-    seed_prefixes::{GOVERNANCE_CONFIG, OPERATOR_MANAGED_PROPOSAL, PROPOSAL_PDA},
-    ExecutableProposal, GovernanceConfig, GovernanceError, ProposalScheduled,
+    ExecutableProposal, GovernanceConfig, GovernanceError, OperatorProposal, ProposalScheduled,
 };
 use anchor_lang::prelude::*;
 
@@ -9,21 +8,27 @@ use anchor_lang::prelude::*;
 #[instruction(proposal_hash: [u8; 32], eta: u64, native_value: Vec<u8>, target: Vec<u8>, call_data: Vec<u8>)]
 pub struct ScheduleTimelockProposal<'info> {
     pub system_program: Program<'info, System>,
+
     #[account(
-            signer,
-            seeds = [GOVERNANCE_CONFIG],
-            bump = governance_config.load()?.bump,
-        )]
+        signer,
+        seeds = [GovernanceConfig::SEED_PREFIX],
+        bump = governance_config.load()?.bump,
+    )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
+
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(
-            init,
-            payer = payer,
-            space = ExecutableProposal::DISCRIMINATOR.len() + std::mem::size_of::<ExecutableProposal>(),
-            seeds = [PROPOSAL_PDA, &proposal_hash],
-            bump
-        )]
+        init,
+        payer = payer,
+        space = ExecutableProposal::DISCRIMINATOR.len() + std::mem::size_of::<ExecutableProposal>(),
+        seeds = [
+            ExecutableProposal::SEED_PREFIX,
+            &proposal_hash,
+        ],
+        bump
+    )]
     pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
 }
 
@@ -35,8 +40,7 @@ pub fn schedule_timelock_proposal_handler(
     target: Vec<u8>,
     call_data: Vec<u8>,
 ) -> Result<()> {
-    let (_, managed_bump) =
-        Pubkey::find_program_address(&[OPERATOR_MANAGED_PROPOSAL, &proposal_hash], &crate::ID);
+    let (_, managed_bump) = OperatorProposal::find_pda(&proposal_hash);
 
     // Enforce min delay
     let eta = at_least_default_eta_delay(

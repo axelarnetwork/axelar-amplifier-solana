@@ -34,6 +34,12 @@ pub struct GovernanceConfig {
 }
 
 impl GovernanceConfig {
+    pub const SEED_PREFIX: &'static [u8] = b"governance";
+
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+    }
+
     /// Creates a new governance program config.
     #[must_use]
     pub const fn new(

@@ -1,5 +1,4 @@
 use crate::{
-    seed_prefixes::{GOVERNANCE_CONFIG, PROPOSAL_PDA},
     transfer_lamports, ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError,
     ProposalExecuted,
 };
@@ -11,23 +10,19 @@ use solana_program::instruction::Instruction;
 #[instruction(execute_proposal_data: ExecuteProposalData)]
 pub struct ExecuteProposal<'info> {
     pub system_program: Program<'info, System>,
+
     #[account(
-        seeds = [GOVERNANCE_CONFIG],
+        seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
+
     #[account(
         mut,
         close = governance_config,
         seeds = [
-            PROPOSAL_PDA,
-            &{
-                ExecutableProposal::calculate_hash(
-                    &Pubkey::new_from_array(execute_proposal_data.target_address),
-                    &execute_proposal_data.call_data,
-                    &execute_proposal_data.native_value,
-                )
-            }
+            ExecutableProposal::SEED_PREFIX,
+            &ExecutableProposal::hash_from_data(&execute_proposal_data),
         ],
         bump = proposal_pda.load()?.bump
     )]
@@ -110,7 +105,7 @@ pub fn execute_proposal_cpi(
             data: execute_proposal_data.call_data.call_data.clone(),
         },
         remaining_accounts,
-        &[&[GOVERNANCE_CONFIG, &[governance_config_bump]]],
+        &[&[GovernanceConfig::SEED_PREFIX, &[governance_config_bump]]],
     )?;
 
     Ok(())

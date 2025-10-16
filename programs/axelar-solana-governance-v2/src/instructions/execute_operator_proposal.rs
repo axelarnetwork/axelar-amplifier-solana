@@ -1,7 +1,6 @@
 use crate::{
     check_governance_config_presence, check_target_program_presence, execute_proposal_cpi,
-    seed_prefixes::{GOVERNANCE_CONFIG, OPERATOR_MANAGED_PROPOSAL, PROPOSAL_PDA},
-    ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError,
+    ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError, OperatorProposal,
     OperatorProposalExecuted,
 };
 use anchor_lang::prelude::*;
@@ -11,45 +10,37 @@ use anchor_lang::prelude::*;
 #[instruction(execute_proposal_data: ExecuteProposalData)]
 pub struct ExecuteOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
+
     #[account(
-        seeds = [GOVERNANCE_CONFIG],
+        seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
+
     #[account(
         mut,
         close = governance_config,
         seeds = [
-            PROPOSAL_PDA,
-            &{
-                ExecutableProposal::calculate_hash(
-                    &Pubkey::new_from_array(execute_proposal_data.target_address),
-                    &execute_proposal_data.call_data,
-                    &execute_proposal_data.native_value,
-                )
-            }
+            ExecutableProposal::SEED_PREFIX,
+            &ExecutableProposal::hash_from_data(&execute_proposal_data),
         ],
         bump = proposal_pda.load()?.bump
     )]
     pub proposal_pda: AccountLoader<'info, crate::ExecutableProposal>,
+
     /// The operator account that must sign this transaction
     #[account(
-        constraint = operator.key().to_bytes() == governance_config.load()?.operator @ GovernanceError::UnauthorizedOperator
+        constraint = operator.key().to_bytes() == governance_config.load()?.operator
+        	@ GovernanceError::UnauthorizedOperator
     )]
     pub operator: Signer<'info>,
+
     #[account(
         mut,
         close = governance_config,
         seeds = [
-            OPERATOR_MANAGED_PROPOSAL,
-            &{
-                ExecutableProposal::calculate_hash(
-                    &Pubkey::new_from_array(execute_proposal_data.target_address),
-                    &execute_proposal_data.call_data,
-                    &execute_proposal_data.native_value,
-                )
-            }
-        ],
+        	OperatorProposal::SEED_PREFIX,
+        	&ExecutableProposal::hash_from_data(&execute_proposal_data),],
         bump
     )]
     pub operator_pda_marker_account: AccountLoader<'info, crate::OperatorProposal>,

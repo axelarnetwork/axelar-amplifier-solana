@@ -1,15 +1,20 @@
-use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError, Hash};
+use crate::{GovernanceConfig, GovernanceError, Hash};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct UpdateConfig<'info> {
-    #[account(mut, constraint = governance_config.load()?.operator == payer.key().to_bytes() @ GovernanceError::NotOperator)]
-    pub payer: Signer<'info>,
     #[account(
-            mut,
-            seeds = [GOVERNANCE_CONFIG],
-            bump
-        )]
+        mut,
+        constraint = governance_config.load()?.operator == payer.key().to_bytes()
+            @ GovernanceError::NotOperator
+    )]
+    pub payer: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [GovernanceConfig::SEED_PREFIX],
+        bump
+    )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
 }
 

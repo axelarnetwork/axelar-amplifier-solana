@@ -1,16 +1,18 @@
-use crate::{seed_prefixes::GOVERNANCE_CONFIG, transfer_lamports, GovernanceConfig};
+use crate::{transfer_lamports, GovernanceConfig};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct WithdrawTokens<'info> {
     pub system_program: Program<'info, System>,
+
     #[account(
         mut,
         signer,
-        seeds = [GOVERNANCE_CONFIG],
+        seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.load()?.bump,
     )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
+
     /// The account that will receive the withdrawn lamports
     /// CHECK: This can be any account that should receive the funds
     #[account(mut)]
