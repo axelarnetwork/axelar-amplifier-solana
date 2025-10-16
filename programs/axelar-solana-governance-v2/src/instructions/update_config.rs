@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 pub struct UpdateConfig<'info> {
     #[account(
         mut,
-        constraint = governance_config.load()?.operator == payer.key().to_bytes()
+        constraint = governance_config.operator == payer.key().to_bytes()
             @ GovernanceError::NotOperator
     )]
     pub payer: Signer<'info>,
@@ -15,7 +15,7 @@ pub struct UpdateConfig<'info> {
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
@@ -30,5 +30,5 @@ pub fn update_config_handler(
     params: GovernanceConfigUpdate,
 ) -> Result<()> {
     let config = &mut ctx.accounts.governance_config;
-    config.load_mut()?.update(params)
+    config.update(params)
 }

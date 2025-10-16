@@ -13,9 +13,9 @@ pub struct ExecuteOperatorProposal<'info> {
 
     #[account(
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(
         mut,
@@ -24,13 +24,13 @@ pub struct ExecuteOperatorProposal<'info> {
             ExecutableProposal::SEED_PREFIX,
             &ExecutableProposal::hash_from_data(&execute_proposal_data),
         ],
-        bump = proposal_pda.load()?.bump
+        bump = proposal_pda.bump
     )]
-    pub proposal_pda: AccountLoader<'info, crate::ExecutableProposal>,
+    pub proposal_pda: Account<'info, crate::ExecutableProposal>,
 
     /// The operator account that must sign this transaction
     #[account(
-        constraint = operator.key().to_bytes() == governance_config.load()?.operator
+        constraint = operator.key().to_bytes() == governance_config.operator
         	@ GovernanceError::UnauthorizedOperator
     )]
     pub operator: Signer<'info>,
@@ -43,7 +43,7 @@ pub struct ExecuteOperatorProposal<'info> {
         	&ExecutableProposal::hash_from_data(&execute_proposal_data),],
         bump
     )]
-    pub operator_pda_marker_account: AccountLoader<'info, crate::OperatorProposal>,
+    pub operator_pda_marker_account: Account<'info, crate::OperatorProposal>,
 }
 
 pub fn execute_operator_proposal_handler(
@@ -64,7 +64,7 @@ pub fn execute_operator_proposal_handler(
 
     check_target_program_presence(remaining_accounts, &target_program)?;
 
-    let governance_config_bump = governance_config.load()?.bump;
+    let governance_config_bump = governance_config.bump;
     execute_proposal_cpi(
         &execute_proposal_data,
         remaining_accounts,

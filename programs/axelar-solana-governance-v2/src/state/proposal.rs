@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 
-#[account(zero_copy)]
 #[derive(Debug)]
+#[account]
 pub struct ExecutableProposal {
     /// Represent the le bytes containing unix timestamp from when the proposal
     /// can be executed.
@@ -11,7 +11,6 @@ pub struct ExecutableProposal {
     pub bump: u8,
     /// The bump seed for the operator managed proposal PDA.
     pub managed_bump: u8,
-    _padding: [u8; 6],
 }
 
 type Uint256 = [u8; 32];

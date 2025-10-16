@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-#[account(zero_copy)]
 #[derive(Debug)]
+#[account]
 pub struct OperatorProposal {}
 
 impl OperatorProposal {

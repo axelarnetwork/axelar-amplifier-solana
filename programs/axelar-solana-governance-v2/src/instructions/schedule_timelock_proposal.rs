@@ -12,9 +12,9 @@ pub struct ScheduleTimelockProposal<'info> {
     #[account(
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -29,7 +29,7 @@ pub struct ScheduleTimelockProposal<'info> {
         ],
         bump
     )]
-    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
+    pub proposal_pda: Account<'info, ExecutableProposal>,
 }
 
 pub fn schedule_timelock_proposal_handler(
@@ -45,13 +45,10 @@ pub fn schedule_timelock_proposal_handler(
     // Enforce min delay
     let eta = at_least_default_eta_delay(
         eta,
-        ctx.accounts
-            .governance_config
-            .load()?
-            .minimum_proposal_eta_delay,
+        ctx.accounts.governance_config.minimum_proposal_eta_delay,
     )?;
 
-    let proposal_pda = &mut ctx.accounts.proposal_pda.load_init()?;
+    let proposal_pda = &mut ctx.accounts.proposal_pda;
     proposal_pda.eta = eta;
     proposal_pda.managed_bump = managed_bump;
     proposal_pda.bump = ctx.bumps.proposal_pda;
