@@ -18,7 +18,7 @@ pub struct IncomingMessage {
 impl IncomingMessage {
     pub const SEED_PREFIX: &'static [u8] = b"incoming message";
 
-    pub fn get_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
+    pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
         Pubkey::find_program_address(&[Self::SEED_PREFIX, command_id], &crate::ID)
     }
 }

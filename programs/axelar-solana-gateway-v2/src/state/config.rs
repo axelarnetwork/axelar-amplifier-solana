@@ -33,7 +33,7 @@ pub struct GatewayConfig {
 impl GatewayConfig {
     pub const SEED_PREFIX: &'static [u8] = b"gateway";
 
-    pub fn get_pda() -> (Pubkey, u8) {
+    pub fn find_pda() -> (Pubkey, u8) {
         Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
     }
 

@@ -23,7 +23,7 @@ pub struct SignatureVerificationSessionData {
 impl SignatureVerificationSessionData {
     pub const SEED_PREFIX: &'static [u8] = b"gtw-sig-verif";
 
-    pub fn get_pda(
+    pub fn find_pda(
         payload_merkle_root: &[u8; 32],
         signing_verifier_set_hash: &[u8; 32],
     ) -> (Pubkey, u8) {
