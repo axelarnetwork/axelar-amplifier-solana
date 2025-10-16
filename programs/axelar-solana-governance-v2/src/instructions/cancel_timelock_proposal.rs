@@ -8,17 +8,17 @@ pub struct CancelTimelockProposal<'info> {
     #[account(
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(
         mut,
         close = governance_config,
         seeds = [ExecutableProposal::SEED_PREFIX, &proposal_hash],
-        bump = proposal_pda.load()?.bump
+        bump = proposal_pda.bump
     )]
-    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
+    pub proposal_pda: Account<'info, ExecutableProposal>,
 }
 
 pub fn cancel_timelock_proposal_handler(

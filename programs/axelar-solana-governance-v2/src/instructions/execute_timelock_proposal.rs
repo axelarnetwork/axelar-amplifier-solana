@@ -13,9 +13,9 @@ pub struct ExecuteProposal<'info> {
 
     #[account(
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(
         mut,
@@ -24,9 +24,9 @@ pub struct ExecuteProposal<'info> {
             ExecutableProposal::SEED_PREFIX,
             &ExecutableProposal::hash_from_data(&execute_proposal_data),
         ],
-        bump = proposal_pda.load()?.bump
+        bump = proposal_pda.bump
     )]
-    pub proposal_pda: AccountLoader<'info, crate::ExecutableProposal>,
+    pub proposal_pda: Account<'info, crate::ExecutableProposal>,
 }
 
 pub fn execute_proposal_handler(
@@ -38,7 +38,7 @@ pub fn execute_proposal_handler(
 
     let clock = Clock::get()?;
     require!(
-        clock.unix_timestamp as u64 >= proposal.load()?.eta,
+        clock.unix_timestamp as u64 >= proposal.eta,
         GovernanceError::ProposalNotReady
     );
 
@@ -53,7 +53,7 @@ pub fn execute_proposal_handler(
 
     check_target_program_presence(remaining_accounts, &target_program)?;
 
-    let governance_config_bump = governance_config.load()?.bump;
+    let governance_config_bump = governance_config.bump;
 
     execute_proposal_cpi(
         &execute_proposal_data,
@@ -73,7 +73,7 @@ pub fn execute_proposal_handler(
         target_address: execute_proposal_data.target_address.to_vec(),
         call_data: execute_proposal_data.call_data.call_data,
         native_value: execute_proposal_data.native_value.to_vec(),
-        eta: proposal.load()?.eta,
+        eta: proposal.eta,
     });
 
     Ok(())
@@ -82,7 +82,7 @@ pub fn execute_proposal_handler(
 pub fn execute_proposal_cpi(
     execute_proposal_data: &ExecuteProposalData,
     remaining_accounts: &[AccountInfo<'_>],
-    governance_config: AccountLoader<'_, GovernanceConfig>,
+    governance_config: Account<'_, GovernanceConfig>,
     governance_config_bump: u8,
 ) -> Result<()> {
     let native_value_u64 = checked_from_u256_le_bytes_to_u64(&execute_proposal_data.native_value)?;
@@ -157,7 +157,7 @@ fn manual_lamport_transfer(
     execute_proposal_data: ExecuteProposalData,
     remaining_accounts: &[AccountInfo<'_>],
     native_value_u64: u64,
-    governance_config: &AccountLoader<'_, GovernanceConfig>,
+    governance_config: &Account<'_, GovernanceConfig>,
 ) -> Result<()> {
     let target_native_value_account = execute_proposal_data
         .call_data

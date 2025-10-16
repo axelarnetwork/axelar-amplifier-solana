@@ -12,18 +12,18 @@ pub struct ApproveOperatorProposal<'info> {
     #[account(
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
 
     #[account(
         seeds = [ExecutableProposal::SEED_PREFIX, &proposal_hash],
-        bump = proposal_pda.load()?.bump
+        bump = proposal_pda.bump
     )]
-    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
+    pub proposal_pda: Account<'info, ExecutableProposal>,
 
     #[account(
         init,
@@ -32,7 +32,7 @@ pub struct ApproveOperatorProposal<'info> {
         seeds = [OperatorProposal::SEED_PREFIX, &proposal_hash],
         bump,
     )]
-    pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,
+    pub operator_proposal_pda: Account<'info, OperatorProposal>,
 }
 
 pub fn approve_operator_proposal_handler(
@@ -42,7 +42,7 @@ pub fn approve_operator_proposal_handler(
     target: Vec<u8>,
     call_data: Vec<u8>,
 ) -> Result<()> {
-    if ctx.accounts.proposal_pda.load()?.managed_bump != ctx.bumps.operator_proposal_pda {
+    if ctx.accounts.proposal_pda.managed_bump != ctx.bumps.operator_proposal_pda {
         return err!(GovernanceError::InvalidArgument);
     }
 

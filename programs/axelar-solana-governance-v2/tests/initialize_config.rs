@@ -1,9 +1,6 @@
 use anchor_lang::AccountDeserialize;
 use axelar_solana_governance_v2::state::GovernanceConfig;
-use axelar_solana_governance_v2_test_fixtures::{
-    initialize_governance,
-    mock_setup_test,
-};
+use axelar_solana_governance_v2_test_fixtures::{initialize_governance, mock_setup_test};
 
 #[test]
 fn should_initialize_config() {
@@ -19,7 +16,7 @@ fn should_initialize_config() {
         setup.operator.to_bytes(),
     );
 
-    let result = initialize_governance(&setup, governance_config);
+    let result = initialize_governance(&setup, governance_config.clone());
     assert!(!result.program_result.is_err());
 
     let governance_config_account = result

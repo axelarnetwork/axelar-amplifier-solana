@@ -51,9 +51,9 @@ pub struct ProcessGmp<'info> {
 
     #[account(
     	seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump
+        bump = governance_config.bump
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -104,7 +104,7 @@ pub fn process_gmp_handler(
     axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message.clone())?;
 
     {
-        let config = ctx.accounts.governance_config.load()?;
+        let config = ctx.accounts.governance_config.clone();
         ensure_authorized_gmp_command(&config, &message)?;
     }
 
@@ -249,7 +249,7 @@ fn schedule_timelock_proposal(
     invoke_signed_with_governance_config(
         &schedule_instruction,
         &account_infos,
-        ctx.accounts.governance_config.load()?.bump,
+        ctx.accounts.governance_config.bump,
     )
 }
 
@@ -294,7 +294,7 @@ fn cancel_timelock_proposal(
     invoke_signed_with_governance_config(
         &cancel_instruction,
         &account_infos,
-        ctx.accounts.governance_config.load()?.bump,
+        ctx.accounts.governance_config.bump,
     )
 }
 
@@ -344,7 +344,7 @@ fn approve_operator_proposal(
     invoke_signed_with_governance_config(
         &approve_instruction,
         &account_infos,
-        ctx.accounts.governance_config.load()?.bump,
+        ctx.accounts.governance_config.bump,
     )
 }
 
@@ -390,7 +390,7 @@ fn cancel_operator_proposal(
     invoke_signed_with_governance_config(
         &cancel_instruction,
         &account_infos,
-        ctx.accounts.governance_config.load()?.bump,
+        ctx.accounts.governance_config.bump,
     )
 }
 

@@ -23,7 +23,7 @@ pub struct InitializeConfig<'info> {
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     pub system_program: Program<'info, System>,
 }
@@ -37,7 +37,7 @@ pub fn initialize_config_handler(
     // Validate the config
     params.validate_config()?;
 
-    let config = &mut ctx.accounts.governance_config.load_init()?;
+    let config = &mut ctx.accounts.governance_config;
 
     // Initialize account data
     config.bump = ctx.bumps.governance_config;

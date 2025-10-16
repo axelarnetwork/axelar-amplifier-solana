@@ -1117,9 +1117,8 @@ pub fn approve_messages_on_gateway(
     verifier_leaves: Vec<VerifierSetLeaf>,
     verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
 ) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
-    let verifier_set_merkle_root = setup.verifier_set_hash;
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree_from_messages(setup, verifier_set_merkle_root, messages);
+        setup_message_merkle_tree_from_messages(setup, messages);
 
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
@@ -1236,7 +1235,6 @@ pub fn approve_messages_on_gateway(
 
 pub fn setup_message_merkle_tree_from_messages(
     setup: &TestSetup,
-    verifier_set_merkle_root: [u8; 32],
     messages: Vec<Message>,
 ) -> (
     Vec<Message>,
@@ -1252,7 +1250,6 @@ pub fn setup_message_merkle_tree_from_messages(
             position: i as u16,
             set_size: messages.len() as u16,
             domain_separator: setup.domain_separator,
-            signing_verifier_set: verifier_set_merkle_root,
         })
         .collect();
 

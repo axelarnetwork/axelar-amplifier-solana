@@ -1,10 +1,9 @@
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::AccountDeserialize;
-use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
-    create_transfer_operatorship_instruction_data, initialize_governance,
-    mock_setup_test,
+    create_transfer_operatorship_instruction_data, initialize_governance, mock_setup_test,
 };
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
@@ -26,7 +25,7 @@ fn should_transfer_operatorship() {
         setup.operator.to_bytes(),
     );
 
-    let result = initialize_governance(&setup, governance_config);
+    let result = initialize_governance(&setup, governance_config.clone());
     assert!(!result.program_result.is_err());
 
     let new_operator = Pubkey::new_unique();

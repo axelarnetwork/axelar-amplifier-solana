@@ -8,23 +8,23 @@ pub struct CancelOperatorProposal<'info> {
     #[account(
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     #[account(
         seeds = [ExecutableProposal::SEED_PREFIX, &proposal_hash],
-        bump = proposal_pda.load()?.bump
+        bump = proposal_pda.bump
     )]
-    pub proposal_pda: AccountLoader<'info, ExecutableProposal>,
+    pub proposal_pda: Account<'info, ExecutableProposal>,
 
     #[account(
         mut,
         close = governance_config,
         seeds = [OperatorProposal::SEED_PREFIX, &proposal_hash],
-        bump = proposal_pda.load()?.managed_bump
+        bump = proposal_pda.managed_bump
     )]
-    pub operator_proposal_pda: AccountLoader<'info, OperatorProposal>,
+    pub operator_proposal_pda: Account<'info, OperatorProposal>,
 }
 
 pub fn cancel_operator_proposal_handler(

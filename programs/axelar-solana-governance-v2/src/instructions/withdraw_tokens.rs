@@ -10,9 +10,9 @@ pub struct WithdrawTokens<'info> {
         mut,
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
-        bump = governance_config.load()?.bump,
+        bump = governance_config.bump,
     )]
-    pub governance_config: AccountLoader<'info, GovernanceConfig>,
+    pub governance_config: Account<'info, GovernanceConfig>,
 
     /// The account that will receive the withdrawn lamports
     /// CHECK: This can be any account that should receive the funds
