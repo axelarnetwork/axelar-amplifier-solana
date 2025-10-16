@@ -242,7 +242,7 @@ pub struct SignatureVerification {
     /// decrement the remaining threshold.
     ///
     /// Currently supports 256 slots. If the signer set maximum size needs to be
-    /// increased in the future, this value must change to make roof for
+    /// increased in the future, this value must change to make room for
     /// them.
     pub signature_slots: [u8; 32],
 

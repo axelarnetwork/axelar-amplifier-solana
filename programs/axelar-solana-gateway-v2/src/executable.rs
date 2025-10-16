@@ -56,11 +56,11 @@ pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 ///     Ok(())
 /// }
 /// ```
-// NOTE: This macro is necessary because Anchor currently does not supporting importing
+// NOTE: This macro is necessary because Anchor currently does not support importing
 // accounts from other crates. Once Anchor supports this, we can remove this macro and
 // export the accounts directly from axelar-solana-gateway-v2.
 // See: https://github.com/solana-foundation/anchor/issues/3811
-// It is also not-possible to use the `cpi` module inside the gateway crate.
+// It is also not possible to use the `cpi` module inside the gateway crate.
 #[macro_export]
 macro_rules! executable_accounts {
     () => {
