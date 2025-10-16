@@ -5,6 +5,20 @@ pub use crate::Message;
 pub use axelar_message_primitives::DataPayload as ExecutablePayload;
 pub use axelar_message_primitives::EncodingScheme as ExecutablePayloadEncodingScheme;
 
+/// Anchor discriminator for the `execute` instruction.
+/// sha256("global:execute")[..8]
+///
+/// Useful for when the execute instruction has a different name in the program.
+/// Usage:
+/// ```ignore
+/// use anchor_lang::prelude::*;
+/// use axelar_solana_gateway_v2::executable::EXECUTABLE_IX_DISC
+///
+/// #[instruction(discriminator = EXECUTABLE_IX_DISC)]
+/// pub fn process_gmp(ctx: Context<ProcessGmp>)
+/// ```
+pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
+
 /// Macro to generate executable accounts and validation function.
 /// Usage:
 /// ```ignore
