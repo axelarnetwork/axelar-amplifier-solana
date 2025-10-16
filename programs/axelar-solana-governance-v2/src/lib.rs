@@ -22,14 +22,16 @@ declare_id!("8sWy2bidXuwtZHfpJ2Ko5AiCsGQyFMf8MKwazB16wmJV");
 
 /// Seed prefixes for different PDAs initialized by the Governance program.
 pub mod seed_prefixes {
+    use crate::state;
+
     /// The main config for the governance
-    pub const GOVERNANCE_CONFIG: &[u8] = b"governance";
+    pub const GOVERNANCE_CONFIG: &[u8] = state::GovernanceConfig::SEED_PREFIX;
     /// The seed that determines a proposal PDA
-    pub const PROPOSAL_PDA: &[u8] = b"proposal";
+    pub const PROPOSAL_PDA: &[u8] = state::ExecutableProposal::SEED_PREFIX;
     /// The seed that derives a PDA which holds a status that
     /// signals an operator can operate a proposal (like executing it
     /// regardless of the ETA).
-    pub const OPERATOR_MANAGED_PROPOSAL: &[u8] = b"operator-managed-proposal";
+    pub const OPERATOR_MANAGED_PROPOSAL: &[u8] = state::OperatorProposal::SEED_PREFIX;
 }
 
 #[program]

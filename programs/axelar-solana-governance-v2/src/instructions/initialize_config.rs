@@ -1,26 +1,30 @@
-use crate::{seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError};
+use crate::{GovernanceConfig, GovernanceError};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
+
     pub upgrade_authority: Signer<'info>,
+
     #[account(
-            seeds = [crate::ID.as_ref()],
-            bump,
-            seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
-            constraint = program_data.upgrade_authority_address == Some(upgrade_authority.key()) @ GovernanceError::InvalidUpgradeAuthority
-        )]
+        seeds = [crate::ID.as_ref()],
+        bump,
+        seeds::program = anchor_lang::solana_program::bpf_loader_upgradeable::ID,
+        constraint = program_data.upgrade_authority_address == Some(upgrade_authority.key()) @ GovernanceError::InvalidUpgradeAuthority
+    )]
     pub program_data: Account<'info, ProgramData>,
+
     #[account(
-            init,
-            payer = payer,
-            space = GovernanceConfig::DISCRIMINATOR.len() + std::mem::size_of::<GovernanceConfig>(),
-            seeds = [GOVERNANCE_CONFIG],
-            bump
-        )]
+        init,
+        payer = payer,
+        space = GovernanceConfig::DISCRIMINATOR.len() + std::mem::size_of::<GovernanceConfig>(),
+        seeds = [GovernanceConfig::SEED_PREFIX],
+        bump
+    )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
+
     pub system_program: Program<'info, System>,
 }
 

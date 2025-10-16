@@ -7,9 +7,11 @@ use anchor_lang::prelude::*;
 #[event_cpi]
 pub struct TransferOperatorship<'info> {
     pub system_program: Program<'info, System>,
+
     /// The current operator account - may or may not be a signer
     /// CHECK: We manually validate this account based on signing requirements
     pub operator_account: AccountInfo<'info>,
+
     #[account(
         mut,
         seeds = [GOVERNANCE_CONFIG],

@@ -1,5 +1,4 @@
 use crate::program::AxelarSolanaGovernanceV2;
-use crate::seed_prefixes::GOVERNANCE_CONFIG;
 use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, GovernanceError};
 use anchor_lang::{prelude::*, solana_program, InstructionData};
 use axelar_solana_gateway_v2::seed_prefixes::{
@@ -20,39 +19,49 @@ pub struct ProcessGmp<'info> {
         seeds::program = axelar_gateway_program.key()
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
+
     /// Signing PDA for this program - used to validate with gateway
     #[account(
-           mut,
-           signer,
-           seeds = [VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
-           bump = incoming_message_pda.load()?.signing_pda_bump,
-       )]
+        mut,
+        signer,
+        seeds = [VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
+        bump = incoming_message_pda.load()?.signing_pda_bump,
+    )]
     pub signing_pda: AccountInfo<'info>,
+
     pub axelar_gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+
     #[account(
-            seeds = [b"__event_authority"],
-            bump,
-            seeds::program = crate::ID.key()
-        )]
+        seeds = [b"__event_authority"],
+        bump,
+        seeds::program = crate::ID.key()
+    )]
     pub governance_event_authority: SystemAccount<'info>,
+
     pub axelar_governance_program: Program<'info, AxelarSolanaGovernanceV2>,
+
     #[account(
-            seeds = [b"__event_authority"],
-            bump,
-            seeds::program = axelar_gateway_program.key()
-        )]
+        seeds = [b"__event_authority"],
+        bump,
+        seeds::program = axelar_gateway_program.key()
+    )]
     pub gateway_event_authority: SystemAccount<'info>,
+
     pub system_program: Program<'info, System>,
+
     #[account(
-            seeds = [GOVERNANCE_CONFIG],
-            bump = governance_config.load()?.bump
-        )]
+    	seeds = [GovernanceConfig::SEED_PREFIX],
+        bump = governance_config.load()?.bump
+    )]
     pub governance_config: AccountLoader<'info, GovernanceConfig>,
+
     #[account(mut)]
     pub payer: Signer<'info>,
+
     // Variable accounts as kept as unchecked. We self-CPI and check them for each separate instruction
     #[account(mut)]
     pub proposal_pda: UncheckedAccount<'info>,
+
     #[account(mut)]
     pub operator_proposal_pda: UncheckedAccount<'info>,
 }
@@ -390,7 +399,7 @@ fn invoke_signed_with_governance_config(
     account_infos: &[AccountInfo],
     governance_config_bump: u8,
 ) -> Result<()> {
-    let seeds = &[GOVERNANCE_CONFIG, &[governance_config_bump]];
+    let seeds = &[GovernanceConfig::SEED_PREFIX, &[governance_config_bump]];
     let signer_seeds = &[&seeds[..]];
 
     solana_program::program::invoke_signed(instruction, account_infos, signer_seeds)?;
