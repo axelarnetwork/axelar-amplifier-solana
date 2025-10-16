@@ -257,7 +257,7 @@ fn test_set_pause_status_unauthorized() {
         (its_root_pda, its_root_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidAccountOwner)];
+    let checks = vec![Check::err(ProgramError::InvalidAccountData)];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 

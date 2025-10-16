@@ -27,7 +27,8 @@ pub(crate) fn init_its_service(
     // Derive the program data PDA for the upgradeable program
     let (program_data, _bump) =
         Pubkey::find_program_address(&[program_id.as_ref()], &bpf_loader_upgradeable::ID);
-    let program_data_account = create_program_data_account(upgrade_authority);
+    let its_elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
+    let program_data_account = create_program_data_account(&its_elf, upgrade_authority);
 
     if payer != upgrade_authority {
         println!("[WARNING] Initialize will fail since payer is not the upgrade authority");
@@ -179,7 +180,7 @@ fn test_initialize_success() {
 }
 
 #[test]
-#[should_panic = "InvalidAccountOwner"]
+#[should_panic = "InvalidAccountData"]
 fn test_initialize_unauthorized_payer() {
     let program_id = axelar_solana_its_v2::id();
     let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");

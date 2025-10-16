@@ -12,9 +12,7 @@ pub fn setup_mollusk(program_id: &Pubkey, program_name: &str) -> Mollusk {
 // setting the upgrade authority
 // Inspired by https://github.com/anza-xyz/mollusk/blob/1cfdd642b3afa351068148d008c0b4f066ed09c6/harness/src/program.rs#L305
 #[allow(clippy::indexing_slicing)]
-pub fn create_program_data_account(upgrade_authority: Pubkey) -> Account {
-    let elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
-
+pub fn create_program_data_account(elf: &[u8], upgrade_authority: Pubkey) -> Account {
     let data = {
         let elf_offset = UpgradeableLoaderState::size_of_programdata_metadata();
         let data_len = elf_offset + elf.len();
@@ -27,7 +25,7 @@ pub fn create_program_data_account(upgrade_authority: Pubkey) -> Account {
             },
         )
         .expect("Failed to serialize program data account");
-        data[elf_offset..].copy_from_slice(&elf);
+        data[elf_offset..].copy_from_slice(elf);
         data
     };
     let lamports = Rent::default().minimum_balance(data.len());
