@@ -86,6 +86,7 @@ impl InterchainTokenService {
 }
 
 #[cfg(test)]
+#[allow(clippy::str_to_string)]
 mod tests {
     use super::*;
     use anchor_lang::AnchorSerialize;
@@ -104,11 +105,6 @@ mod tests {
         let serialized = its_empty.try_to_vec().expect("Failed to serialize");
         let calculated_space = InterchainTokenService::space(0);
 
-        println!(
-            "Empty chains - Actual size: {}, Calculated space: {}",
-            serialized.len(),
-            calculated_space
-        );
         assert!(
             calculated_space >= serialized.len(),
             "Space function should account for at least the actual size"
@@ -132,11 +128,6 @@ mod tests {
         let serialized = its.try_to_vec().expect("Failed to serialize");
         let calculated_space = InterchainTokenService::space(3);
 
-        println!(
-            "3 chains - Actual size: {}, Calculated space: {}",
-            serialized.len(),
-            calculated_space
-        );
         assert!(
             calculated_space >= serialized.len(),
             "Space function should account for at least the actual size"
@@ -145,7 +136,7 @@ mod tests {
 
     #[test]
     fn test_space_function_with_many_chains() {
-        let trusted_chains: Vec<String> = (0..40).map(|i| format!("chain_{}", i)).collect();
+        let trusted_chains: Vec<String> = (0..40).map(|i| format!("chain_{i}")).collect();
 
         let its = InterchainTokenService {
             its_hub_address: "test".to_string(),
@@ -158,11 +149,6 @@ mod tests {
         let serialized = its.try_to_vec().expect("Failed to serialize");
         let calculated_space = InterchainTokenService::space(40);
 
-        println!(
-            "40 chains - Actual size: {}, Calculated space: {}",
-            serialized.len(),
-            calculated_space
-        );
         assert!(
             calculated_space >= serialized.len(),
             "Space function should account for at least the actual size"
@@ -188,11 +174,6 @@ mod tests {
         let serialized = its.try_to_vec().expect("Failed to serialize");
         let calculated_space = InterchainTokenService::space(10);
 
-        println!(
-            "Max length data - Actual size: {}, Calculated space: {}",
-            serialized.len(),
-            calculated_space
-        );
         assert!(
             calculated_space >= serialized.len(),
             "Space function should account for at least the actual size"

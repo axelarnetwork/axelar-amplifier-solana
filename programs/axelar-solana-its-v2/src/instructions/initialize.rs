@@ -42,7 +42,6 @@ pub struct Initialize<'info> {
 			operator.key().as_ref(),
 		],
 	 	bump,
-
     )]
     pub user_roles_account: Account<'info, UserRoles>,
 }
