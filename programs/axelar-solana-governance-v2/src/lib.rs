@@ -125,7 +125,7 @@ pub mod axelar_solana_governance_v2 {
         )
     }
 
-    pub fn execute_proposal(
+    pub fn execute_timelock_proposal(
         ctx: Context<ExecuteProposal>,
         execute_proposal_data: ExecuteProposalData,
     ) -> Result<()> {

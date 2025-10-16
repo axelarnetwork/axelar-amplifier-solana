@@ -1,5 +1,5 @@
 use alloy_sol_types::SolValue;
-use anchor_lang::prelude::AccountMeta;
+use anchor_lang::prelude::{AccountMeta, ToAccountMetas};
 use anchor_lang::AnchorSerialize;
 use anchor_lang::solana_program;
 use axelar_solana_gateway_v2_test_fixtures::{
@@ -281,18 +281,22 @@ fn should_execute_scheduled_proposal() {
 
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-            AccountMeta::new(governance_setup.governance_config, false),
-            AccountMeta::new(proposal_pda, false),
-            // for emit cpi
-            AccountMeta::new_readonly(event_authority_pda_governance, false),
-            AccountMeta::new_readonly(GOVERNANCE_PROGRAM_ID, false),
+        accounts: axelar_solana_governance_v2::accounts::ExecuteProposal {
+            system_program: SYSTEM_PROGRAM_ID,
+            governance_config: governance_setup.governance_config,
+            proposal_pda,
+            event_authority: event_authority_pda_governance,
+            program: GOVERNANCE_PROGRAM_ID,
+        }
+        .to_account_metas(None)
+        .into_iter()
+        .chain(vec![
             // Remaining accounts
             AccountMeta::new_readonly(MEMO_PROGRAM_ID, false),
             AccountMeta::new(value_receiver_pubkey, false),
             AccountMeta::new(governance_setup.governance_config, false),
-        ],
+        ])
+        .collect(),
         data: instruction_data,
     };
 

@@ -12,6 +12,7 @@ pub struct ExecuteOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
 
     #[account(
+        mut,
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump,
     )]
@@ -40,7 +41,8 @@ pub struct ExecuteOperatorProposal<'info> {
         close = governance_config,
         seeds = [
         	OperatorProposal::SEED_PREFIX,
-        	&ExecutableProposal::hash_from_data(&execute_proposal_data),],
+        	&ExecutableProposal::hash_from_data(&execute_proposal_data),
+        ],
         bump
     )]
     pub operator_pda_marker_account: Account<'info, crate::OperatorProposal>,

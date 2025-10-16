@@ -1,4 +1,4 @@
-use anchor_lang::prelude::AccountMeta;
+use anchor_lang::prelude::ToAccountMetas;
 use anchor_lang::AccountDeserialize;
 use axelar_solana_governance_v2::state::GovernanceConfig;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
@@ -87,14 +87,14 @@ fn should_transfer_operatorship() {
 
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-            AccountMeta::new_readonly(setup.operator, true),
-            AccountMeta::new(setup.governance_config, false),
-            // For emit cpi
-            AccountMeta::new_readonly(setup.event_authority_pda, false),
-            AccountMeta::new_readonly(GOVERNANCE_PROGRAM_ID, false),
-        ],
+        accounts: axelar_solana_governance_v2::accounts::TransferOperatorship {
+            system_program: SYSTEM_PROGRAM_ID,
+            operator_account: Some(setup.operator),
+            governance_config: setup.governance_config,
+            event_authority: setup.event_authority_pda,
+            program: GOVERNANCE_PROGRAM_ID,
+        }
+        .to_account_metas(None),
         data: instruction_data,
     };
 
