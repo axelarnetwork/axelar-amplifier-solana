@@ -518,21 +518,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anchor-spl"
-version = "0.31.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c08cb5d762c0694f74bd02c9a5b04ea53cefc496e2c27b3234acffca5cd076b"
-dependencies = [
- "anchor-lang",
- "spl-associated-token-account 6.0.0",
- "spl-pod",
- "spl-token 7.0.0",
- "spl-token-2022 6.0.0",
- "spl-token-group-interface 0.5.0",
- "spl-token-metadata-interface 0.6.0",
-]
-
-[[package]]
 name = "anchor-syn"
 version = "0.31.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1096,7 +1081,6 @@ name = "axelar-solana-gas-service-v2"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "anchor-spl",
  "axelar-solana-gas-service",
  "axelar-solana-gateway-test-fixtures",
  "axelar-solana-operators",
