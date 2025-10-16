@@ -1,9 +1,9 @@
 use crate::{
-    transfer_lamports, ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError,
-    ProposalExecuted,
+    ExecutableProposal, ExecuteProposalData, GovernanceConfig, GovernanceError, ProposalExecuted,
 };
 use anchor_lang::prelude::*;
-use solana_program::instruction::Instruction;
+use anchor_lang::solana_program;
+use program_utils::transfer_lamports_anchor;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -99,7 +99,7 @@ pub fn execute_proposal_cpi(
 
     // Execute the target program instruction
     solana_program::program::invoke_signed(
-        &Instruction {
+        &solana_program::instruction::Instruction {
             program_id: Pubkey::from(execute_proposal_data.target_address),
             accounts: account_metas,
             data: execute_proposal_data.call_data.call_data.clone(),
@@ -180,7 +180,7 @@ fn manual_lamport_transfer(
     let governance_account = governance_config.to_account_info();
     let target_account = target_account_info;
 
-    transfer_lamports(&governance_account, target_account, native_value_u64)?;
+    transfer_lamports_anchor!(governance_account, target_account, native_value_u64);
 
     Ok(())
 }

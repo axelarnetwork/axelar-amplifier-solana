@@ -1262,7 +1262,7 @@ dependencies = [
  "hex",
  "libsecp256k1",
  "mollusk-svm",
- "solana-program",
+ "program-utils",
  "solana-sdk",
 ]
 

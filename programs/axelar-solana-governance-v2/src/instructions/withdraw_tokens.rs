@@ -1,5 +1,6 @@
-use crate::{transfer_lamports, GovernanceConfig};
+use crate::GovernanceConfig;
 use anchor_lang::prelude::*;
+use program_utils::transfer_lamports_anchor;
 
 #[derive(Accounts)]
 pub struct WithdrawTokens<'info> {
@@ -28,7 +29,7 @@ pub fn withdraw_tokens_handler(ctx: Context<WithdrawTokens>, amount: u64) -> Res
 
     // Note: We need manual lamport transfer because we are dealing with
     // governance_config which is a data account
-    transfer_lamports(&governance_account_info, receiver, amount)?;
+    transfer_lamports_anchor!(governance_account_info, receiver, amount);
 
     msg!(
         "{} lamports were transferred from {}",
