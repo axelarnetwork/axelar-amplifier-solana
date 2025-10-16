@@ -175,4 +175,10 @@ pub mod axelar_solana_its_v2 {
     ) -> Result<()> {
         instructions::register_token_metadata_handler(ctx, gas_value, signing_pda_bump)
     }
+
+    pub fn register_canonical_interchain_token(
+        ctx: Context<RegisterCanonicalInterchainToken>,
+    ) -> Result<()> {
+        instructions::register_canonical_interchain_token_handler(ctx)
+    }
 }

@@ -9,4 +9,5 @@ pub enum ITSError {
     DeployApprovalPDANotProvided,
     MinterNotProvided,
     InvalidRole,
+    InvalidAccountData,
 }
