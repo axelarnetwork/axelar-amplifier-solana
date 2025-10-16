@@ -28,7 +28,7 @@ use program_utils::pda::ValidPDA;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-solana_program::declare_id!("gtwi5T9x6rTWPtuuz6DA7ia1VmH8bdazm9QfDdi6DVp");
+solana_program::declare_id!("gtwt7FUv5JAN2WsntHzCQwCzNz7YEzskP9jjfpYbv7k");
 
 #[cfg(feature = "stagenet")]
 solana_program::declare_id!("gtwqQzBirGUVdAUDt17WWYnVfPoydn9eAazDJb7gFUs");
