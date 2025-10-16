@@ -3,7 +3,7 @@ use crate::{
     events::{InterchainTokenIdClaimed, TokenManagerDeployed},
     instructions::get_token_metadata,
     seed_prefixes::TOKEN_MANAGER_SEED,
-    state::{FlowState, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    state::{FlowState, InterchainTokenService, TokenManager, Type},
     utils::{
         canonical_interchain_token_deploy_salt, canonical_interchain_token_id,
         interchain_token_id_internal,

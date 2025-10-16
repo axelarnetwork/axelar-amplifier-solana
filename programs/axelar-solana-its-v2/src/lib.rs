@@ -181,4 +181,18 @@ pub mod axelar_solana_its_v2 {
     ) -> Result<()> {
         instructions::register_canonical_interchain_token_handler(ctx)
     }
+
+    pub fn deploy_remote_canonical_interchain_token(
+        ctx: Context<DeployRemoteCanonicalInterchainToken>,
+        destination_chain: String,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::deploy_remote_canonical_interchain_token_handler(
+            ctx,
+            destination_chain,
+            gas_value,
+            signing_pda_bump,
+        )
+    }
 }
