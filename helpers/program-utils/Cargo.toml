@@ -10,7 +10,6 @@ workspace = true
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-anchor-discriminators.workspace = true
 borsh.workspace = true
 bytemuck.workspace = true
 mpl-token-metadata.workspace = true

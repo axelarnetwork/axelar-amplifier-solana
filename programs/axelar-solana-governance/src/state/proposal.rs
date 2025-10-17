@@ -22,9 +22,6 @@ use solana_program::program_error::ProgramError;
 use solana_program::program_pack::{Pack, Sealed};
 use solana_program::pubkey::Pubkey;
 
-use anchor_discriminators::Discriminator;
-use anchor_discriminators_macros::account;
-
 type Uint256 = [u8; 32];
 type Hash = [u8; 32];
 
@@ -32,8 +29,7 @@ type Hash = [u8; 32];
 /// RKYV as de/se technology, this represents the write model, while the read
 /// model is implemented at [`ArchivedExecutableProposal`], which is generated
 /// by RKYV derive traits.
-#[account]
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, BorshSerialize, BorshDeserialize)]
 #[allow(clippy::module_name_repetitions)]
 pub struct ExecutableProposal {
     /// Represent the le bytes containing unix timestamp from when the proposal
@@ -425,10 +421,7 @@ impl ExecutableProposal {
 impl Sealed for ExecutableProposal {}
 
 impl Pack for ExecutableProposal {
-    const LEN: usize = ExecutableProposal::DISCRIMINATOR.len()
-        + size_of::<u64>()
-        + size_of::<u8>()
-        + size_of::<u8>();
+    const LEN: usize = size_of::<u64>() + size_of::<u8>() + size_of::<u8>();
 
     fn pack_into_slice(&self, mut dst: &mut [u8]) {
         self.serialize(&mut dst)
@@ -448,8 +441,7 @@ impl Pack for ExecutableProposal {
     }
 }
 
-#[account]
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, BorshSerialize, BorshDeserialize)]
 /// Represents the data required to execute a proposal.
 /// This struct is only used by the execute proposal instruction (See
 /// [`crate::instructions::send_execute_proposal`]).

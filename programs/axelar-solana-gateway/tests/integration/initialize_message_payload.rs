@@ -3,19 +3,20 @@ use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
 use axelar_solana_encoding::types::messages::{Message, Messages};
 use axelar_solana_encoding::types::payload::Payload;
 use axelar_solana_encoding::LeafHash;
-use axelar_solana_gateway::events::MessageApprovedEvent;
 use axelar_solana_gateway::instructions;
+use axelar_solana_gateway::processor::GatewayEvent;
 use axelar_solana_gateway::state::incoming_message::{command_id, IncomingMessage, MessageStatus};
 use axelar_solana_gateway::state::message_payload::ImmutMessagePayload;
 use axelar_solana_gateway::{
     find_message_payload_pda, get_incoming_message_pda, get_validate_message_signing_pda,
 };
-use axelar_solana_gateway_test_fixtures::gateway::random_message;
+use axelar_solana_gateway_test_fixtures::gateway::{
+    get_gateway_events, random_message, ProgramInvocationState,
+};
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
 use core::str::FromStr;
-use event_cpi_test_utils::assert_event_cpi;
 use pretty_assertions::assert_eq;
 use solana_program_test::tokio;
 use solana_sdk::account::Account;
@@ -71,39 +72,26 @@ pub async fn approve_message(runner: &mut SolanaAxelarIntegrationMetadata, messa
         incoming_message_pda,
     )
     .unwrap();
-
-    // Simulate transaction
-
-    let simulation_result = runner.simulate_tx(&[ix.clone()]).await.unwrap();
-
-    // Assert event emitted
-
-    let inner_ixs = simulation_result
-        .simulation_details
-        .unwrap()
-        .inner_instructions
-        .unwrap()
-        .first()
-        .cloned()
-        .unwrap();
-    assert!(!inner_ixs.is_empty());
+    let tx = runner.send_tx(&[ix]).await.unwrap();
 
     // Assert event
-    let expected_event = MessageApprovedEvent {
+    let expected_event = axelar_solana_gateway::processor::MessageEvent {
         command_id,
-        source_chain: message.cc_id.chain.clone(),
-        cc_id: message.cc_id.id.clone(),
+        cc_id_chain: message.cc_id.chain.clone(),
+        cc_id_id: message.cc_id.id.clone(),
         source_address: message.source_address.clone(),
         destination_address: Pubkey::from_str(&message.destination_address).unwrap(),
         payload_hash: message.payload_hash,
         destination_chain: message.destination_chain.clone(),
     };
-
-    assert_event_cpi(&expected_event, &inner_ixs);
-
-    // Execute the transaction
-
-    runner.send_tx(&[ix]).await.unwrap();
+    let emitted_events = get_gateway_events(&tx).pop().unwrap();
+    let ProgramInvocationState::Succeeded(vec_events) = emitted_events else {
+        panic!("unexpected event")
+    };
+    let [(_, GatewayEvent::MessageApproved(emitted_event))] = vec_events.as_slice() else {
+        panic!("unexpected event")
+    };
+    assert_eq!(emitted_event, &expected_event);
 
     let (_, signing_pda_bump) =
         get_validate_message_signing_pda(expected_event.destination_address, command_id);

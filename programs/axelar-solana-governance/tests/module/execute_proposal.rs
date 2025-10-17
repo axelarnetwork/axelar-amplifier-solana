@@ -1,21 +1,16 @@
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_governance::{
-    events,
-    instructions::builder::{IxBuilder, ProposalRelated},
-};
-use axelar_solana_memo_program::state::Counter;
+use axelar_solana_governance::events::GovernanceEvent;
+use axelar_solana_governance::instructions::builder::{IxBuilder, ProposalRelated};
 use borsh::to_vec;
 use solana_program_test::tokio;
+use solana_sdk::instruction::AccountMeta;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
-use solana_sdk::program_pack::Pack;
 use solana_sdk::signature::Signer;
-use solana_sdk::{instruction::AccountMeta, pubkey::Pubkey};
 
 use crate::helpers::{
-    approve_ix_at_gateway, default_proposal_eta, find_first_cpi_event_unchecked, gmp_memo_metadata,
-    gmp_sample_metadata, ix_builder_with_memo_proposal_data, ix_builder_with_sample_proposal_data,
-    setup_programs,
+    approve_ix_at_gateway, default_proposal_eta, events, gmp_memo_metadata, gmp_sample_metadata,
+    ix_builder_with_memo_proposal_data, ix_builder_with_sample_proposal_data, setup_programs,
 };
 
 #[tokio::test]
@@ -68,14 +63,6 @@ async fn test_proposal_can_be_executed_and_reached_memo_program() {
         AccountMeta::new_readonly(counter_pda, false),
         AccountMeta::new_readonly(memo_signing_pda, false),
         AccountMeta::new_readonly(sol_integration.gateway_root_pda, false),
-        AccountMeta::new_readonly(
-            Pubkey::find_program_address(
-                &[event_cpi::EVENT_AUTHORITY_SEED],
-                &axelar_solana_gateway::ID,
-            )
-            .0,
-            false,
-        ),
         AccountMeta::new_readonly(axelar_solana_gateway::id(), false),
         AccountMeta::new_readonly(sol_integration.fixture.payer.pubkey(), true),
     ];
@@ -102,21 +89,21 @@ async fn test_proposal_can_be_executed_and_reached_memo_program() {
 
     // Send execute proposal instruction
     let ix = ix_builder.clone().execute_proposal(&config_pda).build();
-    let simulation_event =
-        find_first_cpi_event_unchecked::<events::ProposalExecuted>(&mut sol_integration, &ix)
-            .await
-            .unwrap();
+
     let res = sol_integration.fixture.send_tx(&[ix]).await;
     assert!(res.is_ok());
 
     // Assert event was emitted
+    let mut emitted_events = events(&res.clone().unwrap());
+    assert_eq!(emitted_events.len(), 1);
     let expected_event = proposal_executed_event(&ix_builder);
-    assert_eq!(expected_event, simulation_event);
+    let got_event: GovernanceEvent = emitted_events.pop().unwrap().parse().unwrap();
+    assert_eq!(expected_event, got_event);
     assert_msg_present_in_logs(res.unwrap(), "Instruction: SendToGateway");
 }
 
-fn proposal_executed_event(builder: &IxBuilder<ProposalRelated>) -> events::ProposalExecuted {
-    events::ProposalExecuted {
+fn proposal_executed_event(builder: &IxBuilder<ProposalRelated>) -> GovernanceEvent {
+    GovernanceEvent::ProposalExecuted {
         hash: builder.proposal_hash(),
         target_address: builder.proposal_target_address().to_bytes(),
         call_data: to_vec(&builder.proposal_call_data()).unwrap(),
@@ -187,14 +174,6 @@ async fn test_proposal_can_be_executed_and_reached_memo_program_transferring_fun
         memo_program_funds_receiver_account.clone(),
         AccountMeta::new_readonly(memo_signing_pda, false),
         AccountMeta::new_readonly(sol_integration.gateway_root_pda, false),
-        AccountMeta::new_readonly(
-            Pubkey::find_program_address(
-                &[event_cpi::EVENT_AUTHORITY_SEED],
-                &axelar_solana_gateway::ID,
-            )
-            .0,
-            false,
-        ),
         AccountMeta::new_readonly(axelar_solana_gateway::id(), false),
         AccountMeta::new_readonly(sol_integration.fixture.payer.pubkey(), true),
     ];
@@ -233,12 +212,7 @@ async fn test_proposal_can_be_executed_and_reached_memo_program_transferring_fun
 
     let target_contract_balance = sol_integration.get_balance(&counter_pda).await;
 
-    let deposit_for_counter = solana_sdk::rent::Rent::default().minimum_balance(Counter::LEN);
-
-    assert_eq!(
-        LAMPORTS_PER_SOL + deposit_for_counter,
-        target_contract_balance
-    );
+    assert_eq!(LAMPORTS_PER_SOL + 953_520, target_contract_balance);
 }
 
 #[tokio::test]
@@ -256,14 +230,6 @@ async fn test_proposal_is_deleted_after_execution() {
         AccountMeta::new_readonly(counter_pda, false),
         AccountMeta::new_readonly(memo_signing_pda, false),
         AccountMeta::new_readonly(sol_integration.gateway_root_pda, false),
-        AccountMeta::new_readonly(
-            Pubkey::find_program_address(
-                &[event_cpi::EVENT_AUTHORITY_SEED],
-                &axelar_solana_gateway::ID,
-            )
-            .0,
-            false,
-        ),
         AccountMeta::new_readonly(axelar_solana_gateway::id(), false),
         AccountMeta::new_readonly(sol_integration.fixture.payer.pubkey(), true),
     ];
@@ -315,14 +281,6 @@ async fn test_same_proposal_can_be_created_after_execution() {
         AccountMeta::new_readonly(counter_pda, false),
         AccountMeta::new_readonly(memo_signing_pda, false),
         AccountMeta::new_readonly(sol_integration.gateway_root_pda, false),
-        AccountMeta::new_readonly(
-            Pubkey::find_program_address(
-                &[event_cpi::EVENT_AUTHORITY_SEED],
-                &axelar_solana_gateway::ID,
-            )
-            .0,
-            false,
-        ),
         AccountMeta::new_readonly(axelar_solana_gateway::id(), false),
         AccountMeta::new_readonly(sol_integration.fixture.payer.pubkey(), true),
     ];
@@ -374,16 +332,8 @@ async fn test_cannot_create_proposal_twice() {
     let memo_program_accounts = &[
         AccountMeta::new_readonly(counter_pda, false),
         AccountMeta::new_readonly(sol_integration.gateway_root_pda, false),
-        AccountMeta::new_readonly(axelar_solana_memo_program::id(), false),
-        AccountMeta::new_readonly(
-            Pubkey::find_program_address(
-                &[event_cpi::EVENT_AUTHORITY_SEED],
-                &axelar_solana_gateway::ID,
-            )
-            .0,
-            false,
-        ),
         AccountMeta::new_readonly(axelar_solana_gateway::id(), false),
+        AccountMeta::new_readonly(axelar_solana_memo_program::id(), false),
         AccountMeta::new_readonly(sol_integration.fixture.payer.pubkey(), true),
     ];
 

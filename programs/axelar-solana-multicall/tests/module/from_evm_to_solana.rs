@@ -1,4 +1,3 @@
-use axelar_solana_gateway::events::MessageExecutedEvent;
 use axelar_solana_gateway::executable::AxelarMessagePayload;
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use axelar_solana_memo_program::instruction::AxelarMemoInstruction;
@@ -74,10 +73,9 @@ async fn test_send_from_evm_to_solana() {
         .clone();
 
     let tx = solana_chain
-        .execute_on_axelar_executable::<MessageExecutedEvent>(
+        .execute_on_axelar_executable(
             merkelised_message.leaf.message,
             &decoded_payload.encode().unwrap(),
-            None,
         )
         .await
         .unwrap();

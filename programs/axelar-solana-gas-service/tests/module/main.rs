@@ -19,3 +19,10 @@ mod native {
     mod pay_for_contract_call;
     mod refund_gas;
 }
+
+mod spl {
+    mod add_gas;
+    mod collet_fees;
+    mod pay_for_contract_call;
+    mod refund_gas;
+}

@@ -1,5 +1,5 @@
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_governance::events;
+use axelar_solana_governance::events::GovernanceEvent;
 use axelar_solana_governance::instructions::builder::{IxBuilder, ProposalRelated};
 use axelar_solana_governance::state::operator;
 use axelar_solana_governance::state::proposal::ExecutableProposal;
@@ -10,8 +10,7 @@ use solana_sdk::signature::Signer;
 use crate::fixtures::MINIMUM_PROPOSAL_DELAY;
 use crate::gmp::gmp_sample_metadata;
 use crate::helpers::{
-    approve_ix_at_gateway, find_first_cpi_event_unchecked, ix_builder_with_sample_proposal_data,
-    setup_programs,
+    approve_ix_at_gateway, events, ix_builder_with_sample_proposal_data, setup_programs,
 };
 
 #[tokio::test]
@@ -27,13 +26,6 @@ async fn test_successfully_process_gmp_schedule_time_proposal() {
         .schedule_time_lock_proposal(&sol_integration.fixture.payer.pubkey(), &config_pda)
         .build();
     approve_ix_at_gateway(&mut sol_integration, &mut gmp_call_data).await;
-
-    let simulation_event = find_first_cpi_event_unchecked::<events::ProposalScheduled>(
-        &mut sol_integration,
-        &gmp_call_data.ix,
-    )
-    .await
-    .unwrap();
 
     let res = sol_integration.fixture.send_tx(&[gmp_call_data.ix]).await;
     assert!(res.is_ok());
@@ -55,12 +47,15 @@ async fn test_successfully_process_gmp_schedule_time_proposal() {
     assert_eq!(expected_proposal, got_proposal);
 
     // Assert event was emitted
+    let mut emitted_events = events(&res.unwrap());
+    assert_eq!(emitted_events.len(), 1);
     let expected_event = proposal_scheduled_event(&ix_builder);
-    assert_eq!(expected_event, simulation_event);
+    let got_event: GovernanceEvent = emitted_events.pop().unwrap().parse().unwrap();
+    assert_eq!(expected_event, got_event);
 }
 
-fn proposal_scheduled_event(builder: &IxBuilder<ProposalRelated>) -> events::ProposalScheduled {
-    events::ProposalScheduled {
+fn proposal_scheduled_event(builder: &IxBuilder<ProposalRelated>) -> GovernanceEvent {
+    GovernanceEvent::ProposalScheduled {
         hash: builder.proposal_hash(),
         target_address: builder.proposal_target_address().to_bytes(),
         call_data: to_vec(&builder.proposal_call_data()).unwrap(),
@@ -94,12 +89,6 @@ async fn test_time_lock_default_is_enforced() {
         .schedule_time_lock_proposal(&sol_integration.fixture.payer.pubkey(), &config_pda)
         .build();
     approve_ix_at_gateway(&mut sol_integration, &mut gmp_call_data).await;
-    let simulation_event = find_first_cpi_event_unchecked::<events::ProposalScheduled>(
-        &mut sol_integration,
-        &gmp_call_data.ix,
-    )
-    .await
-    .unwrap();
     let res = sol_integration.fixture.send_tx(&[gmp_call_data.ix]).await;
     assert!(res.is_ok());
 
@@ -116,14 +105,23 @@ async fn test_time_lock_default_is_enforced() {
     assert_eq!(expected_eta, got_proposal.eta());
 
     // Assert event was emitted
+    let mut emitted_events = events(&res.unwrap());
+    assert_eq!(emitted_events.len(), 1);
     #[allow(clippy::panic)] // This is a test, so we can panic here.
     let expected_event = {
         let mut event = proposal_scheduled_event(&ix_builder);
-        let events::ProposalScheduled { eta, .. } = &mut event;
-        *eta = program_utils::from_u64_to_u256_le_bytes(expected_eta);
+        if let GovernanceEvent::ProposalScheduled { eta, .. } = &mut event {
+            *eta = program_utils::from_u64_to_u256_le_bytes(expected_eta);
+        } else {
+            panic!(
+                "If we got here then this test is broken, as we expect a ProposalScheduled event"
+            )
+        };
         event
     };
-    assert_eq!(expected_event, simulation_event);
+
+    let got_event: GovernanceEvent = emitted_events.pop().unwrap().parse().unwrap();
+    assert_eq!(expected_event, got_event);
 }
 
 #[tokio::test]

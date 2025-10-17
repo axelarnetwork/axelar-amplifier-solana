@@ -1,3 +1,5 @@
+use core::mem::size_of;
+
 use axelar_message_primitives::U256;
 use program_utils::{
     pda::{BytemuckedPda, ValidPDA},
@@ -45,8 +47,8 @@ impl Processor {
     /// # Panics
     ///
     /// This function will panic if:
-    /// * Converting `VerifierSetTracker::pda_size` to u64 overflows (via `expect`)
-    /// * Converting `GatewayConfig::pda_size()` to u64 overflows (via `expect`)
+    /// * Converting `size_of::<VerifierSetTracker>` to u64 overflows (via `expect`)
+    /// * Converting `size_of::<GatewayConfig>` to u64 overflows (via `expect`)
     /// * Converting `unix_timestamp` to u64 results in an invalid timestamp (via `expect`)
     pub fn process_initialize_config(
         program_id: &Pubkey,
@@ -85,7 +87,7 @@ impl Processor {
             verifier_set_pda,
             program_id,
             system_account,
-            VerifierSetTracker::pda_size().try_into().map_err(|_err| {
+            size_of::<VerifierSetTracker>().try_into().map_err(|_err| {
                 solana_program::msg!("unexpected u64 overflow in struct size");
                 ProgramError::ArithmeticOverflow
             })?,
@@ -99,7 +101,7 @@ impl Processor {
         // store account data
         let mut data = verifier_set_pda.try_borrow_mut_data()?;
         let tracker =
-            VerifierSetTracker::init_mut(&mut data).ok_or(GatewayError::BytemuckDataLenInvalid)?;
+            VerifierSetTracker::read_mut(&mut data).ok_or(GatewayError::BytemuckDataLenInvalid)?;
         *tracker = VerifierSetTracker::new(pda_bump, epoch, verifier_set_hash);
 
         // check that everything has been derived correctly
@@ -119,7 +121,7 @@ impl Processor {
             gateway_root_pda,
             program_id,
             system_account,
-            GatewayConfig::pda_size().try_into().map_err(|_err| {
+            size_of::<GatewayConfig>().try_into().map_err(|_err| {
                 solana_program::msg!("unexpected u64 overflow in struct size");
                 ProgramError::ArithmeticOverflow
             })?,
@@ -127,7 +129,7 @@ impl Processor {
         )?;
         let mut data = gateway_root_pda.try_borrow_mut_data()?;
         let gateway_config =
-            GatewayConfig::init_mut(&mut data).ok_or(GatewayError::BytemuckDataLenInvalid)?;
+            GatewayConfig::read_mut(&mut data).ok_or(GatewayError::BytemuckDataLenInvalid)?;
 
         let clock = Clock::get()?;
         let current_timestamp = clock.unix_timestamp.try_into().map_err(|_err| {

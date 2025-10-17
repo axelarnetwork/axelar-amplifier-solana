@@ -2,13 +2,12 @@
 //!
 //! See [original implementation](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/governance/AxelarServiceGovernance.sol#L17).
 
-use event_cpi_macros::{emit_cpi, event_cpi_accounts};
 use program_utils::{account_array_structs, validate_system_account_key};
 use solana_program::account_info::AccountInfo;
 use solana_program::program_error::ProgramError;
 
 use super::ProcessGMPContext;
-use crate::events;
+use crate::events::GovernanceEvent;
 use crate::state::operator;
 
 account_array_structs! {
@@ -22,9 +21,7 @@ account_array_structs! {
     // Mandatory for every GMP instruction in the Governance program.
     root_pda,
     proposal_pda,
-    operator_proposal_pda,
-    event_cpi_authority,
-    event_cpi_program_account
+    operator_proposal_pda
 }
 
 /// Processes a Governance GMP `CancelOperatorApproval` command.
@@ -41,12 +38,7 @@ pub(crate) fn process(
         root_pda,
         proposal_pda,
         operator_proposal_pda,
-        event_cpi_authority,
-        event_cpi_program_account,
     } = CancelOperatorApprovalInfo::from_account_iter(&mut accounts.iter())?;
-
-    let event_cpi_accounts = &mut [event_cpi_authority, event_cpi_program_account].into_iter();
-    event_cpi_accounts!(event_cpi_accounts);
 
     validate_system_account_key(system_account.key)?;
 
@@ -59,12 +51,12 @@ pub(crate) fn process(
     program_utils::pda::close_pda(root_pda, operator_proposal_pda, &crate::id())?;
 
     // Send event
-    emit_cpi!(events::OperatorProposalCancelled {
+    let event = GovernanceEvent::OperatorProposalCancelled {
         hash: ctx.proposal_hash,
         target_address: ctx.target.to_bytes(),
         call_data: ctx.cmd_payload.call_data.into(),
         native_value: ctx.cmd_payload.native_value.to_le_bytes(),
-    });
+    };
 
-    Ok(())
+    event.emit()
 }

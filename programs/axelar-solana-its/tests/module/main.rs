@@ -36,7 +36,7 @@ mod role_management;
 mod token_id_validation;
 mod transfer_destination;
 
-use solana_banks_interface::BanksTransactionResultWithSimulation;
+use event_utils::Event;
 use solana_program_test::BanksTransactionResultWithMetadata;
 use solana_sdk::account::Account;
 use solana_sdk::account_info::Account as AccountTrait;
@@ -51,16 +51,17 @@ use solana_sdk::system_instruction;
 use test_context::AsyncTestContext;
 
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway::events::CallContractEvent;
+use axelar_solana_gateway::processor::{CallContractEvent, GatewayEvent};
 use axelar_solana_gateway::state::incoming_message::command_id;
 use axelar_solana_gateway_test_fixtures::base::workspace_root_dir;
 use axelar_solana_gateway_test_fixtures::gas_service::GasServiceUtils;
-use axelar_solana_gateway_test_fixtures::gateway::random_message;
+use axelar_solana_gateway_test_fixtures::gateway::{
+    get_gateway_events, random_message, ProgramInvocationState,
+};
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
 use axelar_solana_its::instruction::ExecuteInstructionInputs;
-use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use evm_contracts_test_suite::chain::TestBlockchain;
 use evm_contracts_test_suite::ethers::abi::Detokenize;
 use evm_contracts_test_suite::ethers::contract::{ContractCall, EthLogDecode, Event as EvmEvent};
@@ -141,10 +142,7 @@ impl ItsTestContext {
         payload: &[u8],
         maybe_mint: Option<Pubkey>,
         token_program: Pubkey,
-    ) -> (
-        Vec<solana_sdk::inner_instruction::InnerInstruction>,
-        BanksTransactionResultWithMetadata,
-    ) {
+    ) -> BanksTransactionResultWithMetadata {
         let payload = route_its_hub(
             GMPPayload::decode(payload).unwrap(),
             self.evm_chain_name.clone(),
@@ -196,23 +194,9 @@ impl ItsTestContext {
         let instruction = axelar_solana_its::instruction::execute(its_ix_inputs)
             .expect("failed to create instruction");
 
-        // Simulate first to get inner_ixs for event extraction
-        let simulation_result = self.simulate_solana_tx(&[instruction.clone()]).await;
-        let inner_ixs = simulation_result
-            .simulation_details
-            .unwrap()
-            .inner_instructions
-            .unwrap()
-            .first()
-            .cloned()
-            .unwrap_or_default();
-
-        // Then execute the transaction
-        let tx_result = match self.solana_chain.fixture.send_tx(&[instruction]).await {
+        match self.solana_chain.fixture.send_tx(&[instruction]).await {
             Ok(tx) | Err(tx) => tx,
-        };
-
-        (inner_ixs, tx_result)
+        }
     }
 
     pub async fn send_solana_tx(
@@ -220,13 +204,6 @@ impl ItsTestContext {
         ixs: &[Instruction],
     ) -> Result<BanksTransactionResultWithMetadata, BanksTransactionResultWithMetadata> {
         self.solana_chain.fixture.send_tx(ixs).await
-    }
-
-    pub async fn simulate_solana_tx(
-        &mut self,
-        ixs: &[Instruction],
-    ) -> BanksTransactionResultWithSimulation {
-        self.solana_chain.fixture.simulate_tx(ixs).await.unwrap()
     }
 
     pub async fn send_solana_tx_with(
@@ -322,24 +299,17 @@ impl ItsTestContext {
             Some(self.solana_wallet),
         )
         .unwrap();
+        let tx = self.send_solana_tx(&[deploy_local_ix]).await.unwrap();
 
-        // Simulate first to get the event
-        let simulation_result = self.simulate_solana_tx(&[deploy_local_ix.clone()]).await;
-        let inner_ixs = simulation_result
-            .simulation_details
+        let deploy_event = tx
+            .metadata
             .unwrap()
-            .inner_instructions
-            .unwrap()
-            .first()
-            .cloned()
+            .log_messages
+            .iter()
+            .find_map(|log| {
+                axelar_solana_its::event::InterchainTokenDeployed::try_from_log(log).ok()
+            })
             .unwrap();
-        let deploy_event = get_first_event_cpi_occurrence::<
-            axelar_solana_its::events::InterchainTokenDeployed,
-        >(&inner_ixs)
-        .unwrap();
-
-        // Then execute the transaction
-        let _tx = self.send_solana_tx(&[deploy_local_ix]).await.unwrap();
 
         assert_eq!(deploy_event.name, "Test Token", "token name does not match");
 
@@ -370,22 +340,8 @@ impl ItsTestContext {
             )
             .unwrap();
 
-        // Simulate first to get the event
-        let simulation_result = self.simulate_solana_tx(&[deploy_remote_ix.clone()]).await;
-        let inner_ixs = simulation_result
-            .simulation_details
-            .unwrap()
-            .inner_instructions
-            .unwrap()
-            .first()
-            .cloned()
-            .unwrap();
-        let call_contract_event =
-            event_cpi_test_utils::get_first_event_cpi_occurrence::<CallContractEvent>(&inner_ixs)
-                .expect("CallContractEvent not found in inner instructions");
-
-        // Then execute the transaction
-        self.send_solana_tx(&[deploy_remote_ix]).await.unwrap();
+        let tx = self.send_solana_tx(&[deploy_remote_ix]).await.unwrap();
+        let call_contract_event = fetch_first_call_contract_event_from_tx(&tx);
 
         self.relay_to_evm(&call_contract_event.payload).await;
 
@@ -426,31 +382,15 @@ impl ItsTestContext {
         )
         .unwrap();
 
-        // Simulate first to get events
-        let simulation_result = self.simulate_solana_tx(&[transfer_ix.clone()]).await;
-        let inner_ixs = simulation_result
-            .simulation_details
-            .unwrap()
-            .inner_instructions
-            .unwrap()
-            .first()
-            .cloned()
+        let tx = self.send_solana_tx(&[transfer_ix]).await.unwrap();
+        let call_contract_event = fetch_first_call_contract_event_from_tx(&tx);
+        let logs = tx.metadata.unwrap().log_messages;
+        let transfer_event = logs
+            .iter()
+            .find_map(|log| axelar_solana_its::event::InterchainTransfer::try_from_log(log).ok())
             .unwrap();
 
-        let call_contract_event =
-            event_cpi_test_utils::get_first_event_cpi_occurrence::<CallContractEvent>(&inner_ixs)
-                .expect("CallContractEvent not found in inner instructions");
-
-        // Find the InterchainTransfer event
-        let transfer_event = get_first_event_cpi_occurrence::<
-            axelar_solana_its::events::InterchainTransfer,
-        >(&inner_ixs)
-        .expect("InterchainTransfer event not found");
-
         assert_eq!(transfer_event.amount, amount);
-
-        // Then execute the transaction
-        self.send_solana_tx(&[transfer_ix]).await.unwrap();
 
         self.relay_to_evm(&call_contract_event.payload).await;
 
@@ -501,17 +441,20 @@ impl ItsTestContext {
             .ok_or("no logs found")
             .unwrap();
 
-        let (inner_ixs, _tx) = self
+        let tx = self
             .relay_to_solana(
                 log.payload.as_ref(),
                 Some(solana_token),
                 spl_token_2022::id(),
             )
             .await;
-        let transfer_received_event = get_first_event_cpi_occurrence::<
-            axelar_solana_its::events::InterchainTransferReceived,
-        >(&inner_ixs)
-        .unwrap();
+        let logs = tx.metadata.unwrap().log_messages;
+        let transfer_received_event = logs
+            .iter()
+            .find_map(|log| {
+                axelar_solana_its::event::InterchainTransferReceived::try_from_log(log).ok()
+            })
+            .unwrap();
         assert_eq!(transfer_received_event.amount, amount_back);
 
         let token_account_data = self
@@ -690,6 +633,22 @@ where
         .into_iter()
         .last()
         .expect("no logs found")
+}
+
+fn fetch_first_call_contract_event_from_tx(
+    tx: &solana_program_test::BanksTransactionResultWithMetadata,
+) -> CallContractEvent {
+    let emitted_events = get_gateway_events(tx).pop().unwrap();
+
+    let ProgramInvocationState::Succeeded(mut vec_events) = emitted_events else {
+        panic!("unexpected event")
+    };
+
+    let (_, GatewayEvent::CallContract(emitted_event)) = vec_events.remove(0) else {
+        panic!("unexpected event")
+    };
+
+    emitted_event
 }
 
 async fn call_evm<M, D>(contract_call: ContractCall<M, D>) -> TransactionReceipt

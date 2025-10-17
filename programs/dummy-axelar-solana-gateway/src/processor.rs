@@ -2,8 +2,6 @@
 
 use std::any::type_name;
 
-use anchor_discriminators::Discriminator;
-use anchor_discriminators_macros::account;
 use borsh::{BorshDeserialize, BorshSerialize};
 use core::mem::size_of;
 use program_utils::pda::init_pda;
@@ -83,8 +81,7 @@ impl Processor {
     }
 }
 
-#[account]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize)]
 struct PDASampleData {
     number: u64,
 }
@@ -92,7 +89,7 @@ struct PDASampleData {
 impl Sealed for PDASampleData {}
 
 impl Pack for PDASampleData {
-    const LEN: usize = Self::DISCRIMINATOR.len() + size_of::<u64>();
+    const LEN: usize = size_of::<u64>();
 
     fn pack_into_slice(&self, mut dst: &mut [u8]) {
         self.serialize(&mut dst)

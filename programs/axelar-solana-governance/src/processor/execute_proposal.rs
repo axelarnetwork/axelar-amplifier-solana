@@ -2,11 +2,10 @@
 //! has reached its ETA.
 //!
 //! See [original implementation](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/governance/InterchainGovernance.sol#L98).
-use crate::events;
+use crate::events::GovernanceEvent;
 use crate::state::proposal::{ExecutableProposal, ExecuteProposalData};
 use crate::state::GovernanceConfig;
 use borsh::to_vec;
-use event_cpi_macros::{emit_cpi, event_cpi_accounts};
 use program_utils::{
     account_array_structs, from_u64_to_u256_le_bytes, pda::ValidPDA, validate_system_account_key,
 };
@@ -22,9 +21,7 @@ account_array_structs! {
     // Attributes
     system_account,
     config_pda,
-    proposal_account,
-    event_cpi_authority,
-    event_cpi_program_account
+    proposal_account
 }
 
 /// Executes a previously GMP received proposal if the proposal has reached its
@@ -42,12 +39,7 @@ pub(crate) fn process(
         system_account,
         config_pda,
         proposal_account,
-        event_cpi_authority,
-        event_cpi_program_account,
     } = ExecuteProposalInfo::from_account_iter(&mut accounts.iter())?;
-
-    let event_cpi_accounts = &mut [event_cpi_authority, event_cpi_program_account].into_iter();
-    event_cpi_accounts!(event_cpi_accounts);
 
     validate_system_account_key(system_account.key)?;
 
@@ -86,7 +78,7 @@ pub(crate) fn process(
     )?;
 
     // Send event
-    emit_cpi!(events::ProposalExecuted {
+    let event = GovernanceEvent::ProposalExecuted {
         hash,
         target_address: execute_proposal_data.target_address,
         call_data: to_vec(&execute_proposal_data.call_data).expect("Should serialize call data"),
@@ -94,6 +86,7 @@ pub(crate) fn process(
         // Todo: Maybe we should adopt this U256 type for the ETA field in the event.
         // Or just cast a u64 in a [u8;32] little endian.
         eta: from_u64_to_u256_le_bytes(proposal.eta()),
-    });
+    };
+    event.emit()?;
     ExecutableProposal::remove(proposal_account, config_pda)
 }

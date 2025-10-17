@@ -1,12 +1,16 @@
 //! State related to role management.
+use core::any::type_name;
 use core::fmt::Debug;
-
-use anchor_discriminators::Discriminator;
-use anchor_discriminators_macros::account;
+use core::mem::size_of;
 
 use bitflags::Flags;
 use borsh::{BorshDeserialize, BorshSerialize};
 use program_utils::pda::BorshPda;
+use solana_program::{
+    msg,
+    program_error::ProgramError,
+    program_pack::{Pack, Sealed},
+};
 
 /// Flags representing the roles that can be assigned to a user. Users shouldn't
 /// need to implement this manually as we have a blanket implementation for
@@ -34,8 +38,7 @@ where
 }
 
 /// Roles assigned to a user on a specific resource.
-#[account]
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, BorshSerialize, BorshDeserialize)]
 pub struct UserRoles<F: RolesFlags> {
     roles: F,
     bump: u8,
@@ -75,11 +78,35 @@ where
     }
 }
 
+impl<F> Pack for UserRoles<F>
+where
+    F: RolesFlags,
+{
+    const LEN: usize = size_of::<F>() + size_of::<u8>();
+
+    #[allow(clippy::unwrap_used)]
+    fn pack_into_slice(&self, mut dst: &mut [u8]) {
+        self.serialize(&mut dst).unwrap();
+    }
+
+    fn unpack_from_slice(src: &[u8]) -> Result<Self, solana_program::program_error::ProgramError> {
+        let mut mut_src: &[u8] = src;
+        Self::deserialize(&mut mut_src).map_err(|err| {
+            msg!(
+                "Error: failed to deserialize account as {}: {}",
+                type_name::<Self>(),
+                err
+            );
+            ProgramError::InvalidAccountData
+        })
+    }
+}
+
+impl<F> Sealed for UserRoles<F> where F: RolesFlags {}
 impl<F> BorshPda for UserRoles<F> where F: RolesFlags {}
 
 /// Proposal to transfer roles to a user.
-#[account]
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, BorshSerialize, BorshDeserialize)]
 pub struct RoleProposal<F: RolesFlags> {
     /// The roles to be transferred.
     pub roles: F,
@@ -88,6 +115,31 @@ pub struct RoleProposal<F: RolesFlags> {
     pub bump: u8,
 }
 
+impl<F> Pack for RoleProposal<F>
+where
+    F: RolesFlags,
+{
+    const LEN: usize = size_of::<F>();
+
+    #[allow(clippy::unwrap_used)]
+    fn pack_into_slice(&self, mut dst: &mut [u8]) {
+        self.serialize(&mut dst).unwrap();
+    }
+
+    fn unpack_from_slice(src: &[u8]) -> Result<Self, solana_program::program_error::ProgramError> {
+        let mut mut_src: &[u8] = src;
+        Self::deserialize(&mut mut_src).map_err(|err| {
+            msg!(
+                "Error: failed to deserialize account as {}: {}",
+                type_name::<Self>(),
+                err
+            );
+            ProgramError::InvalidAccountData
+        })
+    }
+}
+
+impl<F> Sealed for RoleProposal<F> where F: RolesFlags {}
 impl<F> BorshPda for RoleProposal<F> where F: RolesFlags {}
 
 #[cfg(test)]
@@ -138,7 +190,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::indexing_slicing)]
     fn test_user_roles_round_trip() {
         let original = UserRoles {
             roles: Roles::MINTER | Roles::OPERATOR,
@@ -146,39 +197,12 @@ mod tests {
         };
 
         let serialized = to_vec(&original).unwrap();
-        assert_eq!(
-            &serialized[..UserRoles::<Roles>::DISCRIMINATOR.len()],
-            UserRoles::<Roles>::DISCRIMINATOR
-        );
         let deserialized = UserRoles::<Roles>::try_from_slice(&serialized).unwrap();
 
         assert_eq!(original, deserialized);
         assert!(original.contains(Roles::MINTER));
         assert!(original.contains(Roles::OPERATOR));
         assert!(deserialized.contains(Roles::MINTER | Roles::OPERATOR));
-    }
-
-    #[test]
-    #[allow(clippy::indexing_slicing)]
-    fn test_role_proposal_round_trip() {
-        let original = RoleProposal {
-            roles: Roles::MINTER | Roles::FLOW_LIMITER,
-            bump: 24,
-        };
-
-        let serialized = to_vec(&original).unwrap();
-        assert_eq!(
-            &serialized[..RoleProposal::<Roles>::DISCRIMINATOR.len()],
-            RoleProposal::<Roles>::DISCRIMINATOR
-        );
-        let deserialized = RoleProposal::<Roles>::try_from_slice(&serialized).unwrap();
-
-        assert_eq!(original, deserialized);
-        assert!(original.roles.contains(Roles::MINTER));
-        assert!(original.roles.contains(Roles::FLOW_LIMITER));
-        assert!(deserialized
-            .roles
-            .contains(Roles::MINTER | Roles::FLOW_LIMITER));
     }
 
     #[test]

@@ -1,3 +1,4 @@
+use event_utils::Event;
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};
 use solana_program_test::tokio;
 use solana_sdk::program_pack::Pack as _;
@@ -7,8 +8,6 @@ use solana_sdk::signer::Signer as _;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_token_2022::instruction::initialize_account3;
 use test_context::test_context;
-
-use event_cpi_test_utils::get_first_event_cpi_occurrence;
 
 use crate::ItsTestContext;
 use axelar_solana_its::state::token_manager::Type as TokenManagerType;
@@ -128,14 +127,17 @@ async fn test_inbound_transfer_using_token_account_mint_burn(
             .into(),
     });
 
-    let (inner_ixs, _tx) = ctx
+    let tx = ctx
         .relay_to_solana(&payload.encode(), Some(custom_mint), spl_token_2022::id())
         .await;
 
-    let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
-    >(&inner_ixs)
-    .expect("InterchainTransferReceived event should be present");
+    let logs = tx.metadata.unwrap().log_messages;
+    let transfer_received_event = logs
+        .iter()
+        .find_map(|log| {
+            axelar_solana_its::event::InterchainTransferReceived::try_from_log(log).ok()
+        })
+        .expect("InterchainTransferReceived event should be present");
 
     assert_eq!(transfer_received_event.amount, transfer_amount);
     assert_eq!(transfer_received_event.token_id, token_id);
@@ -206,14 +208,17 @@ async fn test_inbound_transfer_using_token_account_lock_unlock(
             .into(),
     });
 
-    let (inner_ixs, _tx) = ctx
+    let tx = ctx
         .relay_to_solana(&payload.encode(), Some(custom_mint), spl_token_2022::id())
         .await;
 
-    let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
-    >(&inner_ixs)
-    .expect("InterchainTransferReceived event should be present");
+    let logs = tx.metadata.unwrap().log_messages;
+    let transfer_received_event = logs
+        .iter()
+        .find_map(|log| {
+            axelar_solana_its::event::InterchainTransferReceived::try_from_log(log).ok()
+        })
+        .expect("InterchainTransferReceived event should be present");
 
     assert_eq!(transfer_received_event.amount, transfer_amount);
     assert_eq!(transfer_received_event.token_id, token_id);
@@ -272,14 +277,17 @@ async fn test_inbound_transfer_using_wallet_mint_burn(
             .into(),
     });
 
-    let (inner_ixs, _tx) = ctx
+    let tx = ctx
         .relay_to_solana(&payload.encode(), Some(custom_mint), spl_token_2022::id())
         .await;
 
-    let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
-    >(&inner_ixs)
-    .expect("InterchainTransferReceived event should be present");
+    let logs = tx.metadata.unwrap().log_messages;
+    let transfer_received_event = logs
+        .iter()
+        .find_map(|log| {
+            axelar_solana_its::event::InterchainTransferReceived::try_from_log(log).ok()
+        })
+        .expect("InterchainTransferReceived event should be present");
 
     assert_eq!(transfer_received_event.amount, transfer_amount);
     assert_eq!(transfer_received_event.token_id, token_id);
@@ -356,14 +364,17 @@ async fn test_inbound_transfer_using_wallet_lock_unlock(
             .into(),
     });
 
-    let (inner_ixs, _tx) = ctx
+    let tx = ctx
         .relay_to_solana(&payload.encode(), Some(custom_mint), spl_token_2022::id())
         .await;
 
-    let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
-    >(&inner_ixs)
-    .expect("InterchainTransferReceived event should be present");
+    let logs = tx.metadata.unwrap().log_messages;
+    let transfer_received_event = logs
+        .iter()
+        .find_map(|log| {
+            axelar_solana_its::event::InterchainTransferReceived::try_from_log(log).ok()
+        })
+        .expect("InterchainTransferReceived event should be present");
 
     assert_eq!(transfer_received_event.amount, transfer_amount);
     assert_eq!(transfer_received_event.token_id, token_id);

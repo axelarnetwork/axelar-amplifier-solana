@@ -20,7 +20,6 @@ mainnet = ["program-utils/mainnet"]
 default = ["devnet-amplifier"]
 
 [dependencies]
-anchor-discriminators.workspace = true
 anchor-discriminators-macros.workspace = true
 solana-program.workspace = true
 borsh.workspace = true

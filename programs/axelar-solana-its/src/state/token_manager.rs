@@ -2,8 +2,6 @@
 //! program.
 
 use alloy_primitives::U256;
-use anchor_discriminators::Discriminator;
-use anchor_discriminators_macros::account;
 use borsh::{BorshDeserialize, BorshSerialize};
 use program_utils::pda::BorshPda;
 use solana_program::program_error::ProgramError;
@@ -135,8 +133,7 @@ impl TryFrom<u8> for Type {
 }
 
 /// Struct containing state of a `TokenManager`
-#[account]
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, BorshSerialize, BorshDeserialize)]
 pub struct TokenManager {
     /// The type of `TokenManager`.
     pub ty: Type,
