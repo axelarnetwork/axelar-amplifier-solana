@@ -195,4 +195,13 @@ pub mod axelar_solana_its_v2 {
             signing_pda_bump,
         )
     }
+
+    pub fn register_custom_token(
+        ctx: Context<RegisterCustomToken>,
+        salt: [u8; 32],
+        token_manager_type: crate::state::Type,
+        operator: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
+    }
 }
