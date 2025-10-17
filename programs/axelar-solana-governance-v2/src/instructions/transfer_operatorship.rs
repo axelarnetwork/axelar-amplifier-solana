@@ -1,25 +1,25 @@
-use crate::{
-    seed_prefixes::GOVERNANCE_CONFIG, GovernanceConfig, GovernanceError, OperatorshipTransferred,
-};
+use crate::{GovernanceConfig, GovernanceError, OperatorshipTransferred};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 #[event_cpi]
+/// Either the operator_account is a signer and matches the stored operator,
+/// or the governance_config account itself is a signer
 pub struct TransferOperatorship<'info> {
     pub system_program: Program<'info, System>,
 
-    /// The current operator account - may or may not be a signer
-    /// CHECK: We manually validate this account based on signing requirements
+    /// The current operator account, optional
+    #[account(
+        constraint = operator_account.key.to_bytes() == governance_config.operator
+            @ GovernanceError::MissingRequiredSignature,
+    )]
     pub operator_account: Option<Signer<'info>>,
 
     #[account(
         mut,
-        seeds = [GOVERNANCE_CONFIG],
+        seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump,
-        // Either the operator_account is a signer and matches the stored operator,
-		// or the governance_config account itself is a signer (program root)
-        constraint = operator_account.as_ref().is_some_and(|op| op.key.to_bytes() == governance_config.operator)
-            || governance_config.to_account_info().is_signer
+        constraint = operator_account.is_some() || governance_config.to_account_info().is_signer
             @ GovernanceError::MissingRequiredSignature,
     )]
     pub governance_config: Account<'info, GovernanceConfig>,
