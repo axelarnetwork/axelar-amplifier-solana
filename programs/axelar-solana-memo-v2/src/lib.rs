@@ -18,10 +18,10 @@ pub mod memo {
     pub fn send_memo(
         ctx: Context<SendMemo>,
         destination_chain: String,
-        destination_contract_address: String,
+        destination_address: String,
         memo: String,
     ) -> Result<()> {
-        instructions::send_memo_handler(ctx, destination_chain, destination_contract_address, memo)
+        instructions::send_memo_handler(ctx, destination_chain, destination_address, memo)
     }
 
     pub fn init(ctx: Context<Init>) -> Result<()> {

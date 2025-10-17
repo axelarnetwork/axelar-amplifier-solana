@@ -92,29 +92,15 @@ fn test_execute() {
             payload_merkle_root,
         );
 
-    let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
+    let gateway_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
 
     let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap();
 
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
+        .get_account(&verification_session_pda)
+        .unwrap();
 
     // Step 5: Sign the payload with both signers, verify both signatures on the gateway
     let verifier_info_1 = create_verifier_info(
@@ -137,12 +123,8 @@ fn test_execute() {
     );
 
     let updated_verification_account_after_first = verify_result_1
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
+        .get_account(&verification_session_pda)
+        .unwrap();
 
     let verifier_info_2 = create_verifier_info(
         &secret_key_2,
@@ -157,10 +139,10 @@ fn test_execute() {
         payload_merkle_root,
         verifier_info_2,
         verification_session_pda,
-        gateway_account,
-        updated_verification_account_after_first,
+        gateway_account.clone(),
+        updated_verification_account_after_first.clone(),
         setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        verifier_set_tracker_account.clone(),
     );
 
     // Step 6: Approve the message
@@ -180,13 +162,7 @@ fn test_execute() {
         "Message approval should succeed"
     );
 
-    let incoming_message_account = approve_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == incoming_message_pda)
-        .unwrap()
-        .1
-        .clone();
+    let incoming_message_account = approve_result.get_account(&incoming_message_pda).unwrap();
 
     let incoming_message =
         IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
@@ -242,13 +218,7 @@ fn test_execute() {
 
     assert!(init_result.program_result.is_ok());
 
-    let counter_pda_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == counter_pda)
-        .unwrap()
-        .1
-        .clone();
+    let counter_pda_account = init_result.get_account(&counter_pda).unwrap();
 
     // Step 7.2: Execute the message
     let message = &messages[0];
@@ -274,13 +244,13 @@ fn test_execute() {
     .data();
 
     let execute_accounts = vec![
-        (incoming_message_pda, incoming_message_account),
+        (incoming_message_pda, incoming_message_account.clone()),
         (
             signing_pda,
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: SYSTEM_PROGRAM_ID,
+                owner: GATEWAY_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -325,19 +295,24 @@ fn test_execute() {
                 rent_epoch: 0,
             },
         ),
-        (counter_pda, counter_pda_account),
+        (counter_pda, counter_pda_account.clone()),
     ];
+
+    let execute_ix_accounts = axelar_solana_memo_v2::accounts::Execute {
+        executable: axelar_solana_memo_v2::accounts::AxelarExecuteAccounts {
+            incoming_message_pda,
+            signing_pda,
+            axelar_gateway_program: GATEWAY_PROGRAM_ID,
+            event_authority: event_authority_pda,
+            system_program: SYSTEM_PROGRAM_ID,
+        },
+        counter: counter_pda,
+    }
+    .to_account_metas(None);
 
     let execute_instruction = Instruction {
         program_id: MEMO_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new(incoming_message_pda, false),
-            AccountMeta::new_readonly(signing_pda, false),
-            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
-            AccountMeta::new_readonly(event_authority_pda, false),
-            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-            AccountMeta::new(counter_pda, false),
-        ],
+        accounts: execute_ix_accounts,
         data: execute_instruction_data,
     };
 
@@ -351,17 +326,13 @@ fn test_execute() {
         execute_result.program_result
     );
 
-    let counter_pda_account = execute_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == counter_pda)
-        .unwrap()
-        .1
-        .clone();
+    let counter_pda_account = execute_result.get_account(&counter_pda).unwrap();
 
     let counter_data = Counter::try_deserialize(&mut counter_pda_account.data.as_slice()).unwrap();
     assert_eq!(
         counter_data.counter, 1,
         "Counter should be incremented to 1"
     );
+
+    // TODO test event cpi
 }
