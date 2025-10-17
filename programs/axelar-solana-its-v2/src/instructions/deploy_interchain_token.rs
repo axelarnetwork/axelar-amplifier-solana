@@ -2,7 +2,9 @@ use crate::{
     errors::ITSError,
     events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    state::{
+        token_manager, FlowState, InterchainTokenService, Roles, TokenManager, Type, UserRoles,
+    },
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::prelude::*;
@@ -169,9 +171,10 @@ pub fn deploy_interchain_token_handler(
     initialize_token_manager(
         &mut ctx.accounts.token_manager_pda,
         token_id,
-        *ctx.accounts.token_mint.to_account_info().key,
-        *ctx.accounts.token_manager_ata.to_account_info().key,
+        ctx.accounts.token_mint.key(),
+        ctx.accounts.token_manager_ata.key(),
         ctx.bumps.token_manager_pda,
+        Type::NativeInterchainToken,
     )?;
 
     emit_cpi!(TokenManagerDeployed {
@@ -194,17 +197,8 @@ pub fn deploy_interchain_token_handler(
     // Initialize UserRoles
     if ctx.accounts.minter.is_some() && ctx.accounts.minter_roles_pda.is_some() {
         let minter_roles_pda = &mut ctx.accounts.minter_roles_pda.as_mut().unwrap();
-
         minter_roles_pda.bump = ctx.bumps.minter_roles_pda.unwrap();
-
-        // Base roles for any minter
-        let mut roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
-
-        if ctx.accounts.token_manager_pda.ty == Type::NativeInterchainToken {
-            roles |= Roles::MINTER;
-        }
-
-        minter_roles_pda.roles = roles;
+        minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
     }
 
     create_token_metadata(
@@ -239,25 +233,6 @@ pub fn deploy_interchain_token_handler(
     });
 
     anchor_lang::solana_program::program::set_return_data(&token_id);
-
-    Ok(())
-}
-
-fn initialize_token_manager(
-    token_manager_pda: &mut Account<TokenManager>,
-    token_id: [u8; 32],
-    token_address: Pubkey,
-    associated_token_account: Pubkey,
-    bump: u8,
-) -> Result<()> {
-    use crate::state::{token_manager::Type, FlowState};
-
-    token_manager_pda.ty = Type::NativeInterchainToken;
-    token_manager_pda.token_id = token_id;
-    token_manager_pda.token_address = token_address;
-    token_manager_pda.associated_token_account = associated_token_account;
-    token_manager_pda.flow_slot = FlowState::new(None, 0);
-    token_manager_pda.bump = bump;
 
     Ok(())
 }
@@ -342,7 +317,10 @@ fn create_token_metadata<'info>(
     Ok(())
 }
 
-fn validate_mint_extensions(ty: token_manager::Type, token_mint: &AccountInfo<'_>) -> Result<()> {
+pub fn validate_mint_extensions(
+    ty: token_manager::Type,
+    token_mint: &AccountInfo<'_>,
+) -> Result<()> {
     let mint_data = token_mint.try_borrow_data()?;
     let mint = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
 
@@ -357,6 +335,24 @@ fn validate_mint_extensions(ty: token_manager::Type, token_mint: &AccountInfo<'_
         msg!("The mint is not compatible with the type");
         return err!(ITSError::InvalidInstructionData);
     }
+
+    Ok(())
+}
+
+pub fn initialize_token_manager(
+    token_manager_pda: &mut Account<TokenManager>,
+    token_id: [u8; 32],
+    token_address: Pubkey,
+    associated_token_account: Pubkey,
+    bump: u8,
+    token_manager_type: Type,
+) -> Result<()> {
+    token_manager_pda.ty = token_manager_type;
+    token_manager_pda.token_id = token_id;
+    token_manager_pda.token_address = token_address;
+    token_manager_pda.associated_token_account = associated_token_account;
+    token_manager_pda.flow_slot = FlowState::new(None, 0);
+    token_manager_pda.bump = bump;
 
     Ok(())
 }
