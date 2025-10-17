@@ -1,7 +1,7 @@
 #![cfg(test)]
 #![allow(clippy::too_many_lines)]
 
-use anchor_lang::AccountDeserialize;
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_gateway_v2::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
 use axelar_solana_gateway_v2::u256::U256;
 use axelar_solana_gateway_v2::{
@@ -16,7 +16,10 @@ use axelar_solana_gateway_v2_test_fixtures::{
     setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
     verify_signature_helper,
 };
-use solana_sdk::pubkey::Pubkey;
+use solana_sdk::{
+    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
+    system_program::ID as SYSTEM_PROGRAM_ID,
+};
 
 #[test]
 fn test_initialize_config() {
@@ -531,6 +534,103 @@ fn test_call_contract_from_program() {
     assert!(
         !result.program_result.is_err(),
         "call_contract should succeed: {:?}",
+        result.program_result
+    );
+}
+
+#[test]
+#[allow(clippy::str_to_string)]
+fn test_call_contract_direct_signer() {
+    let setup = mock_setup_test(None);
+
+    // Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(
+        !init_result.program_result.is_err(),
+        "Gateway initialization should succeed"
+    );
+
+    let gateway_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
+
+    let (event_authority_pda, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+
+    // Create a direct signer (e.g., a user wallet)
+    let direct_signer = Pubkey::new_unique();
+
+    let destination_chain = "ethereum".to_string();
+    let destination_address = "0xDestinationContract".to_string();
+    let payload = b"Hello from Solana!".to_vec();
+    let signing_pda_bump = 0; // Not used for direct signers
+
+    let call_contract_ix = axelar_solana_gateway_v2::instruction::CallContract {
+        destination_chain: destination_chain.clone(),
+        destination_contract_address: destination_address.clone(),
+        payload: payload.clone(),
+        signing_pda_bump,
+    };
+
+    let mut accounts = axelar_solana_gateway_v2::accounts::CallContract {
+        caller: direct_signer,
+        signing_pda: None,
+        gateway_root_pda: setup.gateway_root_pda,
+        event_authority: event_authority_pda,
+        program: GATEWAY_PROGRAM_ID,
+    }
+    .to_account_metas(None);
+
+    #[allow(clippy::indexing_slicing)]
+    {
+        accounts[0].is_signer = true; // Mark direct signer as signer
+    }
+
+    let instruction = Instruction {
+        program_id: GATEWAY_PROGRAM_ID,
+        accounts,
+        data: call_contract_ix.data(),
+    };
+
+    let instruction_accounts = vec![
+        (
+            direct_signer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (setup.gateway_root_pda, gateway_account.clone()),
+        (
+            event_authority_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            GATEWAY_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let result = setup
+        .mollusk
+        .process_instruction(&instruction, &instruction_accounts);
+
+    assert!(
+        !result.program_result.is_err(),
+        "call_contract with direct signer should succeed: {:?}",
         result.program_result
     );
 }
