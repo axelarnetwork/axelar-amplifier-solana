@@ -4,18 +4,14 @@ use crate::{
     ITS_HUB_CHAIN_NAME,
 };
 use anchor_lang::prelude::*;
-use anchor_lang::InstructionData;
 use anchor_spl::token_2022::spl_token_2022::{
     extension::StateWithExtensions, state::Mint as SplMint,
 };
 use anchor_spl::token_interface::Mint;
-use axelar_solana_gas_service_v2::{
-    cpi::{accounts::PayNativeForContractCall, pay_native_for_contract_call},
-    state::Treasury,
-};
+use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{
-    GMPPayload, RegisterTokenMetadata as RegisterTokenMetadataPayload, SendToHub,
+    GMPPayload, RegisterTokenMetadata as RegisterTokenMetadataPayload,
 };
 
 #[derive(Accounts)]
