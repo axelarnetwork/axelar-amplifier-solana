@@ -5,6 +5,12 @@ pub use crate::Message;
 pub use axelar_message_primitives::DataPayload as ExecutablePayload;
 pub use axelar_message_primitives::EncodingScheme as ExecutablePayloadEncodingScheme;
 
+#[error_code]
+pub enum ExecutableError {
+    #[msg("Payload hash does not match the computed hash of the payload")]
+    InvalidPayloadHash,
+}
+
 /// Anchor discriminator for the `execute` instruction.
 /// sha256("global:execute")[..8]
 ///
@@ -66,7 +72,7 @@ macro_rules! executable_accounts {
     () => {
     /// Accounts for executing an inbound Axelar GMP message.
     #[derive(Accounts)]
-    #[instruction(message: Message)]
+    #[instruction(message: axelar_solana_gateway_v2::Message)]
     pub struct AxelarExecuteAccounts<'info> {
         // IncomingMessage PDA account
         // needs to be mutable as the validate_message CPI
@@ -99,13 +105,13 @@ macro_rules! executable_accounts {
 
     pub fn validate_message<'info>(
         executable_accounts: &AxelarExecuteAccounts<'info>,
-        message: Message,
+        message: axelar_solana_gateway_v2::Message,
         payload: &[u8],
     ) -> Result<()> {
     	// Verify that the payload hash matches the computed hash of the payload
         let computed_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
         if computed_payload_hash != message.payload_hash {
-            return err!(ExecutableError::InvalidPayloadHash);
+            return err!(axelar_solana_gateway_v2::executable::ExecutableError::InvalidPayloadHash);
         }
 
         let cpi_accounts = axelar_solana_gateway_v2::cpi::accounts::ValidateMessage {
@@ -142,10 +148,4 @@ macro_rules! executable_accounts {
     }
 
     };
-}
-
-#[error_code]
-pub enum ExecutableError {
-    #[msg("Payload hash does not match the computed hash of the payload")]
-    InvalidPayloadHash,
 }
