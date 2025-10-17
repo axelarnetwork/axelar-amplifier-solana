@@ -195,6 +195,7 @@ axelar-solana-memo-v2 = { path = "programs/axelar-solana-memo-v2", default-featu
 axelar-solana-multicall = { path = "programs/axelar-solana-multicall", default-features = false }
 axelar-solana-gateway = { path = "programs/axelar-solana-gateway", default-features = false }
 axelar-solana-gateway-v2 = { path = "programs/axelar-solana-gateway-v2", default-features = false }
+axelar-solana-governance-v2 = { path = "programs/axelar-solana-governance-v2", default-features = false }
 dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", default-features = false }
 axelar-solana-governance = { path = "programs/axelar-solana-governance", default-features = false }
 
@@ -203,6 +204,7 @@ axelar-message-primitives = { path = "helpers/axelar-message-primitives" }
 axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
 axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
+axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
 event-utils = { path = "crates/event-utils" }
 event-macros = { path = "crates/event-macros" }
 event-cpi = { path = "helpers/event-cpi" }
