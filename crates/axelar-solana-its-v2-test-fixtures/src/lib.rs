@@ -1,17 +1,26 @@
+use anchor_lang::prelude::Rent;
+use anchor_lang::AnchorSerialize;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::{
-    associated_token::get_associated_token_address_with_program_id,
+    associated_token::{
+        get_associated_token_address_with_program_id, spl_associated_token_account,
+    },
     token_2022::spl_token_2022::{self},
 };
 use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 use axelar_solana_its_v2::{
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    utils::interchain_token_id,
+    utils::{canonical_interchain_token_id, interchain_token_id},
 };
+use mollusk_svm::result::Check;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_svm_programs_token;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
+use mpl_token_metadata::accounts::Metadata;
+use solana_program::program_pack::Pack;
+use solana_sdk::signature::Signer;
+use solana_sdk::signer::keypair::Keypair;
 
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -665,4 +674,145 @@ pub fn approve_deploy_remote_interchain_token_helper(
             .process_instruction(&approve_ix, &approve_accounts),
         ctx.mollusk,
     )
+}
+
+pub fn register_canonical_interchain_token_helper(
+    mollusk: &Mollusk,
+    mint_data: Vec<u8>,
+    mint_keypair: &Keypair,
+    mint_authority: &Keypair,
+    payer: Pubkey,
+    payer_account: &Account,
+    its_root_pda: Pubkey,
+    its_root_account: &Account,
+    program_id: Pubkey,
+) -> InstructionResult {
+    let mint_pubkey = mint_keypair.pubkey();
+
+    let mint_account = Account {
+        lamports: Rent::default().minimum_balance(spl_token_2022::state::Mint::LEN),
+        data: mint_data,
+        owner: spl_token_2022::ID,
+        executable: false,
+        rent_epoch: 0,
+    };
+
+    // Create metadata for the token
+    let (metadata_account_pda, _metadata_bump) = Pubkey::find_program_address(
+        &[
+            b"metadata",
+            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
+            mint_pubkey.as_ref(),
+        ],
+        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
+    );
+
+    let (event_authority, event_authority_account, program_account) =
+        mollusk_test_utils::get_event_authority_and_program_accounts(&program_id);
+
+    // Create metadata account data
+    let metadata = Metadata {
+        key: mpl_token_metadata::types::Key::MetadataV1,
+        update_authority: mint_authority.pubkey(),
+        mint: mint_pubkey,
+        name: "Test Canonical Token".to_string(),
+        symbol: "TCT".to_string(),
+        uri: "https://example.com".to_string(),
+        seller_fee_basis_points: 0,
+        creators: None,
+        primary_sale_happened: false,
+        is_mutable: true,
+        edition_nonce: None,
+        token_standard: Some(mpl_token_metadata::types::TokenStandard::Fungible),
+        collection: None,
+        uses: None,
+        collection_details: None,
+        programmable_config: None,
+    };
+
+    let metadata_data = metadata.try_to_vec().unwrap();
+    let metadata_account = Account {
+        lamports: Rent::default().minimum_balance(metadata_data.len()),
+        data: metadata_data,
+        owner: mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
+        executable: false,
+        rent_epoch: 0,
+    };
+
+    // Calculate the token ID and manager PDA
+    let token_id = canonical_interchain_token_id(&mint_pubkey);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+
+    // Calculate the token manager ATA
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &mint_pubkey,
+        &spl_token_2022::ID,
+    );
+
+    // Create the instruction
+    let ix = Instruction {
+        program_id,
+        accounts: axelar_solana_its_v2::accounts::RegisterCanonicalInterchainToken {
+            payer,
+            metadata_account: metadata_account_pda,
+            system_program: system_program::ID,
+            its_root_pda,
+            token_manager_pda,
+            token_mint: mint_pubkey,
+            token_manager_ata,
+            token_program: spl_token_2022::ID,
+            associated_token_program: spl_associated_token_account::ID,
+            rent: solana_program::sysvar::rent::ID,
+            // for event cpi
+            event_authority,
+            program: program_id,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_its_v2::instruction::RegisterCanonicalInterchainToken {}.data(),
+    };
+
+    // Set up accounts
+    let accounts = vec![
+        (payer, payer_account.clone()),
+        (metadata_account_pda, metadata_account),
+        (
+            system_program::ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        (its_root_pda, its_root_account.clone()),
+        (token_manager_pda, Account::new(0, 0, &system_program::ID)),
+        (mint_pubkey, mint_account),
+        (token_manager_ata, Account::new(0, 0, &system_program::ID)),
+        mollusk_svm_programs_token::token2022::keyed_account(),
+        mollusk_svm_programs_token::associated_token::keyed_account(),
+        (
+            solana_sdk::sysvar::rent::ID,
+            Account {
+                lamports: 1_000_000_000,
+                data: create_rent_sysvar_data(),
+                owner: solana_sdk::sysvar::rent::ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        // For event CPI
+        (event_authority, event_authority_account),
+        (program_id, program_account),
+    ];
+
+    mollusk.process_and_validate_instruction(&ix, &accounts, &[Check::success()])
 }
