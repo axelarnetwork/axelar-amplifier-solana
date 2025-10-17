@@ -11,7 +11,7 @@ pub mod processor;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-solana_program::declare_id!("mcKVtacWYmMcvDZ9kLVhzWpMXPKA7arWgWfUb1zjwWU");
+solana_program::declare_id!("mcACg3rCYQLAUKAmpyX9eD4tLMxMV2wbwz2Agc8Hj1A");
 
 #[cfg(feature = "stagenet")]
 solana_program::declare_id!("mcHYeFvgcAsQqQDesRjbNQ7viuJgyn726pCWti4YgAi");
