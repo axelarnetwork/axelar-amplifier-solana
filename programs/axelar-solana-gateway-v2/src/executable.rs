@@ -68,7 +68,11 @@ macro_rules! executable_accounts {
     #[derive(Accounts)]
     #[instruction(message: Message)]
     pub struct AxelarExecuteAccounts<'info> {
+        // IncomingMessage PDA account
+        // needs to be mutable as the validate_message CPI
+        // updates its state
         #[account(
+        	mut,
             seeds = [axelar_solana_gateway_v2::IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
             bump = incoming_message_pda.load()?.bump,
             seeds::program = axelar_gateway_program.key()
