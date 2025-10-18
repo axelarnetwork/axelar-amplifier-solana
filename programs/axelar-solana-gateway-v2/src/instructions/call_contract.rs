@@ -33,6 +33,7 @@ pub fn call_contract_handler(
 
     if caller.is_signer {
         // Direct signer, so not a program, continue
+        caller.key()
     } else {
         // Case of a program, validate and use signing PDA
         let expected_signing_pda = Pubkey::create_program_address(
