@@ -15,11 +15,11 @@ borsh.workspace = true
 axelar-solana-encoding = { workspace = true, features = ["solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
+axelar-message-primitives.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway-v2-test-fixtures.workspace = true
-axelar-message-primitives.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 rand.workspace = true

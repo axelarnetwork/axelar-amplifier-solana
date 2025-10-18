@@ -1,17 +1,19 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
-use anchor_lang::{solana_program, AccountDeserialize, InstructionData};
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
 use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use axelar_solana_gateway_v2::IncomingMessage;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2::{CrossChainId, Message, MessageLeaf};
+use axelar_solana_gateway_v2::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
     verify_signature_helper,
 };
+use axelar_solana_memo_v2::Counter;
 use axelar_solana_memo_v2::ID as MEMO_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
@@ -23,12 +25,17 @@ use solana_sdk::{
 
 #[test]
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::non_ascii_literal)]
 fn test_execute() {
     // Step 0: Example payload
-    let test_payload =
-        hex::decode("0000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000087872706c2d64657600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000000192a012442953d881972bfc1eb1b77c6950b992b6b30b3798b47d666aa91704900000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000002386f26fc1000000000000000000000000000000000000000000000000000000000000000001600000000000000000000000000000000000000000000000000000000000000014ba76c6980428a0b10cfc5d8ccb61949677a61233000000000000000000000000000000000000000000000000000000000000000000000000000000000000002272396d3975554341774d4c536e5272795859755542336347586f6a70527a6e61416f0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        ).unwrap();
-    let test_payload_hash: [u8; 32] = solana_program::keccak::hashv(&[&test_payload]).to_bytes();
+    let memo_string = "🐪🐪🐪🐪";
+    let (counter_pda, _counter_pda_bump) = Counter::get_pda();
+    let test_payload = ExecutablePayload::new(
+        memo_string.as_bytes(),
+        &[AccountMeta::new(counter_pda, false)],
+        ExecutablePayloadEncodingScheme::AbiEncoding,
+    );
+    let test_payload_hash: [u8; 32] = *test_payload.hash().unwrap().0;
 
     // Step 1: Setup test with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
@@ -85,29 +92,15 @@ fn test_execute() {
             payload_merkle_root,
         );
 
-    let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
+    let gateway_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
 
     let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap();
 
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
+        .get_account(&verification_session_pda)
+        .unwrap();
 
     // Step 5: Sign the payload with both signers, verify both signatures on the gateway
     let verifier_info_1 = create_verifier_info(
@@ -130,12 +123,8 @@ fn test_execute() {
     );
 
     let updated_verification_account_after_first = verify_result_1
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
+        .get_account(&verification_session_pda)
+        .unwrap();
 
     let verifier_info_2 = create_verifier_info(
         &secret_key_2,
@@ -150,10 +139,10 @@ fn test_execute() {
         payload_merkle_root,
         verifier_info_2,
         verification_session_pda,
-        gateway_account,
-        updated_verification_account_after_first,
+        gateway_account.clone(),
+        updated_verification_account_after_first.clone(),
         setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        verifier_set_tracker_account.clone(),
     );
 
     // Step 6: Approve the message
@@ -173,18 +162,65 @@ fn test_execute() {
         "Message approval should succeed"
     );
 
-    let incoming_message_account = approve_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == incoming_message_pda)
-        .unwrap()
-        .1
-        .clone();
+    let incoming_message_account = approve_result.get_account(&incoming_message_pda).unwrap();
 
     let incoming_message =
         IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
 
-    // Step 7: Execute the message
+    // Step 7.1: Init Counter PDA
+    let init_ix = axelar_solana_memo_v2::instruction::Init {};
+    let init_accounts = axelar_solana_memo_v2::accounts::Init {
+        counter: counter_pda,
+        payer: setup.payer,
+        system_program: SYSTEM_PROGRAM_ID,
+    };
+    let init_instruction = Instruction {
+        program_id: MEMO_PROGRAM_ID,
+        accounts: init_accounts.to_account_metas(None),
+        data: init_ix.data(),
+    };
+    let init_accounts = vec![
+        (
+            counter_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            setup.payer,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            SYSTEM_PROGRAM_ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+    ];
+
+    let init_result = setup
+        .mollusk
+        .process_instruction(&init_instruction, &init_accounts);
+
+    assert!(init_result.program_result.is_ok());
+
+    let counter_pda_account = init_result.get_account(&counter_pda).unwrap();
+
+    // Step 7.2: Execute the message
     let message = &messages[0];
     let command_id = message.command_id();
 
@@ -203,20 +239,18 @@ fn test_execute() {
 
     let execute_instruction_data = axelar_solana_memo_v2::instruction::Execute {
         message: message.clone(),
-        source_chain: message.cc_id.chain.clone(),
-        source_address: message.source_address.clone(),
-        payload: test_payload.clone(),
+        payload: test_payload.encode().unwrap(),
     }
     .data();
 
     let execute_accounts = vec![
-        (incoming_message_pda, incoming_message_account),
+        (incoming_message_pda, incoming_message_account.clone()),
         (
             signing_pda,
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: SYSTEM_PROGRAM_ID,
+                owner: GATEWAY_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -261,17 +295,24 @@ fn test_execute() {
                 rent_epoch: 0,
             },
         ),
+        (counter_pda, counter_pda_account.clone()),
     ];
+
+    let execute_ix_accounts = axelar_solana_memo_v2::accounts::Execute {
+        executable: axelar_solana_memo_v2::accounts::AxelarExecuteAccounts {
+            incoming_message_pda,
+            signing_pda,
+            axelar_gateway_program: GATEWAY_PROGRAM_ID,
+            event_authority: event_authority_pda,
+            system_program: SYSTEM_PROGRAM_ID,
+        },
+        counter: counter_pda,
+    }
+    .to_account_metas(None);
 
     let execute_instruction = Instruction {
         program_id: MEMO_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new(incoming_message_pda, false),
-            AccountMeta::new_readonly(signing_pda, true),
-            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
-            AccountMeta::new_readonly(event_authority_pda, false),
-            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-        ],
+        accounts: execute_ix_accounts,
         data: execute_instruction_data,
     };
 
@@ -284,4 +325,14 @@ fn test_execute() {
         "Execute instruction should succeed: {:?}",
         execute_result.program_result
     );
+
+    let counter_pda_account = execute_result.get_account(&counter_pda).unwrap();
+
+    let counter_data = Counter::try_deserialize(&mut counter_pda_account.data.as_slice()).unwrap();
+    assert_eq!(
+        counter_data.counter, 1,
+        "Counter should be incremented to 1"
+    );
+
+    // TODO test event cpi
 }

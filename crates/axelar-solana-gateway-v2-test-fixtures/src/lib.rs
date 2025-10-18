@@ -1,6 +1,8 @@
 #![allow(clippy::too_many_arguments)]
 
-use anchor_lang::{prelude::UpgradeableLoaderState, solana_program, InstructionData};
+use anchor_lang::{
+    prelude::UpgradeableLoaderState, solana_program, InstructionData, ToAccountMetas,
+};
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use axelar_solana_gateway_v2::seed_prefixes::{
     self, CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
@@ -594,9 +596,9 @@ pub fn call_contract_helper(
         (
             signing_pda,
             Account {
-                lamports: 1,
+                lamports: 0,
                 data: vec![],
-                owner: GATEWAY_PROGRAM_ID,
+                owner: memo_program_id,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -623,14 +625,8 @@ pub fn call_contract_helper(
         ),
     ];
 
-    let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pk, _)| *pk == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-    accounts.push((setup.gateway_root_pda, gateway_account));
+    let gateway_root = init_result.get_account(&setup.gateway_root_pda).unwrap();
+    accounts.push((setup.gateway_root_pda, gateway_root.clone()));
 
     let destination_chain = "ethereum".to_string();
     let destination_contract_address = "0xdeadbeef".to_string();
@@ -649,13 +645,14 @@ pub fn call_contract_helper(
     // Full account metas (must include event_authority + program)
     let ix = Instruction {
         program_id: GATEWAY_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new_readonly(memo_program_id, false),
-            AccountMeta::new(signing_pda, true),
-            AccountMeta::new_readonly(setup.gateway_root_pda, false),
-            AccountMeta::new_readonly(event_authority_pda, false),
-            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
-        ],
+        accounts: axelar_solana_gateway_v2::accounts::CallContract {
+            caller: memo_program_id,
+            signing_pda: Some(signing_pda),
+            gateway_root_pda: setup.gateway_root_pda,
+            event_authority: event_authority_pda,
+            program: GATEWAY_PROGRAM_ID,
+        }
+        .to_account_metas(None),
         data: ix_data,
     };
 
