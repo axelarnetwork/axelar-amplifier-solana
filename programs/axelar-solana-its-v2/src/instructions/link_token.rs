@@ -37,7 +37,7 @@ pub struct LinkToken<'info> {
         seeds = [
             crate::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &salt)
+            &interchain_token_id_internal(&linked_token_deployer_salt(&deployer.key(), &salt))
         ],
         seeds::program = crate::ID,
         bump = token_manager_pda.bump,

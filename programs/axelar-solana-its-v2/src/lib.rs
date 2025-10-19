@@ -205,7 +205,25 @@ pub mod axelar_solana_its_v2 {
         instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
     }
 
-    // pub fn link_token() -> Result<()> {
-    //     instructions::link_token_handler(ctx, )
-    // }
+    pub fn link_token(
+        ctx: Context<LinkToken>,
+        salt: [u8; 32],
+        destination_chain: String,
+        destination_token_address: Vec<u8>,
+        token_manager_type: crate::state::Type,
+        link_params: Vec<u8>,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::link_token_handler(
+            ctx,
+            salt,
+            destination_chain,
+            destination_token_address,
+            token_manager_type,
+            link_params,
+            gas_value,
+            signing_pda_bump,
+        )
+    }
 }

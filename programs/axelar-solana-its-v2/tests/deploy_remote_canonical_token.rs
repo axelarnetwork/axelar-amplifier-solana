@@ -51,7 +51,7 @@ fn test_deploy_remote_canonical_interchain_token() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = axelar_solana_its_v2::id();
-    let mut mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
