@@ -67,3 +67,13 @@ pub struct TokenMetadataRegistered {
     pub token_address: Pubkey,
     pub decimals: u8,
 }
+
+#[event]
+pub struct LinkTokenStarted {
+    pub token_id: [u8; 32],
+    pub destination_chain: String,
+    pub source_token_address: Pubkey,
+    pub destination_token_address: Vec<u8>,
+    pub token_manager_type: u8,
+    pub params: Vec<u8>,
+}

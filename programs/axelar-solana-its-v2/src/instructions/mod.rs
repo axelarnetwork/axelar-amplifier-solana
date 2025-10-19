@@ -33,3 +33,6 @@ pub use deploy_remote_canonical_token::*;
 
 pub mod register_custom_token;
 pub use register_custom_token::*;
+
+pub mod link_token;
+pub use link_token::*;

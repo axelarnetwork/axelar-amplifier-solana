@@ -1,52 +1,43 @@
-use crate::instructions::deploy_remote_interchain_token::{
-    get_token_metadata, process_outbound, GMPAccounts,
-};
 use crate::{
     errors::ITSError,
-    events::InterchainTokenDeploymentStarted,
-    state::{InterchainTokenService, TokenManager},
-    utils::{
-        canonical_interchain_token_deploy_salt, canonical_interchain_token_id,
-        interchain_token_id_internal,
+    events::{InterchainTokenIdClaimed, LinkTokenStarted},
+    instructions::{process_outbound, GMPAccounts},
+    state::{
+        token_manager::{TokenManager, Type},
+        InterchainTokenService,
     },
+    utils::{interchain_token_id, interchain_token_id_internal, linked_token_deployer_salt},
 };
-use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::Mint;
 use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
-use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
+use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
 
-/// Accounts required for deploying a remote canonical interchain token
 #[derive(Accounts)]
+#[instruction(
+    salt: [u8; 32],
+    destination_chain: String,
+    destination_token_address: Vec<u8>,
+    token_manager_type: Type,
+    link_params: Vec<u8>,
+    gas_value: u64,
+    signing_pda_bump: u8
+)]
 #[event_cpi]
-#[instruction(destination_chain: String, gas_value: u64, signing_pda_bump: u8)]
-pub struct DeployRemoteCanonicalInterchainToken<'info> {
-    /// The account which is paying for the transaction
+pub struct LinkToken<'info> {
+    /// Payer for the transaction fees (must be signer and writable)
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The existing mint account for the canonical token
-    pub token_mint: InterfaceAccount<'info, Mint>,
-
-    /// The Metaplex metadata account associated with the mint
-    #[account(
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        seeds::program = mpl_token_metadata::ID,
-        bump
-    )]
-    pub metadata_account: AccountInfo<'info>,
+    /// The deployer who originally deployed the token (must be signer)
+    pub deployer: Signer<'info>,
 
     /// The token manager account associated with the canonical interchain token
     #[account(
         seeds = [
             crate::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
-            &canonical_interchain_token_id(&token_mint.key())
+            &interchain_token_id(&deployer.key(), &salt)
         ],
         seeds::program = crate::ID,
         bump = token_manager_pda.bump,
@@ -121,8 +112,8 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     pub gas_event_authority: SystemAccount<'info>,
 }
 
-impl<'info> DeployRemoteCanonicalInterchainToken<'info> {
-    /// Convert to GMPAccounts for common GMP operations
+impl<'info> LinkToken<'info> {
+    /// Convert the accounts to GmpAccounts format expected by the GMP processor
     pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
@@ -140,63 +131,79 @@ impl<'info> DeployRemoteCanonicalInterchainToken<'info> {
     }
 }
 
-/// Instruction handler for deploying a remote canonical interchain token
-pub fn deploy_remote_canonical_interchain_token_handler(
-    ctx: Context<DeployRemoteCanonicalInterchainToken>,
+pub fn link_token_handler(
+    ctx: Context<LinkToken>,
+    salt: [u8; 32],
     destination_chain: String,
+    destination_token_address: Vec<u8>,
+    token_manager_type: Type,
+    link_params: Vec<u8>,
     gas_value: u64,
     signing_pda_bump: u8,
 ) -> Result<()> {
-    let deploy_salt = canonical_interchain_token_deploy_salt(&ctx.accounts.token_mint.key());
-    let token_id = interchain_token_id_internal(&deploy_salt);
+    msg!("Instruction: LinkToken");
 
+    // Validate that destination chain is different from current chain
     if destination_chain == ctx.accounts.its_root_pda.chain_name {
-        msg!("Cannot deploy remotely to the origin chain");
+        msg!("Cannot link to another token on the same chain");
         return err!(ITSError::InvalidInstructionData);
     }
 
-    msg!("Instruction: OutboundCanonicalDeploy");
-
-    // get token metadata
-    let (name, symbol) = get_token_metadata(
-        &ctx.accounts.token_mint.to_account_info(),
-        Some(&ctx.accounts.metadata_account),
-    )?;
-    let decimals = ctx.accounts.token_mint.decimals;
-
-    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
-        msg!("TokenManager doesn't match mint");
-        return err!(ITSError::InvalidArgument);
+    if token_manager_type == Type::NativeInterchainToken {
+        return err!(ITSError::InvalidInstructionData);
     }
 
-    emit_cpi!(InterchainTokenDeploymentStarted {
+    // Derive the token ID using the same logic as the existing implementation
+    let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
+    let token_id = interchain_token_id_internal(&deploy_salt);
+
+    // Emit InterchainTokenIdClaimed event
+    emit_cpi!(InterchainTokenIdClaimed {
         token_id,
-        token_name: name.clone(),
-        token_symbol: symbol.clone(),
-        token_decimals: decimals,
-        minter: vec![], // Canonical tokens don't have destination minters
-        destination_chain: destination_chain.clone(),
+        deployer: ctx.accounts.deployer.key(),
+        salt: deploy_salt,
     });
 
-    let inner_payload = GMPPayload::DeployInterchainToken(DeployInterchainToken {
-        selector: DeployInterchainToken::MESSAGE_TYPE_ID
+    // Emit LinkTokenStarted event
+    emit_cpi!(LinkTokenStarted {
+        token_id,
+        destination_chain: destination_chain.clone(),
+        source_token_address: ctx.accounts.token_manager_pda.token_address,
+        destination_token_address: destination_token_address.clone(),
+        token_manager_type: token_manager_type.into(),
+        params: link_params.clone(),
+    });
+
+    // Create the GMP payload for linking the token
+    let message = GMPPayload::LinkToken(LinkTokenPayload {
+        selector: LinkTokenPayload::MESSAGE_TYPE_ID
             .try_into()
             .map_err(|_err| ProgramError::ArithmeticOverflow)?,
         token_id: token_id.into(),
-        name,
-        symbol,
-        decimals,
-        minter: Bytes::new(), // Canonical tokens don't have destination minters
+        token_manager_type: token_manager_type.into(),
+        source_token_address: ctx
+            .accounts
+            .token_manager_pda
+            .token_address
+            .to_bytes()
+            .into(),
+        destination_token_address: destination_token_address.into(),
+        link_params: link_params.into(),
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
+
+    // Process the outbound GMP message
     process_outbound(
         gmp_accounts,
         destination_chain,
         gas_value,
         signing_pda_bump,
-        inner_payload,
+        message,
     )?;
+
+    // Set return data to the token_id
+    anchor_lang::solana_program::program::set_return_data(&token_id);
 
     Ok(())
 }

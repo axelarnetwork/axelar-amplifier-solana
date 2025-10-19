@@ -70,7 +70,7 @@ pub struct DeployRemoteInterchainToken<'info> {
             &interchain_token_id(&deployer.key(), &salt)
         ],
         seeds::program = crate::ID,
-        bump
+        bump = token_manager_pda.bump,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 

@@ -204,4 +204,8 @@ pub mod axelar_solana_its_v2 {
     ) -> Result<()> {
         instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
     }
+
+    // pub fn link_token() -> Result<()> {
+    //     instructions::link_token_handler(ctx, )
+    // }
 }

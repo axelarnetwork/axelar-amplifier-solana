@@ -1,4 +1,5 @@
 use crate::state::FlowState;
+use alloy_primitives::U256;
 use anchor_lang::prelude::*;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, AnchorSerialize, AnchorDeserialize)]
@@ -52,6 +53,18 @@ pub enum Type {
     /// manager will need to be granted the role to be able to execute the
     /// `mint` and `burn` function on the token.
     MintBurn,
+}
+
+impl From<Type> for U256 {
+    fn from(value: Type) -> Self {
+        match value {
+            Type::NativeInterchainToken => Self::from(0_u8),
+            Type::MintBurnFrom => Self::from(1_u8),
+            Type::LockUnlock => Self::from(2_u8),
+            Type::LockUnlockFee => Self::from(3_u8),
+            Type::MintBurn => Self::from(4_u8),
+        }
+    }
 }
 
 impl From<Type> for u8 {
