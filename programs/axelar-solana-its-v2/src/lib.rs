@@ -1,8 +1,10 @@
-//! Axelar Interchain Token Service program for the Solana blockchain
+//! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
+pub mod errors;
 pub mod events;
 pub mod instructions;
 pub mod state;
+pub mod utils;
 
 use instructions::*;
 
@@ -13,6 +15,12 @@ ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
 declare_id!("itsqybuNsChBo3LgVhCWWnTJVJdoVTUJaodmqQcG6z7");
+pub const CHAIN_NAME_HASH: [u8; 32] = [
+    10, 171, 102, 67, 72, 176, 161, 92, 42, 179, 148, 228, 13, 72, 172, 178, 168, 16, 138, 252, 99,
+    222, 187, 187, 25, 30, 121, 52, 235, 103, 11, 169,
+]; // keccak256("solana-devnet")
+
+pub(crate) const ITS_HUB_CHAIN_NAME: &str = "axelar";
 
 #[cfg(feature = "stagenet")]
 declare_id!("itsediSVCwwKc6UuxfrsEiF8AEuEFk34RFAscPEDEpJ");
@@ -22,6 +30,38 @@ declare_id!("itsZEirFsnRmLejCsRRNZKHqWTzMsKGyYi6Qr962os4");
 
 #[cfg(feature = "mainnet")]
 declare_id!("its1111111111111111111111111111111111111111");
+
+pub mod seed_prefixes {
+    /// The seed prefix for deriving the ITS root PDA
+    pub const ITS_SEED: &[u8] = b"interchain-token-service";
+
+    /// The seed prefix for deriving the token manager PDA
+    pub const TOKEN_MANAGER_SEED: &[u8] = b"token-manager";
+
+    /// The seed prefix for deriving the interchain token PDA
+    pub const INTERCHAIN_TOKEN_SEED: &[u8] = b"interchain-token";
+
+    /// The seed prefix for deriving an interchain token id
+    pub const PREFIX_INTERCHAIN_TOKEN_ID: &[u8] = b"interchain-token-id";
+
+    /// The seed prefix for deriving an interchain token salt
+    pub const PREFIX_INTERCHAIN_TOKEN_SALT: &[u8] = b"interchain-token-salt";
+
+    /// The seed prefix for deriving an interchain token id for a canonical token
+    pub const PREFIX_CANONICAL_TOKEN_SALT: &[u8] = b"canonical-token-salt";
+
+    /// The seed prefix for deriving an interchain token id for a canonical token
+    pub const PREFIX_CUSTOM_TOKEN_SALT: &[u8] = b"solana-custom-token-salt";
+
+    /// The seed prefix for deriving the flow slot PDA
+    pub const FLOW_SLOT_SEED: &[u8] = b"flow-slot";
+
+    /// The seed prefix for deriving the deployment approval PDA
+    pub const DEPLOYMENT_APPROVAL_SEED: &[u8] = b"deployment-approval";
+
+    /// The seed prefix for deriving the interchain transfer execute signing PDA
+    pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] = b"interchain-transfer-execute";
+}
 
 #[program]
 pub mod axelar_solana_its_v2 {
@@ -48,5 +88,146 @@ pub mod axelar_solana_its_v2 {
         chain_name: String,
     ) -> Result<()> {
         instructions::remove_trusted_chain::remove_trusted_chain(ctx, chain_name)
+    }
+
+    pub fn deploy_interchain_token(
+        ctx: Context<DeployInterchainToken>,
+        salt: [u8; 32],
+        name: String,
+        symbol: String,
+        decimals: u8,
+        initial_supply: u64,
+    ) -> Result<()> {
+        instructions::deploy_interchain_token_handler(
+            ctx,
+            salt,
+            name,
+            symbol,
+            decimals,
+            initial_supply,
+        )
+    }
+
+    pub fn deploy_remote_interchain_token(
+        ctx: Context<DeployRemoteInterchainToken>,
+        salt: [u8; 32],
+        destination_chain: String,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::deploy_remote_interchain_token_handler(
+            ctx,
+            salt,
+            destination_chain,
+            gas_value,
+            signing_pda_bump,
+            None,
+        )
+    }
+
+    pub fn deploy_remote_interchain_token_with_minter(
+        ctx: Context<DeployRemoteInterchainToken>,
+        salt: [u8; 32],
+        destination_chain: String,
+        gas_value: u64,
+        signing_pda_bump: u8,
+        destination_minter: Vec<u8>,
+    ) -> Result<()> {
+        instructions::deploy_remote_interchain_token_handler(
+            ctx,
+            salt,
+            destination_chain,
+            gas_value,
+            signing_pda_bump,
+            Some(destination_minter),
+        )
+    }
+
+    pub fn approve_deploy_remote_interchain_token(
+        ctx: Context<ApproveDeployRemoteInterchainToken>,
+        deployer: Pubkey,
+        salt: [u8; 32],
+        destination_chain: String,
+        destination_minter: Vec<u8>,
+    ) -> Result<()> {
+        instructions::approve_deploy_remote_interchain_token(
+            ctx,
+            deployer,
+            salt,
+            destination_chain,
+            destination_minter,
+        )
+    }
+
+    pub fn revoke_deploy_remote_interchain_token(
+        ctx: Context<RevokeDeployRemoteInterchainToken>,
+        deployer: Pubkey,
+        salt: [u8; 32],
+        destination_chain: String,
+    ) -> Result<()> {
+        instructions::revoke_deploy_remote_interchain_token(ctx, deployer, salt, destination_chain)
+    }
+
+    pub fn register_token_metadata(
+        ctx: Context<RegisterTokenMetadata>,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::register_token_metadata_handler(ctx, gas_value, signing_pda_bump)
+    }
+
+    pub fn register_canonical_interchain_token(
+        ctx: Context<RegisterCanonicalInterchainToken>,
+    ) -> Result<()> {
+        instructions::register_canonical_interchain_token_handler(ctx)
+    }
+
+    pub fn deploy_remote_canonical_interchain_token(
+        ctx: Context<DeployRemoteCanonicalInterchainToken>,
+        destination_chain: String,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::deploy_remote_canonical_interchain_token_handler(
+            ctx,
+            destination_chain,
+            gas_value,
+            signing_pda_bump,
+        )
+    }
+
+    pub fn register_custom_token(
+        ctx: Context<RegisterCustomToken>,
+        salt: [u8; 32],
+        token_manager_type: crate::state::Type,
+        operator: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
+    }
+
+    pub fn link_token(
+        ctx: Context<LinkToken>,
+        salt: [u8; 32],
+        destination_chain: String,
+        destination_token_address: Vec<u8>,
+        token_manager_type: crate::state::Type,
+        link_params: Vec<u8>,
+        gas_value: u64,
+        signing_pda_bump: u8,
+    ) -> Result<()> {
+        instructions::link_token_handler(
+            ctx,
+            salt,
+            destination_chain,
+            destination_token_address,
+            token_manager_type,
+            link_params,
+            gas_value,
+            signing_pda_bump,
+        )
+    }
+
+    pub fn set_flow_limit(ctx: Context<SetFlowLimit>, flow_limit: Option<u64>) -> Result<()> {
+        instructions::set_flow_limit_handler(ctx, flow_limit)
     }
 }

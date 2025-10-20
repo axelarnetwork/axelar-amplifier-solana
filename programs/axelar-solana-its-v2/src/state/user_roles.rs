@@ -19,6 +19,18 @@ impl UserRoles {
     pub fn pda_seeds<'a>(resource: &'a Pubkey, user: &'a Pubkey) -> [&'a [u8]; 3] {
         [Self::SEED_PREFIX, resource.as_ref(), user.as_ref()]
     }
+
+    pub fn has_minter_role(&self) -> bool {
+        self.roles.contains(Roles::MINTER)
+    }
+
+    pub fn has_operator_role(&self) -> bool {
+        self.roles.contains(Roles::OPERATOR)
+    }
+
+    pub fn has_flow_limiter_role(&self) -> bool {
+        self.roles.contains(Roles::FLOW_LIMITER)
+    }
 }
 
 // Roles flag used in ITS

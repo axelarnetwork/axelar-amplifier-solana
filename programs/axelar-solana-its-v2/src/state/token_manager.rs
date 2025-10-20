@@ -1,0 +1,102 @@
+use crate::state::FlowState;
+use alloy_primitives::U256;
+use anchor_lang::prelude::*;
+
+#[derive(Debug, Eq, PartialEq, Clone, Copy, AnchorSerialize, AnchorDeserialize, InitSpace)]
+pub enum Type {
+    /// For tokens that are deployed directly from ITS itself they use a native
+    /// interchain token manager. Tokens that are deployed via the frontend
+    /// portal also use this type of manager.
+    NativeInterchainToken,
+
+    /// The mint/burnFrom token manager type, allows tokens to be burnt on the
+    /// source chain when they are transferred out of that chain and minted they
+    /// are transferred back into the source chain. As the name suggests when
+    /// the token is burnt on the source chain the manager is looking to trigger
+    /// the `burnFrom` function on the token rather than the `burn` function.
+    /// The main implication is that ITS must be approved to call `burnFrom` by
+    /// the token. The manager must be granted the role to be able to `mint` the
+    /// token on the destination chain.
+    MintBurnFrom,
+
+    /// Token integrations using the lock/unlock token manager will have their
+    /// token locked with their token’s manager. Only a single lock/unlock
+    /// manager can exist for a token as having multiple lock/unlock managers
+    /// would make it substantially more difficult to manage liquidity across
+    /// many different blockchains. These token managers are best used in the
+    /// case where a token has a “home chain” where a token can be locked. On
+    /// the remote chains users can then use a wrapped version of that token
+    /// which derives it’s value from a locked token back on the home chain.
+    /// Canonical tokens for example deployed via ITS are examples where a
+    /// lock/unlock token manager type is useful. When bridging tokens out of
+    /// the destination chain (locking them at the manager) ITS will call the
+    /// `transferTokenFrom` function, which in turn will call the
+    /// `safeTransferFrom` function. For this transaction to be successful, ITS
+    /// must be `approved` to call the `safeTransferFrom` function, otherwise
+    /// the call will revert.
+    LockUnlock,
+
+    /// This manager type is similar to the lock/unlock token manager, where the
+    /// manager locks
+    /// the token on it’s “home chain” when it is bridged out and unlocks it
+    /// when it is bridged back. The key feature with this token manager is
+    /// that you have the option to set a fee that will be deducted when
+    /// executing an `interchainTransfer`.
+    ///
+    /// This token type is currently not supported.
+    LockUnlockFee,
+
+    /// The mint/burn token manager type is the most common token manager type
+    /// used for integrating tokens to ITS. This token manager type is used when
+    /// there is no home chain for your token and allows you to `burn` tokens
+    /// from the source chain and `mint` tokens on the destination chain. The
+    /// manager will need to be granted the role to be able to execute the
+    /// `mint` and `burn` function on the token.
+    MintBurn,
+}
+
+impl From<Type> for U256 {
+    fn from(value: Type) -> Self {
+        match value {
+            Type::NativeInterchainToken => Self::from(0_u8),
+            Type::MintBurnFrom => Self::from(1_u8),
+            Type::LockUnlock => Self::from(2_u8),
+            Type::LockUnlockFee => Self::from(3_u8),
+            Type::MintBurn => Self::from(4_u8),
+        }
+    }
+}
+
+impl From<Type> for u8 {
+    fn from(value: Type) -> Self {
+        match value {
+            Type::NativeInterchainToken => 0,
+            Type::MintBurnFrom => 1,
+            Type::LockUnlock => 2,
+            Type::LockUnlockFee => 3,
+            Type::MintBurn => 4,
+        }
+    }
+}
+
+#[account]
+#[derive(Debug, Eq, PartialEq, InitSpace)]
+pub struct TokenManager {
+    /// The type of `TokenManager`.
+    pub ty: Type,
+
+    /// The interchain token id.
+    pub token_id: [u8; 32],
+
+    /// The token address within the Solana chain.
+    pub token_address: Pubkey,
+
+    /// The associated token account owned by the token manager.
+    pub associated_token_account: Pubkey,
+
+    /// The flow limit for the token manager.
+    pub flow_slot: FlowState,
+
+    /// The token manager PDA bump seed.
+    pub bump: u8,
+}
