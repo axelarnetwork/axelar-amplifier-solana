@@ -31,9 +31,8 @@ pub fn call_contract_handler(
     let caller = &ctx.accounts.caller;
     let signing_pda = &ctx.accounts.signing_pda;
 
-    let sender = if caller.is_signer {
+    if caller.is_signer {
         // Direct signer, so not a program, continue
-        caller.key()
     } else {
         // Case of a program, validate and use signing PDA
         let expected_signing_pda = Pubkey::create_program_address(
@@ -55,15 +54,14 @@ pub fn call_contract_handler(
             expected_signing_pda,
             GatewayError::InvalidSigningPDA
         );
-
-        *pda.key
     };
+
+    // A valid signing PDA was provided and it's a signer, continue
 
     let payload_hash = keccak::hash(&payload);
 
-    // A valid signing PDA was provided and it's a signer, continue
     emit_cpi!(CallContractEvent {
-        sender,
+        sender: caller.key(),
         payload_hash: payload_hash.to_bytes(),
         destination_chain,
         destination_contract_address,
