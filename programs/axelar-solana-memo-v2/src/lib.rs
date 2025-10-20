@@ -31,4 +31,8 @@ pub mod memo {
     pub fn execute(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
         instructions::execute_handler(ctx, message, payload)
     }
+
+    pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {
+        instructions::emit_memo_handler(ctx, message)
+    }
 }

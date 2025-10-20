@@ -1,7 +1,8 @@
 #![allow(clippy::too_many_arguments)]
 
 use anchor_lang::{
-    prelude::UpgradeableLoaderState, solana_program, InstructionData, ToAccountMetas,
+    prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
+    ToAccountMetas,
 };
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use axelar_solana_gateway_v2::seed_prefixes::{
@@ -13,7 +14,7 @@ use axelar_solana_gateway_v2::{
     MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2::{
-    CrossChainId, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
+    CrossChainId, IncomingMessage, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
 };
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
@@ -1104,5 +1105,165 @@ pub fn approve_message_helper(
             .mollusk
             .process_instruction(&approve_instruction, &approve_accounts),
         incoming_message_pda,
+    )
+}
+
+pub fn approve_messages_on_gateway(
+    setup: &TestSetup,
+    messages: Vec<Message>,
+    init_result: InstructionResult,
+    secret_key_1: &SecretKey,
+    secret_key_2: &SecretKey,
+    verifier_leaves: Vec<VerifierSetLeaf>,
+    verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
+    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
+        setup_message_merkle_tree_from_messages(setup, messages);
+
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
+    assert!(!session_result.program_result.is_err());
+
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verification_session_account = session_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_info_1 = create_verifier_info(
+        secret_key_1,
+        payload_merkle_root,
+        &verifier_leaves[0],
+        0,
+        &verifier_merkle_tree,
+    );
+
+    let verify_result_1 = verify_signature_helper(
+        setup,
+        payload_merkle_root,
+        verifier_info_1,
+        verification_session_pda,
+        gateway_account.clone(),
+        verification_session_account.clone(),
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account.clone(),
+    );
+
+    let updated_verification_account_after_first = verify_result_1
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_info_2 = create_verifier_info(
+        secret_key_2,
+        payload_merkle_root,
+        &verifier_leaves[1],
+        1,
+        &verifier_merkle_tree,
+    );
+
+    let verify_result_2 = verify_signature_helper(
+        setup,
+        payload_merkle_root,
+        verifier_info_2,
+        verification_session_pda,
+        gateway_account,
+        updated_verification_account_after_first,
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account,
+    );
+
+    let mut incoming_messages = Vec::new();
+
+    // Approve all messages
+    for i in 0..messages.len() {
+        // Step 8: Approve the message
+        let (approve_result, incoming_message_pda) = approve_message_helper(
+            setup,
+            message_merkle_tree.clone(),
+            message_leaves.clone(),
+            &messages,
+            payload_merkle_root,
+            verification_session_pda,
+            verify_result_2.clone(),
+            i, // message position
+        );
+
+        let incoming_message_account = approve_result
+            .resulting_accounts
+            .iter()
+            .find(|(pubkey, _)| *pubkey == incoming_message_pda)
+            .unwrap()
+            .1
+            .clone();
+
+        // sanity check
+        let incoming_message =
+            IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice())
+                .unwrap();
+
+        incoming_messages.push((
+            incoming_message,
+            incoming_message_pda,
+            incoming_message_account.data,
+        ));
+    }
+
+    incoming_messages
+}
+
+pub fn setup_message_merkle_tree_from_messages(
+    setup: &TestSetup,
+    messages: Vec<Message>,
+) -> (
+    Vec<Message>,
+    Vec<MessageLeaf>,
+    MerkleTree<SolanaSyscallHasher>,
+    [u8; 32],
+) {
+    let message_leaves: Vec<MessageLeaf> = messages
+        .iter()
+        .enumerate()
+        .map(|(i, msg)| MessageLeaf {
+            message: msg.clone(),
+            position: i as u16,
+            set_size: messages.len() as u16,
+            domain_separator: setup.domain_separator,
+        })
+        .collect();
+
+    let message_leaf_hashes: Vec<[u8; 32]> =
+        message_leaves.iter().map(|leaf| leaf.hash()).collect();
+
+    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+
+    let payload_merkle_root = message_merkle_tree.root().unwrap();
+
+    (
+        messages,
+        message_leaves,
+        message_merkle_tree,
+        payload_merkle_root,
     )
 }

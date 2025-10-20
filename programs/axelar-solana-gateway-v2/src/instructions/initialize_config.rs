@@ -55,8 +55,6 @@ pub fn initialize_config_handler(
     ctx: Context<InitializeConfig>,
     params: InitializeConfigParams,
 ) -> Result<()> {
-    msg!("initialize_config_handler");
-
     let config = &mut ctx.accounts.gateway_root_pda.load_init()?;
 
     // Initialize GatewayConfig (i.e. gateway config pda) state
