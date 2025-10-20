@@ -56,7 +56,6 @@ pub fn execute_operator_proposal_handler(
 
     // Note: No ETA validation for operator proposals - they can be executed immediately
     let remaining_accounts = ctx.remaining_accounts;
-    let governance_config = ctx.accounts.governance_config.clone();
 
     check_governance_config_presence(
         &ctx.accounts.governance_config.key(),
@@ -66,11 +65,12 @@ pub fn execute_operator_proposal_handler(
 
     check_target_program_presence(remaining_accounts, &target_program)?;
 
-    let governance_config_bump = governance_config.bump;
+    let governance_config_bump = ctx.accounts.governance_config.bump;
+
     execute_proposal_cpi(
         &execute_proposal_data,
         remaining_accounts,
-        governance_config,
+        &ctx.accounts.governance_config,
         governance_config_bump,
     )?;
 

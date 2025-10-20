@@ -59,7 +59,7 @@ pub fn execute_proposal_handler(
     execute_proposal_cpi(
         &execute_proposal_data,
         remaining_accounts,
-        governance_config,
+        &ctx.accounts.governance_config,
         governance_config_bump,
     )?;
 
@@ -83,7 +83,7 @@ pub fn execute_proposal_handler(
 pub fn execute_proposal_cpi(
     execute_proposal_data: &ExecuteProposalData,
     remaining_accounts: &[AccountInfo<'_>],
-    governance_config: Account<'_, GovernanceConfig>,
+    governance_config: &Account<'_, GovernanceConfig>,
     governance_config_bump: u8,
 ) -> Result<()> {
     let native_value_u64 = checked_from_u256_le_bytes_to_u64(&execute_proposal_data.native_value)?;
@@ -92,7 +92,7 @@ pub fn execute_proposal_cpi(
             execute_proposal_data.clone(),
             remaining_accounts,
             native_value_u64,
-            &governance_config,
+            governance_config,
         )?;
     }
 
