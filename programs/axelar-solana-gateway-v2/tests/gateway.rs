@@ -105,8 +105,11 @@ fn test_initialize_payload_verification_session() {
     )
     .unwrap();
 
-    let expected_verification_account =
+    let mut expected_verification_account =
         SignatureVerificationSessionData::new(SignatureVerification::default(), 255);
+    expected_verification_account
+        .signature_verification
+        .signing_verifier_set_hash = setup.verifier_set_hash;
 
     assert_eq!(expected_verification_account, actual_verification_account);
 }
