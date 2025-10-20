@@ -36,8 +36,6 @@ The second account is a `signing PDA`, meaning the source program must generate 
 
 [Full-fledged example](https://github.com/eigerco/axelar-amplifier-solana/blob/bf3351013ccf5061aaa1195411e2430c67250ec8/solana/programs/axelar-solana-memo-program/src/processor.rs#L123-L157): Memo program that leverages a PDA for signing the `Call Contract` CPI call.
 
-[Full-fledged example](https://github.com/eigerco/axelar-amplifier-solana/blob/bf3351013ccf5061aaa1195411e2430c67250ec8/solana/programs/axelar-solana-memo-program/src/processor.rs#L164-L198): Memo program that leverages a PDA for signing the `Call Contract Offchain Data` CPI call.
-
 | Gateway Instruction |  Use Case | Caveats |
 | - | - | - |
 | [Call Contract](https://github.com/eigerco/axelar-amplifier-solana/blob/bf3351013ccf5061aaa1195411e2430c67250ec8/solana/programs/axelar-solana-gateway/src/instructions.rs#L52-L67) | When you can create the data fully on-chain. Or When the data is small enough to fit into tx arguments  | Even if you can generate all the data on-chain, the Solana tx log is limited to 10kb. And if your program logs more than that, there won't be any error on the transaction level. The log will be truncated, and the message will be malformed. **Please be careful when making this API call.**  |
