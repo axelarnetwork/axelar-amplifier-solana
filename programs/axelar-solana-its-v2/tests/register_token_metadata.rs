@@ -31,7 +31,7 @@ fn test_register_token_metadata() {
     let mut mollusk = setup_mollusk(&gas_service_program_id, "axelar_solana_gas_service_v2");
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -51,10 +51,10 @@ fn test_register_token_metadata() {
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -155,14 +155,17 @@ fn test_register_token_metadata() {
         (its_root_pda, its_root_account),
         (
             call_contract_signing_pda,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         (program_id, program_account),
         (gateway_event_authority, gateway_event_authority_account),
         (gas_event_authority, gas_event_authority_account),
         // for event cpi
         (event_authority, event_authority_account),
-        (program_id, Account::new(0, 0, &system_program::ID)),
+        (
+            program_id,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
     ];
 
     let checks = vec![Check::success()];

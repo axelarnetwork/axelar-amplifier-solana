@@ -11,7 +11,7 @@ use axelar_solana_its_v2::{
 use axelar_solana_its_v2_test_fixtures::{
     init_its_service, initialize_mollusk, register_canonical_interchain_token_helper,
 };
-use solana_program::{program_pack::Pack, system_program};
+use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair,
     signer::Signer,
@@ -24,10 +24,10 @@ fn test_register_canonical_token() {
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();

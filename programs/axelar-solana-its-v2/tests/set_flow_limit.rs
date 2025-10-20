@@ -8,10 +8,9 @@ use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk,
     DeployInterchainTokenContext,
 };
+use mollusk_svm::program::keyed_account_for_system_program;
 use solana_program::instruction::Instruction;
-use solana_sdk::{
-    account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
-};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_set_flow_limit_success() {
@@ -19,13 +18,13 @@ fn test_set_flow_limit_success() {
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -139,7 +138,7 @@ fn test_set_flow_limit_success() {
             its_root_pda,
             its_roles_pda: operator_roles_pda,
             token_manager_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
         data: axelar_solana_its_v2::instruction::SetFlowLimit { flow_limit }.data(),
@@ -148,7 +147,7 @@ fn test_set_flow_limit_success() {
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
     let operator_roles_account = result.get_account(&operator_roles_pda).unwrap();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let accounts = vec![
         (payer, payer_account),
@@ -156,16 +155,7 @@ fn test_set_flow_limit_success() {
         (its_root_pda, updated_its_root_account.clone()),
         (operator_roles_pda, operator_roles_account.clone()),
         (token_manager_pda, updated_token_manager_account.clone()),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        keyed_account_for_system_program(),
     ];
 
     let result = mollusk.process_instruction(&ix, &accounts);

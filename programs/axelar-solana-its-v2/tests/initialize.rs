@@ -3,7 +3,6 @@ use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
 use axelar_solana_its_v2_test_fixtures::init_its_service;
 use mollusk_test_utils::setup_mollusk;
 use {
-    anchor_lang::system_program,
     solana_sdk::{account::Account, pubkey::Pubkey},
     solana_sdk_ids::bpf_loader_upgradeable,
 };
@@ -17,10 +16,10 @@ fn test_initialize_success() {
 
     // We require that the payer be the upgrade_authority
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -91,10 +90,10 @@ fn test_initialize_unauthorized_payer() {
 
     // We make the payer different from the upgrade_authority
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();

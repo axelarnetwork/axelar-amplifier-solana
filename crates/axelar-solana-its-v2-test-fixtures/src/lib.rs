@@ -24,14 +24,12 @@ use mollusk_test_utils::{
     create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
 };
 use mpl_token_metadata::accounts::Metadata;
-use solana_program::bpf_loader_upgradeable;
 use solana_program::program_pack::Pack;
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program,
 };
 
 pub struct DeployInterchainTokenContext {
@@ -80,19 +78,6 @@ pub fn create_rent_sysvar_data() -> Vec<u8> {
 
     let rent = Rent::default();
     bincode::serialize(&rent).unwrap()
-}
-
-pub fn system_account_tuple() -> (Pubkey, Account) {
-    (
-        system_program::ID,
-        Account {
-            lamports: 1,
-            data: vec![],
-            owner: solana_sdk::native_loader::id(),
-            executable: true,
-            rent_epoch: 0,
-        },
-    )
 }
 
 pub fn create_sysvar_instructions_data() -> Vec<u8> {
@@ -168,7 +153,7 @@ pub fn deploy_interchain_token_helper(
         accounts: axelar_solana_its_v2::accounts::DeployInterchainToken {
             payer: ctx.payer,
             deployer: ctx.deployer,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             its_root_pda: ctx.its_root_pda,
             token_manager_pda,
             token_mint: token_mint_pda,
@@ -192,11 +177,20 @@ pub fn deploy_interchain_token_helper(
     let accounts = vec![
         (ctx.payer, ctx.payer_account),
         (ctx.deployer, ctx.deployer_account),
-        system_account_tuple(),
+        keyed_account_for_system_program(),
         (ctx.its_root_pda, ctx.its_root_account),
-        (token_manager_pda, Account::new(0, 0, &system_program::ID)),
-        (token_mint_pda, Account::new(0, 0, &system_program::ID)),
-        (token_manager_ata, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            token_mint_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            token_manager_ata,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -231,16 +225,22 @@ pub fn deploy_interchain_token_helper(
                 rent_epoch: 0,
             },
         ),
-        (metadata_account, Account::new(0, 0, &system_program::ID)),
-        (deployer_ata, Account::new(0, 0, &system_program::ID)),
+        (
+            metadata_account,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            deployer_ata,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         // Minter accounts - use program_id as placeholder if None
         (
             ctx.minter.unwrap_or(ctx.program_id),
-            Account::new(1_000_000_000, 0, &system_program::ID),
+            Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID),
         ),
         (
             ctx.minter_roles_pda.unwrap_or(ctx.program_id),
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         // For event CPI
         (event_authority, event_authority_account),
@@ -412,7 +412,7 @@ pub fn deploy_remote_interchain_token_helper(
             axelar_gateway_program: axelar_solana_gateway_v2::ID,
             gas_treasury,
             gas_service: axelar_solana_gas_service_v2::ID,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             its_root_pda: ctx.its_root_pda,
             call_contract_signing_pda,
             its_program: ctx.program_id,
@@ -433,7 +433,7 @@ pub fn deploy_remote_interchain_token_helper(
         .iter()
         .find(|(pubkey, _)| *pubkey == ctx.payer)
         .map(|(_, account)| account.clone())
-        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
+        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID));
 
     let updated_its_root_account = ctx.result.get_account(&ctx.its_root_pda).unwrap().clone();
 
@@ -456,7 +456,7 @@ pub fn deploy_remote_interchain_token_helper(
         (ctx.payer, updated_payer_account),
         (
             ctx.deployer,
-            Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID),
+            Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID),
         ),
         (ctx.token_mint_pda, updated_token_mint_account),
         (ctx.metadata_account, updated_metadata_account),
@@ -464,20 +464,23 @@ pub fn deploy_remote_interchain_token_helper(
         // Optional minter accounts
         (
             ctx.minter.unwrap_or(ctx.program_id),
-            Account::new(1_000_000_000, 0, &system_program::ID),
+            Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID),
         ),
         (
             ctx.deploy_approval_pda.unwrap_or(ctx.program_id),
             ctx.deploy_approval_pda_account.unwrap_or(Account::new(
                 1_000_000_000,
                 0,
-                &system_program::ID,
+                &solana_sdk::system_program::ID,
             )),
         ),
         (
             ctx.minter_roles.unwrap_or(ctx.program_id),
-            ctx.minter_roles_account
-                .unwrap_or(Account::new(1_000_000_000, 0, &system_program::ID)),
+            ctx.minter_roles_account.unwrap_or(Account::new(
+                1_000_000_000,
+                0,
+                &solana_sdk::system_program::ID,
+            )),
         ),
         //
         (gateway_root_pda, ctx.gateway_root_pda_account.clone()),
@@ -502,7 +505,7 @@ pub fn deploy_remote_interchain_token_helper(
                 rent_epoch: 0,
             },
         ),
-        system_account_tuple(),
+        keyed_account_for_system_program(),
         (ctx.its_root_pda, updated_its_root_account),
         (
             call_contract_signing_pda,
@@ -520,9 +523,12 @@ pub fn deploy_remote_interchain_token_helper(
         ),
         (
             gateway_event_authority,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (gas_event_authority, Account::new(0, 0, &system_program::ID)),
+        (
+            gas_event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         // For event cpi
         (its_event_authority, its_event_authority_account),
         (ctx.program_id, its_program_account),
@@ -592,7 +598,7 @@ pub fn approve_deploy_remote_interchain_token_helper(
             token_manager_pda: ctx.token_manager_pda,
             minter_roles: ctx.minter_roles_pda,
             deploy_approval_pda: ctx.deploy_approval_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             // for event CPI
             event_authority,
             program: ctx.program_id,
@@ -607,7 +613,7 @@ pub fn approve_deploy_remote_interchain_token_helper(
         .iter()
         .find(|(pubkey, _)| *pubkey == ctx.payer)
         .map(|(_, account)| account.clone())
-        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
+        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID));
 
     let updated_token_manager_account = ctx
         .result
@@ -623,14 +629,17 @@ pub fn approve_deploy_remote_interchain_token_helper(
 
     let approve_accounts = vec![
         (ctx.payer, updated_payer_account),
-        (ctx.minter, Account::new(0, 0, &system_program::ID)),
+        (
+            ctx.minter,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         (ctx.token_manager_pda, updated_token_manager_account),
         (ctx.minter_roles_pda, updated_minter_roles_account),
         (
             ctx.deploy_approval_pda,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        system_account_tuple(),
+        keyed_account_for_system_program(),
         // For event CPI
         (event_authority, event_authority_account),
         (ctx.program_id, program_account),
@@ -730,7 +739,7 @@ pub fn register_canonical_interchain_token_helper(
         accounts: axelar_solana_its_v2::accounts::RegisterCanonicalInterchainToken {
             payer,
             metadata_account: metadata_account_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             its_root_pda,
             token_manager_pda,
             token_mint: mint_pubkey,
@@ -750,11 +759,17 @@ pub fn register_canonical_interchain_token_helper(
     let accounts = vec![
         (payer, payer_account.clone()),
         (metadata_account_pda, metadata_account),
-        system_account_tuple(),
+        keyed_account_for_system_program(),
         (its_root_pda, its_root_account.clone()),
-        (token_manager_pda, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         (mint_pubkey, mint_account),
-        (token_manager_ata, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_ata,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -856,7 +871,7 @@ pub fn setup_operator(
             payer: operator,
             owner: operator,
             registry,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
         data: axelar_solana_operators::instruction::Initialize {}.data(),
@@ -878,7 +893,7 @@ pub fn setup_operator(
             operator_to_add: operator,
             registry,
             operator_account: operator_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
         data: axelar_solana_operators::instruction::AddOperator {}.data(),
@@ -895,8 +910,14 @@ pub fn setup_operator(
     // List accounts
     let accounts = vec![
         (operator, operator_account.clone()),
-        (registry, Account::new(0, 0, &system_program::ID)),
-        (operator_pda, Account::new(0, 0, &system_program::ID)),
+        (
+            registry,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            operator_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         keyed_account_for_system_program(),
     ];
 
@@ -936,7 +957,7 @@ pub fn init_gas_service(
             operator,
             operator_pda,
             treasury,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
         data: axelar_solana_gas_service_v2::instruction::Initialize {}.data(),
@@ -945,7 +966,10 @@ pub fn init_gas_service(
     let accounts = vec![
         (operator, operator_account.clone()),
         (operator_pda, operator_pda_account.clone()),
-        (treasury, Account::new(0, 0, &system_program::ID)),
+        (
+            treasury,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         keyed_account_for_system_program(),
     ];
 
@@ -979,8 +1003,10 @@ pub fn init_its_service(
     let program_id = axelar_solana_its_v2::id();
 
     // Derive the program data PDA for the upgradeable program
-    let (program_data, _bump) =
-        Pubkey::find_program_address(&[program_id.as_ref()], &bpf_loader_upgradeable::ID);
+    let (program_data, _bump) = Pubkey::find_program_address(
+        &[program_id.as_ref()],
+        &solana_sdk::bpf_loader_upgradeable::ID,
+    );
     let its_elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
     let program_data_account = create_program_data_account(&its_elf, upgrade_authority);
 
@@ -1004,7 +1030,7 @@ pub fn init_its_service(
             payer,
             program_data,
             its_root_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             operator,
             user_roles_account: user_roles_pda,
         }
@@ -1019,10 +1045,16 @@ pub fn init_its_service(
     let accounts = vec![
         (payer, payer_account.clone()),
         (program_data, program_data_account.clone()),
-        (its_root_pda, Account::new(0, 0, &system_program::ID)),
+        (
+            its_root_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         keyed_account_for_system_program(),
         (operator, operator_account.clone()),
-        (user_roles_pda, Account::new(0, 0, &system_program::ID)),
+        (
+            user_roles_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
     ];
 
     let checks = vec![
@@ -1104,7 +1136,7 @@ pub fn init_its_service_with_ethereum_trusted(
             user_roles: None,
             program_data: Some(program_data),
             its_root_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             event_authority: event_authority,
             program: program_id,
         }

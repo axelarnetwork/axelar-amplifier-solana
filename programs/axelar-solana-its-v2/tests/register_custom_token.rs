@@ -5,10 +5,10 @@ use axelar_solana_its_v2::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use axelar_solana_its_v2_test_fixtures::{init_its_service, initialize_mollusk};
+use mollusk_svm::program::keyed_account_for_system_program;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program,
 };
 
 fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
@@ -43,13 +43,13 @@ fn test_register_custom_token_without_operator() {
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -118,7 +118,7 @@ fn test_register_custom_token_without_operator() {
     let accounts = axelar_solana_its_v2::accounts::RegisterCustomToken {
         payer,
         deployer,
-        system_program: system_program::ID,
+        system_program: solana_sdk::system_program::ID,
         its_root_pda,
         token_manager_pda,
         token_mint,
@@ -143,20 +143,17 @@ fn test_register_custom_token_without_operator() {
     let mollusk_accounts = vec![
         (payer, payer_account),
         (deployer, deployer_account),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        keyed_account_for_system_program(),
         (its_root_pda, its_root_account),
-        (token_manager_pda, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         (token_mint, token_mint_account),
-        (token_manager_ata, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_ata,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -183,8 +180,14 @@ fn test_register_custom_token_without_operator() {
             },
         ),
         // For event CPI
-        (event_authority, Account::new(0, 0, &system_program::ID)),
-        (program_id, Account::new(0, 0, &system_program::ID)),
+        (
+            event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            program_id,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
     ];
 
     let result = mollusk.process_and_validate_instruction(
