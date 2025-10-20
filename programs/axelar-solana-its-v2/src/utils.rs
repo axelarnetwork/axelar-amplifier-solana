@@ -22,7 +22,9 @@ pub fn interchain_token_id_internal(salt: &[u8; 32]) -> [u8; 32] {
 }
 
 pub fn interchain_token_id(deployer: &Pubkey, salt: &[u8; 32]) -> [u8; 32] {
-    solana_program::keccak::hashv(&[deployer.as_ref(), salt]).to_bytes()
+    let deploy_salt = interchain_token_deployer_salt(deployer, salt);
+
+    interchain_token_id_internal(&deploy_salt)
 }
 
 pub fn canonical_interchain_token_deploy_salt(mint: &Pubkey) -> [u8; 32] {

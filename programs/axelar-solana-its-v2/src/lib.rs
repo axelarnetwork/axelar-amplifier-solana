@@ -226,4 +226,8 @@ pub mod axelar_solana_its_v2 {
             signing_pda_bump,
         )
     }
+
+    pub fn set_flow_limit(ctx: Context<SetFlowLimit>, flow_limit: Option<u64>) -> Result<()> {
+        instructions::set_flow_limit_handler(ctx, flow_limit)
+    }
 }

@@ -148,7 +148,6 @@ pub fn deploy_interchain_token_handler(
 ) -> Result<()> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
-    let cpi_token_id = interchain_token_id(ctx.accounts.deployer.key, &salt);
 
     if initial_supply == 0
         && (ctx.accounts.minter.is_none() || ctx.accounts.minter_roles_pda.is_none())
@@ -205,14 +204,14 @@ pub fn deploy_interchain_token_handler(
         &ctx.accounts,
         name.clone(),
         symbol.clone(),
-        cpi_token_id,
+        token_id,
         ctx.bumps.token_manager_pda,
     )?;
 
     if initial_supply > 0 {
         mint_initial_supply(
             &ctx.accounts,
-            cpi_token_id,
+            token_id,
             initial_supply,
             ctx.bumps.token_manager_pda,
         )?;
