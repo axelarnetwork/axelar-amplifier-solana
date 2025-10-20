@@ -295,6 +295,7 @@ fn should_execute_withdraw_tokens_through_proposal() {
 
     assert_eq!(proposal_account_after_execution.1.data.len(), 0);
     assert_eq!(proposal_account_after_execution.1.lamports, 0);
+    assert_eq!(proposal_account_after_execution.1.owner, SYSTEM_PROGRAM_ID);
 
     // Verify the receiver got the withdrawn amount
     let receiver_account_after = execute_result
