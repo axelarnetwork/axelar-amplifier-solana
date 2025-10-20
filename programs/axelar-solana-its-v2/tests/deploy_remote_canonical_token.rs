@@ -12,13 +12,12 @@ use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
 use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
 use axelar_solana_its_v2_test_fixtures::register_canonical_interchain_token_helper;
 use axelar_solana_its_v2_test_fixtures::setup_operator;
+use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::setup_mollusk;
 use solana_program::program_pack::Pack;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
-use solana_sdk::{
-    account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
-};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[path = "initialize.rs"]
 mod initialize;
@@ -36,12 +35,12 @@ fn test_deploy_remote_canonical_token() {
     let mut mollusk = setup_mollusk(&gas_service_program_id, "axelar_solana_gas_service_v2");
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
 
-    let (treasury_pda, treasury_pda_account) = init_gas_service(
+    let (_, treasury_pda_account) = init_gas_service(
         &mollusk,
         operator,
         &operator_account,
@@ -56,13 +55,13 @@ fn test_deploy_remote_canonical_token() {
     let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -203,7 +202,7 @@ fn test_deploy_remote_canonical_token() {
             gateway_program: axelar_solana_gateway_v2::ID,
             gas_treasury: gas_treasury_pda,
             gas_service: axelar_solana_gas_service_v2::id(),
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             its_root_pda,
             call_contract_signing_pda,
             its_program: program_id,
@@ -256,20 +255,11 @@ fn test_deploy_remote_canonical_token() {
                 rent_epoch: 0,
             },
         ),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        keyed_account_for_system_program(),
         (its_root_pda, its_root_account.clone()),
         (
             call_contract_signing_pda,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         (
             program_id,
@@ -283,9 +273,12 @@ fn test_deploy_remote_canonical_token() {
         ),
         (
             gateway_event_authority,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (gas_event_authority, Account::new(0, 0, &system_program::ID)),
+        (
+            gas_event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         // For event CPI
         (event_authority, event_authority_account),
         (program_id, program_account),

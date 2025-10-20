@@ -9,9 +9,7 @@ use axelar_solana_its_v2_test_fixtures::{
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_program::instruction::Instruction;
-use solana_sdk::{
-    account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
-};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[path = "initialize.rs"]
 mod initialize;
@@ -22,13 +20,13 @@ fn test_set_flow_limit_success() {
     let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -137,7 +135,7 @@ fn test_set_flow_limit_success() {
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
     let operator_roles_account = result.get_account(&operator_roles_pda).unwrap();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let accounts = vec![
         (payer, payer_account),
