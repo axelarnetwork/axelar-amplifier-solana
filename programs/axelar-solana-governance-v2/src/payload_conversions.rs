@@ -31,7 +31,7 @@ pub fn decode_payload(
 pub fn decode_payload_target(
     payload_target_addr: &Bytes,
 ) -> std::result::Result<Pubkey, ProgramError> {
-    let target: [u8; 32] = payload_target_addr.to_vec().try_into().map_err(|_err| {
+    let target: [u8; 32] = payload_target_addr.as_ref().try_into().map_err(|_err| {
         msg!("Cannot cast incoming target address for governance gmp command");
         ProgramError::InvalidArgument
     })?;
