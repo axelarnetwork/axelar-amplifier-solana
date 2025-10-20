@@ -12,10 +12,10 @@ use axelar_solana_its_v2_test_fixtures::{
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
+use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program,
 };
 
 #[path = "initialize.rs"]
@@ -27,13 +27,13 @@ fn test_revoke_deploy_remote_interchain_token() {
     let mollusk = initialize::initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -169,7 +169,7 @@ fn test_revoke_deploy_remote_interchain_token() {
             payer,
             minter,
             deploy_approval_pda,
-            system_program: system_program::ID,
+            system_program: solana_sdk::system_program::ID,
             // for event CPI
             event_authority,
             program: program_id,
@@ -184,22 +184,13 @@ fn test_revoke_deploy_remote_interchain_token() {
         .iter()
         .find(|(pubkey, _)| *pubkey == payer)
         .map(|(_, account)| account.clone())
-        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
+        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID));
 
     let revoke_accounts = vec![
         (payer, updated_payer_account),
-        (minter, Account::new(0, 0, &system_program::ID)),
+        (minter, Account::new(0, 0, &solana_sdk::system_program::ID)),
         (deploy_approval_pda, deploy_approval_account.clone()),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        keyed_account_for_system_program(),
         // For event CPI
         (event_authority, event_authority_account),
         (program_id, program_account),
