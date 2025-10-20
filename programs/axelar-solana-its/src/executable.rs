@@ -13,7 +13,7 @@ use crate::assert_valid_interchain_transfer_execute_pda;
 /// Axelar Interchain Token Executable command prefix
 pub(crate) const AXELAR_INTERCHAIN_TOKEN_EXECUTE: &[u8; 16] = b"axelar-its-exec_";
 
-/// This is the payload that the `executeWithInterchainToken` processor on the destinatoin program
+/// This is the payload that the `executeWithInterchainToken` processor on the destination program
 /// must expect
 #[derive(Debug, PartialEq, Eq, BorshDeserialize, BorshSerialize)]
 #[repr(C)]
