@@ -29,7 +29,7 @@ pub struct ApproveOperatorProposal<'info> {
     #[account(
         init,
         payer = payer,
-        space = OperatorProposal::DISCRIMINATOR.len() + std::mem::size_of::<OperatorProposal>(),
+        space = OperatorProposal::DISCRIMINATOR.len() + OperatorProposal::INIT_SPACE,
         seeds = [OperatorProposal::SEED_PREFIX, &proposal_hash],
         bump,
     )]

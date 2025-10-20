@@ -1,19 +1,20 @@
 use alloy_sol_types::SolValue;
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas};
-use anchor_lang::AnchorSerialize;
 use anchor_lang::solana_program;
+use anchor_lang::AnchorSerialize;
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
 use axelar_solana_governance_v2::seed_prefixes::GOVERNANCE_CONFIG;
-use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
-    create_execute_proposal_instruction_data,
-    create_gateway_event_authority_pda,
-    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda, create_signing_pda_from_message, extract_proposal_hash_unchecked, get_withdraw_tokens_instruction_data, initialize_governance,
-    mock_setup_test, process_gmp_helper, GmpContext, TestSetup,
+    create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
+    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
+    create_signing_pda_from_message, extract_proposal_hash_unchecked,
+    get_withdraw_tokens_instruction_data, initialize_governance, mock_setup_test,
+    process_gmp_helper, GmpContext, TestSetup,
 };
 use governance_gmp::alloy_primitives::U256;
 use solana_sdk::account::Account;
@@ -207,7 +208,7 @@ fn should_execute_withdraw_tokens_through_proposal() {
         ),
         (
             governance_setup.governance_config,
-            governance_config_account_updated.clone(),
+            governance_config_account_updated,
         ),
         (proposal_pda, proposal_pda_account_updated),
         (
@@ -229,31 +230,6 @@ fn should_execute_withdraw_tokens_through_proposal() {
                 executable: true,
                 rent_epoch: 0,
             },
-        ),
-        // Remaining accounts for withdraw_tokens instruction:
-        (
-            GOVERNANCE_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            SYSTEM_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            governance_setup.governance_config,
-            governance_config_account_updated,
         ),
         (
             receiver_pubkey,

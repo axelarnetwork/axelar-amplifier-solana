@@ -1,20 +1,20 @@
 use alloy_sol_types::SolValue;
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas};
-use anchor_lang::AnchorSerialize;
 use anchor_lang::solana_program;
+use anchor_lang::AnchorSerialize;
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
 use axelar_solana_governance_v2::seed_prefixes::GOVERNANCE_CONFIG;
+use axelar_solana_governance_v2::state::GovernanceConfig;
 use axelar_solana_governance_v2::SolanaAccountMetadata;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
-use axelar_solana_governance_v2::state::GovernanceConfig;
 use axelar_solana_governance_v2_test_fixtures::{
-    create_execute_proposal_instruction_data,
-    create_gateway_event_authority_pda,
-    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda, create_signing_pda_from_message, extract_proposal_hash_unchecked,
-    get_memo_instruction_data, initialize_governance, process_gmp_helper, GmpContext, TestSetup,
+    create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
+    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
+    create_signing_pda_from_message, extract_proposal_hash_unchecked, get_memo_instruction_data,
+    initialize_governance, process_gmp_helper, GmpContext, TestSetup,
 };
 use axelar_solana_memo_v2::ID as MEMO_PROGRAM_ID;
 use governance_gmp::alloy_primitives::U256;
@@ -46,7 +46,7 @@ fn should_execute_scheduled_proposal() {
     let value_receiver = SolanaAccountMetadata {
         pubkey: value_receiver_pubkey.to_bytes(),
         is_signer: false,
-        is_writable: false,
+        is_writable: true,
     };
 
     let call_data = get_memo_instruction_data(memo, value_receiver);
@@ -229,7 +229,7 @@ fn should_execute_scheduled_proposal() {
         ),
         (
             governance_setup.governance_config,
-            governance_config_account_updated.clone(),
+            governance_config_account_updated,
         ),
         (proposal_pda, proposal_pda_account_updated),
         (
@@ -272,10 +272,6 @@ fn should_execute_scheduled_proposal() {
                 executable: false,
                 rent_epoch: 0,
             },
-        ),
-        (
-            governance_setup.governance_config,
-            governance_config_account_updated,
         ),
     ];
 

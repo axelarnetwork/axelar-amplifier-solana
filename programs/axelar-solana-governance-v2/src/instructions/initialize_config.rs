@@ -19,7 +19,7 @@ pub struct InitializeConfig<'info> {
     #[account(
         init,
         payer = payer,
-        space = GovernanceConfig::DISCRIMINATOR.len() + std::mem::size_of::<GovernanceConfig>(),
+        space = GovernanceConfig::DISCRIMINATOR.len() + GovernanceConfig::INIT_SPACE,
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump
     )]

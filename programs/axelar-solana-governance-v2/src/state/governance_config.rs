@@ -32,6 +32,16 @@ pub struct GovernanceConfig {
     pub operator: Address,
 }
 
+impl anchor_lang::Space for GovernanceConfig {
+    const INIT_SPACE: usize =
+		1 + // bump
+		32 + // chain_hash
+		32 + // address_hash
+		4 + // minimum_proposal_eta_delay
+		32 // operator
+		;
+}
+
 impl GovernanceConfig {
     pub const SEED_PREFIX: &'static [u8] = b"governance";
 

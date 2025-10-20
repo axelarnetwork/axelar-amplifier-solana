@@ -93,7 +93,7 @@ fn calculate_gmp_context(
     ExecuteProposalCallData,
     [u8; 32],
 )> {
-    let cmd_payload = crate::decode_payload(&payload).unwrap();
+    let cmd_payload = crate::decode_payload(&payload)?;
 
     let target = crate::decode_payload_target(&cmd_payload.target)?;
 

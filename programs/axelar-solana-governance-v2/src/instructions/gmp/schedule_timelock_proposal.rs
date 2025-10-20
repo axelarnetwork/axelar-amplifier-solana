@@ -22,7 +22,7 @@ pub struct ScheduleTimelockProposal<'info> {
     #[account(
         init,
         payer = payer,
-        space = ExecutableProposal::DISCRIMINATOR.len() + std::mem::size_of::<ExecutableProposal>(),
+        space = ExecutableProposal::DISCRIMINATOR.len() + ExecutableProposal::INIT_SPACE,
         seeds = [
             ExecutableProposal::SEED_PREFIX,
             &proposal_hash,

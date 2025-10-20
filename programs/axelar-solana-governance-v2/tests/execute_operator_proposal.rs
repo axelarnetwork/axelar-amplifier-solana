@@ -44,7 +44,7 @@ fn should_execute_operator_proposal() {
     let value_receiver = SolanaAccountMetadata {
         pubkey: value_receiver_pubkey.to_bytes(),
         is_signer: false,
-        is_writable: false,
+        is_writable: true,
     };
     let target_bytes: [u8; 32] = MEMO_PROGRAM_ID.to_bytes();
     let call_data = get_memo_instruction_data(memo, value_receiver);
@@ -277,7 +277,7 @@ fn should_execute_operator_proposal() {
         ),
         (
             governance_setup.governance_config,
-            governance_config_account_updated.clone(),
+            governance_config_account_updated,
         ),
         (proposal_pda, proposal_pda_account_updated),
         (
@@ -331,10 +331,6 @@ fn should_execute_operator_proposal() {
                 executable: false,
                 rent_epoch: 0,
             },
-        ),
-        (
-            governance_setup.governance_config,
-            governance_config_account_updated,
         ),
     ];
 

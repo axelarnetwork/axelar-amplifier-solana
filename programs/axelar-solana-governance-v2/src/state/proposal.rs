@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 
-#[derive(Debug)]
+#[derive(Debug, InitSpace)]
 #[account]
 pub struct ExecutableProposal {
     /// Represent the le bytes containing unix timestamp from when the proposal

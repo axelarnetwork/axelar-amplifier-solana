@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, InitSpace)]
 #[account]
 pub struct OperatorProposal {}
 

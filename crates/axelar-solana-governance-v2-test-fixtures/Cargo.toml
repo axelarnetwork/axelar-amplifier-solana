@@ -9,13 +9,13 @@ edition.workspace = true
 
 [dependencies]
 governance-gmp = {workspace = true}
-axelar-solana-memo-v2 = { path = "../../programs/axelar-solana-memo-v2", features = ["no-entrypoint"], default-features = false }
-axelar-solana-gateway-v2 = { path = "../../programs/axelar-solana-gateway-v2", features = ["no-entrypoint"], default-features = false }
+axelar-solana-memo-v2 = { workspace = true, features = ["no-entrypoint"], default-features = false }
+axelar-solana-gateway-v2 = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
-axelar-solana-governance-v2 = { path = "../../programs/axelar-solana-governance-v2" }
+axelar-solana-governance-v2.workspace = true
 mollusk-svm.workspace = true
-anchor-lang = "0.31.1"
+anchor-lang.workspace = true
 solana-sdk.workspace = true
 bincode.workspace = true
 
