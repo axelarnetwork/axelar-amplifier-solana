@@ -33,7 +33,6 @@ pub fn call_contract_handler(
 
     if caller.is_signer {
         // Direct signer, so not a program, continue
-        caller.key()
     } else {
         // Case of a program, validate and use signing PDA
         let expected_signing_pda = Pubkey::create_program_address(
@@ -61,7 +60,6 @@ pub fn call_contract_handler(
 
     let payload_hash = keccak::hash(&payload);
 
-    // A valid signing PDA was provided and it's a signer, continue
     emit_cpi!(CallContractEvent {
         sender: caller.key(),
         payload_hash: payload_hash.to_bytes(),
