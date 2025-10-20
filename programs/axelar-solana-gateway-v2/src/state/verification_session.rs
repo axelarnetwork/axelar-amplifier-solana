@@ -91,7 +91,7 @@ impl SignatureVerificationSessionData {
         // Update state
         self.accumulate_threshold(&verifier_info.leaf)?;
         self.mark_slot_done(&verifier_info.leaf)?;
-        self.verify_or_initialize_verifier_set(verifier_set_merkle_root)?;
+        self.verify_verifier_set(verifier_set_merkle_root)?;
 
         Ok(())
     }
@@ -208,12 +208,7 @@ impl SignatureVerificationSessionData {
         Ok(())
     }
 
-    fn verify_or_initialize_verifier_set(&mut self, expected_hash: &[u8; 32]) -> Result<()> {
-        if self.signature_verification.signing_verifier_set_hash == [0; 32] {
-            self.signature_verification.signing_verifier_set_hash = *expected_hash;
-            return Ok(());
-        }
-
+    fn verify_verifier_set(&mut self, expected_hash: &[u8; 32]) -> Result<()> {
         if self.signature_verification.signing_verifier_set_hash != *expected_hash {
             return err!(GatewayError::InvalidDigitalSignature);
         }
