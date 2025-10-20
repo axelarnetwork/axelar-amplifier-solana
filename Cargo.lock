@@ -1087,6 +1087,7 @@ dependencies = [
  "borsh 1.5.7",
  "bytemuck",
  "mollusk-svm",
+ "mollusk-test-utils",
  "program-utils",
  "solana-sdk",
  "solana-sdk-ids",
@@ -1302,6 +1303,26 @@ dependencies = [
  "spl-token-metadata-interface 0.6.0",
  "test-context",
  "typed-builder",
+]
+
+[[package]]
+name = "axelar-solana-its-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-gas-service",
+ "axelar-solana-gas-service-v2",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-operators",
+ "bincode",
+ "bitflags 2.9.4",
+ "bytemuck",
+ "mollusk-svm",
+ "mollusk-test-utils",
+ "program-utils",
+ "solana-sdk",
+ "solana-sdk-ids",
 ]
 
 [[package]]
@@ -5501,6 +5522,17 @@ dependencies = [
  "solana-program-error",
  "solana-pubkey",
  "solana-rent",
+]
+
+[[package]]
+name = "mollusk-test-utils"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "mollusk-svm",
+ "solana-sdk",
+ "solana-sdk-ids",
 ]
 
 [[package]]
