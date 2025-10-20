@@ -149,11 +149,8 @@ fn should_execute_operator_proposal() {
     assert!(!init_governance_result.program_result.is_err());
 
     let governance_config_account = init_governance_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == governance_setup.governance_config)
+        .get_account(&governance_setup.governance_config)
         .unwrap()
-        .1
         .clone();
 
     // Step 8: Process SCHEDULE timelock proposal
@@ -192,15 +189,11 @@ fn should_execute_operator_proposal() {
         schedule_payload,
         gmp_context,
     );
+
     assert!(!schedule_result.program_result.is_err());
 
-    let proposal_pda_account_after_schedule = schedule_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == proposal_pda)
-        .unwrap()
-        .1
-        .clone();
+    let proposal_pda_account_after_schedule =
+        schedule_result.get_account(&proposal_pda).unwrap().clone();
 
     // Step 9: Process APPROVE operator proposal
     let approve_operator_message = messages[1].clone();
@@ -256,27 +249,18 @@ fn should_execute_operator_proposal() {
 
     // Get updated accounts
     let governance_config_account_updated = approve_operator_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == governance_setup.governance_config)
+        .get_account(&governance_setup.governance_config)
         .unwrap()
-        .1
         .clone();
 
     let proposal_pda_account_updated = approve_operator_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == proposal_pda)
+        .get_account(&proposal_pda)
         .unwrap()
-        .1
         .clone();
 
     let operator_proposal_account_updated = approve_operator_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == operator_proposal_pda)
+        .get_account(&operator_proposal_pda)
         .unwrap()
-        .1
         .clone();
 
     // Set up accounts for execute operator proposal instruction

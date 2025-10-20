@@ -62,6 +62,12 @@ pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 ///     Ok(())
 /// }
 /// ```
+///
+/// NOTE: Keep in mind the outer accounts struct must not include:
+/// ```ignore
+/// #[instruction(message: Message, payload: Vec<u8>)]
+/// ```
+/// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
 // NOTE: This macro is necessary because Anchor currently does not support importing
 // accounts from other crates. Once Anchor supports this, we can remove this macro and
 // export the accounts directly from axelar-solana-gateway-v2.
@@ -71,6 +77,11 @@ pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 macro_rules! executable_accounts {
     () => {
     /// Accounts for executing an inbound Axelar GMP message.
+    /// NOTE: Keep in mind the outer accounts struct must not include:
+    /// ```ignore
+    /// #[instruction(message: Message, payload: Vec<u8>)]
+    /// ```
+    /// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
     #[derive(Accounts)]
     #[instruction(message: axelar_solana_gateway_v2::Message)]
     pub struct AxelarExecuteAccounts<'info> {

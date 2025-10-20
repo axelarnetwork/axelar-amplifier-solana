@@ -12,6 +12,7 @@ pub struct ExecuteProposal<'info> {
     pub system_program: Program<'info, System>,
 
     #[account(
+    	mut,
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump,
     )]

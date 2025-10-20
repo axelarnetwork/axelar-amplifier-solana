@@ -1,4 +1,4 @@
-use anchor_lang::prelude::{AccountMeta, UpgradeableLoaderState};
+use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
 use axelar_solana_gateway_v2::Message;
 use axelar_solana_gateway_v2::{
@@ -197,10 +197,6 @@ pub fn update_config(
     setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
-fn process_gmp_instruction(message: Message, payload: Vec<u8>) -> Vec<u8> {
-    axelar_solana_governance_v2::instruction::ProcessGmp { message, payload }.data()
-}
-
 #[allow(clippy::too_many_lines)]
 pub fn process_gmp_helper(
     setup: &TestSetup,
@@ -208,7 +204,11 @@ pub fn process_gmp_helper(
     payload: Vec<u8>,
     context: GmpContext,
 ) -> InstructionResult {
-    let instruction_data = process_gmp_instruction(message.clone(), payload.clone());
+    let instruction_data = axelar_solana_governance_v2::instruction::ProcessGmp {
+        message: message.clone(),
+        payload: payload.clone(),
+    }
+    .data();
 
     let accounts = vec![
         (
@@ -327,20 +327,22 @@ pub fn process_gmp_helper(
     // Updated instruction accounts:
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new(context.incoming_message.pubkey, false),
-            AccountMeta::new(context.signing_pda.pubkey, true),
-            AccountMeta::new_readonly(GATEWAY_PROGRAM_ID, false),
-            AccountMeta::new_readonly(context.event_authority_pda_governance.pubkey, false),
-            AccountMeta::new_readonly(GOVERNANCE_PROGRAM_ID, false),
-            AccountMeta::new_readonly(context.event_authority_pda.pubkey, false),
-            // GMP Accounts
-            AccountMeta::new(solana_sdk::system_program::ID, false),
-            AccountMeta::new(setup.governance_config, false),
-            AccountMeta::new(setup.payer, true),
-            AccountMeta::new(context.proposal.pubkey, false),
-            AccountMeta::new(context.operator_proposal.pubkey, false),
-        ],
+        accounts: axelar_solana_governance_v2::accounts::ProcessGmp {
+            executable: axelar_solana_governance_v2::accounts::AxelarExecuteAccounts {
+                incoming_message_pda: context.incoming_message.pubkey,
+                signing_pda: context.signing_pda.pubkey,
+                axelar_gateway_program: GATEWAY_PROGRAM_ID,
+                event_authority: context.event_authority_pda.pubkey,
+                system_program: solana_sdk::system_program::ID,
+            },
+            payer: setup.payer,
+            governance_config: setup.governance_config,
+            proposal_pda: context.proposal.pubkey,
+            operator_proposal_pda: context.operator_proposal.pubkey,
+            governance_event_authority: context.event_authority_pda_governance.pubkey,
+            axelar_governance_program: GOVERNANCE_PROGRAM_ID,
+        }
+        .to_account_metas(None),
         data: instruction_data,
     };
 

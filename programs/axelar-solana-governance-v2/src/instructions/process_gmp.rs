@@ -1,69 +1,46 @@
-use crate::program::AxelarSolanaGovernanceV2;
-use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, GovernanceError};
 use anchor_lang::{prelude::*, solana_program, InstructionData};
-use axelar_solana_gateway_v2::seed_prefixes::{
-    INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
-};
-use axelar_solana_gateway_v2::{
-    cpi::accounts::ValidateMessage, program::AxelarSolanaGatewayV2, IncomingMessage, Message,
-};
-use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 use solana_program::instruction::Instruction;
 
+use crate::program::AxelarSolanaGovernanceV2;
+use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, GovernanceError};
+use axelar_solana_gateway_v2::{executable::*, executable_accounts};
+use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
+
+executable_accounts!();
+
 #[derive(Accounts)]
-#[instruction(message: Message, payload: Vec<u8>)]
 pub struct ProcessGmp<'info> {
+    // GMP Accounts
+    pub executable: AxelarExecuteAccounts<'info>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    // Even though governance_config doesn't need to be mutable in
+    // all GMP instructions, we make it mutable here to simplify CPI handling.
+    // This avoids manual account construction for each instruction.
+    // TODO: recheck this choice later
     #[account(
-        seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
-        bump = incoming_message_pda.load()?.bump,
-        seeds::program = axelar_gateway_program.key()
-    )]
-    pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
-
-    /// Signing PDA for this program - used to validate with gateway
-    #[account(
-        mut,
-        signer,
-        seeds = [VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
-        bump = incoming_message_pda.load()?.signing_pda_bump,
-    )]
-    pub signing_pda: AccountInfo<'info>,
-
-    pub axelar_gateway_program: Program<'info, AxelarSolanaGatewayV2>,
-
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = crate::ID.key()
-    )]
-    pub governance_event_authority: SystemAccount<'info>,
-
-    pub axelar_governance_program: Program<'info, AxelarSolanaGovernanceV2>,
-
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = axelar_gateway_program.key()
-    )]
-    pub gateway_event_authority: SystemAccount<'info>,
-
-    pub system_program: Program<'info, System>,
-
-    #[account(
+    	mut,
     	seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump
     )]
     pub governance_config: Account<'info, GovernanceConfig>,
 
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    // Variable accounts as kept as unchecked. We self-CPI and check them for each separate instruction
+    // Variable accounts are kept as unchecked. We self-CPI and check them for each separate instruction
     #[account(mut)]
     pub proposal_pda: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub operator_proposal_pda: UncheckedAccount<'info>,
+
+    #[account(
+        seeds = [b"__event_authority"],
+        bump,
+    )]
+    pub governance_event_authority: SystemAccount<'info>,
+
+    pub axelar_governance_program: Program<'info, AxelarSolanaGovernanceV2>,
 }
 
 pub fn process_gmp_handler(
@@ -71,42 +48,12 @@ pub fn process_gmp_handler(
     message: Message,
     payload: Vec<u8>,
 ) -> Result<()> {
-    // Check that provided payload matches the approved message
-    let computed_payload_hash = solana_program::keccak::hashv(&[&payload]).to_bytes();
-    if computed_payload_hash != message.payload_hash {
-        return err!(GovernanceError::InvalidPayloadHash);
-    }
+    // Ensure the message is from an authorized address and chain.
+    // Check this first before validating message,
+    // to avoid copying Message + it's a cheaper check
+    ensure_authorized_gmp_command(&ctx.accounts.governance_config, &message)?;
 
-    let cpi_accounts = ValidateMessage {
-        incoming_message_pda: ctx.accounts.incoming_message_pda.to_account_info(),
-        caller: ctx.accounts.signing_pda.to_account_info(),
-        // for emit cpi
-        event_authority: ctx.accounts.gateway_event_authority.to_account_info(),
-        program: ctx.accounts.axelar_gateway_program.to_account_info(),
-    };
-
-    let binding = message.command_id();
-    let msg = binding.as_ref();
-
-    let seeds = &[
-        VALIDATE_MESSAGE_SIGNING_SEED,
-        msg,
-        &[ctx.accounts.incoming_message_pda.load()?.signing_pda_bump],
-    ];
-    let signer_seeds = &[&seeds[..]];
-
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.axelar_gateway_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
-
-    axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message.clone())?;
-
-    {
-        let config = ctx.accounts.governance_config.clone();
-        ensure_authorized_gmp_command(&config, &message)?;
-    }
+    validate_message(&ctx.accounts.executable, message, &payload)?;
 
     let (cmd_payload, _, _, proposal_hash) = calculate_gmp_context(payload)?;
 
@@ -173,15 +120,19 @@ fn process_proposal_gmp(
 ) -> Result<()> {
     match cmd_payload.command {
         GovernanceCommand::ScheduleTimeLockProposal => {
+            msg!("Processing ScheduleTimeLockProposal via GMP");
             schedule_timelock_proposal(ctx, cmd_payload, proposal_hash)
         }
         GovernanceCommand::CancelTimeLockProposal => {
+            msg!("Processing CancelTimeLockProposal via GMP");
             cancel_timelock_proposal(ctx, cmd_payload, proposal_hash)
         }
         GovernanceCommand::ApproveOperatorProposal => {
+            msg!("Processing ApproveOperatorProposal via GMP");
             approve_operator_proposal(ctx, cmd_payload, proposal_hash)
         }
         GovernanceCommand::CancelOperatorApproval => {
+            msg!("Processing CancelOperatorApproval via GMP");
             cancel_operator_proposal(ctx, cmd_payload, proposal_hash)
         }
         _ => {
@@ -224,7 +175,7 @@ fn schedule_timelock_proposal(
     let schedule_instruction = Instruction {
         program_id: crate::ID,
         accounts: crate::accounts::ScheduleTimelockProposal {
-            system_program: ctx.accounts.system_program.key(),
+            system_program: ctx.accounts.executable.system_program.key(),
             governance_config: ctx.accounts.governance_config.key(),
             payer: ctx.accounts.payer.key(),
             proposal_pda: ctx.accounts.proposal_pda.key(),
@@ -236,15 +187,17 @@ fn schedule_timelock_proposal(
         data: instruction_data.data(),
     };
 
-    let account_infos = vec![
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.governance_config.to_account_info(),
-        ctx.accounts.payer.to_account_info(),
-        ctx.accounts.proposal_pda.to_account_info(),
-        // for emit cpi
-        ctx.accounts.governance_event_authority.to_account_info(),
-        ctx.accounts.axelar_governance_program.to_account_info(),
-    ];
+    let account_infos =
+        crate::__cpi_client_accounts_schedule_timelock_proposal::ScheduleTimelockProposal {
+            system_program: ctx.accounts.executable.system_program.to_account_info(),
+            governance_config: ctx.accounts.governance_config.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            proposal_pda: ctx.accounts.proposal_pda.to_account_info(),
+            // for emit cpi
+            event_authority: ctx.accounts.governance_event_authority.to_account_info(),
+            program: ctx.accounts.axelar_governance_program.to_account_info(),
+        }
+        .to_account_infos();
 
     invoke_signed_with_governance_config(
         &schedule_instruction,
@@ -274,7 +227,6 @@ fn cancel_timelock_proposal(
         accounts: crate::accounts::CancelTimelockProposal {
             governance_config: ctx.accounts.governance_config.key(),
             proposal_pda: ctx.accounts.proposal_pda.key(),
-            // for event cpi
             event_authority: ctx.accounts.governance_event_authority.key(),
             program: ctx.accounts.axelar_governance_program.key(),
         }
@@ -282,14 +234,14 @@ fn cancel_timelock_proposal(
         data: instruction_data.data(),
     };
 
-    // Account infos for the CPI call
-    let account_infos = vec![
-        ctx.accounts.governance_config.to_account_info(),
-        ctx.accounts.proposal_pda.to_account_info(),
-        // for emit cpi
-        ctx.accounts.governance_event_authority.to_account_info(),
-        ctx.accounts.axelar_governance_program.to_account_info(),
-    ];
+    let account_infos =
+        crate::__cpi_client_accounts_cancel_timelock_proposal::CancelTimelockProposal {
+            governance_config: ctx.accounts.governance_config.to_account_info(),
+            proposal_pda: ctx.accounts.proposal_pda.to_account_info(),
+            event_authority: ctx.accounts.governance_event_authority.to_account_info(),
+            program: ctx.accounts.axelar_governance_program.to_account_info(),
+        }
+        .to_account_infos();
 
     invoke_signed_with_governance_config(
         &cancel_instruction,
@@ -316,7 +268,7 @@ fn approve_operator_proposal(
     let approve_instruction = Instruction {
         program_id: crate::ID,
         accounts: crate::accounts::ApproveOperatorProposal {
-            system_program: ctx.accounts.system_program.key(),
+            system_program: ctx.accounts.executable.system_program.key(),
             governance_config: ctx.accounts.governance_config.key(),
             payer: ctx.accounts.payer.key(),
             proposal_pda: ctx.accounts.proposal_pda.key(),
@@ -329,17 +281,17 @@ fn approve_operator_proposal(
         data: instruction_data.data(),
     };
 
-    // Account infos for the CPI call
-    let account_infos = vec![
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.governance_config.to_account_info(),
-        ctx.accounts.payer.to_account_info(),
-        ctx.accounts.proposal_pda.to_account_info(),
-        ctx.accounts.operator_proposal_pda.to_account_info(),
-        // for emit cpi
-        ctx.accounts.governance_event_authority.to_account_info(),
-        ctx.accounts.axelar_governance_program.to_account_info(),
-    ];
+    let account_infos =
+        crate::__cpi_client_accounts_approve_operator_proposal::ApproveOperatorProposal {
+            system_program: ctx.accounts.executable.system_program.to_account_info(),
+            governance_config: ctx.accounts.governance_config.to_account_info(),
+            payer: ctx.accounts.payer.to_account_info(),
+            proposal_pda: ctx.accounts.proposal_pda.to_account_info(),
+            operator_proposal_pda: ctx.accounts.operator_proposal_pda.to_account_info(),
+            event_authority: ctx.accounts.governance_event_authority.to_account_info(),
+            program: ctx.accounts.axelar_governance_program.to_account_info(),
+        }
+        .to_account_infos();
 
     invoke_signed_with_governance_config(
         &approve_instruction,
@@ -377,15 +329,15 @@ fn cancel_operator_proposal(
         data: instruction_data.data(),
     };
 
-    // Account infos for the CPI call
-    let account_infos = vec![
-        ctx.accounts.governance_config.to_account_info(),
-        ctx.accounts.proposal_pda.to_account_info(),
-        ctx.accounts.operator_proposal_pda.to_account_info(),
-        // for emit cpi
-        ctx.accounts.governance_event_authority.to_account_info(),
-        ctx.accounts.axelar_governance_program.to_account_info(),
-    ];
+    let account_infos =
+        crate::__cpi_client_accounts_cancel_operator_proposal::CancelOperatorProposal {
+            governance_config: ctx.accounts.governance_config.to_account_info(),
+            proposal_pda: ctx.accounts.proposal_pda.to_account_info(),
+            operator_proposal_pda: ctx.accounts.operator_proposal_pda.to_account_info(),
+            event_authority: ctx.accounts.governance_event_authority.to_account_info(),
+            program: ctx.accounts.axelar_governance_program.to_account_info(),
+        }
+        .to_account_infos();
 
     invoke_signed_with_governance_config(
         &cancel_instruction,

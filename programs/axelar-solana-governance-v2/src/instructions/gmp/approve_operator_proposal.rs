@@ -9,15 +9,16 @@ use anchor_lang::prelude::*;
 #[instruction(proposal_hash: [u8; 32], native_value: Vec<u8>, target: Vec<u8>, call_data: Vec<u8>)]
 pub struct ApproveOperatorProposal<'info> {
     pub system_program: Program<'info, System>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     #[account(
         signer,
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump,
     )]
     pub governance_config: Account<'info, GovernanceConfig>,
-
-    #[account(mut)]
-    pub payer: Signer<'info>,
 
     #[account(
         seeds = [ExecutableProposal::SEED_PREFIX, &proposal_hash],
