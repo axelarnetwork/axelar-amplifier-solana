@@ -1,4 +1,3 @@
-use crate::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData,
     VerifierSetRotatedEvent, VerifierSetTracker,
@@ -12,19 +11,18 @@ use anchor_lang::solana_program;
 pub struct RotateSigners<'info> {
     #[account(
         mut,
-        seeds = [GATEWAY_SEED],
+        seeds = [GatewayConfig::SEED_PREFIX],
         bump = gateway_root_pda.load()?.bump
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
     #[account(
         seeds = [
-        	SIGNATURE_VERIFICATION_SEED,
-        	construct_payload_hash(
-         		new_verifier_set_merkle_root,
-           		verification_session_account.load()?.signature_verification.signing_verifier_set_hash,
-         	).as_ref(),
-         	verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref(),
+        	SignatureVerificationSessionData::SEED_PREFIX,
+         	// New verifier set merkle root is used directly as the payload hash.
+         	&new_verifier_set_merkle_root,
+          	verification_session_account.load()?.signature_verification
+		 		.signing_verifier_set_hash.as_ref(),
         ],
         bump = verification_session_account.load()?.bump,
         // Check: signature session is complete/valid
@@ -35,7 +33,7 @@ pub struct RotateSigners<'info> {
 
     #[account(
         seeds = [
-            VERIFIER_SET_TRACKER_SEED,
+            VerifierSetTracker::SEED_PREFIX,
             verification_session_account.load()?
             	.signature_verification.signing_verifier_set_hash.as_slice()
         ],
@@ -54,7 +52,7 @@ pub struct RotateSigners<'info> {
         payer = payer,
         space = VerifierSetTracker::DISCRIMINATOR.len() + std::mem::size_of::<VerifierSetTracker>(),
         seeds = [
-            crate::seed_prefixes::VERIFIER_SET_TRACKER_SEED,
+            VerifierSetTracker::SEED_PREFIX,
             new_verifier_set_merkle_root.as_ref()
         ],
         bump
@@ -135,19 +133,6 @@ pub fn rotate_signers_handler(
     });
 
     Ok(())
-}
-
-pub fn construct_payload_hash(
-    new_verifier_set_merkle_root: [u8; 32],
-    signing_verifier_set_merkle_root: [u8; 32],
-) -> [u8; 32] {
-    const HASH_PREFIX: &[u8] = b"new verifier set";
-    solana_program::keccak::hashv(&[
-        HASH_PREFIX,
-        &new_verifier_set_merkle_root,
-        &signing_verifier_set_merkle_root,
-    ])
-    .to_bytes()
 }
 
 fn enough_time_till_next_rotation(current_time: u64, config: &GatewayConfig) -> bool {

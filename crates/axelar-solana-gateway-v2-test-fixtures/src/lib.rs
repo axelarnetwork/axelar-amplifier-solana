@@ -963,16 +963,6 @@ pub fn setup_message_merkle_tree(
     )
 }
 
-pub fn setup_signer_rotation_payload(
-    current_verifier_set_hash: [u8; 32],
-    new_verifier_set_hash: [u8; 32],
-) -> [u8; 32] {
-    axelar_solana_gateway_v2::construct_payload_hash(
-        new_verifier_set_hash,
-        current_verifier_set_hash,
-    )
-}
-
 pub fn approve_message_helper(
     setup: &TestSetup,
     message_merkle_tree: MerkleTree<SolanaSyscallHasher>,
