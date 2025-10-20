@@ -1105,6 +1105,7 @@ dependencies = [
  "borsh 1.5.7",
  "bytemuck",
  "mollusk-svm",
+ "mollusk-test-utils",
  "program-utils",
  "solana-sdk",
  "solana-sdk-ids",
