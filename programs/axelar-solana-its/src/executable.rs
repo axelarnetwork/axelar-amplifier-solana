@@ -10,16 +10,6 @@ use solana_program::pubkey::Pubkey;
 use crate::accounts::AxelarInterchainTokenExecutableAccounts;
 use crate::assert_valid_interchain_transfer_execute_pda;
 
-/// The index of the first account that is expected to be passed to the
-/// destination program. The prepended accounts are:
-///
-/// 0. [signer] The Interchain Token Service Root PDA.
-/// 1. [] The Message Payload PDA.
-/// 2. [] The token program (spl-token or spl-token-2022).
-/// 3. [writable] The token mint.
-/// 4. [writable] The Destination Program Associated Token Account.
-pub const PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
-
 /// Axelar Interchain Token Executable command prefix
 pub(crate) const AXELAR_INTERCHAIN_TOKEN_EXECUTE: &[u8; 16] = b"axelar-its-exec_";
 
