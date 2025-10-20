@@ -60,7 +60,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
             axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
         ],
         seeds::program = axelar_solana_gateway_v2::ID,
-        bump
+        bump = gateway_root_pda.load()?.bump,
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
@@ -73,7 +73,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
         mut,
         seeds = [Treasury::SEED_PREFIX],
         seeds::program = axelar_solana_gas_service_v2::ID,
-        bump
+        bump = gas_treasury.bump,
     )]
     pub gas_treasury: Account<'info, Treasury>,
 

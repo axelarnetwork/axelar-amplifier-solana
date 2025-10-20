@@ -44,7 +44,7 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        space = DeployApproval::DISCRIMINATOR.len() + std::mem::size_of::<DeployApproval>(),
+        space = DeployApproval::DISCRIMINATOR.len() + DeployApproval::INIT_SPACE,
         seeds = [
             DEPLOYMENT_APPROVAL_SEED,
             minter.key().as_ref(),

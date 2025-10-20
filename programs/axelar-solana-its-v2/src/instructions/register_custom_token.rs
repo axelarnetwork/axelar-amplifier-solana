@@ -38,7 +38,7 @@ pub struct RegisterCustomToken<'info> {
     #[account(
         init,
         payer = payer,
-        space = TokenManager::DISCRIMINATOR.len() + std::mem::size_of::<TokenManager>(),
+        space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),

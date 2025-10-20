@@ -83,7 +83,7 @@ pub struct DeployRemoteInterchainToken<'info> {
             &interchain_token_id(&deployer.key(), &salt),
             &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
         ],
-        bump
+        bump = deploy_approval_pda.bump,
     )]
     pub deploy_approval_pda: Option<Account<'info, DeployApproval>>,
     #[account(
@@ -104,7 +104,7 @@ pub struct DeployRemoteInterchainToken<'info> {
             axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
         ],
         seeds::program = axelar_solana_gateway_v2::ID,
-        bump
+        bump = gateway_root_pda.load()?.bump,
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
@@ -117,7 +117,7 @@ pub struct DeployRemoteInterchainToken<'info> {
         mut,
         seeds = [Treasury::SEED_PREFIX],
         seeds::program = axelar_solana_gas_service_v2::ID,
-        bump
+        bump = gas_treasury.bump,
     )]
     pub gas_treasury: Account<'info, Treasury>,
 

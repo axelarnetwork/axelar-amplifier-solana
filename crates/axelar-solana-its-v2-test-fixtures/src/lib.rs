@@ -75,6 +75,19 @@ pub fn create_rent_sysvar_data() -> Vec<u8> {
     bincode::serialize(&rent).unwrap()
 }
 
+pub fn system_account_tuple() -> (Pubkey, Account) {
+    (
+        system_program::ID,
+        Account {
+            lamports: 1,
+            data: vec![],
+            owner: solana_sdk::native_loader::id(),
+            executable: true,
+            rent_epoch: 0,
+        },
+    )
+}
+
 pub fn create_sysvar_instructions_data() -> Vec<u8> {
     use solana_sdk::sysvar::instructions::{construct_instructions_data, BorrowedInstruction};
 
@@ -172,16 +185,7 @@ pub fn deploy_interchain_token_helper(
     let accounts = vec![
         (ctx.payer, ctx.payer_account),
         (ctx.deployer, ctx.deployer_account),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        system_account_tuple(),
         (ctx.its_root_pda, ctx.its_root_account),
         (token_manager_pda, Account::new(0, 0, &system_program::ID)),
         (token_mint_pda, Account::new(0, 0, &system_program::ID)),
@@ -424,40 +428,20 @@ pub fn deploy_remote_interchain_token_helper(
         .map(|(_, account)| account.clone())
         .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &system_program::ID));
 
-    let updated_its_root_account = ctx
-        .result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == ctx.its_root_pda)
-        .unwrap()
-        .1
-        .clone();
+    let updated_its_root_account = ctx.result.get_account(&ctx.its_root_pda).unwrap().clone();
 
-    let updated_token_mint_account = ctx
-        .result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == ctx.token_mint_pda)
-        .unwrap()
-        .1
-        .clone();
+    let updated_token_mint_account = ctx.result.get_account(&ctx.token_mint_pda).unwrap().clone();
 
     let updated_metadata_account = ctx
         .result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == ctx.metadata_account)
+        .get_account(&ctx.metadata_account)
         .unwrap()
-        .1
         .clone();
 
     let updated_token_manager_account = ctx
         .result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == ctx.token_manager_pda)
+        .get_account(&ctx.token_manager_pda)
         .unwrap()
-        .1
         .clone();
 
     // Accounts for the deploy remote instruction
@@ -511,16 +495,7 @@ pub fn deploy_remote_interchain_token_helper(
                 rent_epoch: 0,
             },
         ),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        system_account_tuple(),
         (ctx.its_root_pda, updated_its_root_account),
         (
             call_contract_signing_pda,
@@ -629,20 +604,14 @@ pub fn approve_deploy_remote_interchain_token_helper(
 
     let updated_token_manager_account = ctx
         .result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == ctx.token_manager_pda)
+        .get_account(&ctx.token_manager_pda)
         .unwrap()
-        .1
         .clone();
 
     let updated_minter_roles_account = ctx
         .result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == ctx.minter_roles_pda)
+        .get_account(&ctx.minter_roles_pda)
         .unwrap()
-        .1
         .clone();
 
     let approve_accounts = vec![
@@ -654,16 +623,7 @@ pub fn approve_deploy_remote_interchain_token_helper(
             ctx.deploy_approval_pda,
             Account::new(0, 0, &system_program::ID),
         ),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        system_account_tuple(),
         // For event CPI
         (event_authority, event_authority_account),
         (ctx.program_id, program_account),
@@ -783,16 +743,7 @@ pub fn register_canonical_interchain_token_helper(
     let accounts = vec![
         (payer, payer_account.clone()),
         (metadata_account_pda, metadata_account),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        system_account_tuple(),
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, Account::new(0, 0, &system_program::ID)),
         (mint_pubkey, mint_account),

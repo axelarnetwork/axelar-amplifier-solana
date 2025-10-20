@@ -45,7 +45,7 @@ pub struct DeployInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        space = TokenManager::DISCRIMINATOR.len() + std::mem::size_of::<TokenManager>(),
+        space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
@@ -158,6 +158,7 @@ pub fn deploy_interchain_token_handler(
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
+        msg!("Name and/or symbol length too long");
         return err!(ITSError::InvalidArgument);
     }
 
@@ -166,6 +167,33 @@ pub fn deploy_interchain_token_handler(
         deployer: *ctx.accounts.deployer.key,
         salt: deploy_salt,
     });
+
+    // process_inbound_deploy
+
+    // setup_mint
+    if initial_supply > 0 {
+        mint_initial_supply(
+            &ctx.accounts,
+            token_id,
+            initial_supply,
+            ctx.bumps.token_manager_pda,
+        )?;
+    }
+
+    // setup_metadata
+    create_token_metadata(
+        &ctx.accounts,
+        name.clone(),
+        symbol.clone(),
+        token_id,
+        ctx.bumps.token_manager_pda,
+    )?;
+
+    // super::token_manager::deploy(...)
+    validate_mint_extensions(
+        Type::NativeInterchainToken,
+        &ctx.accounts.token_mint.to_account_info(),
+    )?;
 
     initialize_token_manager(
         &mut ctx.accounts.token_manager_pda,
@@ -188,33 +216,11 @@ pub fn deploy_interchain_token_handler(
             .unwrap_or_default(),
     });
 
-    validate_mint_extensions(
-        Type::NativeInterchainToken,
-        &ctx.accounts.token_mint.to_account_info(),
-    )?;
-
     // Initialize UserRoles
     if ctx.accounts.minter.is_some() && ctx.accounts.minter_roles_pda.is_some() {
         let minter_roles_pda = &mut ctx.accounts.minter_roles_pda.as_mut().unwrap();
         minter_roles_pda.bump = ctx.bumps.minter_roles_pda.unwrap();
         minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
-    }
-
-    create_token_metadata(
-        &ctx.accounts,
-        name.clone(),
-        symbol.clone(),
-        token_id,
-        ctx.bumps.token_manager_pda,
-    )?;
-
-    if initial_supply > 0 {
-        mint_initial_supply(
-            &ctx.accounts,
-            token_id,
-            initial_supply,
-            ctx.bumps.token_manager_pda,
-        )?;
     }
 
     emit_cpi!(InterchainTokenDeployed {
@@ -299,11 +305,11 @@ fn create_token_metadata<'info>(
         .authority(&accounts.token_manager_pda.to_account_info())
         .update_authority(&accounts.token_manager_pda.to_account_info(), true)
         .payer(&accounts.payer.to_account_info())
-        .is_mutable(false) // Make metadata immutable for interchain tokens
+        .is_mutable(false)
         .name(truncated_name)
         .symbol(truncated_symbol)
-        .uri(String::new()) // Empty URI for now, can be customized later
-        .seller_fee_basis_points(0) // No royalties for fungible tokens
+        .uri(String::new())
+        .seller_fee_basis_points(0)
         .system_program(&accounts.system_program.to_account_info())
         .sysvar_instructions(&accounts.sysvar_instructions.to_account_info())
         .invoke_signed(&[&[

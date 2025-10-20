@@ -8,7 +8,7 @@ pub(crate) enum FlowDirection {
     Out,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize, InitSpace)]
 /// Struct containing flow information for a specific epoch.
 pub struct FlowState {
     pub flow_limit: Option<u64>,

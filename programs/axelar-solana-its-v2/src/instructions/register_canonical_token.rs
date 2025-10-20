@@ -1,9 +1,9 @@
 use crate::{
     errors::ITSError,
     events::{InterchainTokenIdClaimed, TokenManagerDeployed},
-    instructions::{get_token_metadata, validate_mint_extensions},
+    instructions::{get_token_metadata, initialize_token_manager, validate_mint_extensions},
     seed_prefixes::TOKEN_MANAGER_SEED,
-    state::{FlowState, InterchainTokenService, TokenManager, Type},
+    state::{InterchainTokenService, TokenManager, Type},
     utils::{
         canonical_interchain_token_deploy_salt, canonical_interchain_token_id,
         interchain_token_id_internal,
@@ -54,7 +54,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        space = TokenManager::DISCRIMINATOR.len() + std::mem::size_of::<TokenManager>(),
+        space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
@@ -129,13 +129,14 @@ pub fn register_canonical_interchain_token_handler(
     });
 
     // Initialize the Token Manager
-    let token_manager = &mut ctx.accounts.token_manager_pda;
-    token_manager.ty = token_manager_type;
-    token_manager.token_id = token_id;
-    token_manager.token_address = *ctx.accounts.token_mint.to_account_info().key;
-    token_manager.associated_token_account = *ctx.accounts.token_manager_ata.to_account_info().key;
-    token_manager.flow_slot = FlowState::new(None, 0);
-    token_manager.bump = ctx.bumps.token_manager_pda;
+    initialize_token_manager(
+        &mut ctx.accounts.token_manager_pda,
+        token_id,
+        ctx.accounts.token_mint.key(),
+        ctx.accounts.token_manager_ata.key(),
+        ctx.bumps.token_manager_pda,
+        token_manager_type,
+    )?;
 
     emit_cpi!(TokenManagerDeployed {
         token_id,

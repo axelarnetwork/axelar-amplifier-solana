@@ -2,7 +2,7 @@ use crate::state::FlowState;
 use alloy_primitives::U256;
 use anchor_lang::prelude::*;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy, AnchorSerialize, AnchorDeserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, AnchorSerialize, AnchorDeserialize, InitSpace)]
 pub enum Type {
     /// For tokens that are deployed directly from ITS itself they use a native
     /// interchain token manager. Tokens that are deployed via the frontend
@@ -80,7 +80,7 @@ impl From<Type> for u8 {
 }
 
 #[account]
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, InitSpace)]
 pub struct TokenManager {
     /// The type of `TokenManager`.
     pub ty: Type,
