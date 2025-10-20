@@ -8,11 +8,7 @@ use mollusk_test_utils::{
     create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
 };
 use {
-    anchor_lang::{
-        solana_program::instruction::Instruction, system_program, Discriminator, InstructionData,
-        Space, ToAccountMetas,
-    },
-    mollusk_svm::Mollusk,
+    anchor_lang::system_program,
     solana_sdk::{account::Account, pubkey::Pubkey},
     solana_sdk_ids::bpf_loader_upgradeable,
 };
