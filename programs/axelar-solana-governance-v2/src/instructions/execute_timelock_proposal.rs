@@ -38,13 +38,10 @@ pub fn execute_proposal_handler(
     let target_program = Pubkey::new_from_array(execute_proposal_data.target_address);
 
     let clock = Clock::get()?;
-    require!(
-        clock.unix_timestamp as u64 >= proposal.eta,
-        GovernanceError::ProposalNotReady
-    );
+    let timestamp: u64 = clock.unix_timestamp.try_into().expect("timestamp invalid");
+    require!(timestamp >= proposal.eta, GovernanceError::ProposalNotReady);
 
     let remaining_accounts = ctx.remaining_accounts;
-    let governance_config = ctx.accounts.governance_config.clone();
 
     check_governance_config_presence(
         &ctx.accounts.governance_config.key(),
@@ -54,7 +51,7 @@ pub fn execute_proposal_handler(
 
     check_target_program_presence(remaining_accounts, &target_program)?;
 
-    let governance_config_bump = governance_config.bump;
+    let governance_config_bump = ctx.accounts.governance_config.bump;
 
     execute_proposal_cpi(
         &execute_proposal_data,
