@@ -188,6 +188,7 @@ mollusk-svm-programs-token = "0.4.1"
 
 # solana programs
 axelar-solana-its = { path = "programs/axelar-solana-its", default-features = false }
+axelar-solana-its-v2 = { path = "programs/axelar-solana-its-v2", default-features = false }
 axelar-solana-operators = { path = "programs/axelar-solana-operators", default-features = false }
 axelar-solana-gas-service = { path = "programs/axelar-solana-gas-service", default-features = false }
 axelar-solana-gas-service-v2 = { path = "programs/axelar-solana-gas-service-v2", default-features = false }
@@ -206,6 +207,7 @@ axelar-message-primitives = { path = "helpers/axelar-message-primitives" }
 axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
 axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
+axelar-solana-its-v2-test-fixtures = { path = "crates/axelar-solana-its-v2-test-fixtures", default-features = false }
 axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
 axelar-solana-its-v2-test-fixtures = { path = "crates/axelar-solana-its-v2-test-fixtures", default-features = false }
 event-cpi = { path = "helpers/event-cpi" }
