@@ -1,6 +1,7 @@
 use anchor_lang::prelude::ToAccountMetas;
 use anchor_lang::AccountDeserialize;
 use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::state::GovernanceConfigInit;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
     create_transfer_operatorship_instruction_data, initialize_governance, mock_setup_test,
@@ -18,7 +19,7 @@ fn should_transfer_operatorship() {
     let address_hash = [2u8; 32];
     let minimum_proposal_eta_delay = 3600;
 
-    let governance_config = GovernanceConfig::new(
+    let governance_config = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,

@@ -10,7 +10,7 @@ use axelar_solana_governance::{
     state::proposal::ExecutableProposal as ExecutableProposalV1,
 };
 use axelar_solana_governance_v2::{
-    ExecuteProposalCallData, ExecuteProposalData, GovernanceConfig, GovernanceConfigUpdate,
+    ExecuteProposalCallData, ExecuteProposalData, GovernanceConfigInit, GovernanceConfigUpdate,
     SolanaAccountMetadata, ID as GOVERNANCE_PROGRAM_ID,
 };
 use mollusk_svm::{result::InstructionResult, Mollusk};
@@ -32,14 +32,6 @@ pub struct TestSetup {
     pub program_data_pda: Pubkey,
     pub event_authority_pda: Pubkey,
     pub event_authority_bump: u8,
-}
-
-fn initialize_instruction(params: GovernanceConfig) -> Vec<u8> {
-    axelar_solana_governance_v2::instruction::InitializeConfig { params }.data()
-}
-
-fn update_config_instruction(params: GovernanceConfigUpdate) -> Vec<u8> {
-    axelar_solana_governance_v2::instruction::UpdateConfig { params }.data()
 }
 
 pub fn mock_setup_test() -> TestSetup {
@@ -77,8 +69,9 @@ pub fn mock_setup_test() -> TestSetup {
     }
 }
 
-pub fn initialize_governance(setup: &TestSetup, params: GovernanceConfig) -> InstructionResult {
-    let instruction_data = initialize_instruction(params);
+pub fn initialize_governance(setup: &TestSetup, params: GovernanceConfigInit) -> InstructionResult {
+    let instruction_data =
+        axelar_solana_governance_v2::instruction::InitializeConfig { params }.data();
 
     let program_data_state = UpgradeableLoaderState::ProgramData {
         slot: 0,
@@ -160,7 +153,7 @@ pub fn update_config(
     params: GovernanceConfigUpdate,
     governance_config_data: Vec<u8>,
 ) -> InstructionResult {
-    let instruction_data = update_config_instruction(params);
+    let instruction_data = axelar_solana_governance_v2::instruction::UpdateConfig { params }.data();
 
     let accounts = vec![
         (

@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use crate::{GovernanceConfigUpdate, GovernanceError};
+use crate::GovernanceError;
 use anchor_lang::prelude::*;
 
 pub type Hash = [u8; 32];
@@ -49,23 +49,6 @@ impl GovernanceConfig {
         Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
     }
 
-    /// Creates a new governance program config.
-    #[must_use]
-    pub const fn new(
-        chain_hash: Hash,
-        address_hash: Hash,
-        minimum_proposal_eta_delay: u32,
-        operator: Address,
-    ) -> Self {
-        Self {
-            bump: 0, // This will be set by the program
-            chain_hash,
-            address_hash,
-            minimum_proposal_eta_delay,
-            operator,
-        }
-    }
-
     pub fn validate_config(&self) -> Result<()> {
         if !VALID_PROPOSAL_DELAY_RANGE.contains(&self.minimum_proposal_eta_delay) {
             msg!(
@@ -92,4 +75,38 @@ impl GovernanceConfig {
         }
         self.validate_config()
     }
+}
+
+/// Parameters for initializing a new governance config.
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
+pub struct GovernanceConfigInit {
+    pub chain_hash: Hash,
+    pub address_hash: Hash,
+    pub minimum_proposal_eta_delay: u32,
+    pub operator: Address,
+}
+
+impl GovernanceConfigInit {
+    /// Creates a new governance program config.
+    #[must_use]
+    pub const fn new(
+        chain_hash: Hash,
+        address_hash: Hash,
+        minimum_proposal_eta_delay: u32,
+        operator: Address,
+    ) -> Self {
+        Self {
+            chain_hash,
+            address_hash,
+            minimum_proposal_eta_delay,
+            operator,
+        }
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct GovernanceConfigUpdate {
+    pub chain_hash: Option<Hash>,
+    pub address_hash: Option<Hash>,
+    pub minimum_proposal_eta_delay: Option<u32>,
 }

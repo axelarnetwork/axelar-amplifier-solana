@@ -37,7 +37,7 @@ pub mod axelar_solana_governance_v2 {
 
     pub fn initialize_config(
         ctx: Context<InitializeConfig>,
-        params: GovernanceConfig,
+        params: GovernanceConfigInit,
     ) -> Result<()> {
         instructions::initialize_config_handler(ctx, params)
     }

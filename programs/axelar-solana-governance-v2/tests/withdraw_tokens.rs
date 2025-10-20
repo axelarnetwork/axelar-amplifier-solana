@@ -7,7 +7,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     setup_test_with_real_signers,
 };
 use axelar_solana_governance_v2::seed_prefixes::GOVERNANCE_CONFIG;
-use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::state::GovernanceConfigInit;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
     create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
@@ -118,7 +118,7 @@ fn should_execute_withdraw_tokens_through_proposal() {
         event_authority_bump,
     };
 
-    let governance_config_data = GovernanceConfig::new(
+    let governance_config_data = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,
@@ -325,7 +325,7 @@ fn should_fail_direct_schedule_timelock_proposal_call() {
     let address_hash = [2u8; 32];
     let minimum_proposal_eta_delay = 3600;
 
-    let governance_config = GovernanceConfig::new(
+    let governance_config = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,

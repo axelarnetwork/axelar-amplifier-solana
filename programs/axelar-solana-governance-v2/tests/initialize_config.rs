@@ -1,5 +1,5 @@
 use anchor_lang::AccountDeserialize;
-use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::state::{GovernanceConfig, GovernanceConfigInit};
 use axelar_solana_governance_v2_test_fixtures::{initialize_governance, mock_setup_test};
 
 #[test]
@@ -9,7 +9,7 @@ fn should_initialize_config() {
     let address_hash = [2u8; 32];
     let minimum_proposal_eta_delay = 3600;
 
-    let governance_config = GovernanceConfig::new(
+    let governance_config = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,

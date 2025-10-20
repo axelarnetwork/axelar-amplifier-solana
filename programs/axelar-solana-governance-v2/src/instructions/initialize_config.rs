@@ -1,4 +1,4 @@
-use crate::{GovernanceConfig, GovernanceError};
+use crate::{GovernanceConfig, GovernanceConfigInit, GovernanceError};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -30,13 +30,8 @@ pub struct InitializeConfig<'info> {
 
 pub fn initialize_config_handler(
     ctx: Context<InitializeConfig>,
-    params: GovernanceConfig,
+    params: GovernanceConfigInit,
 ) -> Result<()> {
-    msg!("initialize_config_handler");
-
-    // Validate the config
-    params.validate_config()?;
-
     let config = &mut ctx.accounts.governance_config;
 
     // Initialize account data
@@ -45,6 +40,9 @@ pub fn initialize_config_handler(
     config.address_hash = params.address_hash;
     config.minimum_proposal_eta_delay = params.minimum_proposal_eta_delay;
     config.operator = params.operator;
+
+    // Validate the config
+    config.validate_config()?;
 
     Ok(())
 }

@@ -3,13 +3,15 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
+use axelar_solana_governance_v2::state::GovernanceConfigInit;
 use axelar_solana_governance_v2::ExecutableProposal;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
-use axelar_solana_governance_v2::state::GovernanceConfig;
 use axelar_solana_governance_v2_test_fixtures::{
     create_gateway_event_authority_pda, create_governance_config_pda,
     create_governance_event_authority_pda, create_governance_program_data_pda,
-    create_operator_proposal_pda, create_proposal_pda, create_signing_pda_from_message, extract_proposal_hash_unchecked, initialize_governance, process_gmp_helper, GmpContext, TestSetup,
+    create_operator_proposal_pda, create_proposal_pda, create_signing_pda_from_message,
+    extract_proposal_hash_unchecked, initialize_governance, process_gmp_helper, GmpContext,
+    TestSetup,
 };
 use hex::FromHex;
 use solana_sdk::pubkey::Pubkey;
@@ -120,7 +122,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
         solana_program::keccak::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
     let minimum_proposal_eta_delay = 3600;
 
-    let governance_config = GovernanceConfig::new(
+    let governance_config = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,

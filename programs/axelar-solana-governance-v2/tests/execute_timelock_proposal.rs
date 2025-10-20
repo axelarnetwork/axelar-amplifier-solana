@@ -7,7 +7,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     setup_test_with_real_signers,
 };
 use axelar_solana_governance_v2::seed_prefixes::GOVERNANCE_CONFIG;
-use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::state::GovernanceConfigInit;
 use axelar_solana_governance_v2::SolanaAccountMetadata;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
@@ -137,7 +137,7 @@ fn should_execute_scheduled_proposal() {
         event_authority_bump,
     };
 
-    let governance_config = GovernanceConfig::new(
+    let governance_config = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,

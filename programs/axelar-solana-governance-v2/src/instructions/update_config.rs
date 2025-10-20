@@ -1,4 +1,4 @@
-use crate::{GovernanceConfig, GovernanceError, Hash};
+use crate::{GovernanceConfig, GovernanceConfigUpdate, GovernanceError};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -16,13 +16,6 @@ pub struct UpdateConfig<'info> {
         bump
     )]
     pub governance_config: Account<'info, GovernanceConfig>,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct GovernanceConfigUpdate {
-    pub chain_hash: Option<Hash>,
-    pub address_hash: Option<Hash>,
-    pub minimum_proposal_eta_delay: Option<u32>,
 }
 
 pub fn update_config_handler(

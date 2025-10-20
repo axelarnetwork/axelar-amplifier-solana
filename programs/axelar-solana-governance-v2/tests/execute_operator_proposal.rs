@@ -7,7 +7,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use axelar_solana_governance_v2::state::GovernanceConfig;
+use axelar_solana_governance_v2::state::GovernanceConfigInit;
 use axelar_solana_governance_v2::SolanaAccountMetadata;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
@@ -138,7 +138,7 @@ fn should_execute_operator_proposal() {
         solana_program::keccak::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
     let minimum_proposal_eta_delay = 3600;
 
-    let governance_config_data = GovernanceConfig::new(
+    let governance_config_data = GovernanceConfigInit::new(
         chain_hash,
         address_hash,
         minimum_proposal_eta_delay,
