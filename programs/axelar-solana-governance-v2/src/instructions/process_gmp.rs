@@ -6,12 +6,14 @@ use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, Gover
 use axelar_solana_gateway_v2::{executable::*, executable_accounts};
 use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 
-executable_accounts!();
+executable_accounts!(ProcessGmp);
 
 #[derive(Accounts)]
 pub struct ProcessGmp<'info> {
     // GMP Accounts
     pub executable: AxelarExecuteAccounts<'info>,
+
+    pub system_program: Program<'info, System>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -53,7 +55,7 @@ pub fn process_gmp_handler(
     // to avoid copying Message + it's a cheaper check
     ensure_authorized_gmp_command(&ctx.accounts.governance_config, &message)?;
 
-    validate_message(&ctx.accounts.executable, message, &payload)?;
+    validate_message_raw(&ctx.accounts.axelar_executable(), message, &payload)?;
 
     let (cmd_payload, _, _, proposal_hash) = calculate_gmp_context(payload)?;
 
@@ -176,7 +178,7 @@ fn schedule_timelock_proposal(
     let schedule_instruction = Instruction {
         program_id: crate::ID,
         accounts: crate::accounts::ScheduleTimelockProposal {
-            system_program: ctx.accounts.executable.system_program.key(),
+            system_program: ctx.accounts.system_program.key(),
             governance_config: ctx.accounts.governance_config.key(),
             payer: ctx.accounts.payer.key(),
             proposal_pda: ctx.accounts.proposal_pda.key(),
@@ -190,7 +192,7 @@ fn schedule_timelock_proposal(
 
     let account_infos =
         crate::__cpi_client_accounts_schedule_timelock_proposal::ScheduleTimelockProposal {
-            system_program: ctx.accounts.executable.system_program.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
             governance_config: ctx.accounts.governance_config.to_account_info(),
             payer: ctx.accounts.payer.to_account_info(),
             proposal_pda: ctx.accounts.proposal_pda.to_account_info(),
@@ -269,7 +271,7 @@ fn approve_operator_proposal(
     let approve_instruction = Instruction {
         program_id: crate::ID,
         accounts: crate::accounts::ApproveOperatorProposal {
-            system_program: ctx.accounts.executable.system_program.key(),
+            system_program: ctx.accounts.system_program.key(),
             governance_config: ctx.accounts.governance_config.key(),
             payer: ctx.accounts.payer.key(),
             proposal_pda: ctx.accounts.proposal_pda.key(),
@@ -284,7 +286,7 @@ fn approve_operator_proposal(
 
     let account_infos =
         crate::__cpi_client_accounts_approve_operator_proposal::ApproveOperatorProposal {
-            system_program: ctx.accounts.executable.system_program.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
             governance_config: ctx.accounts.governance_config.to_account_info(),
             payer: ctx.accounts.payer.to_account_info(),
             proposal_pda: ctx.accounts.proposal_pda.to_account_info(),

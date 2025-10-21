@@ -25,6 +25,10 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
+    let gateway_root = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
     assert!(!init_result.program_result.is_err());
 
     // Step 3: Create ALL 4 governance message payloads
@@ -161,6 +165,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
             governance_setup.governance_config,
             governance_config_account.data.clone(),
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(schedule_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
@@ -210,6 +215,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
             governance_setup.governance_config,
             governance_config_account.data.clone(),
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(approve_operator_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
@@ -279,6 +285,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
             governance_setup.governance_config,
             governance_config_account.data,
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(cancel_operator_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)

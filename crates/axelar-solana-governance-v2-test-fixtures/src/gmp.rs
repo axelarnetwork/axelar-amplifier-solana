@@ -13,6 +13,7 @@ pub struct GmpContext {
     pub incoming_message: AccountWithData,
     pub governance_config: AccountWithData,
     pub signing_pda: AccountWithData,
+    pub gateway_root_pda: AccountWithData,
     pub event_authority_pda: AccountWithData,
     pub event_authority_pda_governance: AccountWithData,
     pub proposal: AccountWithData,
@@ -31,6 +32,11 @@ impl GmpContext {
                 pubkey: Pubkey::default(),
                 data: vec![],
                 owner: GOVERNANCE_PROGRAM_ID,
+            },
+            gateway_root_pda: AccountWithData {
+                pubkey: Pubkey::default(),
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
             },
             signing_pda: AccountWithData {
                 pubkey: Pubkey::default(),
@@ -86,6 +92,16 @@ impl GmpContext {
             pubkey,
             data: vec![],
             owner: SYSTEM_PROGRAM_ID,
+        };
+        self
+    }
+
+    #[must_use]
+    pub fn with_gateway_root_pda(mut self, pubkey: Pubkey, data: Vec<u8>) -> Self {
+        self.gateway_root_pda = AccountWithData {
+            pubkey,
+            data,
+            owner: GATEWAY_PROGRAM_ID,
         };
         self
     }

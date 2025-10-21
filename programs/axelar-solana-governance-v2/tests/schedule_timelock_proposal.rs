@@ -25,6 +25,10 @@ fn should_schedule_timelock_proposal() {
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
+    let gateway_root = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
 
     let schedule_payload: Vec<u8> = Vec::from_hex("0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000068d40fa100000000000000000000000000000000000000000000000000000000000000208e3ada0bc9a65c73374363655898f17ad104ea9822d37be8d954e72b2dcb0a36000000000000000000000000000000000000000000000000000000000000004e010000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000").unwrap();
     let schedule_payload_hash = solana_program::keccak::hashv(&[&schedule_payload]).to_bytes();
@@ -129,6 +133,7 @@ fn should_schedule_timelock_proposal() {
             governance_setup.governance_config,
             governance_config_account.data.clone(),
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
@@ -170,6 +175,7 @@ fn should_schedule_timelock_proposal() {
             governance_setup.governance_config,
             governance_config_account.data,
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(cancel_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
