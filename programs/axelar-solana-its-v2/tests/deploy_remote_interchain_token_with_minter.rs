@@ -47,9 +47,6 @@ fn test_deploy_remote_interchain_token_with_minter() {
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
-
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
 
@@ -66,9 +63,6 @@ fn test_deploy_remote_interchain_token_with_minter() {
 
     let program_id = axelar_solana_its_v2::id();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
     let deployer = Pubkey::new_unique();
     let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
@@ -82,7 +76,7 @@ fn test_deploy_remote_interchain_token_with_minter() {
     let minter = Pubkey::new_unique();
 
     let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+    let (token_manager_pda, _) = Pubkey::find_program_address(
         &[
             axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
