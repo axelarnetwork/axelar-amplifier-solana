@@ -30,14 +30,11 @@ use spl_token_metadata_interface::state::TokenMetadata;
 #[event_cpi]
 #[instruction(salt: [u8; 32], destination_chain: String, gas_value: u64, signing_pda_bump: u8)]
 pub struct DeployRemoteInterchainToken<'info> {
-    /// The account which is paying for the transaction
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The account of the deployer (must be signer)
     pub deployer: Signer<'info>,
 
-    /// The mint account (token address)
     #[account(
         seeds = [
             INTERCHAIN_TOKEN_SEED,
@@ -60,7 +57,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub metadata_account: AccountInfo<'info>,
 
-    /// The token manager account associated with the interchain token
     #[account(
         seeds = [
             crate::seed_prefixes::TOKEN_MANAGER_SEED,
@@ -98,7 +94,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub minter_roles: Option<Account<'info, UserRoles>>,
 
     // GMP Accounts
-    /// The GMP gateway root account
     #[account(
         seeds = [
             axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
@@ -108,10 +103,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    /// The GMP gateway program account
     pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
-    /// The GMP gas treasury account
     #[account(
         mut,
         seeds = [Treasury::SEED_PREFIX],
@@ -120,14 +113,11 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub gas_treasury: AccountLoader<'info, Treasury>,
 
-    /// The GMP gas service program account
     #[account(address = axelar_solana_gas_service_v2::ID)]
     pub gas_service: AccountInfo<'info>,
 
-    /// The system program account
     pub system_program: Program<'info, System>,
 
-    /// The ITS root account
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -137,7 +127,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// The GMP call contract signing account
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump = signing_pda_bump,
@@ -145,10 +134,9 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub call_contract_signing_pda: Signer<'info>,
 
-    /// The ITS program account
     pub its_program: Program<'info, AxelarSolanaItsV2>,
 
-    /// Event authority - derived from gateway program
+    // Event authority accounts
     #[account(
         seeds = [b"__event_authority"],
         bump,

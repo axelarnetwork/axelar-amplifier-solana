@@ -19,15 +19,12 @@ use interchain_token_transfer_gmp::{
 #[event_cpi]
 #[instruction(gas_value: u64, signing_pda_bump: u8)]
 pub struct RegisterTokenMetadata<'info> {
-    /// The account which is paying for the transaction
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The mint account (token address) to register metadata for
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     // GMP accounts
-    /// The GMP gateway root account
     #[account(
         seeds = [
             axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
@@ -37,10 +34,8 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    /// The GMP gateway program account
     pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
-    /// The GMP gas treasury account
     #[account(
         mut,
         seeds = [Treasury::SEED_PREFIX],
@@ -49,14 +44,11 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub gas_treasury: AccountLoader<'info, Treasury>,
 
-    /// The GMP gas service program account
     #[account(address = axelar_solana_gas_service_v2::ID)]
     pub gas_service: AccountInfo<'info>,
 
-    /// The system program account
     pub system_program: Program<'info, System>,
 
-    /// The ITS root account
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -64,7 +56,6 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// The GMP call contract signing account
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump = signing_pda_bump,
@@ -72,11 +63,10 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub call_contract_signing_pda: Signer<'info>,
 
-    /// The ITS program account (this program)
     #[account(address = crate::ID)]
     pub its_program: AccountInfo<'info>,
 
-    /// Event authority - derived from gateway program
+    // Event authority accounts
     #[account(
         seeds = [b"__event_authority"],
         bump,
@@ -84,7 +74,6 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
-    /// Event authority for gas service - derived from gas service program
     #[account(
         seeds = [b"__event_authority"],
         bump,
