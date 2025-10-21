@@ -115,6 +115,9 @@ fn test_set_flow_limit_success() {
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&program_id);
 
+    let (event_authority, event_authority_account, program_account) =
+        get_event_authority_and_program_accounts(&program_id);
+
     let ix = Instruction {
         program_id,
         accounts: axelar_solana_its_v2::accounts::SetFlowLimit {
