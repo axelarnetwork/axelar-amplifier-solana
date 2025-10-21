@@ -77,3 +77,10 @@ pub struct LinkTokenStarted {
     pub token_manager_type: u8,
     pub params: Vec<u8>,
 }
+
+#[event]
+pub struct FlowLimitSet {
+    pub token_id: [u8; 32],
+    pub operator: Pubkey,
+    pub flow_limit: Option<u64>,
+}

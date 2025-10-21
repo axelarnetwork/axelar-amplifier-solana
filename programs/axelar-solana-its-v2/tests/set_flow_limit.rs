@@ -9,6 +9,7 @@ use axelar_solana_its_v2_test_fixtures::{
     DeployInterchainTokenContext,
 };
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_program::instruction::Instruction;
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
@@ -130,6 +131,9 @@ fn test_set_flow_limit_success() {
         &program_id,
     );
 
+    let (event_authority, event_authority_account, program_account) =
+        get_event_authority_and_program_accounts(&program_id);
+
     let ix = Instruction {
         program_id,
         accounts: axelar_solana_its_v2::accounts::SetFlowLimit {
@@ -139,6 +143,9 @@ fn test_set_flow_limit_success() {
             its_roles_pda: operator_roles_pda,
             token_manager_pda,
             system_program: solana_sdk::system_program::ID,
+            // for emit cpi
+            event_authority,
+            program: program_id,
         }
         .to_account_metas(None),
         data: axelar_solana_its_v2::instruction::SetFlowLimit { flow_limit }.data(),
@@ -156,6 +163,9 @@ fn test_set_flow_limit_success() {
         (operator_roles_pda, operator_roles_account.clone()),
         (token_manager_pda, updated_token_manager_account.clone()),
         keyed_account_for_system_program(),
+        // for event cpi
+        (event_authority, event_authority_account),
+        (program_id, program_account),
     ];
 
     let result = mollusk.process_instruction(&ix, &accounts);

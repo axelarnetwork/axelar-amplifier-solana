@@ -1,7 +1,11 @@
-use crate::state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles};
+use crate::{
+    events::FlowLimitSet,
+    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
+#[event_cpi]
 #[instruction(flow_limit: Option<u64>)]
 pub struct SetFlowLimit<'info> {
     #[account(mut)]
@@ -47,6 +51,14 @@ pub fn set_flow_limit_handler(ctx: Context<SetFlowLimit>, flow_limit: Option<u64
 
     // Update the flow limit in the token manager
     ctx.accounts.token_manager_pda.flow_slot.flow_limit = flow_limit;
+
+    emit_cpi!({
+        FlowLimitSet {
+            token_id: ctx.accounts.token_manager_pda.token_id,
+            operator: ctx.accounts.operator.key(),
+            flow_limit,
+        }
+    });
 
     Ok(())
 }
