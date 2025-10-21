@@ -23,7 +23,7 @@ fn test_deploy_remote_interchain_token() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
-    assert!(!init_result.program_result.is_err());
+    assert!(init_result.program_result.is_ok());
 
     // Initialize gas service
     let gas_service_program_id = axelar_solana_gas_service_v2::id();
