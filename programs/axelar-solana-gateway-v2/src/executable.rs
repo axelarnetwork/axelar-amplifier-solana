@@ -1,14 +1,39 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program::invoke_signed;
+use anchor_lang::InstructionData;
+
+use crate as axelar_solana_gateway_v2;
+
+use crate::payload;
 
 // Re-export Message
 pub use crate::Message;
-pub use axelar_message_primitives::DataPayload as ExecutablePayload;
-pub use axelar_message_primitives::EncodingScheme as ExecutablePayloadEncodingScheme;
+pub use payload::AxelarMessagePayload as ExecutablePayload;
+pub use payload::EncodingScheme as ExecutablePayloadEncodingScheme;
 
 #[error_code]
 pub enum ExecutableError {
     #[msg("Payload hash does not match the computed hash of the payload")]
     InvalidPayloadHash,
+    #[msg("Provided accounts are invalid")]
+    InvalidAccounts,
+}
+
+/// Holds references to the Axelar executable accounts needed for validation.
+/// This is returned by the `HasAxelarExecutable` trait.
+pub struct AxelarExecutableAccountRefs<'a, 'info> {
+    pub incoming_message_pda: &'a AccountLoader<'info, axelar_solana_gateway_v2::IncomingMessage>,
+    pub signing_pda: &'a AccountInfo<'info>,
+    pub gateway_root_pda: &'a AccountLoader<'info, axelar_solana_gateway_v2::state::GatewayConfig>,
+    pub axelar_gateway_program:
+        &'a Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+    pub event_authority: &'a SystemAccount<'info>,
+}
+
+/// Trait that must be implemented by account structs that contain Axelar executable accounts.
+/// This trait is automatically implemented when using the `executable_accounts!` macro.
+pub trait HasAxelarExecutable<'info> {
+    fn axelar_executable(&self) -> AxelarExecutableAccountRefs<'_, 'info>;
 }
 
 /// Anchor discriminator for the `execute` instruction.
@@ -40,13 +65,17 @@ pub enum ExecutableError {
 /// ```
 pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 
+/// The index of the first account that is expected to be passed to the
+/// destination program.
+pub const EXECUTE_PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
+
 /// Macro to generate executable accounts and validation function.
 /// Usage:
 /// ```ignore
 /// use anchor_lang::prelude::*;
 /// use axelar_solana_gateway_v2::{executable::*, executable_accounts};
 ///
-/// executable_accounts!();
+/// executable_accounts!(Execute);
 ///
 /// #[derive(Accounts)]
 /// pub struct Execute<'info> {
@@ -57,7 +86,7 @@ pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 /// }
 ///
 /// pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
-///     validate_message(&ctx.accounts.executable, message, &payload)?;
+///     validate_message(&ctx.accounts, message, &payload)?;
 ///
 ///     Ok(())
 /// }
@@ -75,7 +104,7 @@ pub const EXECUTE_IX_DISC: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 // It is also not possible to use the `cpi` module inside the gateway crate.
 #[macro_export]
 macro_rules! executable_accounts {
-    () => {
+    ($outer_struct:ident) => {
     /// Accounts for executing an inbound Axelar GMP message.
     /// NOTE: Keep in mind the outer accounts struct must not include:
     /// ```ignore
@@ -102,7 +131,15 @@ macro_rules! executable_accounts {
         )]
         pub signing_pda: AccountInfo<'info>,
 
-        pub axelar_gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+        #[account(
+            seeds = [axelar_solana_gateway_v2::state::GatewayConfig::SEED_PREFIX],
+            bump = gateway_root_pda.load()?.bump,
+            seeds::program = axelar_gateway_program.key(),
+        )]
+        pub gateway_root_pda: AccountLoader<'info, axelar_solana_gateway_v2::state::GatewayConfig>,
+
+        pub axelar_gateway_program:
+            Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
         #[account(
             seeds = [b"__event_authority"],
@@ -110,53 +147,133 @@ macro_rules! executable_accounts {
             seeds::program = axelar_gateway_program.key()
         )]
         pub event_authority: SystemAccount<'info>,
-
-        pub system_program: Program<'info, System>,
     }
 
-    pub fn validate_message<'info>(
-        executable_accounts: &AxelarExecuteAccounts<'info>,
-        message: axelar_solana_gateway_v2::Message,
-        payload: &[u8],
-    ) -> Result<()> {
-    	// Verify that the payload hash matches the computed hash of the payload
-        let computed_payload_hash = anchor_lang::solana_program::keccak::hashv(&[payload]).to_bytes();
-        if computed_payload_hash != message.payload_hash {
-            return err!(axelar_solana_gateway_v2::executable::ExecutableError::InvalidPayloadHash);
+    impl<'info> axelar_solana_gateway_v2::executable::HasAxelarExecutable<'info> for $outer_struct<'info> {
+        fn axelar_executable(&self) -> axelar_solana_gateway_v2::executable::AxelarExecutableAccountRefs<'_, 'info> {
+            (&self.executable).into()
         }
+    }
 
-        let cpi_accounts = axelar_solana_gateway_v2::cpi::accounts::ValidateMessage {
+    impl<'a, 'info> From<&'a AxelarExecuteAccounts<'info>> for axelar_solana_gateway_v2::executable::AxelarExecutableAccountRefs<'a, 'info> {
+        fn from(accounts: &'a AxelarExecuteAccounts<'info>) -> Self {
+            Self {
+                incoming_message_pda: &accounts.incoming_message_pda,
+                signing_pda: &accounts.signing_pda,
+                gateway_root_pda: &accounts.gateway_root_pda,
+                axelar_gateway_program: &accounts.axelar_gateway_program,
+                event_authority: &accounts.event_authority,
+            }
+        }
+    }
+
+    };
+}
+
+/// Validates a raw message payload against the Axelar gateway without account reconstruction.
+///
+/// This is a lower-level validation function that verifies the payload hash matches
+/// the expected hash in the message, then performs a CPI call to the Axelar gateway
+/// to mark the message as executed.
+///
+/// # Example
+///
+/// ```ignore
+/// // Validate with pre-encoded payload
+/// let encoded_payload = my_payload.encode()?;
+/// validate_message_raw(&ctx.accounts.executable, message, &encoded_payload)?;
+/// ```
+///
+/// # Notes
+///
+/// Unlike `validate_message`, this function:
+/// - Does not reconstruct account metadata from the payload
+/// - Does not verify payload encoding schemes
+/// - Requires the caller to provide the final encoded payload bytes
+///
+/// Use this function when you have already encoded your payload or when you're
+/// not using the standard Axelar payload encoding with account metadata.
+pub fn validate_message<'info, T: HasAxelarExecutable<'info> + ToAccountMetas>(
+    accounts: &T,
+    message: axelar_solana_gateway_v2::Message,
+    payload_without_accounts: &[u8],
+    encoding_scheme: axelar_solana_gateway_v2::executable::ExecutablePayloadEncodingScheme,
+) -> Result<()> {
+    // Reconstruct the ExecutablePayload from the passed accounts
+    // and the payload passed in instruction data
+    let instruction_accounts = accounts
+        .to_account_metas(None)
+        .split_off(EXECUTE_PROGRAM_ACCOUNTS_START_INDEX);
+
+    // Reconstruct the ExecutablePayload from the passed accounts
+    // and the payload passed in instruction data
+
+    let payload = axelar_solana_gateway_v2::executable::ExecutablePayload::new(
+        payload_without_accounts,
+        &instruction_accounts,
+        encoding_scheme,
+    );
+
+    // Check: parsed accounts matches the original chain provided accounts
+    if !payload.account_meta().eq(&instruction_accounts) {
+        return err!(axelar_solana_gateway_v2::executable::ExecutableError::InvalidAccounts);
+    }
+
+    // Verify that the payload hash matches the computed hash of the payload
+    let encoded = payload.encode()?;
+
+    let executable_accounts = accounts.axelar_executable();
+    validate_message_raw(&executable_accounts, message, &encoded)?;
+
+    Ok(())
+}
+
+pub fn validate_message_raw<'info>(
+    executable_accounts: &AxelarExecutableAccountRefs<'_, 'info>,
+    message: axelar_solana_gateway_v2::Message,
+    payload: &[u8],
+) -> Result<()> {
+    let computed_payload_hash = anchor_lang::solana_program::keccak::hash(payload).to_bytes();
+    if computed_payload_hash != message.payload_hash {
+        return err!(axelar_solana_gateway_v2::executable::ExecutableError::InvalidPayloadHash);
+    }
+
+    // Prepare signer seeds
+    let command_id = message.command_id();
+    let signer_seeds = &[
+        axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
+        &command_id,
+        &[executable_accounts
+            .incoming_message_pda
+            .load()?
+            .signing_pda_bump],
+    ];
+    let signer_seeds = &[&signer_seeds[..]];
+
+    // Prepare CPI accounts
+
+    let cpi_accounts =
+        axelar_solana_gateway_v2::__cpi_client_accounts_validate_message::ValidateMessage {
             incoming_message_pda: executable_accounts.incoming_message_pda.to_account_info(),
             caller: executable_accounts.signing_pda.to_account_info(),
+            gateway_root_pda: executable_accounts.gateway_root_pda.to_account_info(),
             event_authority: executable_accounts.event_authority.to_account_info(),
             program: executable_accounts.axelar_gateway_program.to_account_info(),
         };
 
-        // Prepare signer seeds
-        let command_id = message.command_id();
-        let signer_seeds = &[
-            axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            &command_id,
-            &[executable_accounts
-                .incoming_message_pda
-                .load()?
-                .signing_pda_bump],
-        ];
-        let signer_seeds = &[&signer_seeds[..]];
+    // Prepare instruction
 
-        // Create CPI context
-        // with the signing PDA as the signer
-        let cpi_ctx = CpiContext::new_with_signer(
-            executable_accounts.axelar_gateway_program.to_account_info(),
-            cpi_accounts,
-            signer_seeds,
-        );
-
-        // Call the validate_message CPI
-        axelar_solana_gateway_v2::cpi::validate_message(cpi_ctx, message)?;
-
-        Ok(())
-    }
-
+    // Build the instruction manually
+    let ix = anchor_lang::solana_program::instruction::Instruction {
+        program_id: executable_accounts.axelar_gateway_program.key(),
+        accounts: cpi_accounts.to_account_metas(None),
+        data: axelar_solana_gateway_v2::instruction::ValidateMessage { message }.data(),
     };
+
+    let ix_accounts = cpi_accounts.to_account_infos();
+
+    // Call the validate_message CPI
+    invoke_signed(&ix, &ix_accounts, signer_seeds)?;
+
+    Ok(())
 }

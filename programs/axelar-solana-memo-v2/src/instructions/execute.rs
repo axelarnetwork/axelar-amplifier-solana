@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use axelar_solana_gateway_v2::{executable::*, executable_accounts};
 
-executable_accounts!();
+executable_accounts!(Execute);
 
 use crate::Counter;
 
@@ -15,13 +15,16 @@ pub struct Execute<'info> {
     pub counter: Account<'info, Counter>,
 }
 
-pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
-    validate_message(&ctx.accounts.executable, message, &payload)?;
+pub fn execute_handler(
+    ctx: Context<Execute>,
+    message: Message,
+    payload: Vec<u8>,
+    encoding_scheme: axelar_solana_gateway_v2::executable::ExecutablePayloadEncodingScheme,
+) -> Result<()> {
+    validate_message(ctx.accounts, message, &payload, encoding_scheme)?;
 
-    let payload = ExecutablePayload::decode(&payload).map_err(|e| -> ProgramError { e.into() })?;
-    let payload = payload.payload_without_accounts();
     msg!("Payload size: {}", payload.len());
-    let memo = std::str::from_utf8(payload).map_err(|err| {
+    let memo = std::str::from_utf8(&payload).map_err(|err| {
         msg!("Invalid UTF-8, from byte {}", err.valid_up_to());
         ProgramError::InvalidInstructionData
     })?;
