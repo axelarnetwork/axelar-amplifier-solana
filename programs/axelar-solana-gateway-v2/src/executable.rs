@@ -138,15 +138,15 @@ macro_rules! executable_accounts {
         )]
         pub gateway_root_pda: AccountLoader<'info, axelar_solana_gateway_v2::state::GatewayConfig>,
 
-        pub axelar_gateway_program:
-            Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
-
         #[account(
             seeds = [b"__event_authority"],
             bump,
             seeds::program = axelar_gateway_program.key()
         )]
         pub event_authority: SystemAccount<'info>,
+
+        pub axelar_gateway_program:
+            Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
     }
 
     impl<'info> axelar_solana_gateway_v2::executable::HasAxelarExecutable<'info> for $outer_struct<'info> {
@@ -161,8 +161,8 @@ macro_rules! executable_accounts {
                 incoming_message_pda: &accounts.incoming_message_pda,
                 signing_pda: &accounts.signing_pda,
                 gateway_root_pda: &accounts.gateway_root_pda,
-                axelar_gateway_program: &accounts.axelar_gateway_program,
                 event_authority: &accounts.event_authority,
+                axelar_gateway_program: &accounts.axelar_gateway_program,
             }
         }
     }
@@ -290,4 +290,88 @@ pub fn validate_message_raw<'info>(
     invoke_signed(&ix, &ix_accounts, signer_seeds)?;
 
     Ok(())
+}
+
+/// Relayer helpers for building the execute instruction
+/// for arbitrary programs.
+// TODO verify this is the best API for relayers and add tests
+pub mod helpers {
+    use super::*;
+    use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
+
+    //
+    // Instruction
+    //
+
+    #[derive(Debug, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
+    pub struct AxelarExecuteInstruction {
+        pub message: Message,
+        pub payload_without_accounts: Vec<u8>,
+        pub encoding_scheme: ExecutablePayloadEncodingScheme,
+    }
+
+    impl anchor_lang::Discriminator for AxelarExecuteInstruction {
+        const DISCRIMINATOR: &'static [u8] = EXECUTE_IX_DISC;
+    }
+
+    // Use default implementation
+    impl InstructionData for AxelarExecuteInstruction {}
+
+    //
+    // Accounts
+    //
+
+    /// Generated client accounts for [`AxelarExecuteAccounts`].
+    // TODO impl AccountInfos and AccountMetas
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AxelarExecuteAccounts {
+        pub incoming_message_pda: Pubkey,
+        pub signing_pda: Pubkey,
+        pub gateway_root_pda: Pubkey,
+        pub event_authority: Pubkey,
+        pub axelar_gateway_program: Pubkey,
+    }
+
+    impl anchor_lang::ToAccountMetas for AxelarExecuteAccounts {
+        fn to_account_metas(&self, _is_signer: Option<bool>) -> Vec<AccountMeta> {
+            vec![
+                AccountMeta::new(self.incoming_message_pda, false),
+                AccountMeta::new_readonly(self.signing_pda, false),
+                AccountMeta::new_readonly(self.gateway_root_pda, false),
+                AccountMeta::new_readonly(self.event_authority, false),
+                AccountMeta::new_readonly(self.axelar_gateway_program, false),
+            ]
+        }
+    }
+
+    //
+    // Instruction builder
+    //
+
+    /// Creates an `AxelarExecuteInstruction` for the given parameters.
+    pub fn create_execute_instruction(
+        program_id: Pubkey,
+        message: Message,
+        payload: &ExecutablePayload,
+        execute_accounts: &AxelarExecuteAccounts,
+    ) -> Instruction {
+        let ix_data = AxelarExecuteInstruction {
+            message,
+            payload_without_accounts: payload.payload_without_accounts().to_owned(),
+            encoding_scheme: payload.encoding_scheme(),
+        }
+        .data();
+
+        let accounts = {
+            let mut executable = execute_accounts.to_account_metas(None);
+            executable.extend(payload.account_meta());
+            executable
+        };
+
+        Instruction {
+            program_id,
+            accounts,
+            data: ix_data,
+        }
+    }
 }
