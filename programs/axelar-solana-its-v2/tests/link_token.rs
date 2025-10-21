@@ -52,7 +52,7 @@ fn test_link_token() {
     // ============================================================================
     let (setup, _, _, _, _) = setup_test_with_real_signers();
     let init_result = initialize_gateway(&setup);
-    assert!(!init_result.program_result.is_err());
+    assert!(init_result.program_result.is_ok());
 
     // ============================================================================
     // STEP 2: Initialize Gas Service (keep gas service mollusk separate!)
