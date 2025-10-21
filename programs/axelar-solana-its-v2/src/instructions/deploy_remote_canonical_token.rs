@@ -22,14 +22,11 @@ use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 #[event_cpi]
 #[instruction(destination_chain: String, gas_value: u64, signing_pda_bump: u8)]
 pub struct DeployRemoteCanonicalInterchainToken<'info> {
-    /// The account which is paying for the transaction
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The existing mint account for the canonical token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// The Metaplex metadata account associated with the mint
     #[account(
         seeds = [
             b"metadata",
@@ -41,7 +38,6 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub metadata_account: AccountInfo<'info>,
 
-    /// The token manager account associated with the canonical interchain token
     #[account(
         seeds = [
             crate::seed_prefixes::TOKEN_MANAGER_SEED,
@@ -54,7 +50,6 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     pub token_manager_pda: Account<'info, TokenManager>,
 
     // GMP Accounts
-    /// The GMP gateway root account
     #[account(
         seeds = [
             axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
@@ -64,11 +59,9 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    /// The GMP gateway program account
     #[account(address = axelar_solana_gateway_v2::ID)]
     pub axelar_gateway_program: AccountInfo<'info>,
 
-    /// The GMP gas treasury account
     #[account(
         mut,
         seeds = [Treasury::SEED_PREFIX],
@@ -77,14 +70,11 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub gas_treasury: AccountLoader<'info, Treasury>,
 
-    /// The GMP gas service program account
     #[account(address = axelar_solana_gas_service_v2::ID)]
     pub gas_service: AccountInfo<'info>,
 
-    /// The system program account
     pub system_program: Program<'info, System>,
 
-    /// The ITS root account
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -92,7 +82,6 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// The GMP call contract signing account
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump = signing_pda_bump,
@@ -100,11 +89,9 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub call_contract_signing_pda: Signer<'info>,
 
-    /// The ITS program account (this program)
     #[account(address = crate::ID)]
     pub its_program: AccountInfo<'info>,
 
-    /// Event authority - derived from gateway program
     #[account(
         seeds = [b"__event_authority"],
         bump,
@@ -112,7 +99,6 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
-    /// Event authority for gas service - derived from gas service program
     #[account(
         seeds = [b"__event_authority"],
         bump,
@@ -122,7 +108,6 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
 }
 
 impl<'info> DeployRemoteCanonicalInterchainToken<'info> {
-    /// Convert to GMPAccounts for common GMP operations
     pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
@@ -140,7 +125,6 @@ impl<'info> DeployRemoteCanonicalInterchainToken<'info> {
     }
 }
 
-/// Instruction handler for deploying a remote canonical interchain token
 pub fn deploy_remote_canonical_interchain_token_handler(
     ctx: Context<DeployRemoteCanonicalInterchainToken>,
     destination_chain: String,

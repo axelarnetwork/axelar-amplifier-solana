@@ -23,11 +23,9 @@ use anchor_spl::{
 #[derive(Accounts)]
 #[event_cpi]
 pub struct RegisterCanonicalInterchainToken<'info> {
-    /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// Metadata account for the token (required for canonical tokens)
     #[account(
         seeds = [
             b"metadata",
@@ -39,10 +37,8 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     )]
     pub metadata_account: UncheckedAccount<'info>,
 
-    /// System program
     pub system_program: Program<'info, System>,
 
-    /// ITS root configuration PDA
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -50,7 +46,6 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// Token Manager PDA for this canonical token
     #[account(
         init,
         payer = payer,
@@ -64,10 +59,8 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// The token mint to register as canonical
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// Token Manager's associated token account (ATA)
     #[account(
         init,
         payer = payer,
@@ -77,13 +70,10 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    /// Token program (can be SPL Token or Token-2022)
     pub token_program: Interface<'info, TokenInterface>,
 
-    /// Associated token program
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    /// Rent sysvar
     pub rent: Sysvar<'info, Rent>,
 }
 

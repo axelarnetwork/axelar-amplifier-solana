@@ -23,17 +23,13 @@ use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard}
 #[event_cpi]
 #[instruction(salt: [u8; 32], name: String, symbol: String, decimals: u8, initial_supply: u64)]
 pub struct DeployInterchainToken<'info> {
-    /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The deployer of the token (must sign the transaction)
     pub deployer: Signer<'info>,
 
-    /// System program
     pub system_program: Program<'info, System>,
 
-    /// ITS root configuration PDA
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -41,7 +37,6 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// Token Manager PDA for this token
     #[account(
         init,
         payer = payer,
@@ -55,7 +50,6 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// The mint account for the new token (Token-2022 compatible)
     #[account(
         init,
         payer = payer,
@@ -72,7 +66,6 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// Token Manager’s associated token account (ATA)
     #[account(
         init,
         payer = payer,
@@ -82,24 +75,18 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    /// Token program (can be SPL Token or Token-2022)
     pub token_program: Interface<'info, TokenInterface>,
 
-    /// Associated token program
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    /// Rent sysvar
     pub rent: Sysvar<'info, Rent>,
 
-    /// Sysvar for instructions (used by Metaplex)
     #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
-    /// Metaplex Token Metadata program
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
 
-    /// Metadata account for the token
     #[account(
         mut,
         seeds = [
@@ -112,7 +99,6 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
-    /// Deployer’s associated token account
     #[account(
         init,
         payer = payer,
@@ -122,7 +108,7 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
 
-    // Minter accounts
+    // Optional accounts
     pub minter: Option<UncheckedAccount<'info>>,
     #[account(
         init,

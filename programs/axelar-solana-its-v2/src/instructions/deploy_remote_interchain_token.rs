@@ -30,14 +30,11 @@ use spl_token_metadata_interface::{solana_instruction::Instruction, state::Token
 #[event_cpi]
 #[instruction(salt: [u8; 32], destination_chain: String, gas_value: u64, signing_pda_bump: u8)]
 pub struct DeployRemoteInterchainToken<'info> {
-    /// The account which is paying for the transaction
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The account of the deployer (must be signer)
     pub deployer: Signer<'info>,
 
-    /// The mint account (token address)
     #[account(
         seeds = [
             INTERCHAIN_TOKEN_SEED,
@@ -48,7 +45,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// The Metaplex metadata account associated with the mint
     #[account(
         seeds = [
             b"metadata",
@@ -60,7 +56,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub metadata_account: AccountInfo<'info>,
 
-    /// The token manager account associated with the interchain token
     #[account(
         seeds = [
             crate::seed_prefixes::TOKEN_MANAGER_SEED,
@@ -96,7 +91,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub minter_roles: Option<Account<'info, UserRoles>>,
 
     // GMP Accounts
-    /// The GMP gateway root account
     #[account(
         seeds = [
             axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
@@ -106,11 +100,9 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    /// The GMP gateway program account
     #[account(address = axelar_solana_gateway_v2::ID)]
     pub axelar_gateway_program: AccountInfo<'info>,
 
-    /// The GMP gas treasury account
     #[account(
         mut,
         seeds = [Treasury::SEED_PREFIX],
@@ -119,14 +111,11 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub gas_treasury: AccountLoader<'info, Treasury>,
 
-    /// The GMP gas service program account
     #[account(address = axelar_solana_gas_service_v2::ID)]
     pub gas_service: AccountInfo<'info>,
 
-    /// The system program account
     pub system_program: Program<'info, System>,
 
-    /// The ITS root account
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -134,7 +123,6 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// The GMP call contract signing account
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump = signing_pda_bump,
@@ -142,11 +130,10 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub call_contract_signing_pda: Signer<'info>,
 
-    /// The ITS program account (this program)
     #[account(address = crate::ID)]
     pub its_program: AccountInfo<'info>,
 
-    /// Event authority - derived from gateway program
+    // Event authority accounts
     #[account(
         seeds = [b"__event_authority"],
         bump,
@@ -164,7 +151,6 @@ pub struct DeployRemoteInterchainToken<'info> {
 }
 
 impl<'info> DeployRemoteInterchainToken<'info> {
-    /// Convert to GMPAccounts for common GMP operations
     pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
@@ -198,7 +184,6 @@ pub struct GMPAccounts<'info> {
     pub gas_event_authority: AccountInfo<'info>,
 }
 
-/// Instruction handler for deploying a remote interchain token
 pub fn deploy_remote_interchain_token_handler(
     ctx: Context<DeployRemoteInterchainToken>,
     salt: [u8; 32],
@@ -327,13 +312,14 @@ pub fn process_outbound(
 
     let call_contract_ix = Instruction {
         program_id: axelar_solana_gateway_v2::ID,
-        accounts: vec![
-            AccountMeta::new_readonly(gmp_accounts.its_program.key(), false),
-            AccountMeta::new_readonly(gmp_accounts.call_contract_signing_pda.key(), true),
-            AccountMeta::new_readonly(gmp_accounts.gateway_root_pda.key(), false),
-            AccountMeta::new_readonly(gmp_accounts.gateway_event_authority.key(), false),
-            AccountMeta::new_readonly(gmp_accounts.axelar_gateway_program.key(), false),
-        ],
+        accounts: axelar_solana_gateway_v2::cpi::accounts::CallContract {
+            caller: gmp_accounts.its_program.clone(),
+            signing_pda: Some(gmp_accounts.call_contract_signing_pda.clone()),
+            gateway_root_pda: gmp_accounts.gateway_root_pda.clone(),
+            event_authority: gmp_accounts.gateway_event_authority.clone(),
+            program: gmp_accounts.axelar_gateway_program.clone(),
+        }
+        .to_account_metas(None),
         data: axelar_solana_gateway_v2::instruction::CallContract {
             destination_chain,
             destination_contract_address,
