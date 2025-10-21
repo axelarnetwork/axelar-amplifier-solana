@@ -1182,6 +1182,7 @@ dependencies = [
 name = "axelar-solana-gateway-v2"
 version = "0.1.0"
 dependencies = [
+ "alloy-sol-types",
  "anchor-lang",
  "axelar-message-primitives",
  "axelar-solana-encoding",
@@ -1190,11 +1191,18 @@ dependencies = [
  "bitvec",
  "borsh 1.5.7",
  "bytemuck",
+ "evm-contracts-rs",
+ "evm-contracts-test-suite",
  "hex",
  "libsecp256k1",
  "mollusk-svm",
+ "num-derive 0.4.2",
+ "num-traits",
  "rand 0.8.5",
+ "rstest",
  "solana-sdk",
+ "test-log",
+ "tokio",
  "udigest",
 ]
 
