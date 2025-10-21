@@ -170,6 +170,55 @@ macro_rules! executable_accounts {
     };
 }
 
+/// Validates an Axelar message with automatic payload reconstruction and account verification.
+///
+/// Reconstructs the full payload from the payload bytes and account metadata, verifies
+/// the accounts match those provided in the instruction, then validates the message hash
+/// via CPI to the Axelar gateway.
+///
+/// # Example
+///
+/// ```ignore
+/// validate_message(
+///     &ctx.accounts,
+///     message,
+///     &payload_bytes,
+///     EncodingScheme::Borsh
+/// )?;
+/// ```
+///
+/// # Notes
+///
+/// This is the recommended validation function for standard Axelar GMP messages that
+/// include account metadata. For pre-encoded payloads, use `validate_message_raw` instead.
+pub fn validate_message<'info, T: HasAxelarExecutable<'info> + ToAccountMetas>(
+    accounts: &T,
+    message: axelar_solana_gateway_v2::Message,
+    payload_without_accounts: &[u8],
+    encoding_scheme: axelar_solana_gateway_v2::executable::ExecutablePayloadEncodingScheme,
+) -> Result<()> {
+    let instruction_accounts = accounts
+        .to_account_metas(None)
+        .split_off(EXECUTE_PROGRAM_ACCOUNTS_START_INDEX);
+
+    // Reconstruct the ExecutablePayload from the passed accounts
+    // and the payload passed in instruction data
+
+    let payload = axelar_solana_gateway_v2::executable::ExecutablePayload::new(
+        payload_without_accounts,
+        &instruction_accounts,
+        encoding_scheme,
+    );
+
+    // Verify that the payload hash matches the computed hash of the payload
+    let encoded = payload.encode()?;
+
+    let executable_accounts = accounts.axelar_executable();
+    validate_message_raw(&executable_accounts, message, &encoded)?;
+
+    Ok(())
+}
+
 /// Validates a raw message payload against the Axelar gateway without account reconstruction.
 ///
 /// This is a lower-level validation function that verifies the payload hash matches
@@ -193,41 +242,6 @@ macro_rules! executable_accounts {
 ///
 /// Use this function when you have already encoded your payload or when you're
 /// not using the standard Axelar payload encoding with account metadata.
-pub fn validate_message<'info, T: HasAxelarExecutable<'info> + ToAccountMetas>(
-    accounts: &T,
-    message: axelar_solana_gateway_v2::Message,
-    payload_without_accounts: &[u8],
-    encoding_scheme: axelar_solana_gateway_v2::executable::ExecutablePayloadEncodingScheme,
-) -> Result<()> {
-    // Reconstruct the ExecutablePayload from the passed accounts
-    // and the payload passed in instruction data
-    let instruction_accounts = accounts
-        .to_account_metas(None)
-        .split_off(EXECUTE_PROGRAM_ACCOUNTS_START_INDEX);
-
-    // Reconstruct the ExecutablePayload from the passed accounts
-    // and the payload passed in instruction data
-
-    let payload = axelar_solana_gateway_v2::executable::ExecutablePayload::new(
-        payload_without_accounts,
-        &instruction_accounts,
-        encoding_scheme,
-    );
-
-    // Check: parsed accounts matches the original chain provided accounts
-    if !payload.account_meta().eq(&instruction_accounts) {
-        return err!(axelar_solana_gateway_v2::executable::ExecutableError::InvalidAccounts);
-    }
-
-    // Verify that the payload hash matches the computed hash of the payload
-    let encoded = payload.encode()?;
-
-    let executable_accounts = accounts.axelar_executable();
-    validate_message_raw(&executable_accounts, message, &encoded)?;
-
-    Ok(())
-}
-
 pub fn validate_message_raw<'info>(
     executable_accounts: &AxelarExecutableAccountRefs<'_, 'info>,
     message: axelar_solana_gateway_v2::Message,

@@ -10,7 +10,7 @@ use std::str::FromStr;
 #[instruction(message: Message)]
 pub struct ValidateMessage<'info> {
     #[account(
-    	mut,
+        mut,
         seeds = [IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
         // CHECK: message must be already approved

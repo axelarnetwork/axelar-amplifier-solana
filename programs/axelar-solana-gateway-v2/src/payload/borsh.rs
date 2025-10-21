@@ -10,14 +10,11 @@ use anchor_lang::{AnchorDeserialize, AnchorSerialize};
 impl<'payload> AxelarMessagePayload<'payload> {
     pub(super) fn encode_borsh(&self) -> Result<Vec<u8>, PayloadError> {
         let mut writer_vec = self.encoding_scheme_prefixed_array()?;
-        borsh::to_writer(
-            &mut writer_vec,
-            &(
-                self.payload_without_accounts.to_vec(),
-                self.solana_accounts.clone(),
-            ),
-        )
-        .map_err(|_err| PayloadError::BorshSerializeError)?;
+        // Serialize each field directly without copying
+        borsh::to_writer(&mut writer_vec, self.payload_without_accounts)
+            .map_err(|_err| PayloadError::BorshSerializeError)?;
+        borsh::to_writer(&mut writer_vec, &self.solana_accounts)
+            .map_err(|_err| PayloadError::BorshSerializeError)?;
         Ok(writer_vec)
     }
 
