@@ -4,8 +4,8 @@
 use std::borrow::Cow;
 
 use anchor_discriminators_macros::InstructionDiscriminator;
-use axelar_message_primitives::DataPayload;
 use axelar_solana_encoding::types::messages::Message;
+use axelar_solana_gateway::executable::AxelarMessagePayload;
 use axelar_solana_gateway::state::incoming_message::command_id;
 use borsh::to_vec;
 use interchain_token_transfer_gmp::GMPPayload;
@@ -2235,7 +2235,7 @@ fn derive_specific_its_accounts(
                     crate::find_interchain_transfer_execute_pda(&wallet);
                 specific_accounts.push(AccountMeta::new(its_transfer_execute_pda, false));
 
-                let execute_data = DataPayload::decode(data)
+                let execute_data = AxelarMessagePayload::decode(data)
                     .map_err(|_err| ProgramError::InvalidInstructionData)?;
                 specific_accounts.extend(execute_data.account_meta().iter().cloned());
             }
