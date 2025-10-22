@@ -105,7 +105,7 @@ fn test_set_trusted_chain_success() {
     assert!(updated_its_data
         .trusted_chains
         .contains(&trusted_chain_name));
-    assert!(updated_its_data.is_trusted_chain(trusted_chain_name.clone()));
+    assert!(updated_its_data.is_trusted_chain(&trusted_chain_name));
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn test_set_trusted_chain_operator_success() {
     assert!(updated_its_data
         .trusted_chains
         .contains(&trusted_chain_name));
-    assert!(updated_its_data.is_trusted_chain(trusted_chain_name.clone()));
+    assert!(updated_its_data.is_trusted_chain(&trusted_chain_name));
 }
 
 #[test]
@@ -299,7 +299,7 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
     assert!(updated_its_data
         .trusted_chains
         .contains(&trusted_chain_name));
-    assert!(updated_its_data.is_trusted_chain(trusted_chain_name.clone()));
+    assert!(updated_its_data.is_trusted_chain(&trusted_chain_name));
 }
 
 #[test]
