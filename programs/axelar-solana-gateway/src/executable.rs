@@ -302,7 +302,7 @@ impl TryFrom<&[u8]> for AxelarExecuteInstruction {
     /// # Errors
     ///
     /// Returns [`ProgramError::InvalidInstructionData`] in case the buffer data doesn't start with
-    /// the [`AXELAR_EXECUTE`] discriminator.
+    /// the [`AXELAR_EXECUTE_IX_DISCRIMINATOR`] discriminator.
     ///
     /// Returns [`ProgramError::BorshIoError`] if deserialization fails.
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
