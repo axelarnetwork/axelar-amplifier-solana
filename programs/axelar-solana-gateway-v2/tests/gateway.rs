@@ -13,8 +13,7 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session, initialize_payload_verification_session_with_root,
     mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
-    setup_signer_rotation_payload, setup_test_with_real_signers, transfer_operatorship_helper,
-    verify_signature_helper,
+    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
 };
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -324,16 +323,15 @@ fn test_rotate_signers() {
     let new_verifier_set_hash = [42u8; 32];
 
     // Step 4: Create rotation payload hash (what current verifiers need to sign)
-    let current_verifier_set_hash = setup.verifier_set_hash;
-    let rotation_payload_hash =
-        setup_signer_rotation_payload(current_verifier_set_hash, new_verifier_set_hash);
+    // New verifier set hash is used directly as the payload hash for rotation
+    let rotation_payload_hash = new_verifier_set_hash;
 
     // Step 5: Initialize payload verification session (for the rotation)
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
             &init_result,
-            rotation_payload_hash,
+            new_verifier_set_hash,
         );
     assert!(!session_result.program_result.is_err());
 
