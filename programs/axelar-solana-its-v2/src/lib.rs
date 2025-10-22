@@ -1,7 +1,7 @@
-//! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
 pub mod errors;
 pub mod events;
+pub mod gmp;
 pub mod instructions;
 pub mod state;
 pub mod utils;
