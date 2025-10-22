@@ -81,6 +81,16 @@ jobs:
       - name: Generate artifact manifest
         run: |
           echo "Generating artifact manifest..."
+
+          # Check if any artifacts exist
+          ARTIFACT_COUNT=$(find artifacts -name "*.so" -o -name "*.json" | wc -l)
+          if [ "$ARTIFACT_COUNT" -eq 0 ]; then
+            echo "Error: No artifacts found to include in manifest"
+            exit 1
+          fi
+
+          echo "Found $ARTIFACT_COUNT artifact(s) to include in manifest"
+
           cat > artifacts/manifest.json << EOF
           {
             "version": "${{ inputs.version }}",
