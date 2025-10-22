@@ -33,7 +33,7 @@ jobs:
 
   summary:
     name: Upload Summary
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: upload-all-environments
     steps:
       - name: Generate summary

@@ -17,7 +17,7 @@ on:
 jobs:
   dry-run-build:
     name: Dry Run Build for ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

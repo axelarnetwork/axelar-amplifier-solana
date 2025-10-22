@@ -16,7 +16,7 @@ permissions:
 jobs:
   update-ids:
     name: Update Program IDs
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     if: inputs.update-ids
     steps:
       - name: Checkout repository
@@ -54,7 +54,7 @@ jobs:
 
   release-pr:
     name: Create Release PR with release-plz
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: [update-ids]
     if: always() && (needs.update-ids.result == 'success' || needs.update-ids.result == 'skipped')
     steps:

@@ -23,7 +23,7 @@ env:
 
 jobs:
   upload:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4

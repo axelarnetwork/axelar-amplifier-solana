@@ -28,7 +28,7 @@ permissions:
 jobs:
   release-plz:
     name: Release with release-plz
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,7 +76,7 @@ jobs:
 
   create-github-release:
     name: Create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: [build, upload-to-r2]
     if: github.event_name == 'push'
     steps:
@@ -146,7 +146,7 @@ jobs:
 
   summary:
     name: Release Summary
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: [release-plz, build, upload-to-r2, create-github-release]
     if: always()
     steps:
