@@ -1,6 +1,5 @@
-use crate::instructions::deploy_remote_interchain_token::{
-    get_token_metadata, process_outbound, GMPAccounts,
-};
+use crate::gmp::{GMPAccounts, ToGMPAccounts};
+use crate::instructions::deploy_remote_interchain_token::{get_token_metadata, process_outbound};
 use crate::{
     errors::ITSError,
     events::InterchainTokenDeploymentStarted,
@@ -121,9 +120,8 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     pub gas_event_authority: SystemAccount<'info>,
 }
 
-impl<'info> DeployRemoteCanonicalInterchainToken<'info> {
-    /// Convert to GMPAccounts for common GMP operations
-    pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
+impl<'info> ToGMPAccounts<'info> for DeployRemoteCanonicalInterchainToken<'info> {
+    fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),

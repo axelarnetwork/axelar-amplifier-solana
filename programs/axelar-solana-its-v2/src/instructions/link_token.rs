@@ -1,7 +1,8 @@
 use crate::{
     errors::ITSError,
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
-    instructions::{process_outbound, GMPAccounts},
+    gmp::GMPAccounts,
+    instructions::process_outbound,
     state::{
         token_manager::{TokenManager, Type},
         InterchainTokenService,

@@ -1,4 +1,5 @@
 use crate::deploy_remote_interchain_token::solana_program::program::invoke_signed;
+use crate::gmp::{GMPAccounts, ToGMPAccounts};
 use crate::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
@@ -165,9 +166,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub gas_event_authority: SystemAccount<'info>,
 }
 
-impl<'info> DeployRemoteInterchainToken<'info> {
-    /// Convert to GMPAccounts for common GMP operations
-    pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
+impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
+    fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
@@ -184,23 +184,6 @@ impl<'info> DeployRemoteInterchainToken<'info> {
     }
 }
 
-/// Common GMP accounts needed for outbound operations
-#[derive(Clone)]
-pub struct GMPAccounts<'info> {
-    pub payer: AccountInfo<'info>,
-    pub gateway_root_pda: AccountInfo<'info>,
-    pub axelar_gateway_program: AccountInfo<'info>,
-    pub gas_treasury: AccountInfo<'info>,
-    pub gas_service: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-    pub its_root_pda: Account<'info, InterchainTokenService>,
-    pub call_contract_signing_pda: AccountInfo<'info>,
-    pub its_program: AccountInfo<'info>,
-    pub gateway_event_authority: AccountInfo<'info>,
-    pub gas_event_authority: AccountInfo<'info>,
-}
-
-/// Instruction handler for deploying a remote interchain token
 pub fn deploy_remote_interchain_token_handler(
     ctx: Context<DeployRemoteInterchainToken>,
     salt: [u8; 32],
