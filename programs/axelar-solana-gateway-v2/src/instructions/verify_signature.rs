@@ -1,5 +1,4 @@
 #![allow(clippy::empty_structs_with_brackets)]
-use crate::seed_prefixes::{GATEWAY_SEED, SIGNATURE_VERIFICATION_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     verification_session::SigningVerifierSetInfo, GatewayConfig, GatewayError,
     SignatureVerificationSessionData, VerifierSetTracker,
@@ -7,39 +6,45 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32], verifier_info: SigningVerifierSetInfo)]
+#[instruction(merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo)]
 pub struct VerifySignature<'info> {
     #[account(
-        seeds = [GATEWAY_SEED],
+        seeds = [GatewayConfig::SEED_PREFIX],
         bump = gateway_root_pda.load()?.bump,
         // Check: Verifier domain separator matches the gateway's domain separator
         constraint = gateway_root_pda.load()?.domain_separator == verifier_info.leaf.domain_separator
-        	@ GatewayError::InvalidDomainSeparator,
+            @ GatewayError::InvalidDomainSeparator,
         // Check: Verifier set isn't expired
         constraint = gateway_root_pda.load()?.assert_valid_epoch(verifier_set_tracker_pda.load()?.epoch).is_ok()
-        	@ GatewayError::VerifierSetTooOld,
+            @ GatewayError::VerifierSetTooOld,
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
     #[account(
         mut,
-        seeds = [SIGNATURE_VERIFICATION_SEED, merkle_root.as_ref(), signing_verifier_set_hash.as_ref()],
+        seeds = [
+            SignatureVerificationSessionData::SEED_PREFIX,
+            merkle_root.as_ref(),
+            verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref(),
+        ],
         bump = verification_session_account.load()?.bump
     )]
     pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,
 
     #[account(
-		// The verifier set tracker PDA is derived from the verifier set hash
-		seeds = [VERIFIER_SET_TRACKER_SEED, signing_verifier_set_hash.as_ref()],
-		bump,
-	)]
+        // The verifier set tracker PDA is derived from the verifier set hash
+        seeds = [
+            VerifierSetTracker::SEED_PREFIX,
+            verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref(),
+        ],
+        bump,
+    )]
     pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
 }
 
 pub fn verify_signature_handler(
     ctx: Context<VerifySignature>,
     payload_merkle_root: [u8; 32],
-    _signing_verifier_set_hash: [u8; 32],
     verifier_info: SigningVerifierSetInfo,
 ) -> Result<()> {
     let verifier_set_tracker_pda = ctx.accounts.verifier_set_tracker_pda.load()?;

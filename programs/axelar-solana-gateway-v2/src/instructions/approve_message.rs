@@ -1,6 +1,4 @@
-use crate::seed_prefixes::{
-    GATEWAY_SEED, INCOMING_MESSAGE_SEED, SIGNATURE_VERIFICATION_SEED, VALIDATE_MESSAGE_SIGNING_SEED,
-};
+use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use crate::{
     GatewayConfig, GatewayError, IncomingMessage, MerkleisedMessage, MessageApprovedEvent,
     MessageStatus, SignatureVerificationSessionData,
@@ -11,10 +9,10 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32])]
+#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
 pub struct ApproveMessage<'info> {
     #[account(
-        seeds = [GATEWAY_SEED],
+        seeds = [GatewayConfig::SEED_PREFIX],
         bump = gateway_root_pda.load()?.bump
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
@@ -23,7 +21,11 @@ pub struct ApproveMessage<'info> {
     pub funder: Signer<'info>,
 
     #[account(
-        seeds = [SIGNATURE_VERIFICATION_SEED, payload_merkle_root.as_ref(), signing_verifier_set_hash.as_ref()],
+        seeds = [
+            SignatureVerificationSessionData::SEED_PREFIX,
+            payload_merkle_root.as_ref(),
+            verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref()
+        ],
         bump = verification_session_account.load()?.bump,
         // CHECK: Validate signature verification session is complete
         constraint = verification_session_account.load()?.is_valid() @ GatewayError::SigningSessionNotValid
@@ -34,7 +36,7 @@ pub struct ApproveMessage<'info> {
         init,
         payer = funder,
         space = IncomingMessage::DISCRIMINATOR.len() + std::mem::size_of::<IncomingMessage>(),
-        seeds = [INCOMING_MESSAGE_SEED, merkleised_message.leaf.message.command_id().as_ref()],
+        seeds = [IncomingMessage::SEED_PREFIX, merkleised_message.leaf.message.command_id().as_ref()],
         bump
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
@@ -46,7 +48,6 @@ pub fn approve_message_handler(
     ctx: Context<ApproveMessage>,
     merkleised_message: MerkleisedMessage,
     payload_merkle_root: [u8; 32],
-    _signing_verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     msg!("Approving message!");
 

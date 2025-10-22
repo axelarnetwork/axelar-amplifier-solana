@@ -71,27 +71,24 @@ pub mod axelar_solana_gateway_v2 {
     pub fn initialize_payload_verification_session(
         ctx: Context<InitializePayloadVerificationSession>,
         merkle_root: [u8; 32],
-        signing_verifier_set_hash: [u8; 32],
     ) -> Result<()> {
-        instructions::initialize_payload_verification_session_handler(ctx, merkle_root, signing_verifier_set_hash)
+        instructions::initialize_payload_verification_session_handler(ctx, merkle_root)
     }
 
     pub fn verify_signature(
         ctx: Context<VerifySignature>,
         payload_merkle_root: [u8; 32],
-        signing_verifier_set_hash: [u8; 32],
         verifier_info: crate::verification_session::SigningVerifierSetInfo,
     ) -> Result<()> {
-        instructions::verify_signature_handler(ctx, payload_merkle_root, signing_verifier_set_hash, verifier_info)
+        instructions::verify_signature_handler(ctx, payload_merkle_root, verifier_info)
     }
 
     pub fn approve_message(
         ctx: Context<ApproveMessage>,
         merkleised_message: MerkleisedMessage,
         payload_merkle_root: [u8; 32],
-        signing_verifier_set_hash: [u8; 32],
     ) -> Result<()> {
-        instructions::approve_message_handler(ctx, merkleised_message, payload_merkle_root, signing_verifier_set_hash)
+        instructions::approve_message_handler(ctx, merkleised_message, payload_merkle_root)
     }
 
     pub fn validate_message(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {

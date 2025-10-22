@@ -364,11 +364,8 @@ pub fn initialize_payload_verification_session(
     );
 
     let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
-            merkle_root,
-            signing_verifier_set_hash,
-        }
-        .data();
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { merkle_root }
+            .data();
 
     let accounts = vec![
         (
@@ -490,7 +487,6 @@ pub fn initialize_payload_verification_session_with_root(
     let instruction_data =
         axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
-            signing_verifier_set_hash,
         }
         .data();
 
@@ -672,7 +668,6 @@ pub fn verify_signature_helper(
 ) -> InstructionResult {
     let instruction_data = axelar_solana_gateway_v2::instruction::VerifySignature {
         payload_merkle_root,
-        signing_verifier_set_hash: setup.verifier_set_hash,
         verifier_info,
     }
     .data();
@@ -1011,7 +1006,6 @@ pub fn approve_message_helper(
     let approve_instruction_data = axelar_solana_gateway_v2::instruction::ApproveMessage {
         merkleised_message: merkleised_message.clone(),
         payload_merkle_root,
-        signing_verifier_set_hash: setup.verifier_set_hash,
     }
     .data();
 
