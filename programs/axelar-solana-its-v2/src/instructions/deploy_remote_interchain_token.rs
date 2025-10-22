@@ -279,7 +279,7 @@ pub fn process_outbound(
 ) -> Result<()> {
     if !gmp_accounts
         .its_root_pda
-        .is_trusted_chain(destination_chain.clone())
+        .is_trusted_chain(&destination_chain)
         && destination_chain != ITS_HUB_CHAIN_NAME
     {
         msg!("Untrusted destination chain: {}", destination_chain);

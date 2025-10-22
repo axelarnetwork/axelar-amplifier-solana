@@ -67,7 +67,7 @@ impl InterchainTokenService {
         self.paused = false;
     }
 
-    pub fn is_trusted_chain(&self, chain_name: String) -> bool {
+    pub fn is_trusted_chain(&self, chain_name: &str) -> bool {
         self.trusted_chains.iter().any(|chain| *chain == chain_name)
     }
 
