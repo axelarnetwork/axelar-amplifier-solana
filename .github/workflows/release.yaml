@@ -67,6 +67,7 @@ jobs:
     uses: ./.github/workflows/reusable-build.yaml
     with:
       commit-hash: ${{ needs.publish-release.outputs.commit_hash }}
+      cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
 
   upload:
     needs: [publish-release, build]

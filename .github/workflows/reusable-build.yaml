@@ -7,6 +7,10 @@ on:
         description: "The commit hash to build from"
         type: string
         required: true
+      cf-config-bucket-root-key:
+        description: "The root key to determine the cluster environment (ex: devnet-amplifier, testnet, stagenet, mainnet)"
+        type: string
+        required: true
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact containing all builds"
@@ -47,6 +51,23 @@ jobs:
 
           # Install solana-verify
           cargo install solana-verify
+
+          # Determine the Solana cluster based on the environment
+          ENVIRONMENT="${{ inputs.cf-config-bucket-root-key }}"
+
+          if [[ "$ENVIRONMENT" == *"devnet"* ]]; then
+            CLUSTER="devnet"
+          elif [[ "$ENVIRONMENT" == *"stagenet"* ]] || [[ "$ENVIRONMENT" == *"testnet"* ]]; then
+            CLUSTER="testnet"
+          elif [[ "$ENVIRONMENT" == *"mainnet"* ]]; then
+            CLUSTER="mainnet-beta"
+          else
+            echo "Warning: Unknown environment '$ENVIRONMENT', defaulting to devnet"
+            CLUSTER="devnet"
+          fi
+
+          echo "Setting Solana cluster to: $CLUSTER"
+          solana config set --url $CLUSTER
 
           # Extract package names from release-plz.toml and build each one
           PROGRAMS=$(grep -A 4 '^\[\[package\]\]' release-plz.toml | grep '^name = ' | sed 's/name = "\(.*\)"/\1/')
