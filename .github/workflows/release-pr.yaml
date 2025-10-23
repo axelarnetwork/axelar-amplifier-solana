@@ -1,4 +1,4 @@
-name: Release PR
+name: Create Release PR
 
 on:
   workflow_dispatch:
@@ -9,19 +9,45 @@ on:
         type: string
         default: 'main'
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 permissions:
   pull-requests: write
   contents: write
 
 jobs:
   release-pr:
-    name: Create Release PR with release-plz
+    name: Create Release PR
     runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
+      - name: Check if branch is whitelisted
+        id: branch-check
+        run: |
+          BRANCH_NAME="${{ inputs.ref }}"
+          WHITELISTED_BRANCHES=("main" "v2-anchor" "releases/*")
+
+          IS_WHITELISTED=false
+          # Check the branch against the whitelist using wildcard matching
+          for BRANCH in "${WHITELISTED_BRANCHES[@]}"; do
+            if [[ "$BRANCH_NAME" == $BRANCH ]]; then
+              IS_WHITELISTED=true;
+              break;
+            fi
+          done
+
+          if [ "$IS_WHITELISTED" == true ]; then
+            echo "Branch is whitelisted: $BRANCH_NAME"
+          else
+            echo "Branch $BRANCH_NAME is not whitelisted."
+            exit 1
+          fi
+
+          echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.branch-check.outputs.branch_name }}
           fetch-depth: 0
           submodules: recursive
 
@@ -36,17 +62,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-      - name: PR Creation Summary
+      - name: Generate PR creation summary
         run: |
           BUILD_TYPE="Vanilla"
-          if [[ "${{ inputs.ref }}" == "v2-anchor" ]]; then
+          if [[ "${{ steps.branch-check.outputs.branch_name }}" == "v2-anchor" ]]; then
             BUILD_TYPE="Anchor"
           fi
 
           echo "## Release PR Creation Complete ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ inputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ steps.branch-check.outputs.branch_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "A release PR has been created (or updated) with the following:" >> $GITHUB_STEP_SUMMARY
           echo "- Updated CHANGELOGs for modified packages" >> $GITHUB_STEP_SUMMARY

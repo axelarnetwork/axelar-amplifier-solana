@@ -1,4 +1,4 @@
-name: Release Upload to R2
+name: Upload to R2
 
 on:
   push:
@@ -6,15 +6,27 @@ on:
       - main
       - v2-anchor
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   detect-build-type:
     name: Detect Build Type
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     outputs:
       is_anchor: ${{ steps.detect.outputs.is_anchor }}
       build_type_label: ${{ steps.detect.outputs.build_type_label }}
       ref: ${{ steps.detect.outputs.ref }}
+      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Detect branch and build type
         id: detect
         run: |
@@ -54,27 +66,38 @@ jobs:
           - mainnet
     uses: ./.github/workflows/release-reusable-upload.yaml
     with:
-      version: ${{ github.sha }}
+      version: ${{ needs.detect-build-type.outputs.commit_hash }}
       environment: ${{ matrix.environment }}
-      artifact-name: solana-programs
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-path: ${{ needs.build.outputs.artifact-path }}
       is_anchor: ${{ needs.detect-build-type.outputs.is_anchor == 'true' }}
       ref: ${{ needs.detect-build-type.outputs.ref }}
-    secrets: inherit
+      github-release: false
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      cf-endpoint-url: ${{ secrets.CF_ENDPOINT_URL }}
+      cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
+      cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}
 
   summary:
     name: Upload Summary
     runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: [detect-build-type, upload-all-environments]
+    if: always()
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.detect-build-type.outputs.ref }}
-
-      - name: Generate summary
+      - name: Generate upload summary
         run: |
-          VERSION="${{ github.sha }}"
+          VERSION="${{ needs.detect-build-type.outputs.commit_hash }}"
+          BUILD_TYPE="${{ needs.detect-build-type.outputs.build_type_label }}"
           if [ "${{ needs.detect-build-type.outputs.is_anchor }}" = "true" ]; then
             VERSION="${VERSION}-anchor"
           fi
-          echo "Artifacts uploaded to \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Upload Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Type:** ${BUILD_TYPE}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ needs.detect-build-type.outputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ needs.detect-build-type.outputs.commit_hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts uploaded to:" >> $GITHUB_STEP_SUMMARY
+          echo "\`releases/solana/{environment}/${VERSION}/\`" >> $GITHUB_STEP_SUMMARY

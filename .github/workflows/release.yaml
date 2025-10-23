@@ -21,6 +21,8 @@ on:
         type: boolean
         default: false
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 permissions:
   contents: write
   pull-requests: write
@@ -28,13 +30,23 @@ permissions:
 jobs:
   detect-build-type:
     name: Detect Build Type
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     outputs:
       is_anchor: ${{ steps.detect.outputs.is_anchor }}
       build_type_label: ${{ steps.detect.outputs.build_type_label }}
       ref: ${{ steps.detect.outputs.ref }}
       version: ${{ steps.detect.outputs.version }}
+      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Detect build type from tag or inputs
         id: detect
         run: |
@@ -93,7 +105,7 @@ jobs:
     secrets: inherit
 
   upload-to-r2:
-    name: Upload Release to R2
+    name: Upload Release to R2 (${{ matrix.environment }})
     needs: [detect-build-type, build]
     strategy:
       matrix:
@@ -106,10 +118,16 @@ jobs:
     with:
       version: ${{ needs.detect-build-type.outputs.version }}
       environment: ${{ matrix.environment }}
-      artifact-name: solana-programs
+      artifact-name: ${{ needs.build.outputs.artifact-name }}
+      artifact-path: ${{ needs.build.outputs.artifact-path }}
       is_anchor: ${{ needs.detect-build-type.outputs.is_anchor == 'true' }}
       ref: ${{ needs.detect-build-type.outputs.ref }}
-    secrets: inherit
+      github-release: false
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      cf-endpoint-url: ${{ secrets.CF_ENDPOINT_URL }}
+      cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
+      cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}
 
   create-github-release:
     name: Create GitHub Release
@@ -117,21 +135,22 @@ jobs:
     needs: [detect-build-type, build, upload-to-r2]
     if: github.event_name == 'push'
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: solana-programs
+          name: ${{ needs.build.outputs.artifact-name }}
           path: release-artifacts
 
-      - name: Create release notes
+      - name: Generate release notes
         id: release-notes
         run: |
           VERSION="${{ needs.detect-build-type.outputs.version }}"
           BUILD_TYPE="${{ needs.detect-build-type.outputs.build_type_label }}"
           REF="${{ needs.detect-build-type.outputs.ref }}"
+          COMMIT="${{ needs.detect-build-type.outputs.commit_hash }}"
           IS_ANCHOR="${{ needs.detect-build-type.outputs.is_anchor }}"
 
           if [ "$IS_ANCHOR" = "true" ]; then
@@ -145,7 +164,7 @@ jobs:
           cat > release-notes.md << EOF
           ## Solana Program Release ${VERSION}
 
-          **Build Type:** ${BUILD_TYPE} | **Branch:** \`${REF}\`
+          **Build Type:** ${BUILD_TYPE} | **Branch:** \`${REF}\` | **Commit:** \`${COMMIT}\`
 
           Artifacts uploaded to: \`releases/solana/{environment}/${VERSION}/\`
 
@@ -153,7 +172,7 @@ jobs:
           EOF
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         with:
           files: |
             release-artifacts/*.so
@@ -171,7 +190,18 @@ jobs:
     needs: [detect-build-type, release-plz, build, upload-to-r2, create-github-release]
     if: always()
     steps:
-      - name: Generate summary
+      - name: Generate release summary
         run: |
           VERSION="${{ needs.detect-build-type.outputs.version }}"
-          echo "Released \`$VERSION\` to \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
+          BUILD_TYPE="${{ needs.detect-build-type.outputs.build_type_label }}"
+          COMMIT="${{ needs.detect-build-type.outputs.commit_hash }}"
+
+          echo "## Release Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Type:** ${BUILD_TYPE}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ needs.detect-build-type.outputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${COMMIT}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Released to:" >> $GITHUB_STEP_SUMMARY
+          echo "\`releases/solana/{environment}/${VERSION}/\`" >> $GITHUB_STEP_SUMMARY

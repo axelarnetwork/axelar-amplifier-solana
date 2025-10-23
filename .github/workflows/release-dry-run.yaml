@@ -1,4 +1,4 @@
-name: Release Dry-Run
+name: Dry-Run Release
 
 on:
   workflow_dispatch:
@@ -14,17 +14,37 @@ on:
         type: boolean
         default: false
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   dry-run-build:
-    name: Dry Run Build
+    name: Dry-Run Build
     runs-on: blacksmith-2vcpu-ubuntu-2204
+
+    outputs:
+      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
+      build_type: ${{ steps.detect-type.outputs.build_type }}
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
           submodules: recursive
+
+      - name: Detect build type
+        id: detect-type
+        run: |
+          if [ "${{ inputs.is_anchor }}" = "true" ] || [[ "${{ inputs.ref }}" == "v2-anchor" ]]; then
+            echo "build_type=anchor" >> $GITHUB_OUTPUT
+          else
+            echo "build_type=vanilla" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.85.1
@@ -63,14 +83,6 @@ jobs:
           cargo build -p xtask
           cargo xtask build
 
-      - name: Generate dry run report
-        run: |
-          VERSION_SUFFIX=""
-          if [ "${{ inputs.is_anchor }}" = "true" ] || [[ "${{ inputs.ref }}" == "v2-anchor" ]]; then
-            VERSION_SUFFIX="-anchor"
-          fi
-          echo "Build successful. Would upload to \`releases/solana/{environment}/{version}${VERSION_SUFFIX}/\`" >> $GITHUB_STEP_SUMMARY
-
       - name: Validate build outputs
         run: |
           PROGRAMS=(
@@ -87,4 +99,23 @@ jobs:
               echo "❌ Error: ${program}.so not found!"
               exit 1
             fi
+            echo "✅ ${program}.so validated"
           done
+
+      - name: Generate dry-run report
+        run: |
+          VERSION_SUFFIX=""
+          BUILD_TYPE="Vanilla"
+          if [ "${{ steps.detect-type.outputs.build_type }}" = "anchor" ]; then
+            VERSION_SUFFIX="-anchor"
+            BUILD_TYPE="Anchor"
+          fi
+
+          echo "## Dry-Run Build Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Type:** ${BUILD_TYPE}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ inputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ steps.get-commit-hash.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Build successful. Would upload to:" >> $GITHUB_STEP_SUMMARY
+          echo "\`releases/solana/{environment}/{version}${VERSION_SUFFIX}/\`" >> $GITHUB_STEP_SUMMARY
