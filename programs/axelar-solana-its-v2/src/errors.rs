@@ -10,4 +10,5 @@ pub enum ITSError {
     MinterNotProvided,
     InvalidRole,
     InvalidAccountData,
+    MissingRemainingAccount,
 }
