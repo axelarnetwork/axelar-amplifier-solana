@@ -10,7 +10,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   detect-build-type:
     name: Get Build Metadata
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     outputs:
       ref: ${{ steps.detect.outputs.ref }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
@@ -67,7 +67,7 @@ jobs:
 
   summary:
     name: Upload Summary
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     needs: [detect-build-type, upload-all-environments]
     if: always()
     steps:

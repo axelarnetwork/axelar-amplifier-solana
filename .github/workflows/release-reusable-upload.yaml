@@ -51,7 +51,7 @@ env:
 
 jobs:
   upload:
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - name: Prepare cross-steps variables
         run: |

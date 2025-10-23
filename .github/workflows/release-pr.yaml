@@ -18,7 +18,7 @@ permissions:
 jobs:
   release-pr:
     name: Create Release PR
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - name: Check if branch is whitelisted
         id: branch-check
