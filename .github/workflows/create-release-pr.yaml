@@ -45,7 +45,7 @@ jobs:
           token: ${{ secrets.PAT_TOKEN }}
 
       - name: Run release-plz
-        uses: MarcoIeni/release-plz-action@fff938ea2923fdfa35797fff63537b00f30fe6f9 # v0.5.82
+        uses: MarcoIeni/release-plz-action@v0.5.82
         with:
           # Run `release-plz release-pr` command.
           command: release-pr

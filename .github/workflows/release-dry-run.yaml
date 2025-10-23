@@ -1,3 +1,5 @@
+# This workflow performs a dry-run release using release-plz
+
 name: Dry-Run Release
 
 on:
@@ -8,9 +10,11 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   dry-run-release:
     name: Dry-Run Release
+
     runs-on: blacksmith-2vcpu-ubuntu-2204
 
     outputs:
+      releases: ${{ steps.prepare-matrix.outputs.releases }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
 
     steps:
@@ -31,7 +35,7 @@ jobs:
         uses: MarcoIeni/release-plz-action@fff938ea2923fdfa35797fff63537b00f30fe6f9 # v0.5.82
         with:
           command: release --dry-run
-          version: "0.3.105"
+          version: "0.3.123"
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: true
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}

@@ -1,4 +1,5 @@
 # This workflow builds the program provided as input and uploads it to CF R2.
+
 name: Upload to R2
 
 on:
@@ -18,6 +19,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   prepare-release:
     name: Prepare release metadata
+
     runs-on: blacksmith-4vcpu-ubuntu-2204
 
     outputs:
@@ -74,8 +76,7 @@ jobs:
     needs: prepare-release
     uses: ./.github/workflows/reusable-build.yaml
     with:
-      ref: ${{ needs.prepare-release.outputs.commit_hash }}
-    secrets: inherit
+      commit-hash: ${{ needs.prepare-release.outputs.commit_hash }}
 
   upload:
     needs: [prepare-release, build]

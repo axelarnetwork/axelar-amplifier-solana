@@ -3,8 +3,8 @@ name: "Build Programs"
 on:
   workflow_call:
     inputs:
-      ref:
-        description: "The ref to build from"
+      commit-hash:
+        description: "The commit hash to build from"
         type: string
         required: true
     outputs:
@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout specific commit
-        run: git checkout ${{ inputs.ref }}
+        run: git checkout ${{ inputs.commit-hash }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -37,14 +37,13 @@ jobs:
       - name: Set artifact name
         id: set-artifact-name
         run: |
-          echo "name=solana-programs-${{ inputs.ref }}" >> $GITHUB_OUTPUT
+          echo "name=solana-programs-${{ inputs.commit-hash }}" >> $GITHUB_OUTPUT
           echo "path=target/deploy" >> $GITHUB_OUTPUT
 
       - name: Build all programs
         run: |
-          # Install Solana CLI
-          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          # Quick install Anchor + all dependencies
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
 
           # Install solana-verify
           cargo install solana-verify

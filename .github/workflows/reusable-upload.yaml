@@ -14,7 +14,7 @@ on:
         required: true
         default: ""
       package-git-tag:
-        description: "the release tag name (ex: axelar-solana-gateway-v0.1.2)"
+        description: "the release tag name (ex: axelar-solana-gateway-v1.1.0)"
         type: string
         required: true
         default: ""

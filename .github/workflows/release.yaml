@@ -1,4 +1,4 @@
-# This workflow creates a github release using release-plz, and publishes it as rust crates and also create the necessary artifacts.
+# This workflow creates a github release using release-plz, and publishes it as a rust crate and also create the necessary artifacts.
 
 name: Release
 on:
@@ -66,8 +66,7 @@ jobs:
     needs: publish-release
     uses: ./.github/workflows/reusable-build.yaml
     with:
-      ref: ${{ needs.publish-release.outputs.commit_hash }}
-    secrets: inherit
+      commit-hash: ${{ needs.publish-release.outputs.commit_hash }}
 
   upload:
     needs: [publish-release, build]
