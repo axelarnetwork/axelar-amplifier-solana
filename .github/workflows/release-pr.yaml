@@ -61,15 +61,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: Generate PR creation summary
-        run: |
-          echo "## Release PR Creation Complete ✅" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ steps.branch-check.outputs.branch_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "A release PR has been created (or updated) with the following:" >> $GITHUB_STEP_SUMMARY
-          echo "- Updated CHANGELOGs for modified packages" >> $GITHUB_STEP_SUMMARY
-          echo "- Version bumps based on conventional commits" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Review and merge the PR to trigger the release workflow." >> $GITHUB_STEP_SUMMARY
