@@ -366,7 +366,6 @@ pub fn initialize_payload_verification_session(
     let instruction_data =
         axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
             merkle_root,
-            verifier_set_hash: signing_verifier_set_hash,
         }
         .data();
 
@@ -490,7 +489,6 @@ pub fn initialize_payload_verification_session_with_root(
     let instruction_data =
         axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
-            verifier_set_hash: signing_verifier_set_hash,
         }
         .data();
 
@@ -673,7 +671,6 @@ pub fn verify_signature_helper(
     let instruction_data = axelar_solana_gateway_v2::instruction::VerifySignature {
         payload_merkle_root,
         verifier_info,
-        verifier_set_hash: setup.verifier_set_hash,
     }
     .data();
 
@@ -705,7 +702,6 @@ pub fn rotate_signers_helper(
 ) -> InstructionResult {
     let instruction_data = axelar_solana_gateway_v2::instruction::RotateSigners {
         new_verifier_set_merkle_root: new_verifier_set_hash,
-        signing_verifier_set_hash: setup.verifier_set_hash,
     }
     .data();
 
@@ -1002,7 +998,6 @@ pub fn approve_message_helper(
     let approve_instruction_data = axelar_solana_gateway_v2::instruction::ApproveMessage {
         merkleised_message: merkleised_message.clone(),
         payload_merkle_root,
-        verifier_set_hash: setup.verifier_set_hash,
     }
     .data();
 

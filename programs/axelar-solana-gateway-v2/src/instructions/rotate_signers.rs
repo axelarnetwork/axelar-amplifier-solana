@@ -7,7 +7,7 @@ use anchor_lang::solana_program;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(new_verifier_set_merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32])]
+#[instruction(new_verifier_set_merkle_root: [u8; 32])]
 pub struct RotateSigners<'info> {
     #[account(
         mut,
@@ -16,33 +16,10 @@ pub struct RotateSigners<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    #[account(
-        seeds = [
-        	SignatureVerificationSessionData::SEED_PREFIX,
-         	// New verifier set merkle root is used directly as the payload hash.
-         	&new_verifier_set_merkle_root,
-          	signing_verifier_set_hash.as_ref(),
-        ],
-        bump = verification_session_account.load()?.bump,
-        // Check: signature session is complete/valid
-        constraint = verification_session_account.load()?.is_valid()
-            @ GatewayError::SigningSessionNotValid,
-    )]
+    /// CHECK: PDA validation is performed manually in the handler
     pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,
 
-    #[account(
-        seeds = [
-            VerifierSetTracker::SEED_PREFIX,
-            signing_verifier_set_hash.as_ref()
-        ],
-        bump = verifier_set_tracker_pda.load()?.bump,
-        // Check: we got the expected verifier hash
-        constraint = verifier_set_tracker_pda.load()?.verifier_set_hash == signing_verifier_set_hash
-			@ GatewayError::InvalidVerifierSetTrackerProvided,
-		// Check: we aren't rotating to an already existing set
-		constraint = verifier_set_tracker_pda.load()?.verifier_set_hash != new_verifier_set_merkle_root
-			@ GatewayError::DuplicateVerifierSetRotation,
-    )]
+    /// CHECK: PDA validation is performed manually in the handler
     pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
 
     #[account(
@@ -68,10 +45,63 @@ pub struct RotateSigners<'info> {
 pub fn rotate_signers_handler(
     ctx: Context<RotateSigners>,
     new_verifier_set_merkle_root: [u8; 32],
-    _signing_verifier_set_hash: [u8; 32],
 ) -> Result<()> {
+    // Load signing_verifier_set_hash from verification_session_account
+    let verification_session = ctx.accounts.verification_session_account.load()?;
+    let signing_verifier_set_hash = verification_session
+        .signature_verification
+        .signing_verifier_set_hash;
+
+    // Check: signature session is complete/valid
+    require!(
+        verification_session.is_valid(),
+        GatewayError::SigningSessionNotValid
+    );
+
+    // Manually validate verification_session_account PDA
+    let (expected_verification_session, _bump) = Pubkey::find_program_address(
+        &[
+            SignatureVerificationSessionData::SEED_PREFIX,
+            // New verifier set merkle root is used directly as the payload hash.
+            &new_verifier_set_merkle_root,
+            signing_verifier_set_hash.as_ref(),
+        ],
+        &crate::ID,
+    );
+    require_keys_eq!(
+        ctx.accounts.verification_session_account.key(),
+        expected_verification_session,
+        GatewayError::InvalidVerifierSetTrackerProvided // TODO: add proper error
+    );
+
     let gateway_root_pda = &mut ctx.accounts.gateway_root_pda.load_mut()?;
     let verifier_set_tracker_pda = &ctx.accounts.verifier_set_tracker_pda.load()?;
+
+    // Check: we got the expected verifier hash
+    require!(
+        verifier_set_tracker_pda.verifier_set_hash == signing_verifier_set_hash,
+        GatewayError::InvalidVerifierSetTrackerProvided
+    );
+
+    // Check: we aren't rotating to an already existing set
+    require!(
+        verifier_set_tracker_pda.verifier_set_hash != new_verifier_set_merkle_root,
+        GatewayError::DuplicateVerifierSetRotation
+    );
+
+    // Manually validate verifier_set_tracker_pda
+    let (expected_verifier_set_tracker, _bump) = Pubkey::find_program_address(
+        &[
+            VerifierSetTracker::SEED_PREFIX,
+            signing_verifier_set_hash.as_ref(),
+        ],
+        &crate::ID,
+    );
+    require_keys_eq!(
+        ctx.accounts.verifier_set_tracker_pda.key(),
+        expected_verifier_set_tracker,
+        GatewayError::InvalidVerifierSetTrackerProvided
+    );
 
     // Check current verifier set isn't expired
     let epoch = verifier_set_tracker_pda.epoch;

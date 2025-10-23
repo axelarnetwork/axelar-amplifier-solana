@@ -30,7 +30,6 @@ pub mod memo {
 
     pub fn execute(
         ctx: Context<Execute>,
-        _command_id: [u8; 32],
         message: Message,
         payload: Vec<u8>,
         encoding_scheme: ExecutablePayloadEncodingScheme,

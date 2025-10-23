@@ -239,7 +239,6 @@ fn test_execute() {
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
     let execute_instruction_data = axelar_solana_memo_v2::instruction::Execute {
-        _command_id: message.command_id(),
         message: message.clone(),
         payload: test_payload.payload_without_accounts().to_vec(),
         encoding_scheme,

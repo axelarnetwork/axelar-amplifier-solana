@@ -36,11 +36,7 @@ import {
   type WritableSignerAccount,
 } from 'gill';
 import { AXELAR_SOLANA_GATEWAY_V2_PROGRAM_ADDRESS } from '../programs';
-import {
-  expectSome,
-  getAccountMetaFactory,
-  type ResolvedAccount,
-} from '../shared';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import {
   getMessageLeafDecoder,
   getMessageLeafEncoder,
@@ -112,7 +108,6 @@ export type ApproveMessageInstructionData = {
    */
   proof: ReadonlyUint8Array;
   payloadMerkleRoot: ReadonlyUint8Array;
-  verifierSetHash: ReadonlyUint8Array;
 };
 
 export type ApproveMessageInstructionDataArgs = {
@@ -124,7 +119,6 @@ export type ApproveMessageInstructionDataArgs = {
    */
   proof: ReadonlyUint8Array;
   payloadMerkleRoot: ReadonlyUint8Array;
-  verifierSetHash: ReadonlyUint8Array;
 };
 
 export function getApproveMessageInstructionDataEncoder(): Encoder<ApproveMessageInstructionDataArgs> {
@@ -134,7 +128,6 @@ export function getApproveMessageInstructionDataEncoder(): Encoder<ApproveMessag
       ['leaf', getMessageLeafEncoder()],
       ['proof', addEncoderSizePrefix(getBytesEncoder(), getU32Encoder())],
       ['payloadMerkleRoot', fixEncoderSize(getBytesEncoder(), 32)],
-      ['verifierSetHash', fixEncoderSize(getBytesEncoder(), 32)],
     ]),
     (value) => ({ ...value, discriminator: APPROVE_MESSAGE_DISCRIMINATOR })
   );
@@ -146,7 +139,6 @@ export function getApproveMessageInstructionDataDecoder(): Decoder<ApproveMessag
     ['leaf', getMessageLeafDecoder()],
     ['proof', addDecoderSizePrefix(getBytesDecoder(), getU32Decoder())],
     ['payloadMerkleRoot', fixDecoderSize(getBytesDecoder(), 32)],
-    ['verifierSetHash', fixDecoderSize(getBytesDecoder(), 32)],
   ]);
 }
 
@@ -171,7 +163,7 @@ export type ApproveMessageAsyncInput<
 > = {
   gatewayRootPda?: Address<TAccountGatewayRootPda>;
   funder: TransactionSigner<TAccountFunder>;
-  verificationSessionAccount?: Address<TAccountVerificationSessionAccount>;
+  verificationSessionAccount: Address<TAccountVerificationSessionAccount>;
   incomingMessagePda: Address<TAccountIncomingMessagePda>;
   systemProgram?: Address<TAccountSystemProgram>;
   eventAuthority?: Address<TAccountEventAuthority>;
@@ -179,7 +171,6 @@ export type ApproveMessageAsyncInput<
   leaf: ApproveMessageInstructionDataArgs['leaf'];
   proof: ApproveMessageInstructionDataArgs['proof'];
   payloadMerkleRoot: ApproveMessageInstructionDataArgs['payloadMerkleRoot'];
-  verifierSetHash: ApproveMessageInstructionDataArgs['verifierSetHash'];
 };
 
 export async function getApproveMessageInstructionAsync<
@@ -254,24 +245,6 @@ export async function getApproveMessageInstructionAsync<
       ],
     });
   }
-  if (!accounts.verificationSessionAccount.value) {
-    accounts.verificationSessionAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            103, 116, 119, 45, 115, 105, 103, 45, 118, 101, 114, 105, 102,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.payloadMerkleRoot)
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.verifierSetHash)
-        ),
-      ],
-    });
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -336,7 +309,6 @@ export type ApproveMessageInput<
   leaf: ApproveMessageInstructionDataArgs['leaf'];
   proof: ApproveMessageInstructionDataArgs['proof'];
   payloadMerkleRoot: ApproveMessageInstructionDataArgs['payloadMerkleRoot'];
-  verifierSetHash: ApproveMessageInstructionDataArgs['verifierSetHash'];
 };
 
 export function getApproveMessageInstruction<

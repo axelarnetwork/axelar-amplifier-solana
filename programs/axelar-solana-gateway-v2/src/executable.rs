@@ -105,68 +105,71 @@ pub const EXECUTE_PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
 #[macro_export]
 macro_rules! executable_accounts {
     ($outer_struct:ident) => {
-    /// Accounts for executing an inbound Axelar GMP message.
-    /// NOTE: Keep in mind the outer accounts struct must not include:
-    /// ```ignore
-    /// #[instruction(message: Message, payload: Vec<u8>)]
-    /// ```
-    /// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
-    #[derive(Accounts)]
-    #[instruction(command_id: [u8; 32])]
-    pub struct AxelarExecuteAccounts<'info> {
-        // IncomingMessage PDA account
-        // needs to be mutable as the validate_message CPI
-        // updates its state
-        #[account(
-        	mut,
-            seeds = [axelar_solana_gateway_v2::IncomingMessage::SEED_PREFIX, command_id.as_ref()],
-            bump = incoming_message_pda.load()?.bump,
-            seeds::program = axelar_gateway_program.key()
-        )]
-        pub incoming_message_pda: AccountLoader<'info, axelar_solana_gateway_v2::IncomingMessage>,
+        /// Accounts for executing an inbound Axelar GMP message.
+        /// NOTE: Keep in mind the outer accounts struct must not include:
+        /// ```ignore
+        /// #[instruction(message: Message, payload: Vec<u8>)]
+        /// ```
+        /// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
+        ///
+        /// IMPORTANT: PDA validation is performed manually in the `validate_message` function
+        /// rather than using Anchor's built-in PDA derivation to avoid requiring `command_id`
+        /// as an explicit instruction parameter.
+        #[derive(Accounts)]
+        pub struct AxelarExecuteAccounts<'info> {
+            // IncomingMessage PDA account
+            // needs to be mutable as the validate_message CPI
+            // updates its state
+            /// CHECK: PDA is validated manually in validate_message function
+            #[account(mut)]
+            pub incoming_message_pda:
+                AccountLoader<'info, axelar_solana_gateway_v2::IncomingMessage>,
 
-        #[account(
-            seeds = [axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
-            bump = incoming_message_pda.load()?.signing_pda_bump,
-        )]
-        pub signing_pda: AccountInfo<'info>,
+            /// CHECK: PDA is validated manually in validate_message function
+            pub signing_pda: AccountInfo<'info>,
 
-        #[account(
-            seeds = [axelar_solana_gateway_v2::state::GatewayConfig::SEED_PREFIX],
-            bump = gateway_root_pda.load()?.bump,
-            seeds::program = axelar_gateway_program.key(),
-        )]
-        pub gateway_root_pda: AccountLoader<'info, axelar_solana_gateway_v2::state::GatewayConfig>,
+            #[account(
+                            seeds = [axelar_solana_gateway_v2::state::GatewayConfig::SEED_PREFIX],
+                            bump = gateway_root_pda.load()?.bump,
+                            seeds::program = axelar_gateway_program.key(),
+                        )]
+            pub gateway_root_pda:
+                AccountLoader<'info, axelar_solana_gateway_v2::state::GatewayConfig>,
 
-        #[account(
-            seeds = [b"__event_authority"],
-            bump,
-            seeds::program = axelar_gateway_program.key()
-        )]
-        pub event_authority: SystemAccount<'info>,
+            #[account(
+                            seeds = [b"__event_authority"],
+                            bump,
+                            seeds::program = axelar_gateway_program.key()
+                        )]
+            pub event_authority: SystemAccount<'info>,
 
-        pub axelar_gateway_program:
-            Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
-    }
-
-    impl<'info> axelar_solana_gateway_v2::executable::HasAxelarExecutable<'info> for $outer_struct<'info> {
-        fn axelar_executable(&self) -> axelar_solana_gateway_v2::executable::AxelarExecutableAccountRefs<'_, 'info> {
-            (&self.executable).into()
+            pub axelar_gateway_program:
+                Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
         }
-    }
 
-    impl<'a, 'info> From<&'a AxelarExecuteAccounts<'info>> for axelar_solana_gateway_v2::executable::AxelarExecutableAccountRefs<'a, 'info> {
-        fn from(accounts: &'a AxelarExecuteAccounts<'info>) -> Self {
-            Self {
-                incoming_message_pda: &accounts.incoming_message_pda,
-                signing_pda: &accounts.signing_pda,
-                gateway_root_pda: &accounts.gateway_root_pda,
-                event_authority: &accounts.event_authority,
-                axelar_gateway_program: &accounts.axelar_gateway_program,
+        impl<'info> axelar_solana_gateway_v2::executable::HasAxelarExecutable<'info>
+            for $outer_struct<'info>
+        {
+            fn axelar_executable(
+                &self,
+            ) -> axelar_solana_gateway_v2::executable::AxelarExecutableAccountRefs<'_, 'info> {
+                (&self.executable).into()
             }
         }
-    }
 
+        impl<'a, 'info> From<&'a AxelarExecuteAccounts<'info>>
+            for axelar_solana_gateway_v2::executable::AxelarExecutableAccountRefs<'a, 'info>
+        {
+            fn from(accounts: &'a AxelarExecuteAccounts<'info>) -> Self {
+                Self {
+                    incoming_message_pda: &accounts.incoming_message_pda,
+                    signing_pda: &accounts.signing_pda,
+                    gateway_root_pda: &accounts.gateway_root_pda,
+                    event_authority: &accounts.event_authority,
+                    axelar_gateway_program: &accounts.axelar_gateway_program,
+                }
+            }
+        }
     };
 }
 

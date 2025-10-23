@@ -33,11 +33,7 @@ import {
   type WritableAccount,
 } from 'gill';
 import { AXELAR_SOLANA_GATEWAY_V2_PROGRAM_ADDRESS } from '../programs';
-import {
-  expectSome,
-  getAccountMetaFactory,
-  type ResolvedAccount,
-} from '../shared';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import {
   getVerifierSetLeafDecoder,
   getVerifierSetLeafEncoder,
@@ -86,7 +82,6 @@ export type VerifySignatureInstructionData = {
   signature: ReadonlyUint8Array;
   leaf: VerifierSetLeaf;
   merkleProof: ReadonlyUint8Array;
-  verifierSetHash: ReadonlyUint8Array;
 };
 
 export type VerifySignatureInstructionDataArgs = {
@@ -94,7 +89,6 @@ export type VerifySignatureInstructionDataArgs = {
   signature: ReadonlyUint8Array;
   leaf: VerifierSetLeafArgs;
   merkleProof: ReadonlyUint8Array;
-  verifierSetHash: ReadonlyUint8Array;
 };
 
 export function getVerifySignatureInstructionDataEncoder(): Encoder<VerifySignatureInstructionDataArgs> {
@@ -105,7 +99,6 @@ export function getVerifySignatureInstructionDataEncoder(): Encoder<VerifySignat
       ['signature', fixEncoderSize(getBytesEncoder(), 65)],
       ['leaf', getVerifierSetLeafEncoder()],
       ['merkleProof', addEncoderSizePrefix(getBytesEncoder(), getU32Encoder())],
-      ['verifierSetHash', fixEncoderSize(getBytesEncoder(), 32)],
     ]),
     (value) => ({ ...value, discriminator: VERIFY_SIGNATURE_DISCRIMINATOR })
   );
@@ -118,7 +111,6 @@ export function getVerifySignatureInstructionDataDecoder(): Decoder<VerifySignat
     ['signature', fixDecoderSize(getBytesDecoder(), 65)],
     ['leaf', getVerifierSetLeafDecoder()],
     ['merkleProof', addDecoderSizePrefix(getBytesDecoder(), getU32Decoder())],
-    ['verifierSetHash', fixDecoderSize(getBytesDecoder(), 32)],
   ]);
 }
 
@@ -138,13 +130,12 @@ export type VerifySignatureAsyncInput<
   TAccountVerifierSetTrackerPda extends string = string,
 > = {
   gatewayRootPda?: Address<TAccountGatewayRootPda>;
-  verificationSessionAccount?: Address<TAccountVerificationSessionAccount>;
-  verifierSetTrackerPda?: Address<TAccountVerifierSetTrackerPda>;
+  verificationSessionAccount: Address<TAccountVerificationSessionAccount>;
+  verifierSetTrackerPda: Address<TAccountVerifierSetTrackerPda>;
   payloadMerkleRoot: VerifySignatureInstructionDataArgs['payloadMerkleRoot'];
   signature: VerifySignatureInstructionDataArgs['signature'];
   leaf: VerifySignatureInstructionDataArgs['leaf'];
   merkleProof: VerifySignatureInstructionDataArgs['merkleProof'];
-  verifierSetHash: VerifySignatureInstructionDataArgs['verifierSetHash'];
 };
 
 export async function getVerifySignatureInstructionAsync<
@@ -203,40 +194,6 @@ export async function getVerifySignatureInstructionAsync<
       ],
     });
   }
-  if (!accounts.verificationSessionAccount.value) {
-    accounts.verificationSessionAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            103, 116, 119, 45, 115, 105, 103, 45, 118, 101, 114, 105, 102,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.payloadMerkleRoot)
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.verifierSetHash)
-        ),
-      ],
-    });
-  }
-  if (!accounts.verifierSetTrackerPda.value) {
-    accounts.verifierSetTrackerPda.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 101, 114, 45, 115, 101, 116, 45, 116, 114, 97, 99, 107, 101,
-            114,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.verifierSetHash)
-        ),
-      ],
-    });
-  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
@@ -269,7 +226,6 @@ export type VerifySignatureInput<
   signature: VerifySignatureInstructionDataArgs['signature'];
   leaf: VerifySignatureInstructionDataArgs['leaf'];
   merkleProof: VerifySignatureInstructionDataArgs['merkleProof'];
-  verifierSetHash: VerifySignatureInstructionDataArgs['verifierSetHash'];
 };
 
 export function getVerifySignatureInstruction<

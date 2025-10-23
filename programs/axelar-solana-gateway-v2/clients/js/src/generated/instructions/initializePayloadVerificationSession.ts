@@ -28,15 +28,10 @@ import {
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
-  type WritableAccount,
   type WritableSignerAccount,
 } from 'gill';
 import { AXELAR_SOLANA_GATEWAY_V2_PROGRAM_ADDRESS } from '../programs';
-import {
-  expectSome,
-  getAccountMetaFactory,
-  type ResolvedAccount,
-} from '../shared';
+import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
 export const INITIALIZE_PAYLOAD_VERIFICATION_SESSION_DISCRIMINATOR =
   new Uint8Array([136, 201, 241, 74, 8, 237, 63, 231]);
@@ -71,7 +66,8 @@ export type InitializePayloadVerificationSessionInstruction<
         ? ReadonlyAccount<TAccountGatewayRootPda>
         : TAccountGatewayRootPda,
       TAccountVerificationSessionAccount extends string
-        ? WritableAccount<TAccountVerificationSessionAccount>
+        ? WritableSignerAccount<TAccountVerificationSessionAccount> &
+            AccountSignerMeta<TAccountVerificationSessionAccount>
         : TAccountVerificationSessionAccount,
       TAccountVerifierSetTrackerPda extends string
         ? ReadonlyAccount<TAccountVerifierSetTrackerPda>
@@ -86,12 +82,10 @@ export type InitializePayloadVerificationSessionInstruction<
 export type InitializePayloadVerificationSessionInstructionData = {
   discriminator: ReadonlyUint8Array;
   merkleRoot: ReadonlyUint8Array;
-  verifierSetHash: ReadonlyUint8Array;
 };
 
 export type InitializePayloadVerificationSessionInstructionDataArgs = {
   merkleRoot: ReadonlyUint8Array;
-  verifierSetHash: ReadonlyUint8Array;
 };
 
 export function getInitializePayloadVerificationSessionInstructionDataEncoder(): FixedSizeEncoder<InitializePayloadVerificationSessionInstructionDataArgs> {
@@ -99,7 +93,6 @@ export function getInitializePayloadVerificationSessionInstructionDataEncoder():
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['merkleRoot', fixEncoderSize(getBytesEncoder(), 32)],
-      ['verifierSetHash', fixEncoderSize(getBytesEncoder(), 32)],
     ]),
     (value) => ({
       ...value,
@@ -112,7 +105,6 @@ export function getInitializePayloadVerificationSessionInstructionDataDecoder():
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['merkleRoot', fixDecoderSize(getBytesDecoder(), 32)],
-    ['verifierSetHash', fixDecoderSize(getBytesDecoder(), 32)],
   ]);
 }
 
@@ -135,11 +127,10 @@ export type InitializePayloadVerificationSessionAsyncInput<
 > = {
   payer: TransactionSigner<TAccountPayer>;
   gatewayRootPda?: Address<TAccountGatewayRootPda>;
-  verificationSessionAccount?: Address<TAccountVerificationSessionAccount>;
-  verifierSetTrackerPda?: Address<TAccountVerifierSetTrackerPda>;
+  verificationSessionAccount: TransactionSigner<TAccountVerificationSessionAccount>;
+  verifierSetTrackerPda: Address<TAccountVerifierSetTrackerPda>;
   systemProgram?: Address<TAccountSystemProgram>;
   merkleRoot: InitializePayloadVerificationSessionInstructionDataArgs['merkleRoot'];
-  verifierSetHash: InitializePayloadVerificationSessionInstructionDataArgs['verifierSetHash'];
 };
 
 export async function getInitializePayloadVerificationSessionInstructionAsync<
@@ -206,40 +197,6 @@ export async function getInitializePayloadVerificationSessionInstructionAsync<
       ],
     });
   }
-  if (!accounts.verificationSessionAccount.value) {
-    accounts.verificationSessionAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            103, 116, 119, 45, 115, 105, 103, 45, 118, 101, 114, 105, 102,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.merkleRoot)
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.verifierSetHash)
-        ),
-      ],
-    });
-  }
-  if (!accounts.verifierSetTrackerPda.value) {
-    accounts.verifierSetTrackerPda.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 101, 114, 45, 115, 101, 116, 45, 116, 114, 97, 99, 107, 101,
-            114,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.verifierSetHash)
-        ),
-      ],
-    });
-  }
   if (!accounts.systemProgram.value) {
     accounts.systemProgram.value =
       '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
@@ -277,11 +234,10 @@ export type InitializePayloadVerificationSessionInput<
 > = {
   payer: TransactionSigner<TAccountPayer>;
   gatewayRootPda: Address<TAccountGatewayRootPda>;
-  verificationSessionAccount: Address<TAccountVerificationSessionAccount>;
+  verificationSessionAccount: TransactionSigner<TAccountVerificationSessionAccount>;
   verifierSetTrackerPda: Address<TAccountVerifierSetTrackerPda>;
   systemProgram?: Address<TAccountSystemProgram>;
   merkleRoot: InitializePayloadVerificationSessionInstructionDataArgs['merkleRoot'];
-  verifierSetHash: InitializePayloadVerificationSessionInstructionDataArgs['verifierSetHash'];
 };
 
 export function getInitializePayloadVerificationSessionInstruction<

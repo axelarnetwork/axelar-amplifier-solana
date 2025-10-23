@@ -105,12 +105,10 @@ export type RotateSignersInstruction<
 export type RotateSignersInstructionData = {
   discriminator: ReadonlyUint8Array;
   newVerifierSetMerkleRoot: ReadonlyUint8Array;
-  signingVerifierSetHash: ReadonlyUint8Array;
 };
 
 export type RotateSignersInstructionDataArgs = {
   newVerifierSetMerkleRoot: ReadonlyUint8Array;
-  signingVerifierSetHash: ReadonlyUint8Array;
 };
 
 export function getRotateSignersInstructionDataEncoder(): FixedSizeEncoder<RotateSignersInstructionDataArgs> {
@@ -118,7 +116,6 @@ export function getRotateSignersInstructionDataEncoder(): FixedSizeEncoder<Rotat
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['newVerifierSetMerkleRoot', fixEncoderSize(getBytesEncoder(), 32)],
-      ['signingVerifierSetHash', fixEncoderSize(getBytesEncoder(), 32)],
     ]),
     (value) => ({ ...value, discriminator: ROTATE_SIGNERS_DISCRIMINATOR })
   );
@@ -128,7 +125,6 @@ export function getRotateSignersInstructionDataDecoder(): FixedSizeDecoder<Rotat
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['newVerifierSetMerkleRoot', fixDecoderSize(getBytesDecoder(), 32)],
-    ['signingVerifierSetHash', fixDecoderSize(getBytesDecoder(), 32)],
   ]);
 }
 
@@ -154,8 +150,8 @@ export type RotateSignersAsyncInput<
   TAccountProgram extends string = string,
 > = {
   gatewayRootPda?: Address<TAccountGatewayRootPda>;
-  verificationSessionAccount?: Address<TAccountVerificationSessionAccount>;
-  verifierSetTrackerPda?: Address<TAccountVerifierSetTrackerPda>;
+  verificationSessionAccount: Address<TAccountVerificationSessionAccount>;
+  verifierSetTrackerPda: Address<TAccountVerifierSetTrackerPda>;
   newVerifierSetTracker?: Address<TAccountNewVerifierSetTracker>;
   payer: TransactionSigner<TAccountPayer>;
   systemProgram?: Address<TAccountSystemProgram>;
@@ -163,7 +159,6 @@ export type RotateSignersAsyncInput<
   eventAuthority?: Address<TAccountEventAuthority>;
   program: Address<TAccountProgram>;
   newVerifierSetMerkleRoot: RotateSignersInstructionDataArgs['newVerifierSetMerkleRoot'];
-  signingVerifierSetHash: RotateSignersInstructionDataArgs['signingVerifierSetHash'];
 };
 
 export async function getRotateSignersInstructionAsync<
@@ -245,40 +240,6 @@ export async function getRotateSignersInstructionAsync<
       seeds: [
         getBytesEncoder().encode(
           new Uint8Array([103, 97, 116, 101, 119, 97, 121])
-        ),
-      ],
-    });
-  }
-  if (!accounts.verificationSessionAccount.value) {
-    accounts.verificationSessionAccount.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            103, 116, 119, 45, 115, 105, 103, 45, 118, 101, 114, 105, 102,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.newVerifierSetMerkleRoot)
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.signingVerifierSetHash)
-        ),
-      ],
-    });
-  }
-  if (!accounts.verifierSetTrackerPda.value) {
-    accounts.verifierSetTrackerPda.value = await getProgramDerivedAddress({
-      programAddress,
-      seeds: [
-        getBytesEncoder().encode(
-          new Uint8Array([
-            118, 101, 114, 45, 115, 101, 116, 45, 116, 114, 97, 99, 107, 101,
-            114,
-          ])
-        ),
-        fixEncoderSize(getBytesEncoder(), 32).encode(
-          expectSome(args.signingVerifierSetHash)
         ),
       ],
     });
@@ -369,7 +330,6 @@ export type RotateSignersInput<
   eventAuthority: Address<TAccountEventAuthority>;
   program: Address<TAccountProgram>;
   newVerifierSetMerkleRoot: RotateSignersInstructionDataArgs['newVerifierSetMerkleRoot'];
-  signingVerifierSetHash: RotateSignersInstructionDataArgs['signingVerifierSetHash'];
 };
 
 export function getRotateSignersInstruction<
