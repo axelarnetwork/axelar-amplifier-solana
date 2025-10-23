@@ -38,15 +38,6 @@ jobs:
       version: ${{ steps.detect.outputs.version }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get commit hash
-        id: get-commit-hash
-        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
       - name: Detect build type from tag or inputs
         id: detect
         run: |
@@ -74,6 +65,16 @@ jobs:
 
           echo "ref=$REF" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.detect.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   release-plz:
     name: Release with release-plz
@@ -182,7 +183,6 @@ jobs:
         with:
           files: |
             release-artifacts/*.so
-            release-artifacts/*.json
           body_path: release-notes.md
           draft: false
           prerelease: false
