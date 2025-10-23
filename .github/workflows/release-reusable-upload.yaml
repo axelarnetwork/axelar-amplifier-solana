@@ -1,4 +1,4 @@
-name: Reusable Upload (helper workflow)
+name: Reusable Upload
 
 on:
   workflow_call:
@@ -111,9 +111,11 @@ jobs:
           # Read build metadata if it exists
           BUILD_TYPE="vanilla"
           BUILD_REF="${{ inputs.ref }}"
+          COMMIT_SHA="${{ github.sha }}"
           if [ -f "artifacts/build-metadata.json" ]; then
             BUILD_TYPE=$(jq -r '.build_type // "vanilla"' artifacts/build-metadata.json)
             BUILD_REF=$(jq -r '.ref // "${{ inputs.ref }}"' artifacts/build-metadata.json)
+            COMMIT_SHA=$(jq -r '.commit_sha // "${{ github.sha }}"' artifacts/build-metadata.json)
           elif [ "${{ inputs.is_anchor }}" = "true" ]; then
             BUILD_TYPE="anchor"
           fi
@@ -136,7 +138,7 @@ jobs:
             "ref": "$BUILD_REF",
             "environment": "${{ inputs.environment }}",
             "uploaded_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "commit_sha": "${{ github.sha }}",
+            "commit_sha": "$COMMIT_SHA",
             "github_ref": "${{ github.ref }}",
             "artifacts": [
           $(find artifacts \( -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" \) \) | while read file; do
