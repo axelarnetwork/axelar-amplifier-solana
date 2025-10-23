@@ -6,20 +6,18 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Release tag (e.g., v1.0.0 or v2.0.0-anchor)'
+      version:
+        description: 'Release version number (e.g., 1.0.0 or 2.0.0)'
         required: true
         type: string
       ref:
         description: 'Branch/ref to build from'
-        required: false
+        required: true
         type: string
-        default: 'main'
       is_anchor:
-        description: 'Mark as Anchor build (auto-detected from tag suffix)'
-        required: false
+        description: 'Build as Anchor version (appends -anchor suffix)'
+        required: true
         type: boolean
-        default: false
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -41,18 +39,33 @@ jobs:
       - name: Detect build type from tag or inputs
         id: detect
         run: |
-          VERSION="${{ github.event.inputs.tag || github.ref_name }}"
-
           if [ "${{ github.event_name }}" = "push" ]; then
+            # Tag push: use the tag name as-is and detect anchor from suffix
+            VERSION="${{ github.ref_name }}"
             REF="${{ github.ref }}"
+
+            if [[ "$VERSION" =~ -anchor$ ]]; then
+              IS_ANCHOR="true"
+            else
+              IS_ANCHOR="false"
+            fi
           else
+            # Manual workflow dispatch: construct tag from version and is_anchor
+            INPUT_VERSION="${{ github.event.inputs.version }}"
+            IS_ANCHOR="${{ github.event.inputs.is_anchor }}"
             REF="${{ github.event.inputs.ref || 'main' }}"
-          fi
 
-          IS_ANCHOR="${{ github.event.inputs.is_anchor }}"
+            # Add v prefix if not present
+            if [[ ! "$INPUT_VERSION" =~ ^v ]]; then
+              INPUT_VERSION="v${INPUT_VERSION}"
+            fi
 
-          if [[ "$VERSION" =~ -anchor$ ]]; then
-            IS_ANCHOR="true"
+            # Append -anchor suffix if needed
+            if [ "$IS_ANCHOR" = "true" ]; then
+              VERSION="${INPUT_VERSION}-anchor"
+            else
+              VERSION="${INPUT_VERSION}"
+            fi
           fi
 
           if [ "$IS_ANCHOR" = "true" ]; then
