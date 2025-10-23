@@ -160,4 +160,3 @@ jobs:
           echo "Version: ${{ steps.version.outputs.final-version }}"
           echo "Build type: ${{ inputs.is_anchor && 'Anchor' || 'Vanilla' }}"
           echo "R2 path: ${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ steps.version.outputs.final-version }}/"
-

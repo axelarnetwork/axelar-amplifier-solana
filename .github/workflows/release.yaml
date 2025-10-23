@@ -105,7 +105,7 @@ jobs:
     name: Build Solana Programs for Release
     needs: [detect-build-type, release-plz]
     if: always() && (needs.release-plz.result == 'success' || needs.release-plz.result == 'skipped')
-    uses: ./.github/workflows/_reusable-build.yaml
+    uses: ./.github/workflows/release-reusable-build.yaml
     with:
       ref: ${{ needs.detect-build-type.outputs.ref }}
       is_anchor: ${{ needs.detect-build-type.outputs.is_anchor == 'true' }}
@@ -123,7 +123,7 @@ jobs:
           - stagenet
           - testnet
           - mainnet
-    uses: ./.github/workflows/_reusable-upload.yaml
+    uses: ./.github/workflows/release-reusable-upload.yaml
     with:
       version: ${{ needs.detect-build-type.outputs.version }}
       environment: ${{ matrix.environment }}
@@ -260,4 +260,3 @@ jobs:
           else
             echo "**Note:** This is a Vanilla release. Use \`solana program deploy\` commands for deployment." >> $GITHUB_STEP_SUMMARY
           fi
-

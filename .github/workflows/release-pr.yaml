@@ -99,4 +99,3 @@ jobs:
           echo "- Version bumps based on conventional commits" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Review and merge the PR to trigger the release workflow." >> $GITHUB_STEP_SUMMARY
-

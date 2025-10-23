@@ -136,4 +136,3 @@ jobs:
           done
 
           echo "All program artifacts validated successfully!"
-

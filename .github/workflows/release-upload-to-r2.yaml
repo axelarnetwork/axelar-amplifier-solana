@@ -36,7 +36,7 @@ jobs:
   build:
     name: Build Solana Programs
     needs: detect-build-type
-    uses: ./.github/workflows/_reusable-build.yaml
+    uses: ./.github/workflows/release-reusable-build.yaml
     with:
       ref: ${{ needs.detect-build-type.outputs.ref }}
       is_anchor: ${{ needs.detect-build-type.outputs.is_anchor == 'true' }}
@@ -54,7 +54,7 @@ jobs:
           - stagenet
           - testnet
           - mainnet
-    uses: ./.github/workflows/_reusable-upload.yaml
+    uses: ./.github/workflows/release-reusable-upload.yaml
     with:
       version: ${{ github.sha }}
       environment: ${{ matrix.environment }}
@@ -100,4 +100,3 @@ jobs:
           echo "- axelar-solana-governance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Access artifacts at: \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
-
