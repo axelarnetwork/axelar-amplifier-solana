@@ -8,6 +8,7 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
+solana-program.workspace = true
 alloy-primitives.workspace = true
 interchain-token-transfer-gmp = { workspace = true }
 axelar-solana-gateway-v2 = { workspace = true, features = ["cpi"] }

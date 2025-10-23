@@ -1,5 +1,6 @@
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_its_v2::{
+    seed_prefixes::TOKEN_MANAGER_SEED,
     state::{TokenManager, UserRoles},
     utils::interchain_token_id,
 };
@@ -56,11 +57,23 @@ fn test_set_flow_limit_success() {
     let symbol = "TEST".to_string();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
+
     let minter = Pubkey::new_unique();
 
     let token_id = interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
-    let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[TOKEN_MANAGER_SEED, its_root_pda.as_ref(), &token_id],
+        &program_id,
+    );
+
+    let (minter_roles_pda, _minter_roles_pda_bump) = Pubkey::find_program_address(
+        &[
+            UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(),
+        ],
+        &program_id,
+    );
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
@@ -110,7 +123,15 @@ fn test_set_flow_limit_success() {
 
     // Now set the flow limit
     let flow_limit: Option<u64> = Some(1_000_000_000); // 1 billion tokens
-    let (operator_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
+
+    let (operator_roles_pda, _operator_roles_bump) = Pubkey::find_program_address(
+        &[
+            UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(), // Using minter as operator since they have all roles
+        ],
+        &program_id,
+    );
 
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&program_id);

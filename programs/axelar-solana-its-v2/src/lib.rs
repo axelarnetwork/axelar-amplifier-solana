@@ -1,3 +1,4 @@
+//! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
 pub mod errors;
 pub mod events;
@@ -257,5 +258,59 @@ pub mod axelar_solana_its_v2 {
 
     pub fn set_flow_limit(ctx: Context<SetFlowLimit>, flow_limit: Option<u64>) -> Result<()> {
         instructions::set_flow_limit_handler(ctx, flow_limit)
+    }
+
+    pub fn execute(
+        ctx: Context<Execute>,
+        message: axelar_solana_gateway_v2::Message,
+        payload: Vec<u8>,
+    ) -> Result<()> {
+        instructions::execute_handler(ctx, message, payload)
+    }
+
+    pub fn deploy_interchain_token_internal(
+        ctx: Context<DeployInterchainTokenInternal>,
+        token_id: [u8; 32],
+        name: String,
+        symbol: String,
+        decimals: u8,
+    ) -> Result<()> {
+        instructions::deploy_interchain_token_internal_handler(
+            ctx, token_id, name, symbol, decimals,
+        )
+    }
+
+    pub fn link_token_internal(
+        ctx: Context<LinkTokenInternal>,
+        token_id: [u8; 32],
+        destination_token_address: [u8; 32],
+        token_manager_type: u8,
+        link_params: Vec<u8>,
+    ) -> Result<()> {
+        instructions::link_token_internal_handler(
+            ctx,
+            token_id,
+            destination_token_address,
+            token_manager_type,
+            link_params,
+        )
+    }
+
+    pub fn interchain_transfer_internal(
+        ctx: Context<InterchainTransferInternal>,
+        token_id: [u8; 32],
+        source_address: String,
+        destination_address: Pubkey,
+        amount: u64,
+        data: Vec<u8>,
+    ) -> Result<()> {
+        instructions::interchain_transfer_internal_handler(
+            ctx,
+            token_id,
+            source_address,
+            destination_address,
+            amount,
+            data,
+        )
     }
 }

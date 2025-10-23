@@ -6,7 +6,6 @@ use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::initialize_gateway;
 use axelar_solana_gateway_v2_test_fixtures::setup_test_with_real_signers;
-use axelar_solana_its_v2::state::TokenManager;
 use axelar_solana_its_v2_test_fixtures::init_gas_service;
 use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
 use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
@@ -127,7 +126,14 @@ fn test_deploy_remote_canonical_token() {
 
     // Calculate required PDAs for deploy remote canonical token
     let token_id = axelar_solana_its_v2::utils::canonical_interchain_token_id(&mint_pubkey);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
 
     // Get metadata account PDA
     let (metadata_account_pda, _metadata_bump) = Pubkey::find_program_address(
