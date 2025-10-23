@@ -8,11 +8,6 @@ on:
         required: false
         type: string
         default: 'main'
-      is_anchor:
-        description: 'Mark as Anchor build'
-        required: false
-        type: boolean
-        default: false
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -23,7 +18,6 @@ jobs:
 
     outputs:
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
-      build_type: ${{ steps.detect-type.outputs.build_type }}
 
     steps:
       - name: Checkout repository
@@ -32,15 +26,6 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
           submodules: recursive
-
-      - name: Detect build type
-        id: detect-type
-        run: |
-          if [ "${{ inputs.is_anchor }}" = "true" ] || [[ "${{ inputs.ref }}" == "v2-anchor" ]]; then
-            echo "build_type=anchor" >> $GITHUB_OUTPUT
-          else
-            echo "build_type=vanilla" >> $GITHUB_OUTPUT
-          fi
 
       - name: Get commit hash
         id: get-commit-hash
@@ -106,18 +91,10 @@ jobs:
 
       - name: Generate dry-run report
         run: |
-          VERSION_SUFFIX=""
-          BUILD_TYPE="Vanilla"
-          if [ "${{ steps.detect-type.outputs.build_type }}" = "anchor" ]; then
-            VERSION_SUFFIX="-anchor"
-            BUILD_TYPE="Anchor"
-          fi
-
           echo "## Dry-Run Build Complete ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Type:** ${BUILD_TYPE}" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** \`${{ inputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ steps.get-commit-hash.outputs.hash }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Build successful. Would upload to:" >> $GITHUB_STEP_SUMMARY
-          echo "\`releases/solana/{environment}/{version}${VERSION_SUFFIX}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "\`releases/solana/{environment}/{version}/\`" >> $GITHUB_STEP_SUMMARY

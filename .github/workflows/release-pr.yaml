@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Branch to create release from (main for Vanilla, v2-anchor for Anchor)'
+        description: 'Branch to create release from'
         required: false
         type: string
         default: 'main'
@@ -24,7 +24,7 @@ jobs:
         id: branch-check
         run: |
           BRANCH_NAME="${{ inputs.ref }}"
-          WHITELISTED_BRANCHES=("main" "v2-anchor" "releases/*")
+          WHITELISTED_BRANCHES=("main" "releases/*")
 
           IS_WHITELISTED=false
           # Check the branch against the whitelist using wildcard matching
@@ -64,14 +64,8 @@ jobs:
 
       - name: Generate PR creation summary
         run: |
-          BUILD_TYPE="Vanilla"
-          if [[ "${{ steps.branch-check.outputs.branch_name }}" == "v2-anchor" ]]; then
-            BUILD_TYPE="Anchor"
-          fi
-
           echo "## Release PR Creation Complete ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** \`${{ steps.branch-check.outputs.branch_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "A release PR has been created (or updated) with the following:" >> $GITHUB_STEP_SUMMARY

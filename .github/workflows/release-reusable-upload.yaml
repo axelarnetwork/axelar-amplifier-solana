@@ -21,11 +21,6 @@ on:
         type: string
         required: false
         default: 'artifacts'
-      is_anchor:
-        description: 'Whether this is an Anchor build'
-        required: false
-        type: boolean
-        default: false
       ref:
         description: 'Git ref that was built'
         required: true
@@ -61,14 +56,6 @@ jobs:
       - name: Prepare cross-steps variables
         run: |
           VERSION="${{ inputs.version }}"
-          if [ "${{ inputs.is_anchor }}" = "true" ]; then
-            # Add -anchor suffix if not already present
-            if [[ ! "$VERSION" =~ -anchor$ ]]; then
-              VERSION="${VERSION}-anchor"
-            fi
-          fi
-
-          BUILD_TYPE="${{ inputs.is_anchor && 'anchor' || 'vanilla' }}"
           BASE_ARTIFACTS_DIR="${{ inputs.artifact-path }}"
           ARTIFACT_NAME="axelar-amplifier-solana-programs-${VERSION}"
           BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}"
@@ -81,7 +68,6 @@ jobs:
           mkdir -p ${ARCHIVES_OUTPUT_DIR}
 
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "BUILD_TYPE=${BUILD_TYPE}" >> $GITHUB_ENV
           echo "BASE_ARTIFACTS_DIR=${BASE_ARTIFACTS_DIR}" >> $GITHUB_ENV
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
           echo "BASE_ARTIFACTS_VERSIONED_DIR=${BASE_ARTIFACTS_VERSIONED_DIR}" >> $GITHUB_ENV
@@ -90,7 +76,6 @@ jobs:
           echo "TAR_ARCHIVE_FILE=${TAR_ARCHIVE_FILE}" >> $GITHUB_ENV
 
           echo "Final version for upload: ${VERSION}"
-          echo "Build type: ${BUILD_TYPE}"
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -201,12 +186,10 @@ jobs:
           fi
 
           echo "Found $ARTIFACT_COUNT artifact(s) to include in manifest"
-          echo "Build type: ${{ env.BUILD_TYPE }}"
 
           cat > ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/manifest.json << EOF
           {
             "version": "${{ env.VERSION }}",
-            "build_type": "${{ env.BUILD_TYPE }}",
             "branch": "$BUILD_REF",
             "ref": "$BUILD_REF",
             "environment": "${{ inputs.environment }}",
@@ -235,7 +218,6 @@ jobs:
           echo ""
           echo "✅ Upload complete!"
           echo "Version: ${{ env.VERSION }}"
-          echo "Build type: ${{ env.BUILD_TYPE }}"
           echo "Environment: ${{ inputs.environment }}"
           echo "R2 path: ${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/"
 

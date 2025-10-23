@@ -8,11 +8,6 @@ on:
         required: false
         type: string
         default: 'main'
-      is_anchor:
-        description: 'Whether this is an Anchor build'
-        required: false
-        type: boolean
-        default: false
       network:
         description: 'Network environment: devnet-amplifier, stagenet, testnet, or mainnet'
         required: false
@@ -35,9 +30,6 @@ on:
       artifact-path:
         description: 'Path of the uploaded artifact containing all builds'
         value: ${{ jobs.build.outputs.artifact-path }}
-      build-type:
-        description: 'Build type (vanilla or anchor)'
-        value: ${{ jobs.build.outputs.build-type }}
       ref-used:
         description: 'Git ref that was built'
         value: ${{ jobs.build.outputs.ref-used }}
@@ -54,7 +46,6 @@ jobs:
     outputs:
       artifact-name: ${{ steps.set-artifact-name.outputs.name }}
       artifact-path: ${{ steps.set-artifact-name.outputs.path }}
-      build-type: ${{ steps.set-metadata.outputs.build-type }}
       ref-used: ${{ steps.set-metadata.outputs.ref-used }}
       commit-hash: ${{ steps.get-commit-hash.outputs.hash }}
     steps:
@@ -73,11 +64,6 @@ jobs:
       - name: Set build metadata
         id: set-metadata
         run: |
-          if [ "${{ inputs.is_anchor }}" = "true" ]; then
-            echo "build-type=anchor" >> $GITHUB_OUTPUT
-          else
-            echo "build-type=vanilla" >> $GITHUB_OUTPUT
-          fi
           echo "ref-used=${{ inputs.ref }}" >> $GITHUB_OUTPUT
 
       - name: Set artifact name
@@ -168,14 +154,12 @@ jobs:
           echo "Keypair files:"
           ls -lh *.json || echo "No keypair files found in root"
           echo ""
-          echo "Build type: ${{ inputs.is_anchor && 'Anchor' || 'Vanilla' }}"
           echo "Git ref: ${{ inputs.ref }}"
 
       - name: Create build metadata file
         run: |
           cat > build-metadata.json << EOF
           {
-            "build_type": "${{ inputs.is_anchor && 'anchor' || 'vanilla' }}",
             "ref": "${{ inputs.ref }}",
             "commit_sha": "${{ github.sha }}",
             "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
