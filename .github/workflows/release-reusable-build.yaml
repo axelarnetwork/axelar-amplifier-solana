@@ -118,7 +118,9 @@ jobs:
             # Convert kebab-case to snake_case for library name
             library_name=$(echo "$program" | tr '-' '_')
             echo "Building $program (library: $library_name)..."
+
             solana-verify build --base-image $BASE_IMAGE --library-name $library_name
+
             echo "✅ $program built successfully"
             echo ""
           done
