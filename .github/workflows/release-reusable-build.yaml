@@ -78,8 +78,7 @@ jobs:
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Install solana-verify
-        run: |
-          cargo install solana-verify
+        run: cargo install solana-verify
 
       - name: Cache Cargo registry
         uses: actions/cache@v4
@@ -125,29 +124,23 @@ jobs:
             git push
           fi
 
-      - name: Build axelar-solana-gateway
+      - name: Build Solana programs
         run: |
-          solana-verify build --base-image $BASE_IMAGE --library-name axelar_solana_gateway
+          # Extract package names from release-plz.toml and build each one
+          PROGRAMS=$(grep -A 4 '^\[\[package\]\]' release-plz.toml | grep '^name = ' | sed 's/name = "\(.*\)"/\1/')
 
-      - name: Build axelar-solana-its
-        run: |
-          solana-verify build --base-image $BASE_IMAGE --library-name axelar_solana_its
+          echo "Building programs from release-plz.toml:"
+          echo "$PROGRAMS"
+          echo ""
 
-      - name: Build axelar-solana-gas-service
-        run: |
-          solana-verify build --base-image $BASE_IMAGE --library-name axelar_solana_gas_service
-
-      - name: Build axelar-solana-multicall
-        run: |
-          solana-verify build --base-image $BASE_IMAGE --library-name axelar_solana_multicall
-
-      - name: Build axelar-solana-memo-program
-        run: |
-          solana-verify build --base-image $BASE_IMAGE --library-name axelar_solana_memo_program
-
-      - name: Build axelar-solana-governance
-        run: |
-          solana-verify build --base-image $BASE_IMAGE --library-name axelar_solana_governance
+          for program in $PROGRAMS; do
+            # Convert kebab-case to snake_case for library name
+            library_name=$(echo "$program" | tr '-' '_')
+            echo "Building $program (library: $library_name)..."
+            solana-verify build --base-image $BASE_IMAGE --library-name $library_name
+            echo "✅ $program built successfully"
+            echo ""
+          done
 
       - name: List build artifacts
         run: |

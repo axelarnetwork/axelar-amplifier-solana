@@ -25,12 +25,10 @@ jobs:
             echo "is_anchor=true" >> $GITHUB_OUTPUT
             echo "build_type_label=Anchor" >> $GITHUB_OUTPUT
             echo "ref=v2-anchor" >> $GITHUB_OUTPUT
-            echo "Detected: Anchor build"
           else
             echo "is_anchor=false" >> $GITHUB_OUTPUT
             echo "build_type_label=Vanilla" >> $GITHUB_OUTPUT
             echo "ref=main" >> $GITHUB_OUTPUT
-            echo "Detected: Vanilla build"
           fi
 
   build:
@@ -68,35 +66,15 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2204
     needs: [detect-build-type, upload-all-environments]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.detect-build-type.outputs.ref }}
+
       - name: Generate summary
         run: |
-          BUILD_TYPE="${{ needs.detect-build-type.outputs.build_type_label }}"
           VERSION="${{ github.sha }}"
-
-          # Add -anchor suffix if Anchor build
           if [ "${{ needs.detect-build-type.outputs.is_anchor }}" = "true" ]; then
             VERSION="${VERSION}-anchor"
           fi
-
-          echo "## Build and Upload Complete ✅" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`${{ needs.detect-build-type.outputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Short SHA:** \`${GITHUB_SHA:0:7}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts uploaded to R2 for all environments:" >> $GITHUB_STEP_SUMMARY
-          echo "- \`devnet-amplifier\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`stagenet\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`testnet\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`mainnet\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Programs built:" >> $GITHUB_STEP_SUMMARY
-          echo "- axelar-solana-gateway" >> $GITHUB_STEP_SUMMARY
-          echo "- axelar-solana-its" >> $GITHUB_STEP_SUMMARY
-          echo "- axelar-solana-gas-service" >> $GITHUB_STEP_SUMMARY
-          echo "- axelar-solana-multicall" >> $GITHUB_STEP_SUMMARY
-          echo "- axelar-solana-memo-program" >> $GITHUB_STEP_SUMMARY
-          echo "- axelar-solana-governance" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Access artifacts at: \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts uploaded to \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY

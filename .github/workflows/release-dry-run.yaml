@@ -3,18 +3,8 @@ name: Release Dry-Run
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Target environment'
-        required: true
-        type: choice
-        options:
-          - devnet-amplifier
-          - stagenet
-          - testnet
-          - mainnet
-        default: 'testnet'
       ref:
-        description: 'Branch/ref to test (main for Vanilla, v2-anchor for Anchor)'
+        description: 'Branch/ref to test'
         required: false
         type: string
         default: 'main'
@@ -26,7 +16,7 @@ on:
 
 jobs:
   dry-run-build:
-    name: Dry Run Build for ${{ inputs.environment }}
+    name: Dry Run Build
     runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
       - name: Checkout code
@@ -37,7 +27,7 @@ jobs:
           submodules: recursive
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.85.1
 
       - name: Install Solana CLI
         run: |
@@ -64,59 +54,25 @@ jobs:
         uses: actions/cache@v4
         with:
           path: target
-          key: ${{ runner.os }}-target-${{ inputs.environment }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-target-${{ inputs.environment }}-
+            ${{ runner.os }}-target-
 
-      - name: Build programs for ${{ inputs.environment }}
+      - name: Build programs
         run: |
-          cargo xtask build --network ${{ inputs.environment }}
-
-      - name: List build artifacts
-        run: |
-          echo "Build artifacts for ${{ inputs.environment }}:"
-          ls -lh target/deploy/
+          cargo build -p xtask
+          cargo xtask build
 
       - name: Generate dry run report
         run: |
-          BUILD_TYPE="Vanilla"
           VERSION_SUFFIX=""
           if [ "${{ inputs.is_anchor }}" = "true" ] || [[ "${{ inputs.ref }}" == "v2-anchor" ]]; then
-            BUILD_TYPE="Anchor"
             VERSION_SUFFIX="-anchor"
           fi
-
-          echo "## Dry Run Results for ${{ inputs.environment }} ✅" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Build Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment:** \`${{ inputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch/Ref:** \`${{ inputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Build Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          ls -lh target/deploy/ >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### What Would Be Uploaded" >> $GITHUB_STEP_SUMMARY
-          echo "In a real release, these artifacts would be uploaded to:" >> $GITHUB_STEP_SUMMARY
-          echo "\`releases/solana/${{ inputs.environment }}/{version}${VERSION_SUFFIX}/\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Deployment Commands:** $([ \"$BUILD_TYPE\" = \"Anchor\" ] && echo \"\\\`anchor deploy\\\`\" || echo \"\\\`solana program deploy\\\`\")" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Programs Built" >> $GITHUB_STEP_SUMMARY
-          for file in target/deploy/*.so; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
-              echo "- ✅ $filename ($(numfmt --to=iec-i --suffix=B $size 2>/dev/null || echo $size bytes))" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
+          echo "Build successful. Would upload to \`releases/solana/{environment}/{version}${VERSION_SUFFIX}/\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Validate build outputs
         run: |
-          echo "Validating build outputs..."
           PROGRAMS=(
             "axelar_solana_gateway"
             "axelar_solana_its"
@@ -130,9 +86,5 @@ jobs:
             if [ ! -f "target/deploy/${program}.so" ]; then
               echo "❌ Error: ${program}.so not found!"
               exit 1
-            else
-              echo "✅ ${program}.so found"
             fi
           done
-
-          echo "All program artifacts validated successfully!"

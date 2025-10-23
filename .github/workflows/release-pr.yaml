@@ -8,61 +8,15 @@ on:
         required: false
         type: string
         default: 'main'
-      update-ids:
-        description: 'Update program IDs before creating release PR'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   pull-requests: write
   contents: write
 
 jobs:
-  update-ids:
-    name: Update Program IDs
-    runs-on: blacksmith-2vcpu-ubuntu-2204
-    if: inputs.update-ids
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-          fetch-depth: 0
-          submodules: recursive
-          token: ${{ secrets.PAT_TOKEN || github.token }}
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Build xtask
-        run: cargo build -p xtask
-
-      - name: Update program IDs
-        run: cargo xtask update-ids
-
-      - name: Commit updated IDs
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add -A
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: update program IDs"
-            git push
-          fi
-
   release-pr:
     name: Create Release PR with release-plz
     runs-on: blacksmith-2vcpu-ubuntu-2204
-    needs: [update-ids]
-    if: always() && (needs.update-ids.result == 'success' || needs.update-ids.result == 'skipped')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

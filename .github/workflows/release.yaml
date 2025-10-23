@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       ref:
-        description: 'Branch/ref to build from (main for Vanilla, v2-anchor for Anchor)'
+        description: 'Branch/ref to build from'
         required: false
         type: string
         default: 'main'
@@ -20,16 +20,6 @@ on:
         required: false
         type: boolean
         default: false
-      environment:
-        description: 'Target environment for deployment artifacts'
-        required: true
-        type: choice
-        options:
-          - devnet-amplifier
-          - stagenet
-          - testnet
-          - mainnet
-        default: 'mainnet'
 
 permissions:
   contents: write
@@ -52,16 +42,8 @@ jobs:
           REF="${{ github.event.inputs.ref || 'main' }}"
           IS_ANCHOR="${{ github.event.inputs.is_anchor }}"
 
-          # Auto-detect Anchor from tag suffix
           if [[ "$VERSION" =~ -anchor$ ]]; then
             IS_ANCHOR="true"
-            echo "Detected Anchor build from tag suffix"
-          fi
-
-          # Auto-detect from ref if not explicitly set
-          if [[ "$REF" == "v2-anchor" ]] && [[ "$IS_ANCHOR" != "true" ]]; then
-            IS_ANCHOR="true"
-            echo "Detected Anchor build from v2-anchor branch"
           fi
 
           if [ "$IS_ANCHOR" = "true" ]; then
@@ -74,9 +56,6 @@ jobs:
 
           echo "ref=$REF" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Final build type: $([ \"$IS_ANCHOR\" = \"true\" ] && echo \"Anchor\" || echo \"Vanilla\")"
-          echo "Branch/Ref: $REF"
-          echo "Version: $VERSION"
 
   release-plz:
     name: Release with release-plz
@@ -155,7 +134,6 @@ jobs:
           REF="${{ needs.detect-build-type.outputs.ref }}"
           IS_ANCHOR="${{ needs.detect-build-type.outputs.is_anchor }}"
 
-          # Determine deployment command
           if [ "$IS_ANCHOR" = "true" ]; then
             DEPLOY_CMD="anchor deploy"
             VERIFY_CMD="anchor verify"
@@ -164,51 +142,15 @@ jobs:
             VERIFY_CMD="solana-verify verify-from-repo"
           fi
 
-          echo "Creating release notes for ${VERSION}..."
-
           cat > release-notes.md << EOF
           ## Solana Program Release ${VERSION}
 
-          **Build Type:** ${BUILD_TYPE}
-          **Branch:** \`${REF}\`
+          **Build Type:** ${BUILD_TYPE} | **Branch:** \`${REF}\`
 
-          This release includes the following Solana programs:
+          Artifacts uploaded to: \`releases/solana/{environment}/${VERSION}/\`
 
-          - ✅ axelar-solana-gateway
-          - ✅ axelar-solana-its
-          - ✅ axelar-solana-gas-service
-          - ✅ axelar-solana-multicall
-          - ✅ axelar-solana-memo-program
-          - ✅ axelar-solana-governance
-
-          ### Artifacts
-
-          Build artifacts have been uploaded to Cloudflare R2 for all environments:
-          - devnet-amplifier
-          - stagenet
-          - testnet
-          - mainnet
-
-          Access path: \`releases/solana/{environment}/${VERSION}/\`
-
-          ### Verification
-
-          All programs were built using the Solana verifiable build image: \`${{ vars.BASE_IMAGE }}\`
-
-          ### Deployment
-
-          To deploy these programs, use the following commands:
-
-          **Deployment command:** \`${DEPLOY_CMD}\`
-          **Verification command:** \`${VERIFY_CMD}\`
-
-          Steps:
-          1. Download artifacts from R2
-          2. Use the included keypair JSON files with the appropriate deployment command
-
+          **Deployment:** \`${DEPLOY_CMD}\` | **Verification:** \`${VERIFY_CMD}\`
           EOF
-
-          cat release-notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -231,32 +173,5 @@ jobs:
     steps:
       - name: Generate summary
         run: |
-          BUILD_TYPE="${{ needs.detect-build-type.outputs.build_type_label }}"
           VERSION="${{ needs.detect-build-type.outputs.version }}"
-          REF="${{ needs.detect-build-type.outputs.ref }}"
-
-          echo "## Release Complete ✅" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** \`$VERSION\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** \`$REF\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Status" >> $GITHUB_STEP_SUMMARY
-          echo "- detect-build-type: ${{ needs.detect-build-type.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- release-plz: ${{ needs.release-plz.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- upload-to-r2: ${{ needs.upload-to-r2.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- create-github-release: ${{ needs.create-github-release.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts Location" >> $GITHUB_STEP_SUMMARY
-          echo "R2 Path: \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "Deploy the programs using your deployment suite with the artifacts from R2." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs.detect-build-type.outputs.is_anchor }}" = "true" ]; then
-            echo "**Note:** This is an Anchor release. Use \`anchor deploy\` commands for deployment." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**Note:** This is a Vanilla release. Use \`solana program deploy\` commands for deployment." >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "Released \`$VERSION\` to \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
