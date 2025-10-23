@@ -51,7 +51,13 @@ jobs:
         id: detect
         run: |
           VERSION="${{ github.event.inputs.tag || github.ref_name }}"
-          REF="${{ github.event.inputs.ref || 'main' }}"
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            REF="${{ github.ref }}"
+          else
+            REF="${{ github.event.inputs.ref || 'main' }}"
+          fi
+
           IS_ANCHOR="${{ github.event.inputs.is_anchor }}"
 
           if [[ "$VERSION" =~ -anchor$ ]]; then
