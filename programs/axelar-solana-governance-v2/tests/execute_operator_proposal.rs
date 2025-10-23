@@ -34,6 +34,10 @@ fn should_execute_operator_proposal() {
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
+    let gateway_root = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
 
     // Step 3: Create governance message payloads for schedule and approve operator
     let memo = String::from("This is a operator proposal memo");
@@ -177,6 +181,7 @@ fn should_execute_operator_proposal() {
             governance_setup.governance_config,
             governance_config_account.data.clone(),
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(schedule_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
@@ -221,6 +226,7 @@ fn should_execute_operator_proposal() {
             governance_setup.governance_config,
             governance_config_account.data.clone(),
         )
+        .with_gateway_root_pda(setup.gateway_root_pda, gateway_root.data.clone())
         .with_signing_pda(approve_operator_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)

@@ -225,6 +225,16 @@ pub fn process_gmp_helper(
             },
         ),
         (
+            context.gateway_root_pda.pubkey,
+            Account {
+                lamports: LAMPORTS_PER_SOL,
+                data: context.gateway_root_pda.data,
+                owner: GATEWAY_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
             GATEWAY_PROGRAM_ID,
             Account {
                 lamports: LAMPORTS_PER_SOL,
@@ -324,10 +334,11 @@ pub fn process_gmp_helper(
             executable: axelar_solana_governance_v2::accounts::AxelarExecuteAccounts {
                 incoming_message_pda: context.incoming_message.pubkey,
                 signing_pda: context.signing_pda.pubkey,
+                gateway_root_pda: context.gateway_root_pda.pubkey,
                 axelar_gateway_program: GATEWAY_PROGRAM_ID,
                 event_authority: context.event_authority_pda.pubkey,
-                system_program: solana_sdk::system_program::ID,
             },
+            system_program: solana_sdk::system_program::ID,
             payer: setup.payer,
             governance_config: setup.governance_config,
             proposal_pda: context.proposal.pubkey,

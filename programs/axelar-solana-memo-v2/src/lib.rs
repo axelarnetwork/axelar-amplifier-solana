@@ -6,7 +6,7 @@ pub use instructions::*;
 pub mod state;
 pub use state::*;
 
-use axelar_solana_gateway_v2::Message;
+use axelar_solana_gateway_v2::executable::{ExecutablePayloadEncodingScheme, Message};
 
 declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
 
@@ -28,8 +28,13 @@ pub mod memo {
         instructions::init_handler(ctx)
     }
 
-    pub fn execute(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
-        instructions::execute_handler(ctx, message, payload)
+    pub fn execute(
+        ctx: Context<Execute>,
+        message: Message,
+        payload: Vec<u8>,
+        encoding_scheme: ExecutablePayloadEncodingScheme,
+    ) -> Result<()> {
+        instructions::execute_handler(ctx, message, payload, encoding_scheme)
     }
 
     pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {

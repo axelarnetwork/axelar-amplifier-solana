@@ -1,5 +1,7 @@
-use crate::seed_prefixes::{INCOMING_MESSAGE_SEED, VALIDATE_MESSAGE_SIGNING_SEED};
-use crate::{GatewayError, IncomingMessage, Message, MessageExecutedEvent, MessageStatus};
+use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+use crate::{
+    GatewayConfig, GatewayError, IncomingMessage, Message, MessageExecutedEvent, MessageStatus,
+};
 use anchor_lang::prelude::*;
 use std::str::FromStr;
 
@@ -8,8 +10,8 @@ use std::str::FromStr;
 #[instruction(message: Message)]
 pub struct ValidateMessage<'info> {
     #[account(
-    	mut,
-        seeds = [INCOMING_MESSAGE_SEED, message.command_id().as_ref()],
+        mut,
+        seeds = [IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
         // CHECK: message must be already approved
         constraint = incoming_message_pda.load()?.status.is_approved()
@@ -27,6 +29,12 @@ pub struct ValidateMessage<'info> {
             @ GatewayError::InvalidSigningPDA
     )]
     pub caller: AccountInfo<'info>,
+
+    #[account(
+        seeds = [GatewayConfig::SEED_PREFIX],
+        bump = gateway_root_pda.load()?.bump
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 }
 
 pub fn validate_message_handler(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {

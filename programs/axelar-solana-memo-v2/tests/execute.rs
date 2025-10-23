@@ -3,11 +3,11 @@
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
+use axelar_solana_gateway_v2::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use axelar_solana_gateway_v2::IncomingMessage;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2::{CrossChainId, Message, MessageLeaf};
-use axelar_solana_gateway_v2::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
@@ -30,12 +30,13 @@ fn test_execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
     let (counter_pda, _counter_pda_bump) = Counter::get_pda();
+    let encoding_scheme = ExecutablePayloadEncodingScheme::AbiEncoding;
     let test_payload = ExecutablePayload::new(
         memo_string.as_bytes(),
         &[AccountMeta::new(counter_pda, false)],
-        ExecutablePayloadEncodingScheme::AbiEncoding,
+        encoding_scheme,
     );
-    let test_payload_hash: [u8; 32] = *test_payload.hash().unwrap().0;
+    let test_payload_hash: [u8; 32] = test_payload.hash().unwrap();
 
     // Step 1: Setup test with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
@@ -92,7 +93,7 @@ fn test_execute() {
             payload_merkle_root,
         );
 
-    let gateway_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
+    let gateway_root_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
 
     let verifier_set_tracker_account = init_result
         .get_account(&setup.verifier_set_tracker_pda)
@@ -116,7 +117,7 @@ fn test_execute() {
         payload_merkle_root,
         verifier_info_1,
         verification_session_pda,
-        gateway_account.clone(),
+        gateway_root_account.clone(),
         verification_session_account.clone(),
         setup.verifier_set_tracker_pda,
         verifier_set_tracker_account.clone(),
@@ -139,7 +140,7 @@ fn test_execute() {
         payload_merkle_root,
         verifier_info_2,
         verification_session_pda,
-        gateway_account.clone(),
+        gateway_root_account.clone(),
         updated_verification_account_after_first.clone(),
         setup.verifier_set_tracker_pda,
         verifier_set_tracker_account.clone(),
@@ -239,7 +240,8 @@ fn test_execute() {
 
     let execute_instruction_data = axelar_solana_memo_v2::instruction::Execute {
         message: message.clone(),
-        payload: test_payload.encode().unwrap(),
+        payload: test_payload.payload_without_accounts().to_vec(),
+        encoding_scheme,
     }
     .data();
 
@@ -275,16 +277,7 @@ fn test_execute() {
                 rent_epoch: 0,
             },
         ),
-        (
-            SYSTEM_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (setup.gateway_root_pda, gateway_root_account.clone()),
         (
             MEMO_PROGRAM_ID,
             Account {
@@ -302,9 +295,9 @@ fn test_execute() {
         executable: axelar_solana_memo_v2::accounts::AxelarExecuteAccounts {
             incoming_message_pda,
             signing_pda,
+            gateway_root_pda: setup.gateway_root_pda,
             axelar_gateway_program: GATEWAY_PROGRAM_ID,
             event_authority: event_authority_pda,
-            system_program: SYSTEM_PROGRAM_ID,
         },
         counter: counter_pda,
     }

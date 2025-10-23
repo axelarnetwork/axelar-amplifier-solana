@@ -15,15 +15,24 @@ borsh.workspace = true
 axelar-solana-encoding = { workspace = true, features = ["solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
-axelar-message-primitives.workspace = true
+alloy-sol-types.workspace = true
+num-derive.workspace = true
+num-traits.workspace = true
 
 [dev-dependencies]
+axelar-message-primitives.workspace = true
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway-v2-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 rand.workspace = true
 hex.workspace = true
+# For testing ABI payloads
+evm-contracts-rs.workspace = true
+evm-contracts-test-suite.workspace = true
+rstest.workspace = true
+test-log.workspace = true
+tokio.workspace = true
 
 [lints]
 workspace = true

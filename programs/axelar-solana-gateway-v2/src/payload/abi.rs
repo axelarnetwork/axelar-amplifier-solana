@@ -6,7 +6,7 @@ use alloy_sol_types::{
     sol, SolValue,
 };
 
-use crate::executable::{AxelarMessagePayload, PayloadError, SolanaAccountRepr};
+use crate::payload::{AxelarMessagePayload, PayloadError, SolanaAccountRepr};
 
 sol! {
     #[repr(C)]
@@ -61,7 +61,8 @@ impl<'payload> AxelarMessagePayload<'payload> {
             let SolanaGatewayPayload {
                 execute_payload: allocated_payload,
                 accounts: allocated_accounts,
-            } = SolanaGatewayPayload::abi_decode_params(data, true)?;
+            } = SolanaGatewayPayload::abi_decode_params(data, true)
+                .map_err(|_| PayloadError::AbiError)?;
 
             debug_assert_eq!(payload, allocated_payload.to_vec(), "bad payload");
             debug_assert_eq!(accounts, allocated_accounts, "bad accounts");
@@ -94,7 +95,8 @@ fn extract_payload_slice_and_solana_accounts(
 ) -> Result<(&[u8], Vec<SolanaAccountRepr>), PayloadError> {
     let mut decoder = Decoder::new(data, true);
     let decoded_sequence = decoder
-        .decode_sequence::<<SolanaGatewayPayload as alloy_sol_types::SolType>::Token<'_>>()?;
+        .decode_sequence::<<SolanaGatewayPayload as alloy_sol_types::SolType>::Token<'_>>()
+        .map_err(|_| PayloadError::AbiError)?;
 
     // The payload bytes are packed inside the first token, and we can use it directly.
     // Account info is listed inside the second token.
@@ -116,6 +118,7 @@ fn extract_payload_slice_and_solana_accounts(
 
 #[cfg(test)]
 mod tests {
+    use anchor_lang::solana_program;
     use evm_contracts_rs::contracts::example_encoder::ExampleEncoder;
     use evm_contracts_rs::ethers;
     use evm_contracts_test_suite::chain::TestBlockchain;
@@ -123,7 +126,10 @@ mod tests {
     use solana_program::instruction::AccountMeta;
 
     use super::*;
-    use crate::executable::axelar_payload::encoding::tests::{account_fixture, account_fixture_2};
+    use crate::payload::{
+        encoding::tests::{account_fixture, account_fixture_2},
+        EncodingScheme,
+    };
 
     #[test]
     fn solana_account_repr_round_trip_abi() {
@@ -152,7 +158,7 @@ mod tests {
         let canonical_payload = AxelarMessagePayload::new(
             payload_without_accounts.as_slice(),
             &accounts,
-            crate::executable::EncodingScheme::AbiEncoding,
+            EncodingScheme::AbiEncoding,
         );
         let canonical_payload_encoded = canonical_payload.encode().unwrap();
         let (contract, _evm_chain) = utils::chain_setup().await;
@@ -207,7 +213,7 @@ mod tests {
         let canonical_payload = AxelarMessagePayload::new(
             payload_without_accounts.as_slice(),
             &accounts,
-            crate::executable::EncodingScheme::AbiEncoding,
+            EncodingScheme::AbiEncoding,
         );
         let canonical_payload_encoded = canonical_payload.encode().unwrap();
         let (contract, _evm_chain) = utils::chain_setup().await;

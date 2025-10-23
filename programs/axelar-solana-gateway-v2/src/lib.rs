@@ -17,7 +17,8 @@ pub mod errors;
 pub use errors::*;
 
 pub mod executable;
-pub use executable::*;
+
+pub mod payload;
 
 declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
 
