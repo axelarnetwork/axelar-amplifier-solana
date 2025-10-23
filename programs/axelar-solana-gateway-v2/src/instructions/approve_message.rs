@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32])]
+#[instruction(merkleised_message: MerkleisedMessage, payload_merkle_root: [u8; 32], verifier_set_hash: [u8; 32])]
 pub struct ApproveMessage<'info> {
     #[account(
         seeds = [GatewayConfig::SEED_PREFIX],
@@ -24,7 +24,7 @@ pub struct ApproveMessage<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             payload_merkle_root.as_ref(),
-            verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref()
+            verifier_set_hash.as_ref()
         ],
         bump = verification_session_account.load()?.bump,
         // CHECK: Validate signature verification session is complete
@@ -48,6 +48,7 @@ pub fn approve_message_handler(
     ctx: Context<ApproveMessage>,
     merkleised_message: MerkleisedMessage,
     payload_merkle_root: [u8; 32],
+    _verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     msg!("Approving message!");
 

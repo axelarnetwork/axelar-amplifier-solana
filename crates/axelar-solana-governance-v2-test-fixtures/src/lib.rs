@@ -197,7 +197,9 @@ pub fn process_gmp_helper(
     payload: Vec<u8>,
     context: GmpContext,
 ) -> InstructionResult {
+    let command_id = message.command_id();
     let instruction_data = axelar_solana_governance_v2::instruction::ProcessGmp {
+        command_id,
         message: message.clone(),
         payload: payload.clone(),
     }

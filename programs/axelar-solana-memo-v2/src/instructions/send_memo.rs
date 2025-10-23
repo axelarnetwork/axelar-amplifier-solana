@@ -10,6 +10,7 @@ pub struct SendMemo<'info> {
     pub memo_program: Program<'info, crate::program::Memo>,
 
     /// Our standardized PDA for calling the gateway
+    /// CHECK: This PDA is used as a signer for CPI calls to the gateway program
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump,

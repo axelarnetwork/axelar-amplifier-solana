@@ -9,6 +9,7 @@ use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 executable_accounts!(ProcessGmp);
 
 #[derive(Accounts)]
+#[instruction(command_id: [u8; 32])]
 pub struct ProcessGmp<'info> {
     // GMP Accounts
     pub executable: AxelarExecuteAccounts<'info>,
@@ -30,9 +31,11 @@ pub struct ProcessGmp<'info> {
     pub governance_config: Account<'info, GovernanceConfig>,
 
     // Variable accounts are kept as unchecked. We self-CPI and check them for each separate instruction
+    /// CHECK: This account is validated in the self-CPI for each specific governance command
     #[account(mut)]
     pub proposal_pda: UncheckedAccount<'info>,
 
+    /// CHECK: This account is validated in the self-CPI for operator governance commands
     #[account(mut)]
     pub operator_proposal_pda: UncheckedAccount<'info>,
 
@@ -47,6 +50,7 @@ pub struct ProcessGmp<'info> {
 
 pub fn process_gmp_handler(
     ctx: Context<ProcessGmp>,
+    _command_id: [u8; 32],
     message: Message,
     payload: Vec<u8>,
 ) -> Result<()> {

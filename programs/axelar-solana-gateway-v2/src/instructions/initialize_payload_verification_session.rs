@@ -5,7 +5,7 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32])]
+#[instruction(merkle_root: [u8; 32], verifier_set_hash: [u8; 32])]
 pub struct InitializePayloadVerificationSession<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -23,14 +23,14 @@ pub struct InitializePayloadVerificationSession<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             merkle_root.as_ref(),
-            verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref(),
+            verifier_set_hash.as_ref(),
         ],
         bump
     )]
     pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,
 
     #[account(
-        seeds = [VerifierSetTracker::SEED_PREFIX, verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref()],
+        seeds = [VerifierSetTracker::SEED_PREFIX, verifier_set_hash.as_ref()],
         bump,
         // Validate that the verifier set isn't expired
         constraint = gateway_root_pda.load()?.assert_valid_epoch(verifier_set_tracker_pda.load()?.epoch).is_ok()
@@ -44,6 +44,7 @@ pub struct InitializePayloadVerificationSession<'info> {
 pub fn initialize_payload_verification_session_handler(
     ctx: Context<InitializePayloadVerificationSession>,
     _merkle_root: [u8; 32],
+    _verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     let verification_session_account =
         &mut ctx.accounts.verification_session_account.load_init()?;

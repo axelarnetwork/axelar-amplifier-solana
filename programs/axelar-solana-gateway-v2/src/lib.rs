@@ -20,7 +20,7 @@ pub mod executable;
 
 pub mod payload;
 
-declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
+declare_id!("41ky5cHRCTPEP5c8hnS8Bwco5vnbxe31iKm26rJs3QYd");
 
 /// Seed prefixes for different PDAs initialized by the Gateway
 pub mod seed_prefixes {
@@ -72,24 +72,27 @@ pub mod axelar_solana_gateway_v2 {
     pub fn initialize_payload_verification_session(
         ctx: Context<InitializePayloadVerificationSession>,
         merkle_root: [u8; 32],
+        verifier_set_hash: [u8; 32],
     ) -> Result<()> {
-        instructions::initialize_payload_verification_session_handler(ctx, merkle_root)
+        instructions::initialize_payload_verification_session_handler(ctx, merkle_root, verifier_set_hash)
     }
 
     pub fn verify_signature(
         ctx: Context<VerifySignature>,
         payload_merkle_root: [u8; 32],
         verifier_info: crate::verification_session::SigningVerifierSetInfo,
+        verifier_set_hash: [u8; 32],
     ) -> Result<()> {
-        instructions::verify_signature_handler(ctx, payload_merkle_root, verifier_info)
+        instructions::verify_signature_handler(ctx, payload_merkle_root, verifier_info, verifier_set_hash)
     }
 
     pub fn approve_message(
         ctx: Context<ApproveMessage>,
         merkleised_message: MerkleisedMessage,
         payload_merkle_root: [u8; 32],
+        verifier_set_hash: [u8; 32],
     ) -> Result<()> {
-        instructions::approve_message_handler(ctx, merkleised_message, payload_merkle_root)
+        instructions::approve_message_handler(ctx, merkleised_message, payload_merkle_root, verifier_set_hash)
     }
 
     pub fn validate_message(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {
@@ -99,8 +102,9 @@ pub mod axelar_solana_gateway_v2 {
     pub fn rotate_signers(
         ctx: Context<RotateSigners>,
         new_verifier_set_merkle_root: [u8; 32],
+        signing_verifier_set_hash: [u8; 32],
     ) -> Result<()> {
-        instructions::rotate_signers_handler(ctx, new_verifier_set_merkle_root)
+        instructions::rotate_signers_handler(ctx, new_verifier_set_merkle_root, signing_verifier_set_hash)
     }
 
     pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {

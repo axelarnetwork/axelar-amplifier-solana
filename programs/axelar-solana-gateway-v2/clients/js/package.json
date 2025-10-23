@@ -1,0 +1,42 @@
+{
+  "name": "@axelar-network/axelar-solana-gateway-v2",
+  "version": "0.1.0",
+  "description": "TypeScript client for Axelar Solana Gateway v2 program",
+  "type": "module",
+  "main": "./src/generated/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/generated/index.ts",
+      "default": "./src/generated/index.ts"
+    }
+  },
+  "files": [
+    "src/generated"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "solana",
+    "axelar",
+    "gateway",
+    "blockchain",
+    "cross-chain"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eigerco/axelar-amplifier-solana.git",
+    "directory": "programs/axelar-solana-gateway-v2/clients/js"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "gill": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

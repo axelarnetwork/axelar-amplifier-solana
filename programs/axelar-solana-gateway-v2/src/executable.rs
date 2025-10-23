@@ -112,21 +112,21 @@ macro_rules! executable_accounts {
     /// ```
     /// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
     #[derive(Accounts)]
-    #[instruction(message: axelar_solana_gateway_v2::Message)]
+    #[instruction(command_id: [u8; 32])]
     pub struct AxelarExecuteAccounts<'info> {
         // IncomingMessage PDA account
         // needs to be mutable as the validate_message CPI
         // updates its state
         #[account(
         	mut,
-            seeds = [axelar_solana_gateway_v2::IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
+            seeds = [axelar_solana_gateway_v2::IncomingMessage::SEED_PREFIX, command_id.as_ref()],
             bump = incoming_message_pda.load()?.bump,
             seeds::program = axelar_gateway_program.key()
         )]
         pub incoming_message_pda: AccountLoader<'info, axelar_solana_gateway_v2::IncomingMessage>,
 
         #[account(
-            seeds = [axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
+            seeds = [axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
             bump = incoming_message_pda.load()?.signing_pda_bump,
         )]
         pub signing_pda: AccountInfo<'info>,

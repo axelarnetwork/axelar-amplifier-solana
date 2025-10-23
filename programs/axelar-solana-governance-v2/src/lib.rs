@@ -49,10 +49,11 @@ pub mod axelar_solana_governance_v2 {
     #[instruction(discriminator = axelar_solana_gateway_v2::executable::EXECUTE_IX_DISC)]
     pub fn process_gmp(
         ctx: Context<ProcessGmp>,
+        command_id: [u8; 32],
         message: axelar_solana_gateway_v2::Message,
         payload: Vec<u8>,
     ) -> Result<()> {
-        instructions::process_gmp_handler(ctx, message, payload)
+        instructions::process_gmp_handler(ctx, command_id, message, payload)
     }
 
     pub fn schedule_timelock_proposal(

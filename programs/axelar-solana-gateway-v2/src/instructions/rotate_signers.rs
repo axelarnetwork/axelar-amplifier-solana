@@ -7,7 +7,7 @@ use anchor_lang::solana_program;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(new_verifier_set_merkle_root: [u8; 32])]
+#[instruction(new_verifier_set_merkle_root: [u8; 32], signing_verifier_set_hash: [u8; 32])]
 pub struct RotateSigners<'info> {
     #[account(
         mut,
@@ -18,11 +18,10 @@ pub struct RotateSigners<'info> {
 
     #[account(
         seeds = [
-            SignatureVerificationSessionData::SEED_PREFIX,
-            // New verifier set merkle root is used directly as the payload hash.
-            &new_verifier_set_merkle_root,
-            verification_session_account.load()?.signature_verification
-            .signing_verifier_set_hash.as_ref(),
+        	SignatureVerificationSessionData::SEED_PREFIX,
+         	// New verifier set merkle root is used directly as the payload hash.
+         	&new_verifier_set_merkle_root,
+          	signing_verifier_set_hash.as_ref(),
         ],
         bump = verification_session_account.load()?.bump,
         // Check: signature session is complete/valid
@@ -34,16 +33,15 @@ pub struct RotateSigners<'info> {
     #[account(
         seeds = [
             VerifierSetTracker::SEED_PREFIX,
-            verification_session_account.load()?
-                .signature_verification.signing_verifier_set_hash.as_slice()
+            signing_verifier_set_hash.as_ref()
         ],
         bump = verifier_set_tracker_pda.load()?.bump,
         // Check: we got the expected verifier hash
-        constraint = verifier_set_tracker_pda.load()?.verifier_set_hash == verification_session_account.load()?.signature_verification
-            .signing_verifier_set_hash @ GatewayError::InvalidVerifierSetTrackerProvided,
-        // Check: we aren't rotating to an already existing set
-        constraint = verifier_set_tracker_pda.load()?.verifier_set_hash != new_verifier_set_merkle_root
-            @ GatewayError::DuplicateVerifierSetRotation,
+        constraint = verifier_set_tracker_pda.load()?.verifier_set_hash == signing_verifier_set_hash
+			@ GatewayError::InvalidVerifierSetTrackerProvided,
+		// Check: we aren't rotating to an already existing set
+		constraint = verifier_set_tracker_pda.load()?.verifier_set_hash != new_verifier_set_merkle_root
+			@ GatewayError::DuplicateVerifierSetRotation,
     )]
     pub verifier_set_tracker_pda: AccountLoader<'info, VerifierSetTracker>,
 
@@ -70,6 +68,7 @@ pub struct RotateSigners<'info> {
 pub fn rotate_signers_handler(
     ctx: Context<RotateSigners>,
     new_verifier_set_merkle_root: [u8; 32],
+    _signing_verifier_set_hash: [u8; 32],
 ) -> Result<()> {
     let gateway_root_pda = &mut ctx.accounts.gateway_root_pda.load_mut()?;
     let verifier_set_tracker_pda = &ctx.accounts.verifier_set_tracker_pda.load()?;

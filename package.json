@@ -1,0 +1,19 @@
+{
+	"type": "module",
+	"scripts": {
+		"generate:clients": "./scripts/generate-clients.sh",
+		"build:programs": "anchor build",
+		"build:all": "npm run build:programs && npm run generate:clients",
+		"install:clients": "npm install --prefix programs/axelar-solana-gateway-v2/clients/js && npm install --prefix programs/axelar-solana-gas-service-v2/clients/js && npm install --prefix programs/axelar-solana-governance-v2/clients/js && npm install --prefix programs/axelar-solana-memo-v2/clients/js",
+		"build:clients": "npm run build --prefix programs/axelar-solana-gateway-v2/clients/js && npm run build --prefix programs/axelar-solana-gas-service-v2/clients/js && npm run build --prefix programs/axelar-solana-governance-v2/clients/js && npm run build --prefix programs/axelar-solana-memo-v2/clients/js"
+	},
+	"dependencies": {
+		"@codama/nodes-from-anchor": "^1.2.9",
+		"@codama/renderers-js": "^1.4.3",
+		"codama": "^1.3.7",
+		"gill": "latest"
+	},
+	"devDependencies": {
+		"prettier": "^3.0.0"
+	}
+}
