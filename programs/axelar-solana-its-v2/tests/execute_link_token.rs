@@ -1,11 +1,11 @@
-use anchor_lang::{InstructionData, ToAccountMetas};
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use anchor_spl::{associated_token::spl_associated_token_account, token_2022::spl_token_2022};
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use axelar_solana_its_v2::utils::interchain_token_id;
+use axelar_solana_its_v2::{state::TokenManager, utils::interchain_token_id};
 use axelar_solana_its_v2_test_fixtures::{
     create_rent_sysvar_data, create_sysvar_instructions_data,
     init_its_service_with_ethereum_trusted, initialize_mollusk,
@@ -218,6 +218,8 @@ fn test_execute_link_token_success() {
         system_program: solana_sdk::system_program::ID,
     };
 
+    let destination_pda = Pubkey::new_unique();
+
     let accounts = axelar_solana_its_v2::accounts::Execute {
         // GMP accounts
         executable: executable_accounts,
@@ -233,12 +235,14 @@ fn test_execute_link_token_success() {
         rent: solana_sdk::sysvar::rent::ID,
         system_program: solana_sdk::system_program::ID,
 
+        // Remaining accounts
         deployer_ata,
         minter: None,
         minter_roles_pda: None,
         mpl_token_metadata_account: metadata_account,
         mpl_token_metadata_program: mpl_token_metadata::ID,
         sysvar_instructions: solana_sdk::sysvar::instructions::ID,
+        destination: destination_pda,
 
         // Event CPI accounts
         event_authority: its_event_authority,
@@ -341,6 +345,10 @@ fn test_execute_link_token_success() {
                 rent_epoch: 0,
             },
         ),
+        (
+            destination_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         // Event CPI accounts
         (its_event_authority, _event_authority_account),
         (program_id, its_program_account.clone()),
@@ -350,9 +358,11 @@ fn test_execute_link_token_success() {
         .mollusk
         .process_instruction(&execute_instruction, &execute_accounts);
 
-    assert!(
-        result.program_result.is_ok(),
-        "Execute link token instruction should succeed: {:?}",
-        result.program_result
-    );
+    assert!(result.program_result.is_ok());
+
+    let token_manager_account = result.get_account(&token_manager_pda).unwrap();
+    let token_manager =
+        TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
+
+    assert_eq!(token_manager.token_id, token_id,);
 }

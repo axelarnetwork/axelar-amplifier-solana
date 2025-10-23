@@ -12,6 +12,7 @@ executable_accounts!();
 pub struct Execute<'info> {
     // GMP Accounts
     pub executable: AxelarExecuteAccounts<'info>,
+
     // ITS Accounts
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -54,6 +55,7 @@ pub struct Execute<'info> {
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
     pub sysvar_instructions: UncheckedAccount<'info>,
+    pub destination: UncheckedAccount<'info>,
 }
 
 pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
@@ -86,14 +88,21 @@ pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>
     let payload =
         GMPPayload::decode(&inner.payload).map_err(|_err| ProgramError::InvalidInstructionData)?;
 
-    perform_self_cpi(payload, ctx)?;
+    perform_self_cpi(payload, ctx, message, &inner.source_chain)?;
 
     Ok(())
 }
 
-fn perform_self_cpi(payload: GMPPayload, ctx: Context<Execute>) -> Result<()> {
+fn perform_self_cpi(
+    payload: GMPPayload,
+    ctx: Context<Execute>,
+    message: Message,
+    source_chain: &str,
+) -> Result<()> {
     match payload {
-        GMPPayload::InterchainTransfer(transfer) => interchain_transfer_self_invoke(ctx, transfer),
+        GMPPayload::InterchainTransfer(transfer) => {
+            interchain_transfer_self_invoke(ctx, transfer, message, source_chain)
+        }
         GMPPayload::DeployInterchainToken(deploy) => {
             deploy_interchain_token_self_invoke(ctx, deploy)
         }
@@ -107,8 +116,77 @@ fn perform_self_cpi(payload: GMPPayload, ctx: Context<Execute>) -> Result<()> {
 fn interchain_transfer_self_invoke(
     ctx: Context<Execute>,
     transfer: interchain_token_transfer_gmp::InterchainTransfer,
+    message: Message,
+    source_chain: &str,
 ) -> Result<()> {
-    Ok(())
+    let token_id = transfer.token_id.0;
+    let source_address = String::from_utf8(transfer.source_address.to_vec())
+        .map_err(|_| ProgramError::InvalidInstructionData)?;
+
+    let destination_address: [u8; 32] = transfer
+        .destination_address
+        .as_ref()
+        .try_into()
+        .map_err(|_| ProgramError::InvalidAccountData)?;
+    let destination_address = Pubkey::new_from_array(destination_address);
+
+    let amount: u64 = transfer
+        .amount
+        .try_into()
+        .map_err(|_| ProgramError::ArithmeticOverflow)?;
+
+    let data = transfer.data;
+
+    let instruction_data = crate::instruction::InterchainTransferInternal {
+        token_id,
+        source_address: source_address.clone(),
+        destination_address,
+        amount,
+        data: data.to_vec(),
+        message,
+        source_chain: source_chain.to_owned(),
+    };
+
+    let transfer_instruction = Instruction {
+        program_id: crate::id(),
+        accounts: crate::accounts::InterchainTransferInternal {
+            payer: ctx.accounts.payer.key(),
+            authority: ctx.accounts.payer.key(), // todo: what do we pick here?
+            its_root_pda: ctx.accounts.its_root_pda.key(),
+            destination: ctx.accounts.destination.key(),
+            destination_ata: ctx.accounts.token_manager_ata.key(), // todo: what do we pick here?
+            token_mint: ctx.accounts.token_mint.key(),
+            token_manager_pda: ctx.accounts.token_manager_pda.key(),
+            token_manager_ata: ctx.accounts.token_manager_ata.key(),
+            token_program: ctx.accounts.token_program.key(),
+            // Event CPI accounts
+            event_authority: ctx.accounts.event_authority.key(),
+            program: ctx.accounts.program.key(),
+        }
+        .to_account_metas(None),
+        data: instruction_data.data(),
+    };
+
+    let account_infos = vec![
+        ctx.accounts.payer.to_account_info(),
+        ctx.accounts.payer.to_account_info(), // todo: what do we pick here?
+        ctx.accounts.its_root_pda.to_account_info(),
+        ctx.accounts.deployer_ata.to_account_info(), // todo: what do we pick here?
+        ctx.accounts.token_mint.to_account_info(),
+        ctx.accounts.token_manager_pda.to_account_info(),
+        ctx.accounts.token_manager_ata.to_account_info(),
+        ctx.accounts.token_program.to_account_info(),
+        // Event CPI accounts
+        ctx.accounts.event_authority.to_account_info(),
+        ctx.accounts.program.to_account_info(),
+    ];
+
+    // Invoke the instruction with ITS root PDA as signer
+    invoke_signed_with_its_root_pda(
+        &transfer_instruction,
+        &account_infos,
+        ctx.accounts.its_root_pda.bump,
+    )
 }
 
 fn link_token_self_invoke(
@@ -138,7 +216,6 @@ fn link_token_self_invoke(
         link_params: link_params.clone(),
     };
 
-    // Build the accounts using Anchor's generated accounts struct
     let accounts = crate::accounts::LinkTokenInternal {
         payer: ctx.accounts.payer.key(),
         deployer: ctx.accounts.payer.key(), // Use payer as deployer for GMP
@@ -164,7 +241,6 @@ fn link_token_self_invoke(
         data: instruction_data.data(),
     };
 
-    // Collect all account infos (same pattern as deploy_interchain_token_self_invoke)
     let account_infos = vec![
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.payer.to_account_info(), // deployer (same as payer)

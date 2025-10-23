@@ -303,6 +303,8 @@ pub mod axelar_solana_its_v2 {
         destination_address: Pubkey,
         amount: u64,
         data: Vec<u8>,
+        message: axelar_solana_gateway_v2::Message,
+        source_chain: String,
     ) -> Result<()> {
         instructions::interchain_transfer_internal_handler(
             ctx,
@@ -311,6 +313,8 @@ pub mod axelar_solana_its_v2 {
             destination_address,
             amount,
             data,
+            message,
+            source_chain,
         )
     }
 }

@@ -1,11 +1,14 @@
-use anchor_lang::{InstructionData, ToAccountMetas};
-use anchor_spl::{associated_token::spl_associated_token_account, token_2022::spl_token_2022};
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_spl::{
+    associated_token::spl_associated_token_account,
+    token_2022::spl_token_2022::{self},
+};
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use axelar_solana_its_v2::utils::interchain_token_id;
+use axelar_solana_its_v2::{state::TokenManager, utils::interchain_token_id};
 use axelar_solana_its_v2_test_fixtures::{
     create_rent_sysvar_data, create_sysvar_instructions_data,
     init_its_service_with_ethereum_trusted, initialize_mollusk,
@@ -13,10 +16,12 @@ use axelar_solana_its_v2_test_fixtures::{
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
+use solana_program::program_pack::{IsInitialized, Pack};
 use solana_sdk::{
     account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL,
     pubkey::Pubkey,
 };
+use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
 fn test_execute_deploy_interchain_token_success() {
@@ -75,7 +80,7 @@ fn test_execute_deploy_interchain_token_success() {
 
     // Step 6: Create the GMP payload
     let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1),// MESSAGE_TYPE_ID for DeployInterchainToken
+        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
         token_id: alloy_primitives::FixedBytes::from(token_id),
         name: name.clone(),
         symbol: symbol.clone(),
@@ -196,6 +201,8 @@ fn test_execute_deploy_interchain_token_success() {
         system_program: solana_sdk::system_program::ID,
     };
 
+    let destination_pda = Pubkey::new_unique();
+
     let accounts = axelar_solana_its_v2::accounts::Execute {
         // GMP accounts
         executable: executable_accounts,
@@ -211,12 +218,14 @@ fn test_execute_deploy_interchain_token_success() {
         rent: solana_sdk::sysvar::rent::ID,
         system_program: solana_sdk::system_program::ID,
 
+        // Remaining accounts
         deployer_ata,
         minter: None,
         minter_roles_pda: None,
         mpl_token_metadata_account: metadata_account,
         mpl_token_metadata_program: mpl_token_metadata::ID,
         sysvar_instructions: solana_sdk::sysvar::instructions::ID,
+        destination: destination_pda,
 
         // Event CPI accounts
         event_authority: its_event_authority,
@@ -323,6 +332,10 @@ fn test_execute_deploy_interchain_token_success() {
                 rent_epoch: 0,
             },
         ), // sysvar_instructions - using working pattern
+        (
+            destination_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         // 3. Event CPI accounts
         (its_event_authority, _event_authority_account),
         (program_id, its_program_account.clone()),
@@ -339,4 +352,40 @@ fn test_execute_deploy_interchain_token_success() {
         "Execute instruction should succeed: {:?}",
         result.program_result
     );
+
+    let token_manager_account = result.get_account(&token_manager_pda).unwrap();
+    let token_manager =
+        TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
+
+    assert_eq!(token_manager.token_id, token_id);
+
+    let token_mint_account = result.get_account(&token_mint_pda).unwrap();
+    let token_mint = spl_token_2022::state::Mint::unpack(&token_mint_account.data).unwrap();
+
+    assert_eq!(token_mint.mint_authority, Some(token_manager_pda).into(),);
+    assert_eq!(token_mint.freeze_authority, Some(token_manager_pda).into(),);
+    assert_eq!(token_mint.decimals, decimals,);
+    assert_eq!(token_mint.supply, 0, "Initial supply should be 0");
+    assert!(token_mint.is_initialized);
+
+    let metadata_acc = result.get_account(&metadata_account).unwrap();
+    let metadata = mpl_token_metadata::accounts::Metadata::from_bytes(&metadata_acc.data).unwrap();
+
+    assert_eq!(metadata.mint, token_mint_pda,);
+    assert_eq!(metadata.update_authority, token_manager_pda,);
+
+    let metadata_name = metadata.name.trim_end_matches('\0');
+    let metadata_symbol = metadata.symbol.trim_end_matches('\0');
+
+    assert_eq!(metadata_name, name,);
+    assert_eq!(metadata_symbol, symbol);
+
+    let deployer_ata_account = result.get_account(&deployer_ata).unwrap();
+    let deployer_ata_data =
+        StateWithExtensions::<Token2022Account>::unpack(&deployer_ata_account.data).unwrap();
+
+    assert_eq!(deployer_ata_data.base.mint, token_mint_pda,);
+    assert_eq!(deployer_ata_data.base.owner, payer,);
+    assert_eq!(deployer_ata_data.base.amount, 0,);
+    assert!(deployer_ata_data.base.is_initialized());
 }
