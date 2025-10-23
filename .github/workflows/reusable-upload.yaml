@@ -170,7 +170,6 @@ jobs:
             ${{ env.TAR_ARCHIVE_FILE }}.sha256
             ${{ env.ZIP_ARCHIVE_FILE }}
             ${{ env.ZIP_ARCHIVE_FILE }}.sha256
-            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '
-            ') }}
+            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '\n') }}
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
