@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use bitvec::prelude::*;
-use bytemuck::{Pod, Zeroable};
 use udigest::{encoding::EncodeValue, Digestable};
 
 /// This PDA tracks that all the signatures for a given payload get verified
@@ -219,8 +218,8 @@ impl SignatureVerificationSessionData {
 }
 
 /// Controls the signature verification session for a given payload.
-#[repr(C)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Pod, Zeroable)]
+#[zero_copy]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SignatureVerification {
     /// Accumulated signer threshold required to validate the payload.
     ///
