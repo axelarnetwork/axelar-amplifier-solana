@@ -117,15 +117,7 @@ fn test_link_token() {
         interchain_token_id_internal(&deploy_salt)
     };
 
-    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
-        &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
-
+    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
     let token_manager_ata =
         anchor_spl::associated_token::get_associated_token_address_with_program_id(
             &token_manager_pda,

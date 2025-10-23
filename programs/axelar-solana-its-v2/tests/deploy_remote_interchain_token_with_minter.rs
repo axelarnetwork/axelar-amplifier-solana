@@ -2,6 +2,7 @@ use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
 use axelar_solana_its_v2::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
+use axelar_solana_its_v2::state::{TokenManager, UserRoles};
 use axelar_solana_its_v2_test_fixtures::{
     approve_deploy_remote_interchain_token_helper, deploy_remote_interchain_token_helper,
     init_gas_service, init_its_service_with_ethereum_trusted, initialize_mollusk, setup_operator,
@@ -76,22 +77,8 @@ fn test_deploy_remote_interchain_token_with_minter() {
     let minter = Pubkey::new_unique();
 
     let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _) = Pubkey::find_program_address(
-        &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
-    let (minter_roles_pda, _) = Pubkey::find_program_address(
-        &[
-            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
-            token_manager_pda.as_ref(),
-            minter.as_ref(),
-        ],
-        &program_id,
-    );
+    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
+    let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,

@@ -25,7 +25,7 @@ use anchor_spl::{
 pub struct RegisterCanonicalInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
+    /// CHECK: decoded using get_token_metadata
     #[account(
         seeds = [
             b"metadata",
@@ -35,7 +35,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
         bump,
         seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
     )]
-    pub metadata_account: UncheckedAccount<'info>,
+    pub metadata_account: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 

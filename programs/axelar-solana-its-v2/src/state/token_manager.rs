@@ -100,3 +100,16 @@ pub struct TokenManager {
     /// The token manager PDA bump seed.
     pub bump: u8,
 }
+
+impl TokenManager {
+    pub fn find_pda(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                crate::seed_prefixes::TOKEN_MANAGER_SEED,
+                its_root_pda.as_ref(),
+                &token_id,
+            ],
+            &crate::ID,
+        )
+    }
+}

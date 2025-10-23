@@ -87,6 +87,7 @@ pub struct DeployInterchainToken<'info> {
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
 
+    /// CHECK: delegated to mpl_token_metadata_program
     #[account(
         mut,
         seeds = [
@@ -97,7 +98,7 @@ pub struct DeployInterchainToken<'info> {
         bump,
         seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
     )]
-    pub mpl_token_metadata_account: UncheckedAccount<'info>,
+    pub mpl_token_metadata_account: AccountInfo<'info>,
 
     #[account(
         init,

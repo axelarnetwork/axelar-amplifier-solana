@@ -46,6 +46,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
+    /// CHECK: Decoded using get_token_metadata
     #[account(
         seeds = [
             b"metadata",

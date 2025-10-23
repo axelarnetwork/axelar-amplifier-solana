@@ -26,6 +26,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
 
     pub token_mint: InterfaceAccount<'info, Mint>,
 
+    /// CHECK: decoded using get_token_metadata
     #[account(
         seeds = [
             b"metadata",
