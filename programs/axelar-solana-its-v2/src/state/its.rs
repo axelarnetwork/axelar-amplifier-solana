@@ -83,6 +83,10 @@ impl InterchainTokenService {
     pub fn remove_trusted_chain(&mut self, chain_name: String) {
         self.trusted_chains.retain(|chain| *chain != chain_name);
     }
+
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &crate::ID)
+    }
 }
 
 #[cfg(test)]

@@ -51,7 +51,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// The Metaplex metadata account associated with the mint
+    /// CHECK: Decoded using get_token_metadata
     #[account(
         seeds = [
             b"metadata",

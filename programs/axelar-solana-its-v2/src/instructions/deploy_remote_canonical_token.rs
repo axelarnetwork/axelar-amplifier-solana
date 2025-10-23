@@ -28,7 +28,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     /// The existing mint account for the canonical token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// The Metaplex metadata account associated with the mint
+    /// CHECK: decoded using get_token_metadata
     #[account(
         seeds = [
             b"metadata",

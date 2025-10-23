@@ -26,8 +26,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
-
-    /// Metadata account for the token (required for canonical tokens)
+    /// CHECK: decoded using get_token_metadata
     #[account(
         seeds = [
             b"metadata",
@@ -37,7 +36,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
         bump,
         seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
     )]
-    pub metadata_account: UncheckedAccount<'info>,
+    pub metadata_account: AccountInfo<'info>,
 
     /// System program
     pub system_program: Program<'info, System>,
