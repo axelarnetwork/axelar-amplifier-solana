@@ -13,9 +13,6 @@ use axelar_solana_its_v2_test_fixtures::{
 use mollusk_test_utils::setup_mollusk;
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
-#[path = "initialize.rs"]
-mod initialize;
-
 #[test]
 fn test_deploy_remote_interchain_token() {
     // Initialize gateway

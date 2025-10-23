@@ -60,9 +60,22 @@ fn test_deploy_interchain_token() {
     let minter = Pubkey::new_unique();
 
     let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
-    let (minter_roles_pda, minter_roles_pda_bump) =
-        UserRoles::find_pda(&token_manager_pda, &minter);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+    let (minter_roles_pda, minter_roles_pda_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(),
+        ],
+        &program_id,
+    );
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
