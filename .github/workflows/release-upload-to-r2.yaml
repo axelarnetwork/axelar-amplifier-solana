@@ -35,7 +35,7 @@ jobs:
   build:
     name: Build Solana Programs
     needs: detect-build-type
-    uses: ./.github/workflows/release-reusable-build.yaml
+    uses: ./.github/workflows/reusable-build.yaml
     with:
       ref: ${{ needs.detect-build-type.outputs.ref }}
       update-ids: false
@@ -52,7 +52,7 @@ jobs:
           - stagenet
           - testnet
           - mainnet
-    uses: ./.github/workflows/release-reusable-upload.yaml
+    uses: ./.github/workflows/reusable-upload.yaml
     with:
       version: ${{ needs.detect-build-type.outputs.commit_hash }}
       environment: ${{ matrix.environment }}

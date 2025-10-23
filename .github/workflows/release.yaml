@@ -50,7 +50,7 @@ jobs:
 
   build:
     needs: publish-release
-    uses: ./.github/workflows/release-reusable-build.yaml
+    uses: ./.github/workflows/reusable-build.yaml
     with:
       ref: main
       update-ids: false
@@ -67,7 +67,7 @@ jobs:
           - testnet
           - mainnet
 
-    uses: ./.github/workflows/release-reusable-upload.yaml
+    uses: ./.github/workflows/reusable-upload.yaml
     with:
       version: ${{ needs.publish-release.outputs.commit_hash }}
       environment: ${{ matrix.environment }}
