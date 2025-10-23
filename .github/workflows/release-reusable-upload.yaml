@@ -17,7 +17,7 @@ on:
         type: string
         default: 'solana-programs'
       artifact-path:
-        description: 'Path of the artifact containing the builds'
+        description: 'Path to download artifacts to'
         type: string
         required: false
         default: 'artifacts'
@@ -103,6 +103,28 @@ jobs:
           echo "Downloaded artifacts:"
           find ${{ env.BASE_ARTIFACTS_DIR }} -type f
 
+      - name: Install required tools
+        run: |
+          # AWS CLI and jq are typically pre-installed on blacksmith runners
+          # but we verify and install if needed for reliability
+          if ! command -v aws &> /dev/null; then
+            echo "Installing AWS CLI..."
+            sudo apt-get update
+            sudo apt-get install -y awscli
+          fi
+
+          if ! command -v jq &> /dev/null; then
+            echo "Installing jq..."
+            sudo apt-get install -y jq
+          fi
+
+          # Verify installations
+          aws --version
+          jq --version
+          zip --version
+          tar --version
+          sha256sum --version
+
       - name: Create `zip` and `tar` archive files
         run: |
           # Renaming to keep the dir structure in the archive matching the release version
@@ -122,7 +144,7 @@ jobs:
 
       - name: Configure CF credentials
         run: |
-          cd $HOME; mkdir ~/.aws; touch ~/.aws/credentials; touch ~/.aws/config
+          cd $HOME; mkdir -p ~/.aws; touch ~/.aws/credentials; touch ~/.aws/config
           echo "[default]
           aws_access_key_id = ${{ secrets.cf-bucket-access-key-id }}
           aws_secret_access_key = ${{ secrets.cf-bucket-secret-access-key }}" > ~/.aws/credentials
@@ -137,6 +159,11 @@ jobs:
         run: |
           CF_PROGRAMS_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/programs"
           PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "*.so")
+
+          if [ -z "$PROGRAM_FILES" ]; then
+            echo "Error: No .so files found to upload!"
+            exit 1
+          fi
 
           printf '%s\n' "$PROGRAM_FILES" | while IFS= read -r program_file; do
             echo "Uploading program file: ${program_file}"

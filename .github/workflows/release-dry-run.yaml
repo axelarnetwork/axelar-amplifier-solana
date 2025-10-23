@@ -47,7 +47,9 @@ jobs:
         run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.85.1
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.1
 
       - name: Install Solana CLI
         run: |
