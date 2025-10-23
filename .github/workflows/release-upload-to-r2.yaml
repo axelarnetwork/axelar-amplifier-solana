@@ -75,8 +75,6 @@ jobs:
     uses: ./.github/workflows/reusable-build.yaml
     with:
       ref: ${{ needs.prepare-release.outputs.commit_hash }}
-      update-ids: false
-      commit-changes: false
     secrets: inherit
 
   upload:
@@ -90,11 +88,13 @@ jobs:
       id-token: write
       contents: read
     with:
-      version: ${{ matrix.releases.version }}
-      environment: mainnet
+      package-name: ${{ matrix.releases.package_name }}
+      package-version: ${{ matrix.releases.version }}
+      package-git-tag: ${{ matrix.releases.tag }}
       artifact-name: ${{ needs.build.outputs.artifact-name }}
       artifact-path: ${{ needs.build.outputs.artifact-path }}
-      ref: ${{ needs.prepare-release.outputs.commit_hash }}
+      cf-bucket-name: ${{ vars.CF_BUCKET_NAME }}
+      cf-config-bucket-root-key: ${{ vars.CF_BUCKET_ROOT_KEY }}
       github-release: true
     secrets:
       github-token: ${{ secrets.PAT_TOKEN }}
