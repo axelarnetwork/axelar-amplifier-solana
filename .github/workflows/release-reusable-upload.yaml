@@ -187,13 +187,7 @@ jobs:
 
           cat > ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/manifest.json << EOF
           {
-            "version": "${{ env.VERSION }}",
-            "branch": "$BUILD_REF",
-            "ref": "$BUILD_REF",
-            "environment": "${{ inputs.environment }}",
-            "uploaded_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "commit_sha": "$COMMIT_SHA",
-            "github_ref": "${{ github.ref }}",
             "artifacts": [
           $(find ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }} \( -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" -a ! -name "manifest.json" \) \) | while read file; do
             echo "      \"$(basename $file)\","
