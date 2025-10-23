@@ -1,16 +1,16 @@
 [workspace]
-allow_dirty = false
-changelog_update = true
-dependencies_update = false
-git_release_enable = true
-git_tag_enable = true
-pr_branch_prefix = "release-"
-pr_labels = ["release"]
-publish_allow_dirty = false
-publish_no_verify = false
-semver_check = true
-publish_timeout = "10m"
-publish = false
+allow_dirty = false # allow updating repositories with uncommitted changes
+changelog_update = true # enables changelog updates
+dependencies_update = false # update dependencies with `cargo update`
+git_release_enable = true # enable GitHub/Gitea releases
+git_tag_enable = true # enable GitHub/Gitea tag
+pr_branch_prefix = "release-" # PR branch prefix
+pr_labels = ["release"] # add the `release` label to the release Pull Request
+publish_allow_dirty = false # removes `--allow-dirty` to `cargo publish`
+semver_check = true # enable API breaking changes checks
+publish_timeout = "10m" # set a timeout for `cargo publish`
+publish = true
+publish_no_verify=false
 release = true
 
 pr_body = """
@@ -32,7 +32,7 @@ changelog_path = "CHANGELOG.md"
 changelog_update = true
 publish_all_features = true
 git_release_enable = true
-publish = false
+publish = true
 
 [[package]]
 name = "axelar-solana-gateway"
@@ -40,7 +40,7 @@ changelog_path = "CHANGELOG.md"
 changelog_update = true
 publish_all_features = true
 git_release_enable = true
-publish = false
+publish = true
 
 [[package]]
 name = "axelar-solana-governance"
@@ -48,7 +48,7 @@ changelog_path = "CHANGELOG.md"
 changelog_update = true
 publish_all_features = true
 git_release_enable = true
-publish = false
+publish = true
 
 [[package]]
 name = "axelar-solana-its"
@@ -56,7 +56,7 @@ changelog_path = "CHANGELOG.md"
 changelog_update = true
 publish_all_features = true
 git_release_enable = true
-publish = false
+publish = true
 
 [[package]]
 name = "axelar-solana-multicall"
@@ -64,7 +64,7 @@ changelog_path = "CHANGELOG.md"
 changelog_update = true
 publish_all_features = true
 git_release_enable = true
-publish = false
+publish = true
 
 [changelog]
 protect_breaking_commits = true
