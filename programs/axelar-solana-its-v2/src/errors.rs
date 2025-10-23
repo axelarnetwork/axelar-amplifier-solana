@@ -10,6 +10,7 @@ pub enum ItsError {
     DeployApprovalPDANotProvided,
     MinterNotProvided,
     InvalidAccountData,
+    MissingRemainingAccount,
     #[msg("The role provided is invalid")]
     InvalidRole,
     #[msg("The token manager type is invalid")]

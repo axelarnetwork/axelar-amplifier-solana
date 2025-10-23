@@ -1,5 +1,6 @@
 use crate::{
     errors::ItsError,
+    events::InterchainTransferReceived,
     seed_prefixes::TOKEN_MANAGER_SEED,
     state::{
         current_flow_epoch, token_manager, FlowDirection, InterchainTokenService, TokenManager,
@@ -15,11 +16,12 @@ use anchor_spl::{
     },
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
+use axelar_solana_gateway_v2::Message;
 use solana_program::{entrypoint::ProgramResult, program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], source_address: String, destination_address: Pubkey, amount: u64, data: Vec<u8>)]
+#[instruction(token_id: [u8; 32], source_address: String, destination_address: Pubkey, amount: u64, data: Vec<u8>, message: Message, source_chain: String)]
 pub struct InterchainTransferInternal<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -35,6 +37,12 @@ pub struct InterchainTransferInternal<'info> {
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
     #[account(mut)]
+    pub destination: AccountInfo<'info>,
+
+    #[account(
+        mut,
+        constraint = destination_ata.owner == destination.key()
+    )]
     pub destination_ata: InterfaceAccount<'info, TokenAccount>,
 
     pub token_mint: InterfaceAccount<'info, Mint>,
@@ -58,62 +66,17 @@ pub struct InterchainTransferInternal<'info> {
 
     #[account(address = anchor_spl::token_2022::ID)]
     pub token_program: Interface<'info, TokenInterface>,
-
-    #[account(
-        seeds = [axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED],
-        bump = gateway_root_pda.load()?.bump,
-        seeds::program = axelar_solana_gateway_v2::ID
-    )]
-    pub gateway_root_pda: AccountLoader<'info, axelar_solana_gateway_v2::GatewayConfig>,
-
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = axelar_solana_gateway_v2::ID
-    )]
-    pub gateway_event_authority: SystemAccount<'info>,
-
-    #[account(address = axelar_solana_gateway_v2::ID)]
-    pub gateway_program: AccountInfo<'info>,
-
-    #[account(
-        mut,
-        seeds = [axelar_solana_gas_service_v2::state::Treasury::SEED_PREFIX],
-        bump = gas_service_root.load()?.bump,
-        seeds::program = axelar_solana_gas_service_v2::ID
-    )]
-    pub gas_service_root: AccountLoader<'info, axelar_solana_gas_service_v2::state::Treasury>,
-
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = axelar_solana_gas_service_v2::ID
-    )]
-    pub gas_service_event_authority: SystemAccount<'info>,
-
-    #[account(address = axelar_solana_gas_service_v2::ID)]
-    pub gas_service_program: AccountInfo<'info>,
-
-    pub system_program: Program<'info, System>,
-
-    #[account(
-        seeds = [axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        bump,
-        seeds::program = crate::ID
-    )]
-    pub call_contract_signing: SystemAccount<'info>,
-
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
 }
 
 pub fn interchain_transfer_internal_handler(
-    ctx: Context<InterchainTransferInternal>,
+    mut ctx: Context<InterchainTransferInternal>,
     token_id: [u8; 32],
     source_address: String,
     destination_address: Pubkey,
     amount: u64,
     data: Vec<u8>,
+    message: Message,
+    source_chain: String,
 ) -> Result<()> {
     validate_token_manager_type(
         ctx.accounts.token_manager_pda.ty,
@@ -121,14 +84,31 @@ pub fn interchain_transfer_internal_handler(
         &ctx.accounts.token_manager_pda.to_account_info(),
     )?;
 
+    let destination_token_account = ctx.accounts.destination.key().clone();
     let token_manager_account_info = ctx.accounts.token_manager_pda.clone();
-    handle_give_token_transfer(ctx, &token_manager_account_info, amount)?;
+    let transferred_amount =
+        handle_give_token_transfer(&mut ctx, &token_manager_account_info, amount)?;
+
+    emit_cpi!(InterchainTransferReceived {
+        command_id: message.command_id(),
+        token_id,
+        source_chain,
+        source_address: source_address.as_bytes().to_vec(),
+        destination_address,
+        destination_token_account,
+        amount: transferred_amount,
+        data_hash: if data.is_empty() {
+            [0; 32]
+        } else {
+            solana_program::keccak::hash(data.as_ref()).0
+        },
+    });
 
     Ok(())
 }
 
 fn handle_give_token_transfer(
-    mut ctx: Context<InterchainTransferInternal>,
+    ctx: &mut Context<InterchainTransferInternal>,
     token_manager: &TokenManager,
     amount: u64,
 ) -> Result<u64> {
@@ -136,7 +116,7 @@ fn handle_give_token_transfer(
         LockUnlock, LockUnlockFee, MintBurn, MintBurnFrom, NativeInterchainToken,
     };
 
-    track_token_flow(&mut ctx, amount, FlowDirection::In)?;
+    track_token_flow(ctx, amount, FlowDirection::In)?;
     let token_id = token_manager.token_id;
     let token_manager_pda_bump = token_manager.bump;
 
@@ -222,7 +202,7 @@ fn get_fee_and_decimals(
 }
 
 fn transfer_to(
-    ctx: Context<InterchainTransferInternal>,
+    ctx: &Context<InterchainTransferInternal>,
     amount: u64,
     decimals: u8,
     signer_seeds: &[&[&[u8]]],
@@ -248,7 +228,7 @@ fn transfer_to(
 }
 
 fn transfer_with_fee_to(
-    ctx: Context<InterchainTransferInternal>,
+    ctx: &Context<InterchainTransferInternal>,
     amount: u64,
     decimals: u8,
     fee: u64,
@@ -282,7 +262,7 @@ fn get_mint_decimals(token_mint: &AccountInfo) -> std::result::Result<u8, Progra
 }
 
 fn mint_to_receiver<'info>(
-    ctx: Context<InterchainTransferInternal>,
+    ctx: &Context<InterchainTransferInternal>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,

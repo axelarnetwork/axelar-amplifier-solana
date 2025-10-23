@@ -120,7 +120,7 @@ pub struct DeployInterchainTokenInternal<'info> {
 }
 
 pub fn deploy_interchain_token_internal_handler(
-    ctx: Context<DeployInterchainTokenInternal>,
+    mut ctx: Context<DeployInterchainTokenInternal>,
     token_id: [u8; 32],
     name: String,
     symbol: String,
@@ -135,9 +135,9 @@ pub fn deploy_interchain_token_internal_handler(
         return err!(ItsError::InvalidArgument);
     }
 
-    let accounts = ctx.accounts.to_gmp_inbound_accounts();
+    // Call process_inbound_deploy directly with the context accounts
     process_inbound_deploy(
-        accounts,
+        &mut ctx.accounts,
         token_id,
         &name,
         &symbol,
@@ -172,56 +172,13 @@ pub fn deploy_interchain_token_internal_handler(
         decimals,
     });
 
+    msg!("HERE!");
+
     Ok(())
 }
 
-impl<'info> DeployInterchainTokenInternal<'info> {
-    /// Converts the DeployInterchainTokenInternal accounts to GmpInboundAccounts
-    pub fn to_gmp_inbound_accounts(&self) -> GmpInboundAccounts<'info> {
-        GmpInboundAccounts {
-            payer: self.payer.to_account_info(),
-            deployer: self.deployer.to_account_info(),
-            system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.to_account_info(),
-            token_manager_pda: self.token_manager_pda.clone(),
-            token_mint: self.token_mint.to_account_info(),
-            token_manager_ata: self.token_manager_ata.to_account_info(),
-            token_program: self.token_program.to_account_info(),
-            associated_token_program: self.associated_token_program.to_account_info(),
-            rent: self.rent.to_account_info(),
-            sysvar_instructions: self.sysvar_instructions.to_account_info(),
-            mpl_token_metadata_program: self.mpl_token_metadata_program.to_account_info(),
-            mpl_token_metadata_account: self.mpl_token_metadata_account.to_account_info(),
-            deployer_ata: self.deployer_ata.to_account_info(),
-            minter: self.minter.as_ref().map(|acc| acc.to_account_info()),
-            minter_roles_pda: self.minter_roles_pda.clone(),
-        }
-    }
-}
-
-/// Common GMP accounts needed for inbound operations
-#[derive(Clone)]
-pub struct GmpInboundAccounts<'info> {
-    pub payer: AccountInfo<'info>,
-    pub deployer: AccountInfo<'info>,
-    pub system_program: AccountInfo<'info>,
-    pub its_root_pda: AccountInfo<'info>,
-    pub token_manager_pda: Account<'info, TokenManager>,
-    pub token_mint: AccountInfo<'info>,
-    pub token_manager_ata: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
-    pub associated_token_program: AccountInfo<'info>,
-    pub rent: AccountInfo<'info>,
-    pub sysvar_instructions: AccountInfo<'info>,
-    pub mpl_token_metadata_program: AccountInfo<'info>,
-    pub mpl_token_metadata_account: AccountInfo<'info>,
-    pub deployer_ata: AccountInfo<'info>,
-    pub minter: Option<AccountInfo<'info>>,
-    pub minter_roles_pda: Option<Account<'info, UserRoles>>,
-}
-
 pub fn process_inbound_deploy(
-    mut ctx: GmpInboundAccounts,
+    ctx: &mut DeployInterchainTokenInternal,
     token_id: [u8; 32],
     name: &str,
     symbol: &str,
@@ -231,14 +188,17 @@ pub fn process_inbound_deploy(
 ) -> Result<()> {
     // setup_mint
     if initial_supply > 0 {
-        mint_initial_supply(&ctx, token_id, initial_supply, token_manager_pda_bump)?;
+        mint_initial_supply(ctx, token_id, initial_supply, token_manager_pda_bump)?;
     }
 
     // setup_metadata
-    create_token_metadata(&ctx, name, symbol, token_id, token_manager_pda_bump)?;
+    create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
 
     // super::token_manager::deploy(...)
-    validate_mint_extensions(Type::NativeInterchainToken, &ctx.token_mint)?;
+    validate_mint_extensions(
+        Type::NativeInterchainToken,
+        &ctx.token_mint.to_account_info(),
+    )?;
 
     initialize_token_manager(
         &mut ctx.token_manager_pda,
@@ -260,7 +220,7 @@ pub fn process_inbound_deploy(
 }
 
 fn mint_initial_supply<'info>(
-    accounts: &GmpInboundAccounts,
+    accounts: &DeployInterchainTokenInternal<'info>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
@@ -295,7 +255,7 @@ fn mint_initial_supply<'info>(
 }
 
 fn create_token_metadata<'info>(
-    accounts: &GmpInboundAccounts,
+    accounts: &DeployInterchainTokenInternal<'info>,
     name: &str,
     symbol: &str,
     token_id: [u8; 32],
