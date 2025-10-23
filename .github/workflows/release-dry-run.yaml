@@ -13,6 +13,16 @@ on:
           - testnet
           - mainnet
         default: 'testnet'
+      ref:
+        description: 'Branch/ref to test (main for Vanilla, v2-anchor for Anchor)'
+        required: false
+        type: string
+        default: 'main'
+      is_anchor:
+        description: 'Mark as Anchor build'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   dry-run-build:
@@ -22,6 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
           submodules: recursive
 
@@ -68,12 +79,20 @@ jobs:
 
       - name: Generate dry run report
         run: |
+          BUILD_TYPE="Vanilla"
+          VERSION_SUFFIX=""
+          if [ "${{ inputs.is_anchor }}" = "true" ] || [[ "${{ inputs.ref }}" == "v2-anchor" ]]; then
+            BUILD_TYPE="Anchor"
+            VERSION_SUFFIX="-anchor"
+          fi
+
           echo "## Dry Run Results for ${{ inputs.environment }} ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment:** \`${{ inputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch/Ref:** \`${{ inputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Build Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
@@ -82,7 +101,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### What Would Be Uploaded" >> $GITHUB_STEP_SUMMARY
           echo "In a real release, these artifacts would be uploaded to:" >> $GITHUB_STEP_SUMMARY
-          echo "\`releases/solana/${{ inputs.environment }}/{version}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "\`releases/solana/${{ inputs.environment }}/{version}${VERSION_SUFFIX}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Commands:** $([ \"$BUILD_TYPE\" = \"Anchor\" ] && echo \"\\\`anchor deploy\\\`\" || echo \"\\\`solana program deploy\\\`\")" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Programs Built" >> $GITHUB_STEP_SUMMARY
           for file in target/deploy/*.so; do
@@ -115,3 +136,4 @@ jobs:
           done
 
           echo "All program artifacts validated successfully!"
+

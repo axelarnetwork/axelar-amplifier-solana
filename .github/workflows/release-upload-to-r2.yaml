@@ -4,19 +4,49 @@ on:
   push:
     branches:
       - main
+      - v2-anchor
 
 jobs:
+  detect-build-type:
+    name: Detect Build Type
+    runs-on: ubuntu-latest
+    outputs:
+      is_anchor: ${{ steps.detect.outputs.is_anchor }}
+      build_type_label: ${{ steps.detect.outputs.build_type_label }}
+      ref: ${{ steps.detect.outputs.ref }}
+    steps:
+      - name: Detect branch and build type
+        id: detect
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == "v2-anchor" ]]; then
+            echo "is_anchor=true" >> $GITHUB_OUTPUT
+            echo "build_type_label=Anchor" >> $GITHUB_OUTPUT
+            echo "ref=v2-anchor" >> $GITHUB_OUTPUT
+            echo "Detected: Anchor build"
+          else
+            echo "is_anchor=false" >> $GITHUB_OUTPUT
+            echo "build_type_label=Vanilla" >> $GITHUB_OUTPUT
+            echo "ref=main" >> $GITHUB_OUTPUT
+            echo "Detected: Vanilla build"
+          fi
+
   build:
     name: Build Solana Programs
+    needs: detect-build-type
     uses: ./.github/workflows/_reusable-build.yaml
     with:
+      ref: ${{ needs.detect-build-type.outputs.ref }}
+      is_anchor: ${{ needs.detect-build-type.outputs.is_anchor == 'true' }}
       update-ids: false
       commit-changes: false
     secrets: inherit
 
   upload-all-environments:
     name: Upload to R2 (${{ matrix.environment }})
-    needs: build
+    needs: [detect-build-type, build]
     strategy:
       matrix:
         environment:
@@ -29,17 +59,29 @@ jobs:
       version: ${{ github.sha }}
       environment: ${{ matrix.environment }}
       artifact-name: solana-programs
+      is_anchor: ${{ needs.detect-build-type.outputs.is_anchor == 'true' }}
+      ref: ${{ needs.detect-build-type.outputs.ref }}
     secrets: inherit
 
   summary:
     name: Upload Summary
     runs-on: blacksmith-2vcpu-ubuntu-2204
-    needs: upload-all-environments
+    needs: [detect-build-type, upload-all-environments]
     steps:
       - name: Generate summary
         run: |
+          BUILD_TYPE="${{ needs.detect-build-type.outputs.build_type_label }}"
+          VERSION="${{ github.sha }}"
+
+          # Add -anchor suffix if Anchor build
+          if [ "${{ needs.detect-build-type.outputs.is_anchor }}" = "true" ]; then
+            VERSION="${VERSION}-anchor"
+          fi
+
           echo "## Build and Upload Complete ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Type:** $BUILD_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ needs.detect-build-type.outputs.ref }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Short SHA:** \`${GITHUB_SHA:0:7}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -57,5 +99,5 @@ jobs:
           echo "- axelar-solana-memo-program" >> $GITHUB_STEP_SUMMARY
           echo "- axelar-solana-governance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Access artifacts at: \`releases/solana/{environment}/${{ github.sha }}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "Access artifacts at: \`releases/solana/{environment}/$VERSION/\`" >> $GITHUB_STEP_SUMMARY
 

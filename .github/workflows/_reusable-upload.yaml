@@ -16,6 +16,16 @@ on:
         required: false
         type: string
         default: 'solana-programs'
+      is_anchor:
+        description: 'Whether this is an Anchor build'
+        required: false
+        type: boolean
+        default: false
+      ref:
+        description: 'Git ref that was built'
+        required: true
+        type: string
+        default: 'main'
 
 env:
   CF_BUCKET_NAME: axelar-static
@@ -25,6 +35,19 @@ jobs:
   upload:
     runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
+      - name: Determine final version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [ "${{ inputs.is_anchor }}" = "true" ]; then
+            # Add -anchor suffix if not already present
+            if [[ ! "$VERSION" =~ -anchor$ ]]; then
+              VERSION="${VERSION}-anchor"
+            fi
+          fi
+          echo "final-version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Final version for upload: $VERSION"
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -51,8 +74,9 @@ jobs:
         env:
           ENDPOINT_URL: ${{ secrets.CF_ENDPOINT_URL }}
         run: |
-          TARGET_PATH="s3://${{ env.CF_BUCKET_NAME }}/${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ inputs.version }}"
+          TARGET_PATH="s3://${{ env.CF_BUCKET_NAME }}/${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ steps.version.outputs.final-version }}"
           echo "Uploading to: $TARGET_PATH"
+          echo "Build type: ${{ inputs.is_anchor && 'Anchor' || 'Vanilla' }}"
 
           # Upload all .so files
           if ls artifacts/*.so 1> /dev/null 2>&1; then
@@ -62,11 +86,13 @@ jobs:
             done
           fi
 
-          # Upload all .json keypair files
+          # Upload all .json keypair files (excluding build-metadata.json)
           if ls artifacts/*.json 1> /dev/null 2>&1; then
             for file in artifacts/*.json; do
-              echo "Uploading $(basename $file)..."
-              aws --endpoint-url="$ENDPOINT_URL" s3 cp "$file" "$TARGET_PATH/$(basename $file)" --no-progress
+              if [ "$(basename $file)" != "build-metadata.json" ]; then
+                echo "Uploading $(basename $file)..."
+                aws --endpoint-url="$ENDPOINT_URL" s3 cp "$file" "$TARGET_PATH/$(basename $file)" --no-progress
+              fi
             done
           fi
 
@@ -74,7 +100,7 @@ jobs:
         env:
           ENDPOINT_URL: ${{ secrets.CF_ENDPOINT_URL }}
         run: |
-          TARGET_PATH="s3://${{ env.CF_BUCKET_NAME }}/${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ inputs.version }}"
+          TARGET_PATH="s3://${{ env.CF_BUCKET_NAME }}/${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ steps.version.outputs.final-version }}"
           echo "Files uploaded to R2:"
           aws --endpoint-url="$ENDPOINT_URL" s3 ls "$TARGET_PATH/" || echo "Could not list files"
 
@@ -82,24 +108,38 @@ jobs:
         run: |
           echo "Generating artifact manifest..."
 
-          # Check if any artifacts exist
-          ARTIFACT_COUNT=$(find artifacts -name "*.so" -o -name "*.json" | wc -l)
+          # Read build metadata if it exists
+          BUILD_TYPE="vanilla"
+          BUILD_REF="${{ inputs.ref }}"
+          if [ -f "artifacts/build-metadata.json" ]; then
+            BUILD_TYPE=$(jq -r '.build_type // "vanilla"' artifacts/build-metadata.json)
+            BUILD_REF=$(jq -r '.ref // "${{ inputs.ref }}"' artifacts/build-metadata.json)
+          elif [ "${{ inputs.is_anchor }}" = "true" ]; then
+            BUILD_TYPE="anchor"
+          fi
+
+          # Check if any artifacts exist (excluding build-metadata.json)
+          ARTIFACT_COUNT=$(find artifacts -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" \) | wc -l)
           if [ "$ARTIFACT_COUNT" -eq 0 ]; then
             echo "Error: No artifacts found to include in manifest"
             exit 1
           fi
 
           echo "Found $ARTIFACT_COUNT artifact(s) to include in manifest"
+          echo "Build type: $BUILD_TYPE"
 
           cat > artifacts/manifest.json << EOF
           {
-            "version": "${{ inputs.version }}",
+            "version": "${{ steps.version.outputs.final-version }}",
+            "build_type": "$BUILD_TYPE",
+            "branch": "$BUILD_REF",
+            "ref": "$BUILD_REF",
             "environment": "${{ inputs.environment }}",
             "uploaded_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "commit_sha": "${{ github.sha }}",
-            "ref": "${{ github.ref }}",
+            "github_ref": "${{ github.ref }}",
             "artifacts": [
-          $(find artifacts -name "*.so" -o -name "*.json" | while read file; do
+          $(find artifacts \( -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" \) \) | while read file; do
             echo "      \"$(basename $file)\","
           done | sed '$ s/,$//')
             ]
@@ -111,6 +151,11 @@ jobs:
         env:
           ENDPOINT_URL: ${{ secrets.CF_ENDPOINT_URL }}
         run: |
-          TARGET_PATH="s3://${{ env.CF_BUCKET_NAME }}/${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ inputs.version }}"
+          TARGET_PATH="s3://${{ env.CF_BUCKET_NAME }}/${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ steps.version.outputs.final-version }}"
           aws --endpoint-url="$ENDPOINT_URL" s3 cp artifacts/manifest.json "$TARGET_PATH/manifest.json" --no-progress
+          echo ""
+          echo "✅ Upload complete!"
+          echo "Version: ${{ steps.version.outputs.final-version }}"
+          echo "Build type: ${{ inputs.is_anchor && 'Anchor' || 'Vanilla' }}"
+          echo "R2 path: ${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ steps.version.outputs.final-version }}/"
 

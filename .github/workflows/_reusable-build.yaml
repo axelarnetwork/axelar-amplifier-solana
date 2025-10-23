@@ -3,6 +3,16 @@ name: Reusable Build
 on:
   workflow_call:
     inputs:
+      ref:
+        description: 'Git ref to checkout (branch, tag, or commit)'
+        required: false
+        type: string
+        default: 'main'
+      is_anchor:
+        description: 'Whether this is an Anchor build'
+        required: false
+        type: boolean
+        default: false
       network:
         description: 'Network environment: devnet-amplifier, stagenet, testnet, or mainnet'
         required: false
@@ -22,6 +32,12 @@ on:
       artifacts-path:
         description: 'Path to build artifacts'
         value: 'target/deploy'
+      build-type:
+        description: 'Build type (vanilla or anchor)'
+        value: ${{ jobs.build.outputs.build-type }}
+      ref-used:
+        description: 'Git ref that was built'
+        value: ${{ jobs.build.outputs.ref-used }}
 
 env:
   BASE_IMAGE: ${{ vars.BASE_IMAGE }}
@@ -29,10 +45,24 @@ env:
 jobs:
   build:
     runs-on: blacksmith-2vcpu-ubuntu-2204
+    outputs:
+      build-type: ${{ steps.set-metadata.outputs.build-type }}
+      ref-used: ${{ steps.set-metadata.outputs.ref-used }}
     steps:
+      - name: Set build metadata
+        id: set-metadata
+        run: |
+          if [ "${{ inputs.is_anchor }}" = "true" ]; then
+            echo "build-type=anchor" >> $GITHUB_OUTPUT
+          else
+            echo "build-type=vanilla" >> $GITHUB_OUTPUT
+          fi
+          echo "ref-used=${{ inputs.ref }}" >> $GITHUB_OUTPUT
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
           submodules: recursive
           token: ${{ secrets.PAT_TOKEN || github.token }}
@@ -125,6 +155,21 @@ jobs:
           ls -lh target/deploy/
           echo "Keypair files:"
           ls -lh *.json || echo "No keypair files found in root"
+          echo ""
+          echo "Build type: ${{ inputs.is_anchor && 'Anchor' || 'Vanilla' }}"
+          echo "Git ref: ${{ inputs.ref }}"
+
+      - name: Create build metadata file
+        run: |
+          cat > build-metadata.json << EOF
+          {
+            "build_type": "${{ inputs.is_anchor && 'anchor' || 'vanilla' }}",
+            "ref": "${{ inputs.ref }}",
+            "commit_sha": "${{ github.sha }}",
+            "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          cat build-metadata.json
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -133,5 +178,6 @@ jobs:
           path: |
             target/deploy/*.so
             *.json
+            build-metadata.json
           retention-days: 90
 
