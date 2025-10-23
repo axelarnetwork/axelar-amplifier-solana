@@ -69,7 +69,7 @@ jobs:
       - name: Set artifact name
         id: set-artifact-name
         run: |
-          echo "name=solana-programs" >> $GITHUB_OUTPUT
+          echo "name=solana-programs-${{ github.run_id }}" >> $GITHUB_OUTPUT
           echo "path=target/deploy" >> $GITHUB_OUTPUT
 
       - name: Install Rust toolchain
@@ -148,7 +148,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: solana-programs
+          name: ${{ steps.set-artifact-name.outputs.name }}
           path: |
             target/deploy/*.so
             *.json
