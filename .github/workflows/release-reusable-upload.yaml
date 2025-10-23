@@ -142,16 +142,14 @@ jobs:
           CF_KEYPAIRS_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/keypairs"
           KEYPAIR_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "*.json" ! -name "build-metadata.json" ! -name "manifest.json")
 
-          if [ -n "$KEYPAIR_FILES" ]; then
-            printf '%s\n' "$KEYPAIR_FILES" | while IFS= read -r keypair_file; do
-              echo "Uploading keypair file: ${keypair_file}"
+          printf '%s\n' "$KEYPAIR_FILES" | while IFS= read -r keypair_file; do
+            echo "Uploading keypair file: ${keypair_file}"
               if [[ -f "$keypair_file" ]]; then
                 FILE_KEY=$(echo $keypair_file | sed "s|^${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/||")
                 echo "Uploading keypair file key: $CF_KEYPAIRS_BUCKET_ROOT_KEY/$FILE_KEY"
                 aws s3api put-object --bucket ${{ env.CF_BUCKET_NAME }} --key "$CF_KEYPAIRS_BUCKET_ROOT_KEY/$FILE_KEY" --body "$keypair_file" --acl public-read --endpoint-url $ENDPOINT_URL
               fi
-            done
-          fi
+          done
 
           # Upload the previously created archives to R2
           CF_ARCHIVES_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/archives"

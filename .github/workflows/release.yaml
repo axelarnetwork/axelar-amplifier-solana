@@ -1,84 +1,30 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version number (e.g., 1.0.0 or 2.0.0)'
-        required: true
-        type: string
-      ref:
-        description: 'Branch/ref to build from'
-        required: true
-        type: string
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
-  detect-build-type:
-    name: Detect Release Metadata
+  publish-release:
+    name: Publish releases
     runs-on: blacksmith-2vcpu-ubuntu-2204
+
     outputs:
-      ref: ${{ steps.detect.outputs.ref }}
-      version: ${{ steps.detect.outputs.version }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
-    steps:
-      - name: Detect version from tag or inputs
-        id: detect
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            # Tag push: use the tag name as-is
-            VERSION="${{ github.ref_name }}"
-            REF="${{ github.ref }}"
-          else
-            # Manual workflow dispatch: construct version from input
-            INPUT_VERSION="${{ github.event.inputs.version }}"
-            REF="${{ github.event.inputs.ref || 'main' }}"
 
-            # Add v prefix if not present
-            if [[ ! "$INPUT_VERSION" =~ ^v ]]; then
-              INPUT_VERSION="v${INPUT_VERSION}"
-            fi
-
-            VERSION="${INPUT_VERSION}"
-          fi
-
-          echo "ref=$REF" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ steps.detect.outputs.ref }}
-          fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Get commit hash
-        id: get-commit-hash
-        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-  release-plz:
-    name: Release with release-plz
-    runs-on: blacksmith-2vcpu-ubuntu-2204
-    needs: detect-build-type
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.detect-build-type.outputs.ref }}
-          fetch-depth: 0
-          submodules: recursive
           token: ${{ secrets.PAT_TOKEN }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Dry Run
         id: dry-run
@@ -103,19 +49,16 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   build:
-    name: Build Solana Programs for Release
-    needs: [detect-build-type, release-plz]
-    if: always() && (needs.release-plz.result == 'success' || needs.release-plz.result == 'skipped')
+    needs: publish-release
     uses: ./.github/workflows/release-reusable-build.yaml
     with:
-      ref: ${{ needs.detect-build-type.outputs.ref }}
+      ref: main
       update-ids: false
       commit-changes: false
     secrets: inherit
 
-  upload-to-r2:
-    name: Upload Release to R2 (${{ matrix.environment }})
-    needs: [detect-build-type, build]
+  upload:
+    needs: [publish-release, build]
     strategy:
       matrix:
         environment:
@@ -123,62 +66,17 @@ jobs:
           - stagenet
           - testnet
           - mainnet
+
     uses: ./.github/workflows/release-reusable-upload.yaml
     with:
-      version: ${{ needs.detect-build-type.outputs.version }}
+      version: ${{ needs.publish-release.outputs.commit_hash }}
       environment: ${{ matrix.environment }}
       artifact-name: ${{ needs.build.outputs.artifact-name }}
       artifact-path: ${{ needs.build.outputs.artifact-path }}
-      ref: ${{ needs.detect-build-type.outputs.ref }}
+      ref: main
       github-release: false
     secrets:
       github-token: ${{ secrets.PAT_TOKEN }}
       cf-endpoint-url: ${{ secrets.CF_ENDPOINT_URL }}
       cf-bucket-access-key-id: ${{ secrets.CF_BUCKET_ACCESS_KEY_ID }}
       cf-bucket-secret-access-key: ${{ secrets.CF_BUCKET_SECRET_ACCESS_KEY }}
-
-  create-github-release:
-    name: Create GitHub Release
-    runs-on: blacksmith-2vcpu-ubuntu-2204
-    needs: [detect-build-type, build, upload-to-r2]
-    if: github.event_name == 'push'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.artifact-name }}
-          path: release-artifacts
-
-      - name: Generate release notes
-        id: release-notes
-        run: |
-          VERSION="${{ needs.detect-build-type.outputs.version }}"
-          REF="${{ needs.detect-build-type.outputs.ref }}"
-          COMMIT="${{ needs.detect-build-type.outputs.commit_hash }}"
-
-          cat > release-notes.md << EOF
-          ## Solana Program Release ${VERSION}
-
-          **Branch:** \`${REF}\` | **Commit:** \`${COMMIT}\`
-
-          Artifacts uploaded to: \`releases/solana/{environment}/${VERSION}/\`
-
-          **Deployment:** \`anchor deploy\` | **Verification:** \`anchor verify\`
-          EOF
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
-        with:
-          files: |
-            release-artifacts/*.so
-          body_path: release-notes.md
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
