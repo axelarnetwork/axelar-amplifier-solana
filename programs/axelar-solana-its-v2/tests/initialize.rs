@@ -434,7 +434,15 @@ fn test_initialize_success() {
         Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &program_id).0;
     assert_eq!(its_root_pda, expected_its_pda);
 
-    let (expected_roles_pda, _) = UserRoles::find_pda(&its_root_pda, &operator);
+    let expected_roles_pda = Pubkey::find_program_address(
+        &[
+            UserRoles::SEED_PREFIX,
+            its_root_pda.as_ref(),
+            operator.as_ref(),
+        ],
+        &program_id,
+    )
+    .0;
     assert_eq!(user_roles_pda, expected_roles_pda);
 
     // Verify the program data PDA is correct
