@@ -1,110 +1,113 @@
-name: Reusable Upload
+name: "Upload Program binaries to Cloudflare R2"
 
 on:
   workflow_call:
     inputs:
-      version:
-        description: 'Version identifier (e.g., v1.0.0 or commit hash)'
-        required: true
+      package-name:
+        description: "The package name to use (ex: axelar-solana-gateway)"
         type: string
-      environment:
-        description: 'Environment: devnet-amplifier, stagenet, testnet, or mainnet'
         required: true
+        default: ""
+      package-version:
+        description: "The package version to use (ex: 0.1.2)"
         type: string
+        required: true
+        default: ""
+      package-git-tag:
+        description: "the release tag name (ex: axelar-solana-gateway-v0.1.2)"
+        type: string
+        required: true
+        default: ""
       artifact-name:
-        description: 'Name of the artifact to download'
-        required: false
+        description: "Name of the artifact containing the builds"
         type: string
-        default: 'solana-programs'
+        required: true
       artifact-path:
-        description: 'Path to download artifacts to'
+        description: "Path of the artifact containing the builds"
         type: string
-        required: false
-        default: 'artifacts'
-      ref:
-        description: 'Git ref that was built'
+        required: true
+      cf-bucket-name:
+        description: "The CF bucket name to use"
         required: true
         type: string
-        default: 'main'
+      cf-config-bucket-root-key:
+        description: "The root key to be used for accessing the configs. (ex: `test-root-key` puts releases in `test-root-key/*`)"
+        required: true
+        type: string
       github-release:
-        description: 'Whether to upload as a github release'
+        description: "Whether to upload as a github release"
         type: boolean
-        default: false
+        default: true
 
     secrets:
       github-token:
-        description: 'The github token to use for release uploads'
-        required: false
+        description: "The github token to use to do the tag updates"
+        required: true
       cf-endpoint-url:
-        description: 'The endpoint URL of the CF bucket'
+        description: "The endpoint URL of the CF bucket"
         required: true
       cf-bucket-access-key-id:
-        description: 'The CF bucket access key id'
+        description: "The CF bucket access key id"
         required: true
       cf-bucket-secret-access-key:
-        description: 'The CF bucket secret access key'
+        description: "The CF bucket secret access key"
         required: true
-
-env:
-  CF_BUCKET_NAME: axelar-static
-  CF_BUCKET_ROOT_KEY: releases/solana
 
 jobs:
   upload:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    name: Upload ${{ inputs.package-git-tag }}
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifact-path }}
+
       - name: Prepare cross-steps variables
         run: |
-          VERSION="${{ inputs.version }}"
-          BASE_ARTIFACTS_DIR="${{ inputs.artifact-path }}"
-          ARTIFACT_NAME="axelar-amplifier-solana-programs-${VERSION}"
-          BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}"
+          export PACKAGE_NAME='${{ inputs.package-name }}'
+          export PACKAGE_VERSION=${{ inputs.github-release && format('v{0}', inputs.package-version) || inputs.package-version }}
 
-          ARCHIVES_OUTPUT_DIR="${{ github.workspace }}/build/archives"
-          ZIP_ARCHIVE_FILE="${ARCHIVES_OUTPUT_DIR}/${ARTIFACT_NAME}.zip"
-          TAR_ARCHIVE_FILE="${ARCHIVES_OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz"
+          export BASE_ARTIFACTS_DIR='${{ inputs.artifact-path }}'
+          export ARTIFACT_NAME="axelar-amplifier-solana-${PACKAGE_NAME}-${PACKAGE_VERSION}"
+          export BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}" # Regardless of the dir type, relative or absolute
+
+          export ARCHIVES_OUTPUT_DIR="${{ github.workspace }}/build/archives"
+          export ZIP_ARCHIVE_FILE="${ARCHIVES_OUTPUT_DIR}/${ARTIFACT_NAME}.zip"
+          export TAR_ARCHIVE_FILE="${ARCHIVES_OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz"
 
           # Ensures that this dir is created
           mkdir -p ${ARCHIVES_OUTPUT_DIR}
 
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          # ex: axelar-solana-gateway
+          echo "PACKAGE_NAME=${PACKAGE_NAME}" >> $GITHUB_ENV
+
+          # ex: v0.1.0
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> $GITHUB_ENV
+
+          # ex: ./target/deploy
           echo "BASE_ARTIFACTS_DIR=${BASE_ARTIFACTS_DIR}" >> $GITHUB_ENV
+
+          # ex: axelar-amplifier-solana-axelar-solana-gateway-v0.1.0
           echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
+
+          # ex: ./axelar-amplifier-solana-axelar-solana-gateway-v0.1.0
           echo "BASE_ARTIFACTS_VERSIONED_DIR=${BASE_ARTIFACTS_VERSIONED_DIR}" >> $GITHUB_ENV
-          echo "ARCHIVES_OUTPUT_DIR=${ARCHIVES_OUTPUT_DIR}" >> $GITHUB_ENV
+
           echo "ZIP_ARCHIVE_FILE=${ZIP_ARCHIVE_FILE}" >> $GITHUB_ENV
           echo "TAR_ARCHIVE_FILE=${TAR_ARCHIVE_FILE}" >> $GITHUB_ENV
 
-          echo "Final version for upload: ${VERSION}"
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.artifact-name }}
-          path: ${{ env.BASE_ARTIFACTS_DIR }}
-
-      - name: List downloaded artifacts
+        # Create `zip` and `tar` archive files for program binaries
+      - name: Create `zip` and `tar` archive files for program binaries
         run: |
-          echo "Downloaded artifacts:"
-          find ${{ env.BASE_ARTIFACTS_DIR }} -type f
-
-      - name: Verify required tools are installed
-        run: |
-          aws --version
-          jq --version
-          zip --version
-          tar --version
-          sha256sum --version
-
-      - name: Create `zip` and `tar` archive files
-        run: |
-          # Renaming to keep the dir structure in the archive matching the release version
+          # Renaming to keep the dir structure in the archive matching the release version defined in `BASE_ARTIFACTS_VERSIONED_DIR`
           mv ${{ env.BASE_ARTIFACTS_DIR }} ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}
 
           # This cd to keep the dir structure of the artifacts archive
           cd ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}
 
-          # Archive the program binaries (.so files)
+          # Archive the program binaries
           find "." -type f -name "*.so" -maxdepth 1 -print | zip "${{ env.ZIP_ARCHIVE_FILE }}" -@
           find "." -type f -name "*.so" -maxdepth 1 -print | tar -czvf "${{ env.TAR_ARCHIVE_FILE }}" -T -
 
@@ -113,116 +116,61 @@ jobs:
             sha256sum "$file" > "$file.sha256"
           done
 
-      - name: Publish program binaries to CF R2
+      # Publishing program binaries to `R2`
+      - name: Configure CF credentials
+        run: |
+          cd $HOME; mkdir ~/.aws; touch ~/.aws/credentials; touch ~/.aws/config
+          echo "[default]
+          aws_access_key_id = ${{ secrets.cf-bucket-access-key-id }}
+          aws_secret_access_key = ${{ secrets.cf-bucket-secret-access-key }}" > ~/.aws/credentials
+          echo "[default]
+          region=auto
+          output=json" > ~/.aws/config
+
+      - name: Publish files to CF R2
         id: publish-to-r2
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.cf-bucket-access-key-id }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.cf-bucket-secret-access-key }}
-          AWS_DEFAULT_REGION: auto
+          S3_BUCKET_NAME: ${{ inputs.cf-bucket-name }}
           ENDPOINT_URL: ${{ secrets.cf-endpoint-url }}
+          CF_BUCKET_ROOT_KEY: ${{ inputs.cf-config-bucket-root-key }}
         run: |
-          CF_PROGRAMS_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/programs"
-          PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "*.so")
-
-          if [ -z "$PROGRAM_FILES" ]; then
-            echo "Error: No .so files found to upload!"
-            exit 1
-          fi
+          export CF_PROGRAMS_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/programs"
+          export PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "*.so")
 
           printf '%s\n' "$PROGRAM_FILES" | while IFS= read -r program_file; do
             echo "Uploading program file: ${program_file}"
             if [[ -f "$program_file" ]]; then
               FILE_KEY=$(echo $program_file | sed "s|^${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/||")
               echo "Uploading program file key: $CF_PROGRAMS_BUCKET_ROOT_KEY/$FILE_KEY"
-              aws s3api put-object --bucket ${{ env.CF_BUCKET_NAME }} --key "$CF_PROGRAMS_BUCKET_ROOT_KEY/$FILE_KEY" --body "$program_file" --acl public-read --endpoint-url $ENDPOINT_URL
+              aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_PROGRAMS_BUCKET_ROOT_KEY/$FILE_KEY" --body "$program_file" --acl public-read --endpoint-url $ENDPOINT_URL
             fi
           done
 
-          # Upload keypair files (excluding build-metadata.json and manifest.json)
-          CF_KEYPAIRS_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/keypairs"
-          KEYPAIR_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "*.json" ! -name "build-metadata.json" ! -name "manifest.json")
-
-          printf '%s\n' "$KEYPAIR_FILES" | while IFS= read -r keypair_file; do
-            echo "Uploading keypair file: ${keypair_file}"
-              if [[ -f "$keypair_file" ]]; then
-                FILE_KEY=$(echo $keypair_file | sed "s|^${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/||")
-                echo "Uploading keypair file key: $CF_KEYPAIRS_BUCKET_ROOT_KEY/$FILE_KEY"
-                aws s3api put-object --bucket ${{ env.CF_BUCKET_NAME }} --key "$CF_KEYPAIRS_BUCKET_ROOT_KEY/$FILE_KEY" --body "$keypair_file" --acl public-read --endpoint-url $ENDPOINT_URL
-              fi
-          done
-
           # Upload the previously created archives to R2
-          CF_ARCHIVES_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/archives"
+          export CF_ARCHIVES_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/archives"
 
           for file in "${{ env.TAR_ARCHIVE_FILE }}" "${{ env.ZIP_ARCHIVE_FILE }}"; do
             FILE_NAME=$(basename "${file}")
-            echo "Uploading archive: ${FILE_NAME}"
-            aws s3api put-object --bucket ${{ env.CF_BUCKET_NAME }} --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME" --body "$file" --acl public-read --endpoint-url $ENDPOINT_URL
-            aws s3api put-object --bucket ${{ env.CF_BUCKET_NAME }} --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME.sha256" --body "$file.sha256" --acl public-read --endpoint-url $ENDPOINT_URL
+            aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME" --body "$file" --acl public-read --endpoint-url $ENDPOINT_URL
+            aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME.sha256" --body "$file.sha256" --acl public-read --endpoint-url $ENDPOINT_URL
           done
 
           # Convert list to a compacted JSON array output
           echo program_files=$(echo "${PROGRAM_FILES}" | jq -R . | jq -s . | jq -c .) >> "$GITHUB_OUTPUT"
 
-      - name: Generate artifact manifest
-        run: |
-          echo "Generating artifact manifest..."
-
-          # Read build metadata if it exists
-          BUILD_REF="${{ inputs.ref }}"
-          COMMIT_SHA="${{ github.sha }}"
-          if [ -f "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/build-metadata.json" ]; then
-            BUILD_REF=$(jq -r '.ref // "${{ inputs.ref }}"' ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/build-metadata.json)
-            COMMIT_SHA=$(jq -r '.commit_sha // "${{ github.sha }}"' ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/build-metadata.json)
-          fi
-
-          # Check if any artifacts exist (excluding build-metadata.json)
-          ARTIFACT_COUNT=$(find ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }} \( -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" -a ! -name "manifest.json" \) \) | wc -l)
-          if [ "$ARTIFACT_COUNT" -eq 0 ]; then
-            echo "Error: No artifacts found to include in manifest"
-            exit 1
-          fi
-
-          echo "Found $ARTIFACT_COUNT artifact(s) to include in manifest"
-
-          cat > ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/manifest.json << EOF
-          {
-            "commit_sha": "$COMMIT_SHA",
-            "artifacts": [
-          $(find ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }} \( -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" -a ! -name "manifest.json" \) \) | while read file; do
-            echo "      \"$(basename $file)\","
-          done | sed '$ s/,$//')
-            ]
-          }
-          EOF
-          cat ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/manifest.json
-
-      - name: Upload manifest
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.cf-bucket-access-key-id }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.cf-bucket-secret-access-key }}
-          AWS_DEFAULT_REGION: auto
-          ENDPOINT_URL: ${{ secrets.cf-endpoint-url }}
-        run: |
-          CF_MANIFEST_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/manifest.json"
-          echo "Uploading manifest to: $CF_MANIFEST_KEY"
-          aws s3api put-object --bucket ${{ env.CF_BUCKET_NAME }} --key "$CF_MANIFEST_KEY" --body "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/manifest.json" --acl public-read --endpoint-url $ENDPOINT_URL
-          echo ""
-          echo "✅ Upload complete!"
-          echo "Version: ${{ env.VERSION }}"
-          echo "Environment: ${{ inputs.environment }}"
-          echo "R2 path: ${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/"
-
+      # Update the existing release and upload the program binaries, zip and tar archives to the specific tag
+      # https://github.com/orgs/community/discussions/26263#discussioncomment-3251069
       - name: Update the GitHub Release
         uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
         if: inputs.github-release
         with:
-          tag_name: ${{ env.VERSION }}
+          tag_name: ${{ inputs.package-git-tag }} # This uses the tag from the push
           files: |
             ${{ env.TAR_ARCHIVE_FILE }}
             ${{ env.TAR_ARCHIVE_FILE }}.sha256
             ${{ env.ZIP_ARCHIVE_FILE }}
             ${{ env.ZIP_ARCHIVE_FILE }}.sha256
-            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '\n') }}
+            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '
+            ') }}
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
