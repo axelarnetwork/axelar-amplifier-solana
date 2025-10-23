@@ -142,19 +142,12 @@ jobs:
             sha256sum "$file" > "$file.sha256"
           done
 
-      - name: Configure CF credentials
-        run: |
-          cd $HOME; mkdir -p ~/.aws; touch ~/.aws/credentials; touch ~/.aws/config
-          echo "[default]
-          aws_access_key_id = ${{ secrets.cf-bucket-access-key-id }}
-          aws_secret_access_key = ${{ secrets.cf-bucket-secret-access-key }}" > ~/.aws/credentials
-          echo "[default]
-          region=auto
-          output=json" > ~/.aws/config
-
       - name: Publish program binaries to CF R2
         id: publish-to-r2
         env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.cf-bucket-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.cf-bucket-secret-access-key }}
+          AWS_DEFAULT_REGION: auto
           ENDPOINT_URL: ${{ secrets.cf-endpoint-url }}
         run: |
           CF_PROGRAMS_BUCKET_ROOT_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/programs"
@@ -215,7 +208,7 @@ jobs:
           fi
 
           # Check if any artifacts exist (excluding build-metadata.json)
-          ARTIFACT_COUNT=$(find ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }} -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" -a ! -name "manifest.json" \) | wc -l)
+          ARTIFACT_COUNT=$(find ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }} \( -name "*.so" -o \( -name "*.json" -a ! -name "build-metadata.json" -a ! -name "manifest.json" \) \) | wc -l)
           if [ "$ARTIFACT_COUNT" -eq 0 ]; then
             echo "Error: No artifacts found to include in manifest"
             exit 1
@@ -245,6 +238,9 @@ jobs:
 
       - name: Upload manifest
         env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.cf-bucket-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.cf-bucket-secret-access-key }}
+          AWS_DEFAULT_REGION: auto
           ENDPOINT_URL: ${{ secrets.cf-endpoint-url }}
         run: |
           CF_MANIFEST_KEY="${{ env.CF_BUCKET_ROOT_KEY }}/${{ inputs.environment }}/${{ env.VERSION }}/manifest.json"
@@ -267,7 +263,6 @@ jobs:
             ${{ env.TAR_ARCHIVE_FILE }}.sha256
             ${{ env.ZIP_ARCHIVE_FILE }}
             ${{ env.ZIP_ARCHIVE_FILE }}.sha256
-            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '
-            ') }}
+            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '\n') }}
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
