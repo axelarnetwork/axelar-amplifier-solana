@@ -103,22 +103,8 @@ jobs:
           echo "Downloaded artifacts:"
           find ${{ env.BASE_ARTIFACTS_DIR }} -type f
 
-      - name: Install required tools
+      - name: Verify required tools are installed
         run: |
-          # AWS CLI and jq are typically pre-installed on blacksmith runners
-          # but we verify and install if needed for reliability
-          if ! command -v aws &> /dev/null; then
-            echo "Installing AWS CLI..."
-            sudo apt-get update
-            sudo apt-get install -y awscli
-          fi
-
-          if ! command -v jq &> /dev/null; then
-            echo "Installing jq..."
-            sudo apt-get install -y jq
-          fi
-
-          # Verify installations
           aws --version
           jq --version
           zip --version
