@@ -9,10 +9,10 @@
 > - [`Solana Transactions and Instructions`](https://solana.com/docs/core/transactions)
 > - [`Solana CPI`](https://solana.com/docs/core/cpi)
 > - [`Solana PDAs`](https://solana.com/docs/core/pda)
-> 
+>
 > 👆 a shorter-summary version is available [on Axelar Executable docs](./axelar-executable.md#solana-specific-rundown).
 
-When integrating with it, you are not expected to be exposed to the Axelar Solana Gateway's inner workings and security mechanisms. 
+When integrating with it, you are not expected to be exposed to the Axelar Solana Gateway's inner workings and security mechanisms.
 - To receive GMP messages from other chains, read [Axelar Executable docs](./axelar-executable.md#solana-specific-rundown).
 - To send messages to other chains, read [Sending messages from Solana](#sending-messages-from-solana).
 
@@ -26,7 +26,7 @@ A CPI must be made to the Axelar Solana Gateway for a destination contract to co
 - On Solana, there is no `msg.sender` concept as in Solidity.
 - On Solana `program_id`'s **cannot** be signers.
 - On Solana, only PDAs can sign on behalf of a program. The only way for programs to send messages is to create PDAs that use [`invoke_signed()`](https://docs.rs/solana-cpi/latest/solana_cpi/fn.invoke_signed.html) and sign over the CPI call.
-- The interface of `axelar_solana_gateway::GatewayInstruction::CallContract` instruction defines that the first account in the `accounts[]` must be the `program_id` that is sending the GMP payload.
+- The interface of `solana_axelar_gateway_legacy::GatewayInstruction::CallContract` instruction defines that the first account in the `accounts[]` must be the `program_id` that is sending the GMP payload.
 The second account is a `signing PDA`, meaning the source program must generate a PDA with specific parameters and sign the CPI call for `gateway.call_contract`. This Signature acts as an authorization token that allows the Gateway to interpret that the provided `program_id` is indeed the one that made the call and thus will use the `program_id` as the sender.
 
 
@@ -78,7 +78,7 @@ The approach taken here is that:
     1. we can prove that each `message` is part of the `payload digest` with the corresponding Merkle Proof
     2. we can prove that each `verifier` is part of the `verifier set` that signed the `payload digest` with the corresponding Merkle Proof
     3. each `verifier` has a corresponding Signature attached to it
-  
+
 | action | tx count | description |
 | - | - | - |
 | Relayer calls `Initialize Payload Verification Session` on the Gateway [[link to the processor]](https://github.com/eigerco/axelar-amplifier-solana/blob/c73300dec01547634a80d85b9984348015eb9fb2/solana/programs/axelar-solana-gateway/src/processor/initialize_payload_verification_session.rs) | 1 | This creates a new PDA that will keep track of the verified signatures. The `payload digest` is used as the core seed parameter for the PDA. This is safe because a `payload digest` will only be duplicated if the `verifier set` remains the same (this is often the case) AND all of the messages are the same. Even if all the messages remain the same, `Axelar Solana Gateway` has idempotency on a per-message level, meaning duplicate execution is impossible. |
@@ -90,12 +90,12 @@ The approach taken here is that:
 
 **Prerequisite:** `Signature Verification Session PDA` that has reached its quorum.
 
-As in the signature verification step, we cannot approve dozens of Messages in a single transaction due to Solana limitations. 
+As in the signature verification step, we cannot approve dozens of Messages in a single transaction due to Solana limitations.
 
 | action | tx count | description |
 | - | - | - |
 | Relayer calls [`Approve Message` (link to the processor)](https://github.com/eigerco/axelar-amplifier-solana/blob/c73300dec01547634a80d85b9984348015eb9fb2/solana/programs/axelar-solana-gateway/src/processor/approve_message.rs). | For each GMP message in the `ExecuteData` | <ol><li>Validating that a `message` is part of a `payload digest` using Merkle Proof.</li><li>Validating that the `payload digest` corresponds to `Signature Verification PDA`, and it has reached its quorum.</li><li>Validating that the `message` has not already been initialized</li><li>Initializes a new PDA (called `Incoming Message PDA`) responsible for tracking a message's `approved`/`executed` state. The core seed of this PDA is `command_id`. You can read more about `command_id` in the [EVM docs #replay prevention section](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/gateway/INTEGRATION.md#replay-prevention); our implementation is the same.</li><li>This action emits a log for the Relayer to capture.</li><li>Repeat this tx for every `message` in a batch.</li></ol> |
-  
+
 **Artefact:** We have initialized a new `Incoming Message PDA` for each message with its state set as `approved`. There have been no changes to PDA contents for messages approved in previous batches.
 
 ### Message Execution
@@ -136,7 +136,7 @@ The role can be updated using [`Transfer Operatorship`](https://github.com/eiger
 | Action | EVM reference impl | Solana implementation | Reasoning |
 | - | - | - | - |
 | [Authentication](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/gateway/INTEGRATION.md#authentication) | Every verifier and all the messages get hashed together in a single hash, then signatures get verified against that hash. All done in a single tx. | Every action is done in a separate tx. Signatures get verified against a hash first. Then, we use Merkle Proofs to prove that a message is part of the hash. | Solana cannot do that many actions in a single transaction (e.g. hashing multiple messages and creating a big hash out of that); we need to split up the approval process into many small transactions. This is described in detail on [axelar-solana-encoding](../crates/axelar-solana-encoding/README.md#current-limits-of-the-merkelised-implementation) crate |
-| Receiving the message on the destination contract | Payload is passed as tx args. | Payload is chunked and uploaded to on-chain storage in many small transactions | Otherwise, the average payload size we could provide would be ~600-800 bytes; Solana tx size is limited to 1232 bytes, and a lot of that is consumed by metadata | 
+| Receiving the message on the destination contract | Payload is passed as tx args. | Payload is chunked and uploaded to on-chain storage in many small transactions | Otherwise, the average payload size we could provide would be ~600-800 bytes; Solana tx size is limited to 1232 bytes, and a lot of that is consumed by metadata |
 | [Message size](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/gateway/INTEGRATION.md#limits) | 16kb is min; more than 1mb on EVM | 10kb is max with options to increase this in the future | The maximum amount of PDA storage (on-chain contract owned account) is 10kb when initialized up-front |
 | Updating verifier set | Requires the whole verifier set to be present, then it is re-hashed and then re-validated on chain | Only the verifier set hash is provided in tx parameters; we don't re-hash individual entries from the verifier set upon verifier set rotation. We take the verifier set hash from the Multisig Prover as granted and only validate that the latest verifier set signed it. We expect the hash always to be valid. | We cannot hash that many entries (67 verifiers being the minimum requirement) in a single transaction. The only thing we can do is _"prove that a verifier belongs to the verifier set"_ (like we do during signature verification). Still, even that would not change the underlying verifier set hash we set; thus, the operation would be pointless. |
 | [Upgradability](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/main/contracts/gateway/INTEGRATION.md#upgradability) | Gateway is deployed via a proxy contract | Gateway is deployed using `bpf_loader_upgradeable` program | This is the standard on Solana |
@@ -161,4 +161,3 @@ In case that id needs to be changed for `devnet`, id value needs to be reset to 
 git checkout -- .
 CHAIN_ENV=devnet cargo build-sbf
 ```
-

@@ -11,7 +11,6 @@ use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
-use axelar_solana_gateway::executable::{AxelarMessagePayload, EncodingScheme, SolanaAccountRepr};
 use axelar_solana_gateway_test_fixtures::base::FindLog;
 use axelar_solana_its::state::token_manager::{TokenManager, Type as TokenManagerType};
 use evm_contracts_test_suite::ethers::{signers::Signer, types::Bytes};
@@ -20,6 +19,9 @@ use evm_contracts_test_suite::evm_contracts_rs::contracts::custom_test_token::Cu
 use evm_contracts_test_suite::evm_contracts_rs::contracts::interchain_token::InterchainToken;
 use evm_contracts_test_suite::ContractMiddleware;
 use interchain_token_transfer_gmp::GMPPayload;
+use solana_axelar_gateway_legacy::executable::{
+    AxelarMessagePayload, EncodingScheme, SolanaAccountRepr,
+};
 use solana_axelar_memo_program::state::Counter;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
@@ -93,7 +95,7 @@ async fn custom_token(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 

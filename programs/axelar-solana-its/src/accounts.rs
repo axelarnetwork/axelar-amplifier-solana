@@ -151,7 +151,7 @@ pub(crate) struct CallContractAccounts<'a> {
 impl Validate for CallContractAccounts<'_> {
     fn validate(&self) -> Result<(), ProgramError> {
         validate_system_account_key(self.system_program.key)?;
-        axelar_solana_gateway::check_program_account(*self.gateway_program.key)?;
+        solana_axelar_gateway_legacy::check_program_account(*self.gateway_program.key)?;
 
         Ok(())
     }

@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
-use axelar_solana_gateway::events::CallContractEvent;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
-use solana_axelar_memo_legacy::get_counter_pda;
-use solana_axelar_memo_legacy::instruction::call_gateway_with_memo;
 use ethers_core::utils::hex::ToHex;
 use ethers_core::utils::keccak256;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_memo::ReceivedMemoFilter;
+use solana_axelar_gateway_legacy::events::CallContractEvent;
+use solana_axelar_memo_legacy::get_counter_pda;
+use solana_axelar_memo_legacy::instruction::call_gateway_with_memo;
 use solana_program_test::tokio;
 
 use crate::{axelar_evm_setup, axelar_solana_setup, MemoProgramWrapper};
@@ -167,7 +167,7 @@ async fn call_solana_gateway(
             memo.to_string(),
             destination_chain.clone(),
             destination_address.clone(),
-            &axelar_solana_gateway::ID,
+            &solana_axelar_gateway_legacy::ID,
         )
         .unwrap()])
         .await
@@ -188,7 +188,7 @@ async fn call_solana_gateway(
             memo.to_string(),
             destination_chain,
             destination_address,
-            &axelar_solana_gateway::ID,
+            &solana_axelar_gateway_legacy::ID,
         )
         .unwrap()])
         .await

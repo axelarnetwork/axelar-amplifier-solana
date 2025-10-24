@@ -1,7 +1,7 @@
-use axelar_solana_gateway::{events::MessageExecutedEvent, executable::EncodingScheme};
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use axelar_solana_multicall::instructions::MultiCallPayloadBuilder;
 use borsh::BorshDeserialize as _;
+use solana_axelar_gateway_legacy::{events::MessageExecutedEvent, executable::EncodingScheme};
 use solana_axelar_memo_program::instruction::AxelarMemoInstruction;
 use solana_axelar_memo_program::state::Counter;
 use solana_program::instruction::AccountMeta;

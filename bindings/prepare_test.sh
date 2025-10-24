@@ -22,7 +22,7 @@ cd $ROOT_PATH
 # Deploy programs and get their ids
 echo -e "\e[32mDeploy programs\e[0m"
 
-GATEWAY_ID=$(solana program deploy target/deploy/axelar_solana_gateway.so --program-id target/deploy/axelar_solana_gateway-keypair.json | cut -d' ' -f3)
+GATEWAY_ID=$(solana program deploy target/deploy/solana_axelar_gateway_legacy.so --program-id target/deploy/solana_axelar_gateway_legacy-keypair.json | cut -d' ' -f3)
 ITS_ID=$(solana program deploy target/deploy/axelar_solana_its.so --program-id target/deploy/axelar_solana_its-keypair.json | cut -d' ' -f3)
 MEMO_PROGRAM_ID=$(solana program deploy target/deploy/solana_axelar_memo_program.so --program-id target/deploy/solana_axelar_memo_program-keypair.json | cut -d' ' -f3)
 
@@ -55,6 +55,6 @@ cd $ROOT_PATH
 
 echo -e "\e[32mDeploy programs again with new id's\e[0m"
 
-solana program deploy target/deploy/axelar_solana_gateway.so --program-id target/deploy/axelar_solana_gateway-keypair.json
+solana program deploy target/deploy/solana_axelar_gateway_legacy.so --program-id target/deploy/solana_axelar_gateway_legacy-keypair.json
 solana program deploy target/deploy/axelar_solana_its.so --program-id target/deploy/axelar_solana_its-keypair.json
 solana program deploy target/deploy/solana_axelar_memo_program.so --program-id target/deploy/solana_axelar_memo_program-keypair.json

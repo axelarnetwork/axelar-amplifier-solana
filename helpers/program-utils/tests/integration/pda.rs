@@ -12,9 +12,10 @@ async fn test_cannot_create_pda_with_previous_lamports() {
     let mut program_test = program_test().await;
 
     // Ask the dummy program to generate a new PDA account
-    let (create_pda_ix, (key, _)) = dummy_axelar_solana_gateway::instructions::create_raw_pda(
-        &program_test.fixture.payer.pubkey(),
-    );
+    let (create_pda_ix, (key, _)) =
+        dummy_solana_axelar_gateway_legacy::instructions::create_raw_pda(
+            &program_test.fixture.payer.pubkey(),
+        );
 
     // We transfer 1 lamport to the PDA account so it cannot be created
     let transfer_lamports_ix =
@@ -33,8 +34,9 @@ async fn test_can_create_pda_with_previous_lamports_using_enhanced_function() {
     let mut program_test = program_test().await;
 
     // Ask the dummy program to generate a new PDA account
-    let (create_pda_ix, (key, _)) =
-        dummy_axelar_solana_gateway::instructions::create_pda(&program_test.fixture.payer.pubkey());
+    let (create_pda_ix, (key, _)) = dummy_solana_axelar_gateway_legacy::instructions::create_pda(
+        &program_test.fixture.payer.pubkey(),
+    );
 
     // We transfer lamports to the PDA account so it cannot be created from normal create-FUNCTION
     let transfer_lamports_ix =
@@ -53,7 +55,7 @@ async fn program_test() -> SolanaAxelarIntegrationMetadata {
         .initial_signer_weights(vec![555, 222])
         .programs_to_deploy(vec![(
             "dummy_axelar_solana_gateway.so".into(),
-            dummy_axelar_solana_gateway::id(),
+            dummy_solana_axelar_gateway_legacy::id(),
         )])
         .build()
         .setup()

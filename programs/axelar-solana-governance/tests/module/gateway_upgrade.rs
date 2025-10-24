@@ -36,7 +36,7 @@ async fn test_gateway_upgrade_through_proposal() {
 
     // Send the upgrade proposal with the new buffer account
     let ix_builder = IxBuilder::builder_for_program_upgrade(
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
         &buffer_address.pubkey(),
         &config_pda,
         &sol_integration.fixture.payer.pubkey(),
@@ -69,8 +69,8 @@ async fn test_gateway_upgrade_through_proposal() {
     sol_integration.warp_to_slot(2);
 
     // Now we can send ixs to the new program
-    let ix = dummy_axelar_solana_gateway::instructions::echo(
-        axelar_solana_gateway::ID,
+    let ix = dummy_solana_axelar_gateway_legacy::instructions::echo(
+        solana_axelar_gateway_legacy::ID,
         "Testing gateway upgrade".to_string(),
     );
     let res = sol_integration.fixture.send_tx(&[ix]).await;

@@ -51,8 +51,6 @@ use solana_sdk::system_instruction;
 use test_context::AsyncTestContext;
 
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway::events::CallContractEvent;
-use axelar_solana_gateway::state::incoming_message::command_id;
 use axelar_solana_gateway_test_fixtures::base::workspace_root_dir;
 use axelar_solana_gateway_test_fixtures::gas_service::GasServiceUtils;
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
@@ -76,6 +74,8 @@ use evm_contracts_test_suite::{
 };
 use interchain_token_transfer_gmp::{GMPPayload, ReceiveFromHub};
 use program_utils::pda::BorshPda;
+use solana_axelar_gateway_legacy::events::CallContractEvent;
+use solana_axelar_gateway_legacy::state::incoming_message::command_id;
 
 const SOLANA_CHAIN_NAME: &str = "solana-localnet";
 const EVM_CHAIN_NAME: &str = "ethereum";
@@ -167,7 +167,7 @@ impl ItsTestContext {
             .unwrap();
 
         // Action: set message status as executed by calling the destination program
-        let (incoming_message_pda, ..) = axelar_solana_gateway::get_incoming_message_pda(
+        let (incoming_message_pda, ..) = solana_axelar_gateway_legacy::get_incoming_message_pda(
             &command_id(&message.cc_id.chain, &message.cc_id.id),
         );
 

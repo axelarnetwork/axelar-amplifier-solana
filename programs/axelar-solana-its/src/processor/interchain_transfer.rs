@@ -1,11 +1,11 @@
 //! Module that handles the processing of the `InterchainTransfer` ITS
 //! instruction.
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway::executable::AxelarMessagePayload;
-use axelar_solana_gateway::state::incoming_message::command_id;
 use event_cpi_macros::{emit_cpi, event_cpi_accounts};
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};
 use program_utils::pda::BorshPda;
+use solana_axelar_gateway_legacy::executable::AxelarMessagePayload;
+use solana_axelar_gateway_legacy::state::incoming_message::command_id;
 use solana_program::account_info::AccountInfo;
 use solana_program::clock::Clock;
 use solana_program::entrypoint::ProgramResult;
@@ -68,12 +68,12 @@ use super::gmp;
 ///
 /// 2. **If `destination_address` is NOT a Token Account**: Derives and uses the Associated Token
 ///    Account (ATA) for that address.
-///    
+///
 ///    For security, the program verifies that the ATA's owner matches the `destination_address`:
 ///    - **SPL Token 2022 ATAs**: Always safe (have `ImmutableOwner` extension preventing ownership
 ///    changes)
 ///    - **SPL Token ATAs**: Can have ownership transferred, creating a security risk
-///    
+///
 ///    If ownership verification fails, the transaction is rejected to prevent funds being sent to
 ///    accounts controlled by unexpected parties./
 ///

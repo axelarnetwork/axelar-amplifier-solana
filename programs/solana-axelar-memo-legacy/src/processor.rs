@@ -1,12 +1,12 @@
 //! Program state processor
 
-use axelar_solana_gateway::executable::{
-    validate_message, AxelarExecuteInstruction, AxelarMessagePayload, PROGRAM_ACCOUNTS_START_INDEX,
-};
 use axelar_solana_its::executable::AxelarInterchainTokenExecuteInstruction;
 use borsh::{self, BorshDeserialize};
 use mpl_token_metadata::accounts::Metadata;
 use program_utils::{check_program_account, pda::ValidPDA};
+use solana_axelar_gateway_legacy::executable::{
+    validate_message, AxelarExecuteInstruction, AxelarMessagePayload, PROGRAM_ACCOUNTS_START_INDEX,
+};
 use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::entrypoint::ProgramResult;
 use solana_program::msg;
@@ -120,14 +120,15 @@ pub fn process_native_ix(
             let gateway_program = next_account_info(account_info_iter)?;
 
             let counter_pda_account = counter_pda.check_initialized_pda::<Counter>(program_id)?;
-            let signing_pda = axelar_solana_gateway::get_call_contract_signing_pda(crate::ID);
+            let signing_pda =
+                solana_axelar_gateway_legacy::get_call_contract_signing_pda(crate::ID);
             assert_counter_pda_seeds(&counter_pda_account, counter_pda.key);
             if &signing_pda.0 != signing_pda_acc.key {
                 msg!("invalid signing PDA");
                 return Err(ProgramError::InvalidAccountData);
             }
             invoke_signed(
-                &axelar_solana_gateway::instructions::call_contract(
+                &solana_axelar_gateway_legacy::instructions::call_contract(
                     *gateway_program.key,
                     *gateway_root_pda.key,
                     crate::ID,
@@ -144,7 +145,7 @@ pub fn process_native_ix(
                     gateway_program.clone(),
                 ],
                 &[&[
-                    axelar_solana_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED,
+                    solana_axelar_gateway_legacy::seed_prefixes::CALL_CONTRACT_SIGNING_SEED,
                     &[signing_pda.1],
                 ]],
             )?;

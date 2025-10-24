@@ -151,12 +151,12 @@ pub mod builder {
 
     use alloy_sol_types::SolValue;
     use axelar_solana_encoding::types::messages::Message;
-    use axelar_solana_gateway::state::incoming_message::command_id;
     use borsh::to_vec;
     use core::str::FromStr;
     use governance_gmp::alloy_primitives::Uint;
     use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
     use program_utils::{checked_from_u256_le_bytes_to_u64, from_u64_to_u256_le_bytes};
+    use solana_axelar_gateway_legacy::state::incoming_message::command_id;
     use solana_program::instruction::{AccountMeta, Instruction};
     use solana_program::keccak::hash;
     use solana_program::program_error::ProgramError;
@@ -1140,16 +1140,16 @@ pub mod builder {
         let destination_address = Pubkey::from_str(&message.destination_address)
             .expect("Invalid destination address in message");
         let (gateway_approved_message_signing_pda, _) =
-            axelar_solana_gateway::get_validate_message_signing_pda(
+            solana_axelar_gateway_legacy::get_validate_message_signing_pda(
                 destination_address,
                 command_id,
             );
 
-        let gateway_root_pda = axelar_solana_gateway::get_gateway_root_config_pda().0;
+        let gateway_root_pda = solana_axelar_gateway_legacy::get_gateway_root_config_pda().0;
 
         let (event_authority, _bump) = Pubkey::find_program_address(
             &[event_cpi::EVENT_AUTHORITY_SEED],
-            &axelar_solana_gateway::ID,
+            &solana_axelar_gateway_legacy::ID,
         );
 
         let mut new_accounts = vec![
@@ -1157,7 +1157,7 @@ pub mod builder {
             AccountMeta::new_readonly(gateway_approved_message_signing_pda, false),
             AccountMeta::new_readonly(gateway_root_pda, false),
             AccountMeta::new_readonly(event_authority, false),
-            AccountMeta::new_readonly(axelar_solana_gateway::id(), false),
+            AccountMeta::new_readonly(solana_axelar_gateway_legacy::id(), false),
         ];
         // Append the new accounts to the existing ones.
         new_accounts.extend_from_slice(&ix.accounts);

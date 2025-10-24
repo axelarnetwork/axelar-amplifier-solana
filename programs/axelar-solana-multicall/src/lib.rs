@@ -1,5 +1,5 @@
 //! # Multicall program
-use axelar_solana_gateway::ensure_single_feature;
+use solana_axelar_gateway_legacy::ensure_single_feature;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::program_error::ProgramError;
 use solana_program::pubkey::Pubkey;

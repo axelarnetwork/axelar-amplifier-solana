@@ -94,7 +94,7 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -260,7 +260,7 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -425,7 +425,7 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -629,7 +629,7 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -758,7 +758,7 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
             .ok_or_else(|| anyhow!("InterchainTransfer not found"))
             .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 

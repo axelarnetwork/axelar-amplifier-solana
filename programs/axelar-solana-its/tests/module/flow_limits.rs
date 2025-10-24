@@ -12,11 +12,11 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use spl_token_2022::state::Account;
 use test_context::test_context;
 
-use axelar_solana_gateway::events::CallContractEvent;
 use evm_contracts_test_suite::ethers::signers::Signer as EvmSigner;
 use evm_contracts_test_suite::ethers::types::U256;
 use interchain_token_transfer_gmp::GMPPayload;
 use interchain_token_transfer_gmp::InterchainTransfer;
+use solana_axelar_gateway_legacy::events::CallContractEvent;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 

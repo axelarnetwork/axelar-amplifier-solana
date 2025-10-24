@@ -1,9 +1,9 @@
 //! Program instructions processor.
 
-use axelar_solana_gateway::executable::{
+use borsh::BorshDeserialize;
+use solana_axelar_gateway_legacy::executable::{
     validate_message, AxelarExecuteInstruction, AxelarMessagePayload, PROGRAM_ACCOUNTS_START_INDEX,
 };
-use borsh::BorshDeserialize;
 use solana_program::account_info::AccountInfo;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::instruction::{AccountMeta, Instruction};

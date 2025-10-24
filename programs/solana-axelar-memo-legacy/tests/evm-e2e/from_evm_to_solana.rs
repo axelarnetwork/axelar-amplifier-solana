@@ -1,9 +1,6 @@
 use crate::{axelar_evm_setup, axelar_solana_setup, MemoProgramWrapper};
 use anyhow::{bail, Context, Result};
 use axelar_solana_encoding::types::messages::{CrossChainId, Message};
-use axelar_solana_gateway::events::MessageExecutedEvent;
-use axelar_solana_gateway::executable::AxelarMessagePayload;
-use solana_axelar_memo_legacy::state::Counter;
 use borsh::BorshDeserialize;
 use ethers_core::utils::hex::ToHexExt;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::ContractCallFilter;
@@ -12,6 +9,9 @@ use evm_contracts_test_suite::evm_contracts_rs::contracts::{
     axelar_amplifier_gateway, axelar_memo,
 };
 use evm_contracts_test_suite::ContractMiddleware;
+use solana_axelar_gateway_legacy::events::MessageExecutedEvent;
+use solana_axelar_gateway_legacy::executable::AxelarMessagePayload;
+use solana_axelar_memo_legacy::state::Counter;
 use solana_program_test::tokio;
 use solana_sdk::transaction::TransactionError;
 use std::fmt;

@@ -15,25 +15,25 @@ no-entrypoint = []
 test-sbf = []
 devnet-amplifier = [
     "axelar-solana-gateway-test-fixtures/devnet-amplifier",
-    "axelar-solana-gateway/devnet-amplifier",
+    "solana-axelar-gateway-legacy/devnet-amplifier",
     "solana-axelar-memo-legacy/devnet-amplifier",
     "program-utils/devnet-amplifier"
 ]
 stagenet = [
     "axelar-solana-gateway-test-fixtures/stagenet",
-    "axelar-solana-gateway/stagenet",
+    "solana-axelar-gateway-legacy/stagenet",
     "solana-axelar-memo-legacy/stagenet",
     "program-utils/stagenet"
 ]
 testnet = [
     "axelar-solana-gateway-test-fixtures/testnet",
-    "axelar-solana-gateway/testnet",
+    "solana-axelar-gateway-legacy/testnet",
     "solana-axelar-memo-legacy/testnet",
     "program-utils/testnet"
 ]
 mainnet = [
     "axelar-solana-gateway-test-fixtures/mainnet",
-    "axelar-solana-gateway/mainnet",
+    "solana-axelar-gateway-legacy/mainnet",
     "solana-axelar-memo-legacy/mainnet",
     "program-utils/mainnet"
 ]
@@ -51,7 +51,7 @@ governance-gmp.workspace = true
 borsh.workspace = true
 axelar-solana-encoding.workspace = true
 alloy-sol-types.workspace = true
-axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-gateway-legacy = { workspace = true, features = ["no-entrypoint"] }
 role-management.workspace = true
 
 [dev-dependencies]

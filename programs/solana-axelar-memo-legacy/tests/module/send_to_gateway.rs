@@ -1,8 +1,8 @@
-use axelar_solana_gateway::events::CallContractEvent;
-use solana_axelar_memo_legacy::get_counter_pda;
-use solana_axelar_memo_legacy::instruction::call_gateway_with_memo;
 use ethers_core::abi::AbiEncode;
 use event_cpi_test_utils::assert_event_cpi;
+use solana_axelar_gateway_legacy::events::CallContractEvent;
+use solana_axelar_memo_legacy::get_counter_pda;
+use solana_axelar_memo_legacy::instruction::call_gateway_with_memo;
 use solana_program_test::tokio;
 use solana_sdk::signer::Signer;
 
@@ -30,7 +30,7 @@ async fn test_successfully_send_to_gateway() {
         memo.to_string(),
         destination_chain.clone(),
         destination_address.clone(),
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
     )
     .unwrap();
     let simulate_tx = solana_chain

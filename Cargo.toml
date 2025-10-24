@@ -186,20 +186,20 @@ proc-macro2 = "1"
 mollusk-svm = "0.5.1"
 
 # solana programs
-axelar-solana-its = { path = "programs/axelar-solana-its", default-features = false }
 axelar-solana-operators = { path = "programs/axelar-solana-operators", default-features = false }
 solana-axelar-gas-service = { path = "programs/solana-axelar-gas-service", default-features = false }
-solana-axelar-memo-legacy = { path = "programs/solana-axelar-memo-legacy", default-features = false }
 solana-axelar-memo = { path = "programs/solana-axelar-memo", default-features = false }
 axelar-solana-multicall = { path = "programs/axelar-solana-multicall", default-features = false }
-axelar-solana-gateway = { path = "programs/axelar-solana-gateway", default-features = false }
 axelar-solana-gateway-v2 = { path = "programs/axelar-solana-gateway-v2", default-features = false }
 axelar-solana-governance-v2 = { path = "programs/axelar-solana-governance-v2", default-features = false }
-dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", default-features = false }
-axelar-solana-governance = { path = "programs/axelar-solana-governance", default-features = false }
 
 # legacy solana programs
+axelar-solana-its = { path = "programs/axelar-solana-its", default-features = false }
+axelar-solana-governance = { path = "programs/axelar-solana-governance", default-features = false }
 solana-axelar-gas-service-legacy = { path = "programs/solana-axelar-gas-service-legacy", default-features = false }
+solana-axelar-gateway-legacy = { path = "programs/solana-axelar-gateway-legacy", default-features = false }
+solana-axelar-memo-legacy = { path = "programs/solana-axelar-memo-legacy", default-features = false }
+dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", default-features = false }
 
 # helper crates
 axelar-message-primitives = { path = "helpers/axelar-message-primitives" }

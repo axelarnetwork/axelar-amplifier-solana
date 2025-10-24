@@ -1,7 +1,6 @@
 use std::time::SystemTime;
 
 use axelar_solana_encoding::types::messages::{CrossChainId, Message};
-use axelar_solana_gateway::state::incoming_message::command_id;
 use axelar_solana_gateway_test_fixtures::base::{workspace_root_dir, TestFixture};
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
@@ -13,6 +12,7 @@ use axelar_solana_governance::state::GovernanceConfig;
 use borsh::to_vec;
 use event_cpi::CpiEvent;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
+use solana_axelar_gateway_legacy::state::incoming_message::command_id;
 use solana_axelar_memo_program::instruction::AxelarMemoInstruction;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::bpf_loader_upgradeable;
@@ -51,7 +51,7 @@ pub(crate) async fn setup_programs() -> (SolanaAxelarIntegrationMetadata, Pubkey
 
     // Immediately set the upgrade authority to the governance program. (needed for tests)
     let ix = bpf_loader_upgradeable::set_upgrade_authority(
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
         &upgrade_authority.pubkey(),
         Some(&gov_config_pda),
     );
@@ -255,10 +255,11 @@ pub(crate) async fn approve_ix_at_gateway(
         .unwrap();
 
     // Action: set message status as executed by calling the destination program
-    let (incoming_message_pda, ..) = axelar_solana_gateway::get_incoming_message_pda(&command_id(
-        &gmp_build.msg_meta.cc_id.chain,
-        &gmp_build.msg_meta.cc_id.id,
-    ));
+    let (incoming_message_pda, ..) =
+        solana_axelar_gateway_legacy::get_incoming_message_pda(&command_id(
+            &gmp_build.msg_meta.cc_id.chain,
+            &gmp_build.msg_meta.cc_id.id,
+        ));
 
     prepend_gateway_accounts_to_ix(&mut gmp_build.ix, incoming_message_pda, &gmp_build.msg_meta);
 }

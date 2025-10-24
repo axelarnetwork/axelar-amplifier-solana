@@ -1,7 +1,7 @@
 use axelar_solana_encoding::hasher::NativeHasher;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
-use axelar_solana_gateway::get_gateway_root_config_pda;
-use axelar_solana_gateway::state::signature_verification::SignatureVerification;
+use solana_axelar_gateway_legacy::get_gateway_root_config_pda;
+use solana_axelar_gateway_legacy::state::signature_verification::SignatureVerification;
 use axelar_solana_gateway_test_fixtures::gateway::{make_verifier_set, random_bytes};
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use bytemuck::Zeroable;
@@ -24,7 +24,7 @@ async fn test_initialize_payload_verification_session() {
     let gateway_config_pda = get_gateway_root_config_pda().0;
     let signing_verifier_set_hash = metadata.init_gateway_config_verifier_set_data().hash;
 
-    let ix = axelar_solana_gateway::instructions::initialize_payload_verification_session(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
         metadata.payer.pubkey(),
         gateway_config_pda,
         payload_merkle_root,
@@ -34,7 +34,7 @@ async fn test_initialize_payload_verification_session() {
     let _tx_result = metadata.send_tx(&[ix]).await.unwrap();
 
     // Check PDA contains the expected data
-    let (verification_pda, bump) = axelar_solana_gateway::get_signature_verification_pda(
+    let (verification_pda, bump) = solana_axelar_gateway_legacy::get_signature_verification_pda(
         &payload_merkle_root,
         &signing_verifier_set_hash,
     );
@@ -48,7 +48,7 @@ async fn test_initialize_payload_verification_session() {
 
     assert_eq!(
         verification_session_account.owner,
-        axelar_solana_gateway::ID
+        solana_axelar_gateway_legacy::ID
     );
 
     let session = metadata
@@ -75,7 +75,7 @@ async fn test_cannot_initialize_pda_twice() {
     let gateway_config_pda = get_gateway_root_config_pda().0;
     let signing_verifier_set_hash = metadata.init_gateway_config_verifier_set_data().hash;
 
-    let ix = axelar_solana_gateway::instructions::initialize_payload_verification_session(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
         metadata.payer.pubkey(),
         gateway_config_pda,
         payload_merkle_root,
@@ -85,7 +85,7 @@ async fn test_cannot_initialize_pda_twice() {
     let _tx_result = metadata.send_tx(&[ix]).await.unwrap();
 
     // Attempt to initialize the PDA a second time
-    let ix_second = axelar_solana_gateway::instructions::initialize_payload_verification_session(
+    let ix_second = solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
         metadata.payer.pubkey(),
         gateway_config_pda,
         payload_merkle_root,
@@ -121,7 +121,7 @@ async fn test_cannot_initialize_with_unknown_verifier_set() {
     // Attempt to initialize payload verification session with unknown verifier set
     let payload_merkle_root = random_bytes();
     let gateway_config_pda = get_gateway_root_config_pda().0;
-    let ix = axelar_solana_gateway::instructions::initialize_payload_verification_session(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
         metadata.payer.pubkey(),
         gateway_config_pda,
         payload_merkle_root,

@@ -1,9 +1,9 @@
 //! Program state processor
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway::executable::validate_with_raw_payload;
 use interchain_token_transfer_gmp::{GMPPayload, SendToHub};
 use itertools::{self, Itertools};
 use program_utils::pda::BorshPda;
+use solana_axelar_gateway_legacy::executable::validate_with_raw_payload;
 use solana_program::account_info::AccountInfo;
 use solana_program::entrypoint::ProgramResult;
 use solana_program::msg;
@@ -98,8 +98,10 @@ pub(crate) fn process_call_contract(
         return Err(ProgramError::InvalidInstructionData);
     }
 
-    let signing_pda =
-        axelar_solana_gateway::create_call_contract_signing_pda(crate::ID, signing_pda_bump)?;
+    let signing_pda = solana_axelar_gateway_legacy::create_call_contract_signing_pda(
+        crate::ID,
+        signing_pda_bump,
+    )?;
 
     if signing_pda.ne(accounts.call_contract_signing.key) {
         msg!("invalid call contract signing account / signing pda bump");
@@ -120,8 +122,8 @@ pub(crate) fn process_call_contract(
     };
 
     let payload_hash = solana_program::keccak::hashv(&[&payload]).to_bytes();
-    let call_contract_ix = axelar_solana_gateway::instructions::call_contract(
-        axelar_solana_gateway::id(),
+    let call_contract_ix = solana_axelar_gateway_legacy::instructions::call_contract(
+        solana_axelar_gateway_legacy::id(),
         *accounts.gateway_root.key,
         crate::ID,
         Some((signing_pda, signing_pda_bump)),
@@ -151,7 +153,7 @@ pub(crate) fn process_call_contract(
             accounts.gateway_event_authority.clone(),
         ],
         &[&[
-            axelar_solana_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED,
+            solana_axelar_gateway_legacy::seed_prefixes::CALL_CONTRACT_SIGNING_SEED,
             &[signing_pda_bump],
         ]],
     )?;

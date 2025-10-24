@@ -1,9 +1,9 @@
 use anyhow::anyhow;
-use axelar_solana_gateway::events::CallContractEvent;
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use axelar_solana_its::state::token_manager::Type;
 use evm_contracts_test_suite::ethers::signers::Signer as EvmSigner;
 use interchain_token_transfer_gmp::GMPPayload;
+use solana_axelar_gateway_legacy::events::CallContractEvent;
 use solana_axelar_memo_program::get_counter_pda;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::tokio;

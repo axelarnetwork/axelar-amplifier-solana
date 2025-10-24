@@ -78,7 +78,7 @@ async fn custom_token(
         .unwrap()[1]
         .clone();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -143,7 +143,7 @@ async fn custom_token(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -278,7 +278,7 @@ async fn canonical_token(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -760,7 +760,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -882,7 +882,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -1119,7 +1119,7 @@ async fn test_source_address_stays_consistent_through_the_transfer(
         .ok_or_else(|| anyhow!("InterchainTransfer not found"))
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 

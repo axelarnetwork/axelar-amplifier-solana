@@ -70,7 +70,7 @@ async fn setup_custom_token(
         .unwrap()[1]
         .clone();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -134,7 +134,7 @@ async fn setup_custom_token(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 
@@ -238,7 +238,7 @@ async fn test_valid_token_id_mint_matches_token_address(
         .cloned()
         .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
-        axelar_solana_gateway::events::CallContractEvent,
+        solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
     .expect("CallContractEvent not found");
 

@@ -375,7 +375,7 @@ mod tests {
 
     #[test]
     fn test_v1_compat() {
-        use axelar_solana_gateway::state::{
+        use solana_axelar_gateway_legacy::state::{
             signature_verification::SignatureVerification as SignatureVerificationV1,
             signature_verification_pda::SignatureVerificationSessionData as V1,
         };

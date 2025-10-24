@@ -1,7 +1,7 @@
 //! Utilities for working with the Axelar gas service
 
 use crate::base::TestFixture;
-use axelar_solana_gateway::BytemuckedPda;
+use solana_axelar_gateway_legacy::BytemuckedPda;
 use solana_program_test::{tokio, BanksTransactionResultWithMetadata};
 use solana_sdk::{
     account::ReadableAccount, program_pack::Pack, pubkey::Pubkey, signature::Keypair,

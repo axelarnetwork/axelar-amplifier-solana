@@ -1,6 +1,5 @@
 //! Module that handles the processing of the `InterchainToken` deployment.
 
-use axelar_solana_gateway::num_traits::Zero;
 use event_cpi_macros::{emit_cpi, event_cpi_accounts};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use mpl_token_metadata::accounts::Metadata;
@@ -13,6 +12,7 @@ use role_management::processor::{
     ensure_roles, ensure_signer_roles, RoleAddAccounts, RoleRemoveAccounts,
     RoleTransferWithProposalAccounts,
 };
+use solana_axelar_gateway_legacy::num_traits::Zero;
 use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::entrypoint::ProgramResult;
 use solana_program::msg;

@@ -1,9 +1,9 @@
-use crate::types::U256;
-use axelar_solana_gateway::get_gateway_root_config_pda;
-use axelar_solana_gateway::state::GatewayConfig;
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
+use solana_axelar_gateway_legacy::get_gateway_root_config_pda;
+use solana_axelar_gateway_legacy::state::GatewayConfig;
+use solana_axelar_gateway_legacy::types::U256;
 use solana_program_test::tokio;
 use solana_sdk::clock::Clock;
 use solana_sdk::pubkey::Pubkey;
@@ -50,7 +50,7 @@ async fn test_successfylly_initialize_config_with_single_initial_signer() {
         .await;
     let (gateway_config_pda, _bump) = get_gateway_root_config_pda();
     let initial_sets = metadata.init_gateway_config_verifier_set_data();
-    let ix = axelar_solana_gateway::instructions::initialize_config(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_config(
         metadata.fixture.payer.pubkey(),
         metadata.upgrade_authority.pubkey(),
         metadata.domain_separator,
@@ -102,7 +102,7 @@ async fn test_reverts_on_invalid_gateway_pda_pubkey() {
         .setup_without_init_config()
         .await;
     let initial_sets = metadata.init_gateway_config_verifier_set_data();
-    let ix = axelar_solana_gateway::instructions::initialize_config(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_config(
         metadata.fixture.payer.pubkey(),
         metadata.upgrade_authority.pubkey(),
         metadata.domain_separator,
@@ -144,7 +144,7 @@ async fn test_reverts_on_already_initialized_gateway_pda() {
         .await;
     let (gateway_config_pda, _bump) = get_gateway_root_config_pda();
     let initial_sets = metadata.init_gateway_config_verifier_set_data();
-    let ix = axelar_solana_gateway::instructions::initialize_config(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_config(
         metadata.fixture.payer.pubkey(),
         metadata.upgrade_authority.pubkey(),
         metadata.domain_separator,
@@ -193,7 +193,7 @@ async fn test_reverts_without_proper_upgrade_authority_signature() {
     let not_upgrade_authority = Keypair::new();
 
     // Create instruction with different payer
-    let ix = axelar_solana_gateway::instructions::initialize_config(
+    let ix = solana_axelar_gateway_legacy::instructions::initialize_config(
         metadata.fixture.payer.pubkey(),
         not_upgrade_authority.pubkey(), // Using different account instead of upgrade authority.
         metadata.domain_separator,

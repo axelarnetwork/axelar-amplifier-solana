@@ -1,8 +1,8 @@
 //! Instruction module for the Axelar Memo program.
 
 use anchor_discriminators_macros::InstructionDiscriminator;
-use axelar_solana_gateway::executable::AxelarMessagePayload;
 use borsh::to_vec;
+use solana_axelar_gateway_legacy::executable::AxelarMessagePayload;
 pub use solana_program;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::program_error::ProgramError;
@@ -155,7 +155,7 @@ pub fn call_gateway_with_memo(
         destination_chain,
         destination_address,
     })?;
-    let signing_pda = axelar_solana_gateway::get_call_contract_signing_pda(crate::ID);
+    let signing_pda = solana_axelar_gateway_legacy::get_call_contract_signing_pda(crate::ID);
     let accounts = vec![
         AccountMeta::new_readonly(crate::ID, false),
         AccountMeta::new(*memo_counter_pda, false),
@@ -164,7 +164,7 @@ pub fn call_gateway_with_memo(
         AccountMeta::new_readonly(
             Pubkey::find_program_address(
                 &[event_cpi::EVENT_AUTHORITY_SEED],
-                &axelar_solana_gateway::ID,
+                &solana_axelar_gateway_legacy::ID,
             )
             .0,
             false,
@@ -213,16 +213,16 @@ pub fn send_interchain_transfer(
     );
 
     // Additional required accounts for proper ITS instruction
-    let gateway_program = axelar_solana_gateway::id();
+    let gateway_program = solana_axelar_gateway_legacy::id();
     let gas_service_program = solana_axelar_gas_service_legacy::id();
     let (call_contract_signing_pda, _) =
-        axelar_solana_gateway::get_call_contract_signing_pda(axelar_solana_its::id());
+        solana_axelar_gateway_legacy::get_call_contract_signing_pda(axelar_solana_its::id());
     let its_program = axelar_solana_its::id();
     let (its_event_authority, _bump) =
         Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
     );
     let (gas_service_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
@@ -294,16 +294,16 @@ pub fn send_interchain_transfer_with_wrong_seeds(
     );
 
     // Additional required accounts for proper ITS instruction
-    let gateway_program = axelar_solana_gateway::id();
+    let gateway_program = solana_axelar_gateway_legacy::id();
     let gas_service_program = solana_axelar_gas_service_legacy::id();
     let (call_contract_signing_pda, _) =
-        axelar_solana_gateway::get_call_contract_signing_pda(axelar_solana_its::id());
+        solana_axelar_gateway_legacy::get_call_contract_signing_pda(axelar_solana_its::id());
     let its_program = axelar_solana_its::id();
     let (its_event_authority, _bump) =
         Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
     );
     let (gas_service_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
@@ -375,16 +375,16 @@ pub fn call_contract_with_interchain_token(
     );
 
     // Additional required accounts for proper ITS instruction
-    let gateway_program = axelar_solana_gateway::id();
+    let gateway_program = solana_axelar_gateway_legacy::id();
     let gas_service_program = solana_axelar_gas_service_legacy::id();
     let (call_contract_signing_pda, _) =
-        axelar_solana_gateway::get_call_contract_signing_pda(axelar_solana_its::id());
+        solana_axelar_gateway_legacy::get_call_contract_signing_pda(axelar_solana_its::id());
     let its_program = axelar_solana_its::id();
     let (its_event_authority, _bump) =
         Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
     );
     let (gas_service_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
@@ -421,7 +421,7 @@ pub fn call_contract_with_interchain_token(
 
 /// Helper function to build a memo payload instruction
 pub mod from_axelar_to_solana {
-    use axelar_solana_gateway::executable::EncodingScheme;
+    use solana_axelar_gateway_legacy::executable::EncodingScheme;
 
     use super::*;
 
@@ -446,7 +446,7 @@ pub mod from_axelar_to_solana {
 
 #[cfg(test)]
 mod tests {
-    use axelar_solana_gateway::executable::EncodingScheme;
+    use solana_axelar_gateway_legacy::executable::EncodingScheme;
 
     use super::*;
 

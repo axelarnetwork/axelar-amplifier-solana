@@ -1,7 +1,7 @@
-use axelar_solana_gateway::error::GatewayError;
-use axelar_solana_gateway::events::OperatorshipTransferredEvent;
-use axelar_solana_gateway::instructions::GatewayInstruction;
-use axelar_solana_gateway::state::GatewayConfig;
+use solana_axelar_gateway_legacy::error::GatewayError;
+use solana_axelar_gateway_legacy::events::OperatorshipTransferredEvent;
+use solana_axelar_gateway_legacy::instructions::GatewayInstruction;
+use solana_axelar_gateway_legacy::state::GatewayConfig;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
@@ -34,12 +34,12 @@ async fn successfully_transfer_operatorship_when_signer_is_operator() {
         .await;
     let new_operator = Keypair::new();
     let original_config_acc = fixture
-        .get_account(&gateway_root_pda, &axelar_solana_gateway::ID)
+        .get_account(&gateway_root_pda, &solana_axelar_gateway_legacy::ID)
         .await;
     let original_config = GatewayConfig::read(original_config_acc.data()).unwrap();
 
     // Action
-    let ix = axelar_solana_gateway::instructions::transfer_operatorship(
+    let ix = solana_axelar_gateway_legacy::instructions::transfer_operatorship(
         gateway_root_pda,
         operator.pubkey(),
         new_operator.pubkey(),
@@ -85,7 +85,7 @@ async fn successfully_transfer_operatorship_when_signer_is_operator() {
 
     // - command PDAs get updated
     let altered_config_acc = fixture
-        .get_account(&gateway_root_pda, &axelar_solana_gateway::ID)
+        .get_account(&gateway_root_pda, &solana_axelar_gateway_legacy::ID)
         .await;
 
     let altered_config = GatewayConfig::read(altered_config_acc.data()).unwrap();
@@ -112,13 +112,13 @@ async fn successfully_transfer_operatorship_when_signer_is_upgrade_authority() {
         .await;
 
     let original_config_acc = fixture
-        .get_account(&gateway_root_pda, &axelar_solana_gateway::ID)
+        .get_account(&gateway_root_pda, &solana_axelar_gateway_legacy::ID)
         .await;
     let original_config = GatewayConfig::read(original_config_acc.data()).unwrap();
 
     // Action - upgrade authority signs message to change operator
     let new_operator = Keypair::new();
-    let ix = axelar_solana_gateway::instructions::transfer_operatorship(
+    let ix = solana_axelar_gateway_legacy::instructions::transfer_operatorship(
         gateway_root_pda,
         upgrade_authority.pubkey(),
         new_operator.pubkey(),
@@ -173,7 +173,7 @@ async fn successfully_transfer_operatorship_when_signer_is_upgrade_authority() {
 
     // - command PDAs get updated
     let altered_config_acc = fixture
-        .get_account(&gateway_root_pda, &axelar_solana_gateway::ID)
+        .get_account(&gateway_root_pda, &solana_axelar_gateway_legacy::ID)
         .await;
 
     let altered_config = GatewayConfig::read(altered_config_acc.data()).unwrap();
@@ -191,20 +191,20 @@ async fn fail_if_gateway_not_initialised() {
     let mut fixture = TestFixture::new(ProgramTest::default()).await;
     // Generate a new keypair for the upgrade authority
     let upgrade_authority = Keypair::new();
-    let gateway_program_bytecode = fs::read("../../target/deploy/axelar_solana_gateway.so")
+    let gateway_program_bytecode = fs::read("../../target/deploy/solana_axelar_gateway_legacy.so")
         .await
         .unwrap();
     fixture
         .register_upgradeable_program(
             &gateway_program_bytecode,
             &upgrade_authority.pubkey(),
-            &axelar_solana_gateway::id(),
+            &solana_axelar_gateway_legacy::id(),
         )
         .await;
-    let (gateway_root_pda, ..) = axelar_solana_gateway::get_gateway_root_config_pda();
+    let (gateway_root_pda, ..) = solana_axelar_gateway_legacy::get_gateway_root_config_pda();
     // Action - upgrade authority signs message to change operator
     let new_operator = Keypair::new();
-    let ix = axelar_solana_gateway::instructions::transfer_operatorship(
+    let ix = solana_axelar_gateway_legacy::instructions::transfer_operatorship(
         gateway_root_pda,
         upgrade_authority.pubkey(),
         new_operator.pubkey(),
@@ -245,7 +245,7 @@ async fn fail_if_operator_or_owner_does_not_match() {
     // Action - random wallet signs message to change operator
     let stranger_danger = Keypair::new();
     let new_operator = Keypair::new();
-    let ix = axelar_solana_gateway::instructions::transfer_operatorship(
+    let ix = solana_axelar_gateway_legacy::instructions::transfer_operatorship(
         gateway_root_pda,
         stranger_danger.pubkey(), // this keypair is not a valid signer
         new_operator.pubkey(),
@@ -300,7 +300,7 @@ async fn fail_if_invalid_program_id() {
 
     let (event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
     );
 
     let accounts = vec![
@@ -309,13 +309,13 @@ async fn fail_if_invalid_program_id() {
         AccountMeta::new_readonly(programdata_pubkey, false),
         AccountMeta::new_readonly(new_operator, false),
         AccountMeta::new_readonly(event_authority, false),
-        AccountMeta::new_readonly(axelar_solana_gateway::ID, false),
+        AccountMeta::new_readonly(solana_axelar_gateway_legacy::ID, false),
     ];
 
     let data = borsh::to_vec(&GatewayInstruction::TransferOperatorship).unwrap();
 
     let ix = Instruction {
-        program_id: axelar_solana_gateway::id(),
+        program_id: solana_axelar_gateway_legacy::id(),
         accounts,
         data,
     };
@@ -360,14 +360,14 @@ async fn fail_if_stranger_dose_not_sing_anything() {
     let stranger_danger = Keypair::new();
     let new_operator = Pubkey::new_unique();
     let (programdata_pubkey, _) = Pubkey::try_find_program_address(
-        &[axelar_solana_gateway::id().as_ref()],
+        &[solana_axelar_gateway_legacy::id().as_ref()],
         &bpf_loader_upgradeable::id(),
     )
     .unwrap();
 
     let (event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
-        &axelar_solana_gateway::ID,
+        &solana_axelar_gateway_legacy::ID,
     );
 
     let accounts = vec![
@@ -379,13 +379,13 @@ async fn fail_if_stranger_dose_not_sing_anything() {
         AccountMeta::new_readonly(programdata_pubkey, false),
         AccountMeta::new_readonly(new_operator, false),
         AccountMeta::new_readonly(event_authority, false),
-        AccountMeta::new_readonly(axelar_solana_gateway::ID, false),
+        AccountMeta::new_readonly(solana_axelar_gateway_legacy::ID, false),
     ];
 
     let data = borsh::to_vec(&GatewayInstruction::TransferOperatorship).unwrap();
 
     let ix = Instruction {
-        program_id: axelar_solana_gateway::id(),
+        program_id: solana_axelar_gateway_legacy::id(),
         accounts,
         data,
     };
