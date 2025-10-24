@@ -67,7 +67,7 @@ impl InterchainTokenService {
         self.paused = false;
     }
 
-    pub fn is_trusted_chain(&self, chain_name: String) -> bool {
+    pub fn is_trusted_chain(&self, chain_name: &str) -> bool {
         self.trusted_chains.iter().any(|chain| *chain == chain_name)
     }
 
@@ -82,6 +82,10 @@ impl InterchainTokenService {
     /// Remove a chain from trusted
     pub fn remove_trusted_chain(&mut self, chain_name: String) {
         self.trusted_chains.retain(|chain| *chain != chain_name);
+    }
+
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &crate::ID)
     }
 }
 
