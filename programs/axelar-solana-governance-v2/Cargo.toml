@@ -33,7 +33,7 @@ mainnet = [
 alloy-sol-types.workspace = true
 governance-gmp.workspace = true
 axelar-solana-encoding.workspace = true
-axelar-solana-gateway-v2 = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
+solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 anchor-lang.workspace = true
 bytemuck.workspace = true
 program-utils.workspace = true

@@ -10,7 +10,7 @@ edition.workspace = true
 [dependencies]
 governance-gmp = {workspace = true}
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint"], default-features = false }
-axelar-solana-gateway-v2 = { workspace = true, features = ["no-entrypoint"], default-features = false }
+solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-governance-v2.workspace = true
 mollusk-svm.workspace = true

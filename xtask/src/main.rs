@@ -209,9 +209,9 @@ fn main() -> eyre::Result<()> {
 
             let mut program_prefixes = vec![
                 ("solana-axelar-gas-service", "gas"),
-                ("axelar-solana-memo", "mem"),
+                ("solana-axelar-gateway", "gtw"),
+                ("solana-axelar-memo", "mem"),
                 ("axelar-solana-operators", "opr"),
-                ("axelar-solana-gateway", "gtw"),
                 ("axelar-solana-its", "its"),
                 ("axelar-solana-multicall", "mc"),
                 ("axelar-solana-governance", "gov"),
@@ -222,6 +222,7 @@ fn main() -> eyre::Result<()> {
 
                 program_prefixes.extend_from_slice(&[
                     ("solana-axelar-gas-service-legacy", "gasl"),
+                    ("solana-axelar-gateway-legacy", "gtwl"),
                     ("solana-axelar-memo-legacy", "meml"),
                 ]);
             }

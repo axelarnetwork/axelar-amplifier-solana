@@ -3,8 +3,8 @@ use solana_program::instruction::Instruction;
 
 use crate::program::AxelarSolanaGovernanceV2;
 use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, GovernanceError};
-use axelar_solana_gateway_v2::{executable::*, executable_accounts};
 use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
+use solana_axelar_gateway::{executable::*, executable_accounts};
 
 executable_accounts!(ProcessGmp);
 

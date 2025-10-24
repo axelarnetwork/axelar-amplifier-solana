@@ -9,7 +9,7 @@ edition.workspace = true
 
 [dependencies]
 anchor-lang.workspace = true
-axelar-solana-gateway-v2 = { workspace = true, features = ["cpi"] }
+solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 
 [dev-dependencies]
 axelar-solana-gateway-v2-test-fixtures.workspace = true
@@ -40,16 +40,16 @@ custom-panic = []
 
 # Network features - these pass through to the gateway dependency
 devnet-amplifier = [
-	"axelar-solana-gateway-v2/devnet-amplifier",
+	"solana-axelar-gateway/devnet-amplifier",
 ]
 stagenet = [
-	"axelar-solana-gateway-v2/stagenet",
+	"solana-axelar-gateway/stagenet",
 
 ]
 testnet = [
-	"axelar-solana-gateway-v2/testnet",
+	"solana-axelar-gateway/testnet",
 ]
 mainnet = [
-	"axelar-solana-gateway-v2/mainnet",
+	"solana-axelar-gateway/mainnet",
 ]
 default = ["devnet-amplifier"]

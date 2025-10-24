@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use axelar_solana_gateway_v2::{executable::*, executable_accounts};
+use solana_axelar_gateway::{executable::*, executable_accounts};
 
 executable_accounts!(Execute);
 
@@ -19,7 +19,7 @@ pub fn execute_handler(
     ctx: Context<Execute>,
     message: Message,
     payload: Vec<u8>,
-    encoding_scheme: axelar_solana_gateway_v2::executable::ExecutablePayloadEncodingScheme,
+    encoding_scheme: solana_axelar_gateway::executable::ExecutablePayloadEncodingScheme,
 ) -> Result<()> {
     validate_message(ctx.accounts, message, &payload, encoding_scheme)?;
 

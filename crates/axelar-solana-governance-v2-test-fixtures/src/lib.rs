@@ -1,9 +1,5 @@
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
-use axelar_solana_gateway_v2::Message;
-use axelar_solana_gateway_v2::{
-    seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
-};
 use axelar_solana_governance::seed_prefixes;
 use axelar_solana_governance::{
     processor::gmp::payload_conversions,
@@ -14,6 +10,10 @@ use axelar_solana_governance_v2::{
     SolanaAccountMetadata, ID as GOVERNANCE_PROGRAM_ID,
 };
 use mollusk_svm::{result::InstructionResult, Mollusk};
+use solana_axelar_gateway::Message;
+use solana_axelar_gateway::{
+    seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
+};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,

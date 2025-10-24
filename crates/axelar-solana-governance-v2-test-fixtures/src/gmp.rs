@@ -1,5 +1,5 @@
-use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
+use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
 

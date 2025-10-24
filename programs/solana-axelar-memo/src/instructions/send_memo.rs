@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use axelar_solana_gateway_v2::{
-    cpi::accounts::CallContract, program::AxelarSolanaGatewayV2,
+use solana_axelar_gateway::{
+    cpi::accounts::CallContract, program::SolanaAxelarGateway,
     seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
 };
 
@@ -28,12 +28,12 @@ pub struct SendMemo<'info> {
     #[account(
         seeds = [b"__event_authority"],
         bump,
-        seeds::program = axelar_solana_gateway_v2::ID,
+        seeds::program = solana_axelar_gateway::ID,
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
     /// Reference to the axelar gateway program
-    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+    pub gateway_program: Program<'info, SolanaAxelarGateway>,
 }
 
 pub fn send_memo_handler(
@@ -70,7 +70,7 @@ pub fn send_memo_handler(
         signer_seeds,
     );
 
-    axelar_solana_gateway_v2::cpi::call_contract(
+    solana_axelar_gateway::cpi::call_contract(
         cpi_ctx,
         destination_chain,
         destination_address,

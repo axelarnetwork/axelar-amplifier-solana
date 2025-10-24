@@ -57,7 +57,7 @@ pub mod seed_prefixes {
 }
 
 #[program]
-pub mod axelar_solana_gateway_v2 {
+pub mod solana_axelar_gateway {
     use super::*;
 
     pub fn call_contract(

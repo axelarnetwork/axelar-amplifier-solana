@@ -46,10 +46,10 @@ pub mod axelar_solana_governance_v2 {
         instructions::update_config_handler(ctx, params)
     }
 
-    #[instruction(discriminator = axelar_solana_gateway_v2::executable::EXECUTE_IX_DISC)]
+    #[instruction(discriminator = solana_axelar_gateway::executable::EXECUTE_IX_DISC)]
     pub fn process_gmp(
         ctx: Context<ProcessGmp>,
-        message: axelar_solana_gateway_v2::Message,
+        message: solana_axelar_gateway::Message,
         payload: Vec<u8>,
     ) -> Result<()> {
         instructions::process_gmp_handler(ctx, message, payload)

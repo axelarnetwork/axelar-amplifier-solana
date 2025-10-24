@@ -2,7 +2,6 @@ use alloy_sol_types::SolValue;
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::AnchorSerialize;
 use anchor_lang::{solana_program, AccountDeserialize, ToAccountMetas};
-use axelar_solana_gateway_v2::IncomingMessage;
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
@@ -18,6 +17,7 @@ use axelar_solana_governance_v2_test_fixtures::{
     initialize_governance, process_gmp_helper, GmpContext, TestSetup,
 };
 use governance_gmp::alloy_primitives::U256;
+use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;

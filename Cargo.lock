@@ -1077,45 +1077,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-gateway-v2"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "anchor-lang",
- "axelar-solana-encoding",
- "axelar-solana-gateway-v2-test-fixtures",
- "bitvec",
- "bnum",
- "bytemuck",
- "evm-contracts-rs",
- "evm-contracts-test-suite",
- "hex",
- "libsecp256k1",
- "mollusk-svm",
- "num-derive 0.4.2",
- "num-traits",
- "program-utils",
- "rand 0.8.5",
- "rstest",
- "solana-axelar-gateway-legacy",
- "solana-sdk",
- "test-log",
- "tokio",
- "udigest",
-]
-
-[[package]]
 name = "axelar-solana-gateway-v2-test-fixtures"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "bincode",
  "libsecp256k1",
  "mollusk-svm",
  "rand 0.8.5",
+ "solana-axelar-gateway",
  "solana-sdk",
 ]
 
@@ -1157,7 +1128,6 @@ dependencies = [
  "alloy-sol-types",
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
  "axelar-solana-governance",
  "axelar-solana-governance-v2-test-fixtures",
@@ -1168,6 +1138,7 @@ dependencies = [
  "libsecp256k1",
  "mollusk-svm",
  "program-utils",
+ "solana-axelar-gateway",
  "solana-axelar-memo",
  "solana-sdk",
 ]
@@ -1177,12 +1148,12 @@ name = "axelar-solana-governance-v2-test-fixtures"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-gateway-v2",
  "axelar-solana-governance",
  "axelar-solana-governance-v2",
  "bincode",
  "governance-gmp",
  "mollusk-svm",
+ "solana-axelar-gateway",
  "solana-axelar-memo",
  "solana-sdk",
 ]
@@ -7991,6 +7962,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-axelar-gateway"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bitvec",
+ "bnum",
+ "bytemuck",
+ "evm-contracts-rs",
+ "evm-contracts-test-suite",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "num-derive 0.4.2",
+ "num-traits",
+ "program-utils",
+ "rand 0.8.5",
+ "rstest",
+ "solana-axelar-gateway-legacy",
+ "solana-sdk",
+ "test-log",
+ "tokio",
+ "udigest",
+]
+
+[[package]]
 name = "solana-axelar-gateway-legacy"
 version = "0.1.0"
 dependencies = [
@@ -8041,11 +8041,11 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "hex",
  "mollusk-svm",
+ "solana-axelar-gateway",
  "solana-sdk",
 ]
 
