@@ -1,3 +1,4 @@
+use crate::deploy_remote_interchain_token::solana_program::program::invoke_signed;
 use crate::{
     errors::ITSError,
     events::InterchainTokenDeploymentStarted,
@@ -7,6 +8,7 @@ use crate::{
     ITS_HUB_CHAIN_NAME,
 };
 use alloy_primitives::Bytes;
+use anchor_lang::InstructionData;
 use anchor_lang::{prelude::*, solana_program};
 use anchor_spl::token_2022::spl_token_2022::{
     extension::{metadata_pointer::MetadataPointer, BaseStateWithExtensions, StateWithExtensions},
@@ -17,12 +19,10 @@ use axelar_solana_gas_service_v2::{
     cpi::{accounts::PayNativeForContractCall, pay_native_for_contract_call},
     state::Treasury,
 };
-use axelar_solana_gateway_v2::{
-    cpi::accounts::CallContract, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
-};
+use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, SendToHub};
 use mpl_token_metadata::accounts::Metadata;
-use spl_token_metadata_interface::state::TokenMetadata;
+use spl_token_metadata_interface::{solana_instruction::Instruction, state::TokenMetadata};
 
 /// Accounts required for deploying a remote interchain token
 #[derive(Accounts)]
@@ -220,31 +220,38 @@ pub fn deploy_remote_interchain_token_handler(
         )?;
     }
 
-    // Call gateway contract
-    let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
-
-    let cpi_accounts = CallContract {
-        calling_program: ctx.accounts.its_program.to_account_info(),
-        signing_pda: ctx.accounts.call_contract_signing_pda.to_account_info(),
-        gateway_root_pda: ctx.accounts.gateway_root_pda.to_account_info(),
-        event_authority: ctx.accounts.gateway_event_authority.to_account_info(),
-        program: ctx.accounts.axelar_gateway_program.to_account_info(),
-    };
-
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.axelar_gateway_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
-
     let destination_contract_address = ctx.accounts.its_root_pda.its_hub_address.clone();
 
-    axelar_solana_gateway_v2::cpi::call_contract(
-        cpi_ctx,
-        destination_chain,
-        destination_contract_address,
-        payload,
-        signing_pda_bump,
+    let call_contract_ix = Instruction {
+        program_id: axelar_solana_gateway_v2::ID,
+        accounts: vec![
+            AccountMeta::new_readonly(ctx.accounts.its_program.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.call_contract_signing_pda.key(), true),
+            AccountMeta::new_readonly(ctx.accounts.gateway_root_pda.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.gateway_event_authority.key(), false),
+            AccountMeta::new_readonly(ctx.accounts.axelar_gateway_program.key(), false),
+        ],
+        data: axelar_solana_gateway_v2::instruction::CallContract {
+            destination_chain,
+            destination_contract_address,
+            payload,
+            signing_pda_bump,
+        }
+        .data(),
+    };
+
+    let accounts_for_invoke = &[
+        ctx.accounts.its_program.to_account_info(),
+        ctx.accounts.call_contract_signing_pda.to_account_info(),
+        ctx.accounts.gateway_root_pda.to_account_info(),
+        ctx.accounts.gateway_event_authority.to_account_info(),
+        ctx.accounts.axelar_gateway_program.to_account_info(),
+    ];
+
+    invoke_signed(
+        &call_contract_ix,
+        accounts_for_invoke,
+        &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]],
     )?;
 
     Ok(())

@@ -1339,6 +1339,8 @@ dependencies = [
  "axelar-solana-gas-service-v2",
  "axelar-solana-gateway-test-fixtures",
  "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "axelar-solana-its-v2-test-fixtures",
  "axelar-solana-operators",
  "bincode",
  "bitflags 2.9.4",
@@ -1350,6 +1352,27 @@ dependencies = [
  "mollusk-test-utils",
  "mpl-token-metadata",
  "program-utils",
+ "solana-program",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "spl-token-metadata-interface 0.6.0",
+]
+
+[[package]]
+name = "axelar-solana-its-v2-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-gas-service",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-its-v2",
+ "bincode",
+ "hex",
+ "mollusk-svm 0.5.1",
+ "mollusk-svm-programs-token",
+ "mollusk-test-utils",
+ "mpl-token-metadata",
  "solana-program",
  "solana-sdk",
  "solana-sdk-ids",

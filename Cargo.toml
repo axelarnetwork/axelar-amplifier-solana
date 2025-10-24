@@ -196,6 +196,7 @@ axelar-solana-multicall = { path = "programs/axelar-solana-multicall", default-f
 axelar-solana-gateway = { path = "programs/axelar-solana-gateway", default-features = false }
 axelar-solana-gateway-v2 = { path = "programs/axelar-solana-gateway-v2", default-features = false }
 axelar-solana-governance-v2 = { path = "programs/axelar-solana-governance-v2", default-features = false }
+axelar-solana-its-v2 = { path = "programs/axelar-solana-its-v2", default-features = false }
 dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", default-features = false }
 axelar-solana-governance = { path = "programs/axelar-solana-governance", default-features = false }
 
@@ -205,6 +206,7 @@ axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
 axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
 axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
+axelar-solana-its-v2-test-fixtures = { path = "crates/axelar-solana-its-v2-test-fixtures", default-features = false }
 event-cpi = { path = "helpers/event-cpi" }
 event-cpi-macros = { path = "helpers/event-cpi-macros" }
 anchor-discriminators = { path = "helpers/anchor-discriminators" }

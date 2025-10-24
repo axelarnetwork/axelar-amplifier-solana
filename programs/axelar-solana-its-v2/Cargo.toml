@@ -22,6 +22,10 @@ bytemuck.workspace = true
 bitflags.workspace = true
 
 [dev-dependencies]
+axelar-solana-gateway-v2-test-fixtures.workspace = true
+axelar-solana-its-v2-test-fixtures.workspace = true
+axelar-solana-gas-service-v2 = { workspace = true, features = ["no-entrypoint", "cpi"] }
+axelar-solana-gateway-v2 = { workspace = true, features = ["cpi"] }
 mollusk-svm-programs-token = "0.4.1"
 solana-program.workspace = true
 hex.workspace = true

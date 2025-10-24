@@ -1,0 +1,47 @@
+[package]
+name = "axelar-solana-its-v2-test-fixtures"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+axelar-solana-its-v2 = { workspace = true, features = ["no-entrypoint"] }
+mollusk-svm-programs-token = "0.4.1"
+solana-program.workspace = true
+hex.workspace = true
+axelar-solana-gateway-test-fixtures.workspace = true
+axelar-solana-gas-service.workspace = true
+bincode.workspace = true
+solana-sdk-ids.workspace = true
+solana-sdk.workspace = true
+mollusk-svm.workspace = true
+mollusk-test-utils.workspace = true
+mpl-token-metadata.workspace = true
+spl-token-metadata-interface.workspace = true
+anchor-lang.workspace = true
+anchor-spl.workspace = true
+
+[features]
+devnet-amplifier = [
+    "axelar-solana-its-v2/devnet-amplifier",
+    "axelar-solana-gateway-test-fixtures/devnet-amplifier"
+]
+stagenet = [
+    "axelar-solana-its-v2/stagenet",
+    "axelar-solana-gateway-test-fixtures/stagenet"
+]
+testnet = [
+    "axelar-solana-its-v2/testnet",
+    "axelar-solana-gateway-test-fixtures/testnet"
+]
+mainnet = [
+    "axelar-solana-its-v2/mainnet",
+    "axelar-solana-gateway-test-fixtures/mainnet"
+]
+default = ["devnet-amplifier"]
+
+[lints]
+workspace = true
