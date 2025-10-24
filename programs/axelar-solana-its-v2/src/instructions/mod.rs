@@ -9,3 +9,6 @@ pub use set_trusted_chain::*;
 
 pub mod remove_trusted_chain;
 pub use remove_trusted_chain::*;
+
+pub mod deploy_interchain_token;
+pub use deploy_interchain_token::*;

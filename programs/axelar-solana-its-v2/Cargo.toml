@@ -8,6 +8,8 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
+mpl-token-metadata.workspace = true
+spl-token-metadata-interface.workspace = true
 anchor-lang.workspace = true
 anchor-spl.workspace = true
 axelar-solana-gas-service-v2 = { workspace = true, features = ["no-entrypoint"] }
@@ -17,6 +19,9 @@ bytemuck.workspace = true
 bitflags.workspace = true
 
 [dev-dependencies]
+mollusk-svm-programs-token = "0.4.1"
+solana-program.workspace = true
+hex.workspace = true
 axelar-solana-gateway-test-fixtures.workspace = true
 axelar-solana-gas-service.workspace = true
 bincode.workspace = true
