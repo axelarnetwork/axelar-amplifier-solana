@@ -1,4 +1,4 @@
-use axelar_message_primitives::U256;
+use crate::types::U256;
 use program_utils::{
     pda::{BytemuckedPda, ValidPDA},
     validate_system_account_key,

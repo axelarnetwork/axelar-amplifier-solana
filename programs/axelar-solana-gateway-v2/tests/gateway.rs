@@ -3,7 +3,7 @@
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_gateway_v2::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
-use axelar_solana_gateway_v2::u256::U256;
+use axelar_solana_gateway_v2::U256;
 use axelar_solana_gateway_v2::{
     state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
     ID as GATEWAY_PROGRAM_ID,
@@ -467,7 +467,10 @@ fn test_rotate_signers() {
         VerifierSetTracker::try_deserialize(&mut new_verifier_set_account.data.as_slice()).unwrap();
 
     assert_eq!(new_tracker.verifier_set_hash, new_verifier_set_hash);
-    assert_eq!(new_tracker.epoch, setup.epoch + U256::ONE);
+    assert_eq!(
+        new_tracker.epoch,
+        setup.epoch.checked_add(U256::ONE).unwrap()
+    );
 
     // Step 11: Verify gateway config was updated
     let updated_gateway_account = rotate_result
@@ -481,7 +484,10 @@ fn test_rotate_signers() {
     let updated_config =
         GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
 
-    assert_eq!(updated_config.current_epoch, setup.epoch + U256::ONE);
+    assert_eq!(
+        updated_config.current_epoch,
+        setup.epoch.checked_add(U256::ONE).unwrap()
+    );
 }
 
 #[test]

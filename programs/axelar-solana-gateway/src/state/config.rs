@@ -1,7 +1,7 @@
 //! Module for the `GatewayConfig` account type.
 
+use crate::types::U256;
 use anchor_discriminators_macros::account;
-use axelar_message_primitives::U256;
 use bytemuck::{Pod, Zeroable};
 use program_utils::pda::BytemuckedPda;
 use solana_program::pubkey::Pubkey;

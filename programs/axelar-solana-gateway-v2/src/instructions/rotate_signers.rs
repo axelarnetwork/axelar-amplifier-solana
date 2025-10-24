@@ -1,6 +1,6 @@
 use crate::{
-    u256::U256, GatewayConfig, GatewayError, SignatureVerificationSessionData,
-    VerifierSetRotatedEvent, VerifierSetTracker,
+    GatewayConfig, GatewayError, SignatureVerificationSessionData, VerifierSetRotatedEvent,
+    VerifierSetTracker, U256,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;

@@ -10,8 +10,7 @@ use axelar_solana_gateway_v2::seed_prefixes::{
 };
 use axelar_solana_gateway_v2::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    u256::U256,
-    MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID,
+    MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID, U256,
 };
 use axelar_solana_gateway_v2::{
     CrossChainId, IncomingMessage, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -59,8 +58,8 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
 
     // dummy values
     let verifier_set_hash = [1u8; 32];
-    let epoch = U256::from(1);
-    let previous_verifier_retention = U256::from(5);
+    let epoch = U256::from(1u64);
+    let previous_verifier_retention = U256::from(5u64);
     let domain_separator = [2u8; 32];
     let minimum_rotation_delay = 3600;
 
@@ -151,8 +150,8 @@ pub fn setup_test_with_real_signers() -> (
     let (secret_key_1, compressed_pubkey_1) = generate_random_signer();
     let (secret_key_2, compressed_pubkey_2) = generate_random_signer();
 
-    let epoch = U256::from(1);
-    let previous_verifier_retention = U256::from(5);
+    let epoch = U256::from(1u64);
+    let previous_verifier_retention = U256::from(5u64);
     let domain_separator = [2u8; 32];
     let minimum_rotation_delay = 3600;
 
