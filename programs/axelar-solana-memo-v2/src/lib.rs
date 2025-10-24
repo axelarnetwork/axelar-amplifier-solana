@@ -40,8 +40,4 @@ pub mod memo {
     pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {
         instructions::emit_memo_handler(ctx, message)
     }
-
-    pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {
-        instructions::emit_memo_handler(ctx, message)
-    }
 }
