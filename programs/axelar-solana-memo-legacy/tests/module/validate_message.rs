@@ -6,8 +6,8 @@ use axelar_solana_gateway::get_incoming_message_pda;
 use axelar_solana_gateway::state::incoming_message;
 use axelar_solana_gateway_test_fixtures::base::FindLog;
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
-use axelar_solana_memo_program::instruction::from_axelar_to_solana::build_memo;
-use axelar_solana_memo_program::state::Counter;
+use axelar_solana_memo_legacy::instruction::from_axelar_to_solana::build_memo;
+use axelar_solana_memo_legacy::state::Counter;
 use borsh::BorshDeserialize;
 use solana_program_test::tokio;
 use solana_sdk::pubkey::Pubkey;
@@ -22,10 +22,10 @@ use crate::program_test;
 async fn test_successful_validate_message(#[case] encoding_scheme: EncodingScheme) {
     // Setup
     let mut solana_chain = program_test().await;
-    let (counter_pda, counter_bump) = axelar_solana_memo_program::get_counter_pda();
+    let (counter_pda, counter_bump) = axelar_solana_memo_legacy::get_counter_pda();
     solana_chain
         .fixture
-        .send_tx(&[axelar_solana_memo_program::instruction::initialize(
+        .send_tx(&[axelar_solana_memo_legacy::instruction::initialize(
             &solana_chain.fixture.payer.pubkey(),
             &(counter_pda, counter_bump),
         )
@@ -35,7 +35,7 @@ async fn test_successful_validate_message(#[case] encoding_scheme: EncodingSchem
 
     // Test scoped constants
     let random_account_used_by_ix = Keypair::new();
-    let destination_program_id = axelar_solana_memo_program::id();
+    let destination_program_id = axelar_solana_memo_legacy::id();
     let memo_string = "🐪🐪🐪🐪";
 
     // Create 2 messages: one we're going to execute and one we're not
@@ -131,7 +131,7 @@ async fn test_successful_validate_message(#[case] encoding_scheme: EncodingSchem
     // The counter should have been incremented
     let counter_account = solana_chain
         .fixture
-        .get_account(&counter_pda, &axelar_solana_memo_program::id())
+        .get_account(&counter_pda, &axelar_solana_memo_legacy::id())
         .await;
     let counter = Counter::try_from_slice(&counter_account.data).unwrap();
     assert_eq!(counter.counter, 1);

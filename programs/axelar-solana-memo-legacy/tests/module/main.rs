@@ -10,8 +10,8 @@ pub async fn program_test() -> SolanaAxelarIntegrationMetadata {
     SolanaAxelarIntegration::builder()
         .initial_signer_weights(vec![555, 222])
         .programs_to_deploy(vec![(
-            "axelar_solana_memo_program.so".into(),
-            axelar_solana_memo_program::id(),
+            "axelar_solana_memo_legacy.so".into(),
+            axelar_solana_memo_legacy::id(),
         )])
         .build()
         .setup()

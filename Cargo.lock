@@ -1215,7 +1215,7 @@ dependencies = [
  "axelar-solana-encoding",
  "axelar-solana-gateway",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-memo-program",
+ "axelar-solana-memo-legacy",
  "borsh 1.5.7",
  "dummy-axelar-solana-gateway",
  "ethers",
@@ -1284,7 +1284,7 @@ dependencies = [
  "axelar-solana-gas-service-legacy",
  "axelar-solana-gateway",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-memo-program",
+ "axelar-solana-memo-legacy",
  "bitflags 2.9.4",
  "borsh 1.5.7",
  "event-cpi",
@@ -1329,7 +1329,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-memo-program"
+name = "axelar-solana-memo-legacy"
 version = "0.1.0"
 dependencies = [
  "anchor-discriminators",
@@ -1383,7 +1383,7 @@ dependencies = [
  "anchor-discriminators-macros",
  "axelar-solana-gateway",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-memo-program",
+ "axelar-solana-memo-legacy",
  "borsh 1.5.7",
  "ethers-core",
  "evm-contracts-test-suite",

@@ -209,18 +209,21 @@ fn main() -> eyre::Result<()> {
 
             let mut program_prefixes = vec![
                 ("axelar-solana-gas-service", "gas"),
+                ("axelar-solana-memo", "mem"),
                 ("axelar-solana-operators", "opr"),
                 ("axelar-solana-gateway", "gtw"),
                 ("axelar-solana-its", "its"),
                 ("axelar-solana-multicall", "mc"),
-                ("axelar-solana-memo-program", "mem"),
                 ("axelar-solana-governance", "gov"),
             ];
 
             if legacy.is_some_and(|l| l) {
                 println!("Updating program IDs for legacy programs");
 
-                program_prefixes.extend_from_slice(&[("axelar-solana-gas-service-legacy", "gasl")]);
+                program_prefixes.extend_from_slice(&[
+                    ("axelar-solana-gas-service-legacy", "gasl"),
+                    ("axelar-solana-memo-legacy", "meml"),
+                ]);
             }
 
             let (solana_programs, _) = workspace_crates_by_category(&sh)?;

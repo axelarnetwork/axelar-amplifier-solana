@@ -16,22 +16,22 @@ test-sbf = []
 devnet-amplifier = [
     "axelar-solana-gateway-test-fixtures/devnet-amplifier",
     "axelar-solana-gateway/devnet-amplifier",
-    "axelar-solana-memo-program/devnet-amplifier"
+    "axelar-solana-memo-legacy/devnet-amplifier"
 ]
 stagenet = [
     "axelar-solana-gateway-test-fixtures/stagenet",
     "axelar-solana-gateway/stagenet",
-    "axelar-solana-memo-program/stagenet",
+    "axelar-solana-memo-legacy/stagenet",
 ]
 testnet = [
     "axelar-solana-gateway-test-fixtures/testnet",
     "axelar-solana-gateway/testnet",
-    "axelar-solana-memo-program/testnet",
+    "axelar-solana-memo-legacy/testnet",
 ]
 mainnet = [
     "axelar-solana-gateway-test-fixtures/mainnet",
     "axelar-solana-gateway/mainnet",
-    "axelar-solana-memo-program/mainnet",
+    "axelar-solana-memo-legacy/mainnet",
 ]
 default = ["devnet-amplifier"]
 
@@ -44,7 +44,7 @@ solana-program.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-axelar-solana-memo-program = { workspace = true, features = ["no-entrypoint"] }
+axelar-solana-memo-legacy = { workspace = true, features = ["no-entrypoint"] }
 axelar-solana-gateway-test-fixtures.workspace = true
 ethers-core.workspace = true
 evm-contracts-test-suite.workspace = true

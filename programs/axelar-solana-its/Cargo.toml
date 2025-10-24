@@ -17,28 +17,28 @@ devnet-amplifier = [
 	"axelar-solana-gas-service-legacy/devnet-amplifier",
 	"axelar-solana-gateway-test-fixtures/devnet-amplifier",
 	"axelar-solana-gateway/devnet-amplifier",
-	"axelar-solana-memo-program/devnet-amplifier",
+	"axelar-solana-memo-legacy/devnet-amplifier",
 	"program-utils/devnet-amplifier",
 ]
 stagenet = [
 	"axelar-solana-gas-service-legacy/stagenet",
 	"axelar-solana-gateway-test-fixtures/stagenet",
 	"axelar-solana-gateway/stagenet",
-	"axelar-solana-memo-program/stagenet",
+	"axelar-solana-memo-legacy/stagenet",
 	"program-utils/stagenet",
 ]
 testnet = [
 	"axelar-solana-gas-service-legacy/testnet",
 	"axelar-solana-gateway-test-fixtures/testnet",
 	"axelar-solana-gateway/testnet",
-	"axelar-solana-memo-program/testnet",
+	"axelar-solana-memo-legacy/testnet",
 	"program-utils/testnet",
 ]
 mainnet = [
 	"axelar-solana-gas-service-legacy/mainnet",
 	"axelar-solana-gateway-test-fixtures/mainnet",
 	"axelar-solana-gateway/mainnet",
-	"axelar-solana-memo-program/mainnet",
+	"axelar-solana-memo-legacy/mainnet",
 	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]
@@ -74,7 +74,7 @@ typed-builder.workspace = true
 [dev-dependencies]
 anyhow.workspace = true
 axelar-solana-gateway-test-fixtures.workspace = true
-axelar-solana-memo-program = { workspace = true, features = ["no-entrypoint"] }
+axelar-solana-memo-legacy = { workspace = true, features = ["no-entrypoint"] }
 event-cpi-test-utils.workspace = true
 evm-contracts-test-suite.workspace = true
 rstest.workspace = true

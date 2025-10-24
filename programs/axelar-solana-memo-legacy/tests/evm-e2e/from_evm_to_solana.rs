@@ -3,7 +3,7 @@ use anyhow::{bail, Context, Result};
 use axelar_solana_encoding::types::messages::{CrossChainId, Message};
 use axelar_solana_gateway::events::MessageExecutedEvent;
 use axelar_solana_gateway::executable::AxelarMessagePayload;
-use axelar_solana_memo_program::state::Counter;
+use axelar_solana_memo_legacy::state::Counter;
 use borsh::BorshDeserialize;
 use ethers_core::utils::hex::ToHexExt;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::ContractCallFilter;
@@ -289,7 +289,7 @@ async fn test_send_from_evm_to_solana_single_case(test_case: MemoTestCase) -> Re
     }
 
     let counter = solana_chain
-        .get_account(&counter_pda, &axelar_solana_memo_program::ID)
+        .get_account(&counter_pda, &axelar_solana_memo_legacy::ID)
         .await;
 
     let counter = Counter::try_from_slice(&counter.data)
@@ -339,7 +339,7 @@ async fn call_evm_gateway(
     // Send transaction and wait for receipt
     let _receipt = evm_memo
         .send_to_solana(
-            axelar_solana_memo_program::id().to_string(),
+            axelar_solana_memo_legacy::id().to_string(),
             solana_id.as_bytes().to_vec().into(),
             memo.as_bytes().to_vec().into(),
             solana_accounts_to_provide,

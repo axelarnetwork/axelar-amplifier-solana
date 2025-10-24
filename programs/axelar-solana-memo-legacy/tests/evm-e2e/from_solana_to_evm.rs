@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use axelar_solana_gateway::events::CallContractEvent;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
-use axelar_solana_memo_program::get_counter_pda;
-use axelar_solana_memo_program::instruction::call_gateway_with_memo;
+use axelar_solana_memo_legacy::get_counter_pda;
+use axelar_solana_memo_legacy::instruction::call_gateway_with_memo;
 use ethers_core::utils::hex::ToHex;
 use ethers_core::utils::keccak256;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
