@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-gas-service-legacy"
+name = "solana-axelar-gas-service-legacy"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -35,7 +35,7 @@ ignored = ["anchor-discriminators"]
 workspace = true
 
 [lib]
-name = "axelar_solana_gas_service_legacy"
+name = "solana_axelar_gas_service_legacy"
 crate-type = ["cdylib", "lib"]
 
 [features]

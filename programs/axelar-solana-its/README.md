@@ -11,7 +11,7 @@ This is the Solana implementation of the Interchain Token Service. From the [EVM
 
 On EVM, the ERC-20 standard is used for tokens, while Solana uses the SPL standard. Deploying an ERC-20 token on EVM involves creating a new contract instance, whereas on Solana, a new mint account is created due to its account model.
 
-In EVM, an `InterchainToken` is an implementation of the ERC-20 standard, allowing multiple minters. This enables the ITS contract to be granted the _minter_ role. On Solana, a mint account representing an SPL token can have only a **single** mint authority. For `TokenManager` types such as `NativeInterchainToken`, `Mint/BurnFrom`, and `Mint/Burn`, which require minting and burning tokens during interchain transfers, the mint authority must be assigned to ITS (technically, to the `TokenManager` created for the token).  
+In EVM, an `InterchainToken` is an implementation of the ERC-20 standard, allowing multiple minters. This enables the ITS contract to be granted the _minter_ role. On Solana, a mint account representing an SPL token can have only a **single** mint authority. For `TokenManager` types such as `NativeInterchainToken`, `Mint/BurnFrom`, and `Mint/Burn`, which require minting and burning tokens during interchain transfers, the mint authority must be assigned to ITS (technically, to the `TokenManager` created for the token).
 
 Consequently, `InterchainToken`s deployed with these `TokenManager` types on Solana have ITS set as their mint authority, with an additional `minter` optionally defined during deployment. This minter can mint tokens but must use the proxy mint instruction in the ITS program instead of the standard `spl-token` instruction. ITS also provides instructions to transfer this internal minter role to another account. Note that the `mint_authority` on the SPL token cannot be changed once transferred to the `TokenManager`.
 
@@ -44,9 +44,9 @@ Additionally, some token standards impose limitations on token metadata, such as
 
 Custom token linking on Axelar involves deploying `TokenManager`s for existing tokens. The [axelar-examples](https://github.com/axelarnetwork/axelar-examples) repository includes an [example](https://github.com/axelarnetwork/axelar-examples/blob/main/examples/evm/its-custom-token/index.js) for linking custom tokens between EVM chains. The same process applies when linking tokens between EVM and Solana.
 
-As noted earlier, mint accounts on Solana can have only one mint authority. Therefore, when deploying a `Mint/Burn` or `Mint/BurnFrom` `TokenManager` on Solana, the mint authority role must be transferred to the `TokenManager` PDA.  
+As noted earlier, mint accounts on Solana can have only one mint authority. Therefore, when deploying a `Mint/Burn` or `Mint/BurnFrom` `TokenManager` on Solana, the mint authority role must be transferred to the `TokenManager` PDA.
 
-- **Local Deployment**: This transfer is handled automatically, requiring the _payer_ to be the current mint authority.  
+- **Local Deployment**: This transfer is handled automatically, requiring the _payer_ to be the current mint authority.
 - **Remote Deployment**: If the `TokenManager` is deployed via a message from another chain, the mint authority must be manually transferred using the [`SetAuthority`](https://docs.rs/spl-token-2022/latest/spl_token_2022/instruction/enum.TokenInstruction.html#variant.SetAuthority) instruction from the `spl-token(-2022)` program. Failure to do so will prevent the token bridge from functioning, as the `TokenManager` cannot mint tokens for interchain transfers.
 
 The [from_solana_to_evm.rs](https://github.com/eigerco/solana-axelar/blob/main/solana/programs/axelar-solana-its/tests/module/from_solana_to_evm.rs) test module includes several examples of token linking with different `TokenManager` types, which can serve as a guide for using `axelar-solana-its` instructions.
@@ -55,7 +55,7 @@ The [from_solana_to_evm.rs](https://github.com/eigerco/solana-axelar/blob/main/s
 
 ## Token Metadata
 
-Unlike ERC-20 tokens, SPL tokens do not natively include metadata such as name, symbol, or URI. The `spl-token-2022` program introduces extensions, including `TokenMetadata` and `MetadataPointer`, to add this information to mint accounts.  
+Unlike ERC-20 tokens, SPL tokens do not natively include metadata such as name, symbol, or URI. The `spl-token-2022` program introduces extensions, including `TokenMetadata` and `MetadataPointer`, to add this information to mint accounts.
 
 However, the Solana ecosystem has historically addressed this gap using the Metaplex `mpl-token-metadata` program, which remains the most common method for managing token metadata. Consequently, `InterchainToken`s deployed on Solana follow the Metaplex metadata specification. During deployment, the metadata is created via the `mpl-token-metadata` program.
 
@@ -93,7 +93,7 @@ Because of these requirements, we cannot use [SolanaGatewayPayload](../../../evm
 
 ### Gas Service
 
-ITS uses the Axelar GMP protocol, and thus gas is paid as any other message on the network. For more info on the Gas Service, please check its [README](../axelar-solana-gas-service/README.md).
+ITS uses the Axelar GMP protocol, and thus gas is paid as any other message on the network. For more info on the Gas Service, please check its [README](../solana-axelar-gas-service/README.md).
 
 ## Contract id
 

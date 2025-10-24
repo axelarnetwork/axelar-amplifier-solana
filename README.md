@@ -33,7 +33,7 @@ cargo xtask --help
 ### Solana contracts
 
 - [**Gateway**](programs/axelar-solana-gateway/README.md): The core contract responsible for authenticating GMP messages.
-- [**Gas Service**](programs/axelar-solana-gas-service/README.md): Used for gas payments for the relayer.
+- [**Gas Service**](programs/solana-axelar-gas-service/README.md): Used for gas payments for the relayer.
 - [**Interchain Token Service**](programs/axelar-solana-its/README.md): Bridge tokens between chains.
 - [**Multicall**](programs/axelar-solana-multicall): Execute multiple actions from a single GMP message.
 - [**Governance**](programs/axelar-solana-governance/README.md): The governing entity over on-chain programs, responsible for program upgrades.

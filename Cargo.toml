@@ -188,7 +188,7 @@ mollusk-svm = "0.5.1"
 # solana programs
 axelar-solana-its = { path = "programs/axelar-solana-its", default-features = false }
 axelar-solana-operators = { path = "programs/axelar-solana-operators", default-features = false }
-axelar-solana-gas-service = { path = "programs/axelar-solana-gas-service", default-features = false }
+solana-axelar-gas-service = { path = "programs/solana-axelar-gas-service", default-features = false }
 axelar-solana-memo-legacy = { path = "programs/axelar-solana-memo-legacy", default-features = false }
 axelar-solana-memo = { path = "programs/axelar-solana-memo", default-features = false }
 axelar-solana-multicall = { path = "programs/axelar-solana-multicall", default-features = false }
@@ -199,7 +199,7 @@ dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", d
 axelar-solana-governance = { path = "programs/axelar-solana-governance", default-features = false }
 
 # legacy solana programs
-axelar-solana-gas-service-legacy = { path = "programs/axelar-solana-gas-service-legacy", default-features = false }
+solana-axelar-gas-service-legacy = { path = "programs/solana-axelar-gas-service-legacy", default-features = false }
 
 # helper crates
 axelar-message-primitives = { path = "helpers/axelar-message-primitives" }

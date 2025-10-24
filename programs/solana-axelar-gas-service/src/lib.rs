@@ -27,7 +27,7 @@ declare_id!("gaspFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
 declare_id!("gas1111111111111111111111111111111111111111");
 
 #[program]
-pub mod axelar_solana_gas_service {
+pub mod solana_axelar_gas_service {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {

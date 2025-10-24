@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-gas-service"
+name = "solana-axelar-gas-service"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -14,7 +14,7 @@ program-utils.workspace = true
 bytemuck.workspace = true
 
 [dev-dependencies]
-axelar-solana-gas-service-legacy.workspace = true
+solana-axelar-gas-service-legacy.workspace = true
 solana-sdk-ids.workspace = true
 mollusk-svm.workspace = true
 mollusk-test-utils.workspace = true
@@ -25,7 +25,7 @@ borsh.workspace = true
 workspace = true
 
 [lib]
-name = "axelar_solana_gas_service"
+name = "solana_axelar_gas_service"
 crate-type = ["cdylib", "lib"]
 
 [features]
@@ -41,22 +41,22 @@ custom-panic = []
 
 devnet-amplifier = [
 	"axelar-solana-operators/devnet-amplifier",
-	"axelar-solana-gas-service-legacy/devnet-amplifier",
+	"solana-axelar-gas-service-legacy/devnet-amplifier",
 	"program-utils/devnet-amplifier",
 ]
 stagenet = [
 	"axelar-solana-operators/stagenet",
-	"axelar-solana-gas-service-legacy/stagenet",
+	"solana-axelar-gas-service-legacy/stagenet",
 	"program-utils/stagenet",
 ]
 testnet = [
 	"axelar-solana-operators/testnet",
-	"axelar-solana-gas-service-legacy/testnet",
+	"solana-axelar-gas-service-legacy/testnet",
 	"program-utils/testnet",
 ]
 mainnet = [
 	"axelar-solana-operators/mainnet",
-	"axelar-solana-gas-service-legacy/mainnet",
+	"solana-axelar-gas-service-legacy/mainnet",
 	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]

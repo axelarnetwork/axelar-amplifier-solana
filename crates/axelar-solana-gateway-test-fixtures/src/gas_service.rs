@@ -25,7 +25,7 @@ impl TestFixture {
     pub async fn deploy_gas_service(&mut self) -> GasServiceUtils {
         // deploy gas service
         let gas_service_bytecode =
-            tokio::fs::read("../../target/deploy/axelar_solana_gas_service_legacy.so")
+            tokio::fs::read("../../target/deploy/solana_axelar_gas_service_legacy.so")
                 .await
                 .unwrap();
 
@@ -35,7 +35,7 @@ impl TestFixture {
         self.register_upgradeable_program(
             &gas_service_bytecode,
             &upgrade_authority.pubkey(),
-            &axelar_solana_gas_service_legacy::id(),
+            &solana_axelar_gas_service_legacy::id(),
         )
         .await;
         self.setup_default_gas_config(upgrade_authority)
@@ -44,7 +44,7 @@ impl TestFixture {
     /// Initialise a new gas config and return a utility tracker struct for it
     pub fn setup_default_gas_config(&mut self, upgrade_authority: Keypair) -> GasServiceUtils {
         let operator = Keypair::new();
-        let (config_pda, ..) = axelar_solana_gas_service_legacy::get_config_pda();
+        let (config_pda, ..) = solana_axelar_gas_service_legacy::get_config_pda();
 
         GasServiceUtils {
             upgrade_authority,
@@ -67,7 +67,7 @@ impl TestFixture {
         &mut self,
         operator: Keypair,
     ) -> Result<BanksTransactionResultWithMetadata, BanksTransactionResultWithMetadata> {
-        let ix = axelar_solana_gas_service_legacy::instructions::init_config(
+        let ix = solana_axelar_gas_service_legacy::instructions::init_config(
             &self.payer.pubkey(),
             &operator.pubkey(),
         )
@@ -233,11 +233,11 @@ impl TestFixture {
     pub async fn gas_service_config_state(
         &mut self,
         config_pda: Pubkey,
-    ) -> axelar_solana_gas_service_legacy::state::Config {
+    ) -> solana_axelar_gas_service_legacy::state::Config {
         let acc = self
-            .get_account(&config_pda, &axelar_solana_gas_service_legacy::ID)
+            .get_account(&config_pda, &solana_axelar_gas_service_legacy::ID)
             .await;
-        let config = axelar_solana_gas_service_legacy::state::Config::read(acc.data()).unwrap();
+        let config = solana_axelar_gas_service_legacy::state::Config::read(acc.data()).unwrap();
         *config
     }
 }

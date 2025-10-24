@@ -1,4 +1,4 @@
-use axelar_solana_gas_service_legacy::instructions::transfer_operatorship;
+use solana_axelar_gas_service_legacy::instructions::transfer_operatorship;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{signature::Keypair, signer::Signer};
@@ -113,7 +113,7 @@ async fn test_successfully_transfer_and_use_new_operator() {
         .unwrap()
         .lamports;
 
-    let collect_ix = axelar_solana_gas_service_legacy::instructions::collect_fees_instruction(
+    let collect_ix = solana_axelar_gas_service_legacy::instructions::collect_fees_instruction(
         &new_operator.pubkey(),
         &new_operator.pubkey(),
         amount,
@@ -153,7 +153,7 @@ async fn test_successfully_transfer_and_use_new_operator() {
     );
 
     // Verify old operator cannot collect fees
-    let collect_ix = axelar_solana_gas_service_legacy::instructions::collect_fees_instruction(
+    let collect_ix = solana_axelar_gas_service_legacy::instructions::collect_fees_instruction(
         &gas_utils.operator.pubkey(),
         &gas_utils.operator.pubkey(),
         amount,

@@ -1,11 +1,11 @@
-use axelar_solana_gas_service_legacy::events::GasPaidEvent;
+use solana_axelar_gas_service_legacy::events::GasAddedEvent;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use event_cpi_test_utils::assert_event_cpi;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
 
 #[tokio::test]
-async fn test_pay_native_for_contract_call() {
+async fn test_add_native_gas() {
     // Setup
     let pt = ProgramTest::default();
     let mut test_fixture = TestFixture::new(pt).await;
@@ -33,16 +33,12 @@ async fn test_pay_native_for_contract_call() {
     // Action
     let refund_address = Pubkey::new_unique();
     let gas_amount = 1_000_000;
-    let destination_chain = "ethereum".to_owned();
-    let destination_addr = "destination addr 123".to_owned();
-    let payload_hash = [42; 32];
-    let ix = axelar_solana_gas_service_legacy::instructions::pay_gas_instruction(
+    let message_id = "tx-sig-2.1".to_owned();
+    let ix = solana_axelar_gas_service_legacy::instructions::add_gas_instruction(
         &payer.pubkey(),
-        destination_chain.clone(),
-        destination_addr.clone(),
-        payload_hash,
-        refund_address,
+        message_id.clone(),
         gas_amount,
+        refund_address,
     )
     .unwrap();
 
@@ -71,11 +67,9 @@ async fn test_pay_native_for_contract_call() {
         .unwrap();
     assert!(!inner_ixs.is_empty());
 
-    let expected_event = GasPaidEvent {
+    let expected_event = GasAddedEvent {
         sender: payer.pubkey(),
-        destination_chain: destination_chain.clone(),
-        destination_address: destination_addr.clone(),
-        payload_hash,
+        message_id,
         amount: gas_amount,
         refund_address,
         spl_token_account: None,
@@ -135,16 +129,12 @@ async fn fails_if_payer_not_signer() {
     // Action
     let refund_address = Pubkey::new_unique();
     let gas_amount = 1_000_000;
-    let destination_chain = "ethereum".to_owned();
-    let destination_addr = "destination addr 123".to_owned();
-    let payload_hash = [42; 32];
-    let mut ix = axelar_solana_gas_service_legacy::instructions::pay_gas_instruction(
+    let message_id = "tx-sig-2.1".to_owned();
+    let mut ix = solana_axelar_gas_service_legacy::instructions::add_gas_instruction(
         &payer.pubkey(),
-        destination_chain.clone(),
-        destination_addr.clone(),
-        payload_hash,
-        refund_address,
+        message_id,
         gas_amount,
+        refund_address,
     )
     .unwrap();
     ix.accounts[0].is_signer = false;
