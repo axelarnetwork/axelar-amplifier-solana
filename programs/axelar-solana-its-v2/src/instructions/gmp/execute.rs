@@ -162,10 +162,10 @@ fn interchain_transfer_self_invoke(
         program_id: crate::id(),
         accounts: crate::accounts::InterchainTransferInternal {
             payer: ctx.accounts.payer.key(),
-            authority: ctx.accounts.authority.clone().unwrap().key(), // todo: what do we pick here?
+            authority: ctx.accounts.authority.clone().unwrap().key(),
             its_root_pda: ctx.accounts.its_root_pda.key(),
             destination: ctx.accounts.destination.clone().unwrap().key(),
-            destination_ata: ctx.accounts.destination_ata.clone().unwrap().key(), // todo: what do we pick here?
+            destination_ata: ctx.accounts.destination_ata.clone().unwrap().key(),
             token_mint: ctx.accounts.token_mint.key(),
             token_manager_pda: ctx.accounts.token_manager_pda.key(),
             token_manager_ata: ctx.accounts.token_manager_ata.key(),
