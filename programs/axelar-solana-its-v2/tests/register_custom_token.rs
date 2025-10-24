@@ -4,13 +4,12 @@ use axelar_solana_its_v2::{
     state::{token_manager::Type, TokenManager},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
+use axelar_solana_its_v2_test_fixtures::{init_its_service, initialize_mollusk};
+use mollusk_svm::program::keyed_account_for_system_program;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
-
-#[path = "initialize.rs"]
-mod initialize;
 
 fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
     let mint = Pubkey::new_unique();
@@ -41,7 +40,7 @@ fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
 #[test]
 fn test_register_custom_token_without_operator() {
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
@@ -63,7 +62,7 @@ fn test_register_custom_token_without_operator() {
         _user_roles_account,
         _program_data,
         _program_data_account,
-    ) = initialize::init_its_service(
+    ) = init_its_service(
         &mollusk,
         payer,
         &payer_account,

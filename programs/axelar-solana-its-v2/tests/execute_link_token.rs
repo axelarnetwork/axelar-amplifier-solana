@@ -1,14 +1,13 @@
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use anchor_spl::{associated_token::spl_associated_token_account, token_2022::spl_token_2022};
-use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
+use axelar_solana_gateway_v2::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
 use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
 use axelar_solana_its_v2::{state::TokenManager, utils::interchain_token_id};
 use axelar_solana_its_v2_test_fixtures::{
-    create_rent_sysvar_data, create_sysvar_instructions_data,
-    init_its_service_with_ethereum_trusted, initialize_mollusk,
+    create_rent_sysvar_data, init_its_service_with_ethereum_trusted, initialize_mollusk,
 };
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, ReceiveFromHub};
 use mollusk_svm::program::keyed_account_for_system_program;
@@ -46,13 +45,16 @@ fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
 }
 
 #[test]
-fn test_execute_link_token_success() {
+fn test_execute_link_token() {
     // Step 1: Setup gateway with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
+    let (gateway_root_pda, _) = GatewayConfig::find_pda();
+    let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
+
     assert!(init_result.program_result.is_ok());
 
     // Step 3: Add ITS program to mollusk - USE the properly configured mollusk
@@ -142,7 +144,7 @@ fn test_execute_link_token_success() {
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result,
+        init_result.clone(),
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -195,9 +197,9 @@ fn test_execute_link_token_success() {
     let executable_accounts = axelar_solana_its_v2::accounts::AxelarExecuteAccounts {
         incoming_message_pda: *incoming_message_pda,
         signing_pda,
+        gateway_root_pda,
         axelar_gateway_program: GATEWAY_PROGRAM_ID,
         event_authority: gateway_event_authority,
-        system_program: solana_sdk::system_program::ID,
     };
 
     let accounts = axelar_solana_its_v2::accounts::Execute {
@@ -213,6 +215,7 @@ fn test_execute_link_token_success() {
         token_program: spl_token_2022::id(),
         associated_token_program: spl_associated_token_account::id(),
         rent: solana_sdk::sysvar::rent::ID,
+        system_program: solana_sdk::system_program::ID,
 
         // Remaining accounts
         deployer_ata: None,
@@ -256,6 +259,11 @@ fn test_execute_link_token_success() {
             signing_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
+        (gateway_root_pda, gateway_root_pda_account.clone()),
+        (
+            gateway_event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         (
             GATEWAY_PROGRAM_ID,
             Account {
@@ -266,11 +274,6 @@ fn test_execute_link_token_success() {
                 rent_epoch: 0,
             },
         ),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        keyed_account_for_system_program(),
         // ITS Accounts
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account),
@@ -285,7 +288,6 @@ fn test_execute_link_token_success() {
         ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
-        keyed_account_for_system_program(),
         (
             solana_sdk::sysvar::rent::ID,
             Account {
@@ -296,6 +298,7 @@ fn test_execute_link_token_success() {
                 rent_epoch: 0,
             },
         ),
+        keyed_account_for_system_program(),
         // Remaining accounts
         (program_id, its_program_account.clone()),
         (program_id, its_program_account.clone()),

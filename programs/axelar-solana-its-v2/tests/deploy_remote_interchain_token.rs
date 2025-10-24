@@ -1,11 +1,12 @@
-use crate::initialize::init_gas_service;
-use crate::initialize::init_its_service_with_ethereum_trusted;
-use crate::initialize::setup_operator;
 use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::initialize_gateway;
 use axelar_solana_gateway_v2_test_fixtures::setup_test_with_real_signers;
 use axelar_solana_its_v2_test_fixtures::deploy_remote_interchain_token_helper;
+use axelar_solana_its_v2_test_fixtures::init_gas_service;
+use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
+use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
+use axelar_solana_its_v2_test_fixtures::setup_operator;
 use axelar_solana_its_v2_test_fixtures::DeployRemoteInterchainTokenContext;
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
@@ -43,7 +44,7 @@ fn test_deploy_remote_interchain_token() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
