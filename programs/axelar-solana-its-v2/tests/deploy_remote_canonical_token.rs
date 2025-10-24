@@ -1,6 +1,3 @@
-use crate::initialize::init_gas_service;
-use crate::initialize::init_its_service_with_ethereum_trusted;
-use crate::initialize::setup_operator;
 use anchor_lang::AnchorSerialize;
 use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
@@ -14,6 +11,7 @@ use axelar_solana_its_v2_test_fixtures::init_gas_service;
 use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
 use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
 use axelar_solana_its_v2_test_fixtures::register_canonical_interchain_token_helper;
+use axelar_solana_its_v2_test_fixtures::setup_operator;
 use mollusk_test_utils::setup_mollusk;
 use solana_program::program_pack::Pack;
 use solana_sdk::signature::Keypair;

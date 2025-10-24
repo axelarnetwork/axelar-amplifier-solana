@@ -1369,6 +1369,7 @@ dependencies = [
  "axelar-solana-gateway-test-fixtures",
  "axelar-solana-gateway-v2",
  "axelar-solana-its-v2",
+ "axelar-solana-operators",
  "bincode",
  "hex",
  "mollusk-svm 0.5.1",

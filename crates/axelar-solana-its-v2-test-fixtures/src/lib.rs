@@ -1,6 +1,7 @@
 use anchor_lang::prelude::Rent;
-use anchor_lang::AnchorSerialize;
-use anchor_lang::{InstructionData, ToAccountMetas};
+use anchor_lang::{AccountDeserialize, AnchorSerialize};
+use anchor_lang::{Discriminator, InstructionData, Space, ToAccountMetas};
+use anchor_spl::token::spl_token;
 use anchor_spl::{
     associated_token::{
         get_associated_token_address_with_program_id, spl_associated_token_account,
@@ -9,14 +10,19 @@ use anchor_spl::{
 };
 use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
+use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
 use axelar_solana_its_v2::{
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     utils::{canonical_interchain_token_id, interchain_token_id},
 };
+use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
+use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_svm_programs_token;
-use mollusk_test_utils::get_event_authority_and_program_accounts;
+use mollusk_test_utils::{
+    create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
+};
 use mpl_token_metadata::accounts::Metadata;
 use solana_program::program_pack::Pack;
 use solana_sdk::signature::Signer;

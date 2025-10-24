@@ -379,7 +379,7 @@ pub(crate) fn init_its_service_with_ethereum_trusted(
         InterchainTokenService::try_deserialize(&mut updated_its_account.data.as_slice())
             .expect("Failed to deserialize updated ITS data");
 
-    assert!(updated_its_data.contains_trusted_chain("ethereum".to_string()));
+    assert!(updated_its_data.is_trusted_chain("ethereum"));
 
     (its_root_pda, updated_its_account.clone())
 }

@@ -20,7 +20,7 @@ use anchor_spl::token_2022::spl_token_2022::{
 };
 use anchor_spl::token_interface::Mint;
 use axelar_solana_gas_service_v2::{
-    cpi::{accounts::PayNativeForContractCall, pay_native_for_contract_call},
+    cpi::{accounts::PayGas, pay_gas},
     state::Treasury,
 };
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
@@ -118,9 +118,9 @@ pub struct DeployRemoteInterchainToken<'info> {
         mut,
         seeds = [Treasury::SEED_PREFIX],
         seeds::program = axelar_solana_gas_service_v2::ID,
-        bump = gas_treasury.bump,
+        bump = gas_treasury.load()?.bump,
     )]
-    pub gas_treasury: Account<'info, Treasury>,
+    pub gas_treasury: AccountLoader<'info, Treasury>,
 
     /// The GMP gas service program account
     #[account(address = axelar_solana_gas_service_v2::ID)]
@@ -352,8 +352,8 @@ fn pay_gas_v2(
     destination_address: String,
     gas_value: u64,
 ) -> Result<()> {
-    let cpi_accounts = PayNativeForContractCall {
-        payer: gmp_accounts.payer.clone(),
+    let cpi_accounts = PayGas {
+        sender: gmp_accounts.payer.clone(),
         treasury: gmp_accounts.gas_treasury,
         system_program: gmp_accounts.system_program,
         event_authority: gmp_accounts.gas_event_authority,
@@ -362,7 +362,7 @@ fn pay_gas_v2(
 
     let cpi_ctx = CpiContext::new(gmp_accounts.gas_service, cpi_accounts);
 
-    pay_native_for_contract_call(
+    pay_gas(
         cpi_ctx,
         destination_chain,
         destination_address,

@@ -184,6 +184,7 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 mollusk-svm = "0.5.1"
+mollusk-svm-programs-token = "0.4.1"
 
 # solana programs
 axelar-solana-its = { path = "programs/axelar-solana-its", default-features = false }

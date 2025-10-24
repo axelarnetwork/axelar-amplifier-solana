@@ -46,9 +46,9 @@ pub struct RegisterTokenMetadata<'info> {
         mut,
         seeds = [Treasury::SEED_PREFIX],
         seeds::program = axelar_solana_gas_service_v2::ID,
-        bump = gas_treasury.bump,
+        bump = gas_treasury.load()?.bump,
     )]
-    pub gas_treasury: Account<'info, Treasury>,
+    pub gas_treasury: AccountLoader<'info, Treasury>,
 
     /// The GMP gas service program account
     #[account(address = axelar_solana_gas_service_v2::ID)]
