@@ -3,7 +3,7 @@
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_gateway_v2::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
-use axelar_solana_gateway_v2::u256::U256;
+use axelar_solana_gateway_v2::U256;
 use axelar_solana_gateway_v2::{
     state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
     ID as GATEWAY_PROGRAM_ID,

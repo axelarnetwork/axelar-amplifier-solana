@@ -1,4 +1,4 @@
-use crate::u256::U256;
+use crate::U256;
 use anchor_lang::prelude::*;
 
 #[event]

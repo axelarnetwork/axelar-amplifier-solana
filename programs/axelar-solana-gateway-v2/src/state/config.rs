@@ -1,4 +1,4 @@
-use crate::{u256::U256, GatewayError};
+use crate::{GatewayError, U256};
 use anchor_lang::prelude::*;
 
 /// Timestamp alias for when the last signer rotation happened

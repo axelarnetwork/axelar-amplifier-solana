@@ -1,5 +1,4 @@
 //! U256 implementation of uint256.
-
 use std::fmt::Display;
 
 pub use bnum::types::U256 as BnumU256;
@@ -8,7 +7,7 @@ use bytemuck::{Pod, Zeroable};
 
 /// [U256] represents uint256.
 #[derive(
-    Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, Eq, Copy, Default, Pod, Zeroable,
+    Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable, BorshSerialize, BorshDeserialize,
 )]
 #[repr(transparent)]
 pub struct U256 {
@@ -60,6 +59,36 @@ impl U256 {
         let rhs = bnum::types::U256::from_digits(rhs.value);
 
         lhs.checked_sub(rhs).map(|res| Self { value: res.into() })
+    }
+}
+
+// Implement arithmetic operators
+impl std::ops::Add for U256 {
+    type Output = U256;
+
+    fn add(self, other: U256) -> U256 {
+        self.checked_add(other).expect("U256 addition overflow")
+    }
+}
+
+impl std::ops::Sub for U256 {
+    type Output = U256;
+
+    fn sub(self, other: U256) -> U256 {
+        self.checked_sub(other).expect("U256 subtraction underflow")
+    }
+}
+
+// Implement AddAssign, SubAssign, etc.
+impl std::ops::AddAssign for U256 {
+    fn add_assign(&mut self, other: U256) {
+        *self = *self + other;
+    }
+}
+
+impl std::ops::SubAssign for U256 {
+    fn sub_assign(&mut self, other: U256) {
+        *self = *self - other;
     }
 }
 

@@ -10,17 +10,17 @@ edition.workspace = true
 [dependencies]
 udigest.workspace = true
 bytemuck.workspace = true
+bnum.workspace = true
 anchor-lang.workspace = true
-borsh.workspace = true
 axelar-solana-encoding = { workspace = true, features = ["solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
+alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 num-derive.workspace = true
 num-traits.workspace = true
 
 [dev-dependencies]
-axelar-message-primitives.workspace = true
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 axelar-solana-gateway-v2-test-fixtures.workspace = true
 mollusk-svm.workspace = true
@@ -55,18 +55,9 @@ custom-panic = []
 
 
 # Network features - these pass through to the gateway dependency
-devnet-amplifier = [
-	"axelar-solana-gateway/devnet-amplifier",
-]
-stagenet = [
-	"axelar-solana-gateway/stagenet",
-
-]
-testnet = [
-	"axelar-solana-gateway/testnet",
-]
-mainnet = [
-	"axelar-solana-gateway/mainnet",
-]
+devnet-amplifier = []
+stagenet = []
+testnet = []
+mainnet = []
 
 default = ["devnet-amplifier"]

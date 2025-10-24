@@ -1,4 +1,4 @@
-use axelar_message_primitives::U256;
+use crate::types::U256;
 use axelar_solana_gateway::get_gateway_root_config_pda;
 use axelar_solana_gateway::state::GatewayConfig;
 use axelar_solana_gateway_test_fixtures::{
