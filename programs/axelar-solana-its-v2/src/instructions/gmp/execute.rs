@@ -39,23 +39,29 @@ pub struct Execute<'info> {
     #[account(address = anchor_spl::associated_token::ID)]
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    pub system_program: Program<'info, System>,
-
-    /// CHECK: Rent sysvar
     #[account(address = anchor_lang::solana_program::sysvar::rent::ID)]
     pub rent: Sysvar<'info, Rent>,
+
     // Remaining accounts
     #[account(mut)]
-    pub deployer_ata: UncheckedAccount<'info>,
+    pub deployer_ata: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub deployer: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub authority: Option<UncheckedAccount<'info>>,
+
     #[account(mut)]
     pub minter: Option<UncheckedAccount<'info>>,
     #[account(mut)]
     pub minter_roles_pda: Option<UncheckedAccount<'info>>,
     #[account(mut)]
-    pub mpl_token_metadata_account: UncheckedAccount<'info>,
-    pub mpl_token_metadata_program: UncheckedAccount<'info>,
-    pub sysvar_instructions: UncheckedAccount<'info>,
-    pub destination: UncheckedAccount<'info>,
+    pub mpl_token_metadata_account: Option<UncheckedAccount<'info>>,
+    pub mpl_token_metadata_program: Option<UncheckedAccount<'info>>,
+    pub sysvar_instructions: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub destination: Option<UncheckedAccount<'info>>,
+    #[account(mut)]
+    pub destination_ata: Option<UncheckedAccount<'info>>,
 }
 
 pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
@@ -151,10 +157,10 @@ fn interchain_transfer_self_invoke(
         program_id: crate::id(),
         accounts: crate::accounts::InterchainTransferInternal {
             payer: ctx.accounts.payer.key(),
-            authority: ctx.accounts.payer.key(), // todo: what do we pick here?
+            authority: ctx.accounts.authority.clone().unwrap().key(), // todo: what do we pick here?
             its_root_pda: ctx.accounts.its_root_pda.key(),
-            destination: ctx.accounts.destination.key(),
-            destination_ata: ctx.accounts.token_manager_ata.key(), // todo: what do we pick here?
+            destination: ctx.accounts.destination.clone().unwrap().key(),
+            destination_ata: ctx.accounts.destination_ata.clone().unwrap().key(), // todo: what do we pick here?
             token_mint: ctx.accounts.token_mint.key(),
             token_manager_pda: ctx.accounts.token_manager_pda.key(),
             token_manager_ata: ctx.accounts.token_manager_ata.key(),
@@ -169,9 +175,14 @@ fn interchain_transfer_self_invoke(
 
     let account_infos = vec![
         ctx.accounts.payer.to_account_info(),
-        ctx.accounts.payer.to_account_info(), // todo: what do we pick here?
+        ctx.accounts.authority.clone().unwrap().to_account_info(),
         ctx.accounts.its_root_pda.to_account_info(),
-        ctx.accounts.deployer_ata.to_account_info(), // todo: what do we pick here?
+        ctx.accounts.destination.clone().unwrap().to_account_info(),
+        ctx.accounts
+            .destination_ata
+            .clone()
+            .unwrap()
+            .to_account_info(),
         ctx.accounts.token_mint.to_account_info(),
         ctx.accounts.token_manager_pda.to_account_info(),
         ctx.accounts.token_manager_ata.to_account_info(),
@@ -218,8 +229,8 @@ fn link_token_self_invoke(
 
     let accounts = crate::accounts::LinkTokenInternal {
         payer: ctx.accounts.payer.key(),
-        deployer: ctx.accounts.payer.key(), // Use payer as deployer for GMP
-        system_program: ctx.accounts.system_program.key(),
+        deployer: ctx.accounts.deployer.clone().unwrap().key(),
+        system_program: ctx.accounts.executable.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
         token_mint: ctx.accounts.token_mint.key(),
@@ -243,8 +254,8 @@ fn link_token_self_invoke(
 
     let account_infos = vec![
         ctx.accounts.payer.to_account_info(),
-        ctx.accounts.payer.to_account_info(), // deployer (same as payer)
-        ctx.accounts.system_program.to_account_info(),
+        ctx.accounts.deployer.clone().unwrap().to_account_info(),
+        ctx.accounts.executable.system_program.to_account_info(),
         ctx.accounts.its_root_pda.to_account_info(),
         ctx.accounts.token_manager_pda.to_account_info(),
         ctx.accounts.token_mint.to_account_info(),
@@ -297,8 +308,8 @@ fn deploy_interchain_token_self_invoke(
     // Build the accounts using Anchor's generated accounts struct
     let accounts = crate::accounts::DeployInterchainTokenInternal {
         payer: ctx.accounts.payer.key(),
-        deployer: ctx.accounts.payer.key(), // todo: do we need to pass a separate deployer?
-        system_program: ctx.accounts.system_program.key(),
+        deployer: ctx.accounts.deployer.clone().unwrap().key(),
+        system_program: ctx.accounts.executable.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
         token_mint: ctx.accounts.token_mint.key(),
@@ -306,10 +317,20 @@ fn deploy_interchain_token_self_invoke(
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
         rent: ctx.accounts.rent.key(),
-        sysvar_instructions: ctx.accounts.sysvar_instructions.key(),
-        mpl_token_metadata_program: ctx.accounts.mpl_token_metadata_program.key(),
-        mpl_token_metadata_account: ctx.accounts.mpl_token_metadata_account.key(),
-        deployer_ata: ctx.accounts.deployer_ata.key(),
+        sysvar_instructions: ctx.accounts.sysvar_instructions.clone().unwrap().key(),
+        mpl_token_metadata_program: ctx
+            .accounts
+            .mpl_token_metadata_program
+            .clone()
+            .unwrap()
+            .key(),
+        mpl_token_metadata_account: ctx
+            .accounts
+            .mpl_token_metadata_account
+            .clone()
+            .unwrap()
+            .key(),
+        deployer_ata: ctx.accounts.deployer_ata.clone().unwrap().key(),
         minter: ctx.accounts.minter.as_ref().map(|acc| acc.key()),
         minter_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(|acc| acc.key()),
         // for event cpi
@@ -326,8 +347,8 @@ fn deploy_interchain_token_self_invoke(
 
     let account_infos = vec![
         ctx.accounts.payer.to_account_info(),
-        ctx.accounts.payer.to_account_info(), // todo: do we need to pass a separate deployer?
-        ctx.accounts.system_program.to_account_info(),
+        ctx.accounts.deployer.clone().unwrap().to_account_info(),
+        ctx.accounts.executable.system_program.to_account_info(),
         ctx.accounts.its_root_pda.to_account_info(),
         ctx.accounts.token_manager_pda.to_account_info(),
         ctx.accounts.token_mint.to_account_info(),
@@ -335,10 +356,22 @@ fn deploy_interchain_token_self_invoke(
         ctx.accounts.token_program.to_account_info(),
         ctx.accounts.associated_token_program.to_account_info(),
         ctx.accounts.rent.to_account_info(),
-        ctx.accounts.sysvar_instructions.to_account_info(),
-        ctx.accounts.mpl_token_metadata_program.to_account_info(),
-        ctx.accounts.mpl_token_metadata_account.to_account_info(),
-        ctx.accounts.deployer_ata.to_account_info(),
+        ctx.accounts
+            .sysvar_instructions
+            .clone()
+            .unwrap()
+            .to_account_info(),
+        ctx.accounts
+            .mpl_token_metadata_program
+            .clone()
+            .unwrap()
+            .to_account_info(),
+        ctx.accounts
+            .mpl_token_metadata_account
+            .clone()
+            .unwrap()
+            .to_account_info(),
+        ctx.accounts.deployer_ata.clone().unwrap().to_account_info(),
         // Optional minter: use actual account if exists, else use program ID
         ctx.accounts
             .minter

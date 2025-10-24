@@ -173,24 +173,6 @@ fn test_execute_link_token_success() {
         &spl_associated_token_account::id(),
     );
 
-    let (deployer_ata, _) = Pubkey::find_program_address(
-        &[
-            payer.as_ref(),
-            spl_token_2022::id().as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &spl_associated_token_account::id(),
-    );
-
-    let (metadata_account, _) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &mpl_token_metadata::ID,
-    );
-
     let (signing_pda, _) = Pubkey::find_program_address(
         &[
             axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
@@ -218,8 +200,6 @@ fn test_execute_link_token_success() {
         system_program: solana_sdk::system_program::ID,
     };
 
-    let destination_pda = Pubkey::new_unique();
-
     let accounts = axelar_solana_its_v2::accounts::Execute {
         // GMP accounts
         executable: executable_accounts,
@@ -233,16 +213,18 @@ fn test_execute_link_token_success() {
         token_program: spl_token_2022::id(),
         associated_token_program: spl_associated_token_account::id(),
         rent: solana_sdk::sysvar::rent::ID,
-        system_program: solana_sdk::system_program::ID,
 
         // Remaining accounts
-        deployer_ata,
+        deployer_ata: None,
         minter: None,
         minter_roles_pda: None,
-        mpl_token_metadata_account: metadata_account,
-        mpl_token_metadata_program: mpl_token_metadata::ID,
-        sysvar_instructions: solana_sdk::sysvar::instructions::ID,
-        destination: destination_pda,
+        mpl_token_metadata_account: None,
+        mpl_token_metadata_program: None,
+        sysvar_instructions: None,
+        destination: None,
+        deployer: Some(payer),
+        authority: None,
+        destination_ata: None,
 
         // Event CPI accounts
         event_authority: its_event_authority,
@@ -268,7 +250,7 @@ fn test_execute_link_token_success() {
     };
 
     let execute_accounts = vec![
-        // 1. AxelarExecuteAccounts
+        // AxelarExecuteAccounts
         (*incoming_message_pda, incoming_message_account),
         (
             signing_pda,
@@ -287,10 +269,10 @@ fn test_execute_link_token_success() {
         (
             gateway_event_authority,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // event_authority (gateway)
+        ),
         keyed_account_for_system_program(),
         // ITS Accounts
-        (payer, payer_account),
+        (payer, payer_account.clone()),
         (its_root_pda, its_root_account),
         (
             token_manager_pda,
@@ -314,41 +296,17 @@ fn test_execute_link_token_success() {
                 rent_epoch: 0,
             },
         ),
-        // Remaining accounts (for the CPI call)
-        (
-            deployer_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (program_id, its_program_account.clone()), // minter: None -> program_id
-        (program_id, its_program_account.clone()), // minter_roles_pda: None -> program_id
-        (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            mpl_token_metadata::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            solana_sdk::sysvar::instructions::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_sysvar_instructions_data(),
-                owner: solana_program::sysvar::id(),
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            destination_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        // Remaining accounts
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
+        (payer, payer_account), // deployer same as payer for simplicity
+        (program_id, its_program_account.clone()),
+        (program_id, its_program_account.clone()),
         // Event CPI accounts
         (its_event_authority, _event_authority_account),
         (program_id, its_program_account.clone()),
