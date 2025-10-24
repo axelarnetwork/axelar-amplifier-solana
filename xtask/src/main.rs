@@ -205,14 +205,18 @@ fn main() -> eyre::Result<()> {
         Commands::UpdateIds => {
             println!("Updating program IDs");
             let program_prefixes = [
-                ("axelar-solana-gateway", "gtw"),
-                ("axelar-solana-its", "its"),
                 ("axelar-solana-gas-service", "gas"),
-                ("axelar-solana-gas-service-v2", "gas2"),
-                ("axelar-solana-operators", "opr"),
-                ("axelar-solana-multicall", "mc"),
-                ("axelar-solana-memo-program", "mem"),
+                ("axelar-solana-gas-service-v2", "ga2"),
+                ("axelar-solana-gateway", "gtw"),
+                ("axelar-solana-gateway-v2", "gt2"),
                 ("axelar-solana-governance", "gov"),
+                ("axelar-solana-governance-v2", "go2"),
+                ("axelar-solana-its", "its"),
+                ("axelar-solana-its-v2", "it2"),
+                ("axelar-solana-memo-program", "mem"),
+                ("axelar-solana-memo-v2", "me2"),
+                ("axelar-solana-multicall", "mc"),
+                ("axelar-solana-operators", "opr"),
             ];
 
             let (solana_programs, _) = workspace_crates_by_category(&sh)?;
