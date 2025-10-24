@@ -538,8 +538,8 @@ async fn axelar_solana_setup() -> (SolanaAxelarIntegrationMetadata, Pubkey) {
             mpl_token_metadata::ID,
         ),
         (
-            "axelar_solana_memo_program.so".into(),
-            axelar_solana_memo_program::id(),
+            "solana_axelar_memo_program.so".into(),
+            solana_axelar_memo_program::id(),
         ),
     ];
 
@@ -550,11 +550,11 @@ async fn axelar_solana_setup() -> (SolanaAxelarIntegrationMetadata, Pubkey) {
         .setup()
         .await;
 
-    let (counter_pda, counter_bump) = axelar_solana_memo_program::get_counter_pda();
+    let (counter_pda, counter_bump) = solana_axelar_memo_program::get_counter_pda();
 
     let _metadata = solana_chain
         .fixture
-        .send_tx(&[axelar_solana_memo_program::instruction::initialize(
+        .send_tx(&[solana_axelar_memo_program::instruction::initialize(
             &solana_chain.fixture.payer.pubkey(),
             &(counter_pda, counter_bump),
         )

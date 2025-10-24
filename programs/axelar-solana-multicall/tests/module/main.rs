@@ -27,8 +27,8 @@ pub struct TestContext {
 async fn axelar_solana_setup() -> TestContext {
     let programs_to_deploy = vec![
         (
-            "axelar_solana_memo_program.so".into(),
-            axelar_solana_memo_program::id(),
+            "solana_axelar_memo_program.so".into(),
+            solana_axelar_memo_program::id(),
         ),
         (
             "axelar_solana_multicall.so".into(),
@@ -43,11 +43,11 @@ async fn axelar_solana_setup() -> TestContext {
         .setup()
         .await;
 
-    let (counter_pda, counter_bump) = axelar_solana_memo_program::get_counter_pda();
+    let (counter_pda, counter_bump) = solana_axelar_memo_program::get_counter_pda();
 
     solana_chain
         .fixture
-        .send_tx(&[axelar_solana_memo_program::instruction::initialize(
+        .send_tx(&[solana_axelar_memo_program::instruction::initialize(
             &solana_chain.fixture.payer.pubkey(),
             &(counter_pda, counter_bump),
         )

@@ -1,5 +1,5 @@
-use axelar_solana_memo_legacy::get_counter_pda;
-use axelar_solana_memo_legacy::state::Counter;
+use solana_axelar_memo_legacy::get_counter_pda;
+use solana_axelar_memo_legacy::state::Counter;
 use borsh::BorshDeserialize;
 use solana_program_test::tokio;
 use solana_sdk::signature::Signer;
@@ -14,7 +14,7 @@ async fn test_initialize() {
 
     // Action
     let (counter_pda, counter_bump) = get_counter_pda();
-    let initialize = axelar_solana_memo_legacy::instruction::initialize(
+    let initialize = solana_axelar_memo_legacy::instruction::initialize(
         &solana_chain.fixture.payer.pubkey().clone(),
         &(counter_pda, counter_bump),
     )
@@ -24,7 +24,7 @@ async fn test_initialize() {
     // Assert
     let counter_pda = solana_chain
         .fixture
-        .get_account(&counter_pda, &axelar_solana_memo_legacy::id())
+        .get_account(&counter_pda, &solana_axelar_memo_legacy::id())
         .await;
     let counter_pda = Counter::try_from_slice(&counter_pda.data).unwrap();
     assert_eq!(counter_pda.bump, counter_bump);

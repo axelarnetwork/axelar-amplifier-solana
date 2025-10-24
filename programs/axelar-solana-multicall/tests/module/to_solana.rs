@@ -1,9 +1,9 @@
 use axelar_solana_gateway::{events::MessageExecutedEvent, executable::EncodingScheme};
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
-use axelar_solana_memo_program::instruction::AxelarMemoInstruction;
-use axelar_solana_memo_program::state::Counter;
 use axelar_solana_multicall::instructions::MultiCallPayloadBuilder;
 use borsh::BorshDeserialize as _;
+use solana_axelar_memo_program::instruction::AxelarMemoInstruction;
+use solana_axelar_memo_program::state::Counter;
 use solana_program::instruction::AccountMeta;
 use solana_program_test::tokio;
 
@@ -26,7 +26,7 @@ async fn test_multicall_different_encodings() {
     for memo in &["Call A", "Call B", "Call C"] {
         multicall_builder = multicall_builder
             .add_instruction(
-                axelar_solana_memo_program::id(),
+                solana_axelar_memo_program::id(),
                 vec![counter_account.clone()],
                 borsh::to_vec(&AxelarMemoInstruction::ProcessMemo {
                     memo: (*memo).to_string(),
@@ -81,7 +81,7 @@ async fn test_multicall_different_encodings() {
     }
 
     let counter = solana_chain
-        .get_account(&memo_program_counter_pda, &axelar_solana_memo_program::ID)
+        .get_account(&memo_program_counter_pda, &solana_axelar_memo_program::ID)
         .await;
     let counter = Counter::try_from_slice(&counter.data).unwrap();
     assert_eq!(counter.counter, 6);

@@ -20,16 +20,16 @@ async fn axelar_solana_setup() -> MemoProgramWrapper {
     let mut solana_chain = SolanaAxelarIntegration::builder()
         .initial_signer_weights(vec![555, 222])
         .programs_to_deploy(vec![(
-            "axelar_solana_memo_legacy.so".into(),
-            axelar_solana_memo_legacy::id(),
+            "solana_axelar_memo_legacy.so".into(),
+            solana_axelar_memo_legacy::id(),
         )])
         .build()
         .setup()
         .await;
-    let (counter_pda, counter_bump) = axelar_solana_memo_legacy::get_counter_pda();
+    let (counter_pda, counter_bump) = solana_axelar_memo_legacy::get_counter_pda();
     solana_chain
         .fixture
-        .send_tx(&[axelar_solana_memo_legacy::instruction::initialize(
+        .send_tx(&[solana_axelar_memo_legacy::instruction::initialize(
             &solana_chain.fixture.payer.pubkey(),
             &(counter_pda, counter_bump),
         )

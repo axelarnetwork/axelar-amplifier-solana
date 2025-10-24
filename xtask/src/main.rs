@@ -222,7 +222,7 @@ fn main() -> eyre::Result<()> {
 
                 program_prefixes.extend_from_slice(&[
                     ("solana-axelar-gas-service-legacy", "gasl"),
-                    ("axelar-solana-memo-legacy", "meml"),
+                    ("solana-axelar-memo-legacy", "meml"),
                 ]);
             }
 

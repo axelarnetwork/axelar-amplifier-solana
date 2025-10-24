@@ -1,11 +1,11 @@
 [package]
-name = "axelar-solana-memo-legacy"
+name = "solana-axelar-memo-legacy"
 version = "0.1.0"
 description = "Utility program to test Axelar Gateway and other integrations"
 edition = "2021"
 
 [lib]
-name = "axelar_solana_memo_legacy"
+name = "solana_axelar_memo_legacy"
 crate-type = ["cdylib", "lib"]
 
 [features]

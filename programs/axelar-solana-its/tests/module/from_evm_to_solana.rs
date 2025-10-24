@@ -14,13 +14,13 @@ use test_context::test_context;
 use axelar_solana_gateway::executable::{AxelarMessagePayload, EncodingScheme, SolanaAccountRepr};
 use axelar_solana_gateway_test_fixtures::base::FindLog;
 use axelar_solana_its::state::token_manager::{TokenManager, Type as TokenManagerType};
-use axelar_solana_memo_program::state::Counter;
 use evm_contracts_test_suite::ethers::{signers::Signer, types::Bytes};
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::ContractCallFilter;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::custom_test_token::CustomTestToken;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::interchain_token::InterchainToken;
 use evm_contracts_test_suite::ContractMiddleware;
 use interchain_token_transfer_gmp::GMPPayload;
+use solana_axelar_memo_program::state::Counter;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 
@@ -295,7 +295,7 @@ async fn test_custom_token_mint_burn_link_transfer(ctx: &mut ItsTestContext) -> 
 #[tokio::test]
 async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Result<()> {
     let memo_instruction =
-        axelar_solana_memo_program::instruction::AxelarMemoInstruction::ProcessMemo {
+        solana_axelar_memo_program::instruction::AxelarMemoInstruction::ProcessMemo {
             memo: "🐪🐪🐪🐪".to_owned(),
         };
 
@@ -352,7 +352,7 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
         .interchain_transfer(
             ctx.deployed_interchain_token,
             ctx.solana_chain_name.clone(),
-            axelar_solana_memo_program::id().to_bytes().into(),
+            solana_axelar_memo_program::id().to_bytes().into(),
             transfer_amount.into(),
             metadata,
             0_u128.into(),
@@ -388,7 +388,7 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
     tx.result.clone()?;
 
     let ata = spl_associated_token_account::get_associated_token_address_with_program_id(
-        &axelar_solana_memo_program::id(),
+        &solana_axelar_memo_program::id(),
         &token_manager.token_address,
         &spl_token_2022::id(),
     );
@@ -402,7 +402,7 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
     let ata_account = spl_token_2022::state::Account::unpack_from_slice(&ata_raw_account.data)?;
 
     assert_eq!(ata_account.mint, token_manager.token_address);
-    assert_eq!(ata_account.owner, axelar_solana_memo_program::id());
+    assert_eq!(ata_account.owner, solana_axelar_memo_program::id());
     assert_eq!(ata_account.amount, transfer_amount);
 
     assert!(

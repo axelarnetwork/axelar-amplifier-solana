@@ -3,7 +3,7 @@
 use anchor_lang::{InstructionData, ToAccountMetas};
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
-use axelar_solana_memo::ID as MEMO_PROGRAM_ID;
+use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -23,7 +23,7 @@ fn test_send_memo_to_gateway() {
     // Add the memo program to the Mollusk instance
     setup.mollusk.add_program(
         &MEMO_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_memo",
+        "../../target/deploy/solana_axelar_memo",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
@@ -33,7 +33,7 @@ fn test_send_memo_to_gateway() {
     let gateway_root_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
 
     // Step 3: Send memo
-    let send_memo_ix = axelar_solana_memo::instruction::SendMemo {
+    let send_memo_ix = solana_axelar_memo::instruction::SendMemo {
         destination_chain: "ethereum".to_owned(),
         destination_address: "0xDestinationAddress".to_owned(),
         memo: memo_string.to_owned(),
@@ -46,7 +46,7 @@ fn test_send_memo_to_gateway() {
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
-    let send_memo_accounts = axelar_solana_memo::accounts::SendMemo {
+    let send_memo_accounts = solana_axelar_memo::accounts::SendMemo {
         memo_program: MEMO_PROGRAM_ID,
         signing_pda,
         gateway_root_pda: setup.gateway_root_pda,

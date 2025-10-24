@@ -1,6 +1,6 @@
 use axelar_solana_gateway::events::CallContractEvent;
-use axelar_solana_memo_legacy::get_counter_pda;
-use axelar_solana_memo_legacy::instruction::call_gateway_with_memo;
+use solana_axelar_memo_legacy::get_counter_pda;
+use solana_axelar_memo_legacy::instruction::call_gateway_with_memo;
 use ethers_core::abi::AbiEncode;
 use event_cpi_test_utils::assert_event_cpi;
 use solana_program_test::tokio;
@@ -16,7 +16,7 @@ async fn test_successfully_send_to_gateway() {
     let destination_address = ethers_core::types::Address::random().encode_hex();
     let destination_chain = "ethereum".to_string();
     let (counter_pda, counter_bump) = get_counter_pda();
-    let initialize = axelar_solana_memo_legacy::instruction::initialize(
+    let initialize = solana_axelar_memo_legacy::instruction::initialize(
         &solana_chain.fixture.payer.pubkey().clone(),
         &(counter_pda, counter_bump),
     )
@@ -49,7 +49,7 @@ async fn test_successfully_send_to_gateway() {
     // We can get the memo from the logs
     assert_event_cpi(
         &CallContractEvent {
-            sender: axelar_solana_memo_legacy::ID,
+            sender: solana_axelar_memo_legacy::ID,
             destination_chain,
             destination_contract_address: destination_address,
             payload: memo.as_bytes().to_vec(),

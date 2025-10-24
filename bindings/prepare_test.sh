@@ -24,7 +24,7 @@ echo -e "\e[32mDeploy programs\e[0m"
 
 GATEWAY_ID=$(solana program deploy target/deploy/axelar_solana_gateway.so --program-id target/deploy/axelar_solana_gateway-keypair.json | cut -d' ' -f3)
 ITS_ID=$(solana program deploy target/deploy/axelar_solana_its.so --program-id target/deploy/axelar_solana_its-keypair.json | cut -d' ' -f3)
-MEMO_PROGRAM_ID=$(solana program deploy target/deploy/axelar_solana_memo_program.so --program-id target/deploy/axelar_solana_memo_program-keypair.json | cut -d' ' -f3)
+MEMO_PROGRAM_ID=$(solana program deploy target/deploy/solana_axelar_memo_program.so --program-id target/deploy/solana_axelar_memo_program-keypair.json | cut -d' ' -f3)
 
 # Print the program IDs
 echo -e "\e[32mDeployed Program IDs\e[0m"
@@ -38,10 +38,10 @@ echo -e "\e[32mReplacing program IDs in files\e[0m"
 
 sed -i "s/$GATEWAY_CODE_ID/$GATEWAY_ID/g" programs/axelar-solana-gateway/src/lib.rs
 sed -i "s/$ITS_CODE_ID/$ITS_ID/g" programs/axelar-solana-its/src/lib.rs
-sed -i "s/$MEMO_CODE_ID/$MEMO_PROGRAM_ID/g" programs/axelar-solana-memo-program/src/lib.rs
+sed -i "s/$MEMO_CODE_ID/$MEMO_PROGRAM_ID/g" programs/solana-axelar-memo/src/lib.rs
 sed -i "s/$GATEWAY_CODE_ID/$GATEWAY_ID/g" bindings/generated/axelar-solana-gateway/src/program.ts
 sed -i "s/$ITS_CODE_ID/$ITS_ID/g" bindings/generated/axelar-solana-its/src/program.ts
-sed -i "s/$MEMO_CODE_ID/$MEMO_PROGRAM_ID/g" bindings/generated/axelar-solana-memo-program/src/program.ts
+sed -i "s/$MEMO_CODE_ID/$MEMO_PROGRAM_ID/g" bindings/generated/solana-axelar-memo/src/program.ts
 
 # Ensure the latest version of the contract is built
 echo -e "\e[32mBuilding programs with new id's\e[0m"
@@ -57,4 +57,4 @@ echo -e "\e[32mDeploy programs again with new id's\e[0m"
 
 solana program deploy target/deploy/axelar_solana_gateway.so --program-id target/deploy/axelar_solana_gateway-keypair.json
 solana program deploy target/deploy/axelar_solana_its.so --program-id target/deploy/axelar_solana_its-keypair.json
-solana program deploy target/deploy/axelar_solana_memo_program.so --program-id target/deploy/axelar_solana_memo_program-keypair.json
+solana program deploy target/deploy/solana_axelar_memo_program.so --program-id target/deploy/solana_axelar_memo_program-keypair.json

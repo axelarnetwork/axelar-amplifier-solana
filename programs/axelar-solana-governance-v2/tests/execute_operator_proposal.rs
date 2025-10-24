@@ -17,8 +17,8 @@ use axelar_solana_governance_v2_test_fixtures::{
     create_signing_pda_from_message, extract_proposal_hash_unchecked, get_memo_instruction_data,
     initialize_governance, process_gmp_helper, GmpContext, TestSetup,
 };
-use axelar_solana_memo::ID as MEMO_PROGRAM_ID;
 use governance_gmp::alloy_primitives::U256;
+use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
@@ -112,7 +112,7 @@ fn should_execute_operator_proposal() {
 
     setup.mollusk.add_program(
         &MEMO_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_memo",
+        "../../target/deploy/solana_axelar_memo",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 

@@ -1176,7 +1176,6 @@ dependencies = [
  "axelar-solana-encoding",
  "axelar-solana-gateway",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-memo-legacy",
  "borsh 1.5.7",
  "dummy-axelar-solana-gateway",
  "ethers",
@@ -1187,6 +1186,7 @@ dependencies = [
  "program-utils",
  "role-management",
  "serde",
+ "solana-axelar-memo-legacy",
  "solana-logger",
  "solana-program",
  "solana-program-test",
@@ -1206,7 +1206,6 @@ dependencies = [
  "axelar-solana-gateway-v2-test-fixtures",
  "axelar-solana-governance",
  "axelar-solana-governance-v2-test-fixtures",
- "axelar-solana-memo",
  "bincode",
  "bytemuck",
  "governance-gmp",
@@ -1214,6 +1213,7 @@ dependencies = [
  "libsecp256k1",
  "mollusk-svm",
  "program-utils",
+ "solana-axelar-memo",
  "solana-sdk",
 ]
 
@@ -1226,10 +1226,10 @@ dependencies = [
  "axelar-solana-gateway-v2",
  "axelar-solana-governance",
  "axelar-solana-governance-v2",
- "axelar-solana-memo",
  "bincode",
  "governance-gmp",
  "mollusk-svm",
+ "solana-axelar-memo",
  "solana-sdk",
 ]
 
@@ -1244,7 +1244,6 @@ dependencies = [
  "axelar-solana-encoding",
  "axelar-solana-gateway",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-memo-legacy",
  "bitflags 2.9.4",
  "borsh 1.5.7",
  "event-cpi",
@@ -1258,6 +1257,7 @@ dependencies = [
  "role-management",
  "rstest",
  "solana-axelar-gas-service-legacy",
+ "solana-axelar-memo-legacy",
  "solana-banks-interface",
  "solana-program",
  "solana-program-test",
@@ -1290,53 +1290,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-memo"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
- "axelar-solana-gateway-v2-test-fixtures",
- "bincode",
- "hex",
- "mollusk-svm",
- "solana-sdk",
-]
-
-[[package]]
-name = "axelar-solana-memo-legacy"
-version = "0.1.0"
-dependencies = [
- "anchor-discriminators",
- "anchor-discriminators-macros",
- "anyhow",
- "axelar-solana-encoding",
- "axelar-solana-gateway",
- "axelar-solana-gateway-test-fixtures",
- "axelar-solana-its",
- "borsh 1.5.7",
- "ethers-core",
- "event-cpi",
- "event-cpi-test-utils",
- "evm-contracts-test-suite",
- "hex",
- "itertools 0.12.1",
- "mpl-token-metadata",
- "pretty_assertions",
- "program-utils",
- "rstest",
- "serde_json",
- "solana-axelar-gas-service-legacy",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "solana-sdk-ids",
- "spl-associated-token-account 6.0.0",
- "spl-token 6.0.0",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "axelar-solana-multicall"
 version = "0.1.0"
 dependencies = [
@@ -1344,11 +1297,11 @@ dependencies = [
  "anchor-discriminators-macros",
  "axelar-solana-gateway",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-memo-legacy",
  "borsh 1.5.7",
  "ethers-core",
  "evm-contracts-test-suite",
  "itertools 0.12.1",
+ "solana-axelar-memo-legacy",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -8081,6 +8034,53 @@ dependencies = [
  "spl-associated-token-account 6.0.0",
  "spl-token 6.0.0",
  "spl-token-2022 6.0.0",
+]
+
+[[package]]
+name = "solana-axelar-memo"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "hex",
+ "mollusk-svm",
+ "solana-sdk",
+]
+
+[[package]]
+name = "solana-axelar-memo-legacy"
+version = "0.1.0"
+dependencies = [
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "anyhow",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-its",
+ "borsh 1.5.7",
+ "ethers-core",
+ "event-cpi",
+ "event-cpi-test-utils",
+ "evm-contracts-test-suite",
+ "hex",
+ "itertools 0.12.1",
+ "mpl-token-metadata",
+ "pretty_assertions",
+ "program-utils",
+ "rstest",
+ "serde_json",
+ "solana-axelar-gas-service-legacy",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "spl-associated-token-account 6.0.0",
+ "spl-token 6.0.0",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

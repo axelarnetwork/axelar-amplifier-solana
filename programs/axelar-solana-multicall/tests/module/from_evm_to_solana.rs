@@ -1,8 +1,6 @@
 use axelar_solana_gateway::events::MessageExecutedEvent;
 use axelar_solana_gateway::executable::AxelarMessagePayload;
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
-use axelar_solana_memo_program::instruction::AxelarMemoInstruction;
-use axelar_solana_memo_program::state::Counter;
 use borsh::BorshDeserialize as _;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::{
     AxelarAmplifierGateway, ContractCallFilter,
@@ -11,6 +9,8 @@ use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_solana_multica
     AxelarSolanaCall, AxelarSolanaMultiCall, SolanaAccountRepr, SolanaGatewayPayload,
 };
 use evm_contracts_test_suite::ContractMiddleware;
+use solana_axelar_memo_program::instruction::AxelarMemoInstruction;
+use solana_axelar_memo_program::state::Counter;
 use solana_program_test::tokio;
 
 use crate::{axelar_evm_setup, axelar_solana_setup, TestContext};
@@ -42,7 +42,7 @@ async fn test_send_from_evm_to_solana() {
     };
     for memo in &["Call A", "Call B", "Call C"] {
         calls.push(AxelarSolanaCall {
-            destination_program: axelar_solana_memo_program::id().to_bytes(),
+            destination_program: solana_axelar_memo_program::id().to_bytes(),
             payload: SolanaGatewayPayload {
                 execute_payload: borsh::to_vec(&AxelarMemoInstruction::ProcessMemo {
                     memo: (*memo).to_string(),
@@ -99,7 +99,7 @@ async fn test_send_from_evm_to_solana() {
     );
 
     let counter = solana_chain
-        .get_account(&memo_program_counter_pda, &axelar_solana_memo_program::ID)
+        .get_account(&memo_program_counter_pda, &solana_axelar_memo_program::ID)
         .await;
     let counter = Counter::try_from_slice(&counter.data).unwrap();
     assert_eq!(counter.counter, 3);

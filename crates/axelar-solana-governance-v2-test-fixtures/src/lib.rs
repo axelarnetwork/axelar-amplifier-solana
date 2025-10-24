@@ -357,7 +357,7 @@ pub fn get_memo_instruction_data(
     memo: String,
     value_receiver: SolanaAccountMetadata,
 ) -> ExecuteProposalCallData {
-    let memo_instruction_data = axelar_solana_memo::instruction::EmitMemo { message: memo }.data();
+    let memo_instruction_data = solana_axelar_memo::instruction::EmitMemo { message: memo }.data();
 
     let (governance_config_pda, _) =
         Pubkey::find_program_address(&[seed_prefixes::GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);

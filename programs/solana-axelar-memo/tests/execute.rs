@@ -13,8 +13,8 @@ use axelar_solana_gateway_v2_test_fixtures::{
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
     verify_signature_helper,
 };
-use axelar_solana_memo::Counter;
-use axelar_solana_memo::ID as MEMO_PROGRAM_ID;
+use solana_axelar_memo::Counter;
+use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -45,7 +45,7 @@ fn test_execute() {
     // Add the memo program to the Mollusk instance
     setup.mollusk.add_program(
         &MEMO_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_memo",
+        "../../target/deploy/solana_axelar_memo",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
@@ -169,8 +169,8 @@ fn test_execute() {
         IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
 
     // Step 7.1: Init Counter PDA
-    let init_ix = axelar_solana_memo::instruction::Init {};
-    let init_accounts = axelar_solana_memo::accounts::Init {
+    let init_ix = solana_axelar_memo::instruction::Init {};
+    let init_accounts = solana_axelar_memo::accounts::Init {
         counter: counter_pda,
         payer: setup.payer,
         system_program: SYSTEM_PROGRAM_ID,
@@ -238,7 +238,7 @@ fn test_execute() {
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
-    let execute_instruction_data = axelar_solana_memo::instruction::Execute {
+    let execute_instruction_data = solana_axelar_memo::instruction::Execute {
         message: message.clone(),
         payload: test_payload.payload_without_accounts().to_vec(),
         encoding_scheme,
@@ -291,8 +291,8 @@ fn test_execute() {
         (counter_pda, counter_pda_account.clone()),
     ];
 
-    let execute_ix_accounts = axelar_solana_memo::accounts::Execute {
-        executable: axelar_solana_memo::accounts::AxelarExecuteAccounts {
+    let execute_ix_accounts = solana_axelar_memo::accounts::Execute {
+        executable: solana_axelar_memo::accounts::AxelarExecuteAccounts {
             incoming_message_pda,
             signing_pda,
             gateway_root_pda: setup.gateway_root_pda,
