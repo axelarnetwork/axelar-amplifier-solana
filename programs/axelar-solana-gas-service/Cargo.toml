@@ -8,28 +8,18 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
-anchor-discriminators.workspace = true
-anchor-discriminators-macros.workspace = true
-solana-program.workspace = true
-solana-sdk-ids.workspace = true
-spl-token = { workspace = true, features = ["no-entrypoint"] }
-spl-token-2022 = { workspace = true, features = ["no-entrypoint"] }
-spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
-bytemuck.workspace = true
-borsh.workspace = true
+anchor-lang.workspace = true
+axelar-solana-operators = { workspace = true, features = ["no-entrypoint"] }
 program-utils.workspace = true
-event-cpi.workspace = true
-event-cpi-macros.workspace = true
+bytemuck.workspace = true
 
 [dev-dependencies]
-event-cpi-test-utils.workspace = true
+axelar-solana-gas-service-legacy.workspace = true
+solana-sdk-ids.workspace = true
+mollusk-svm.workspace = true
+mollusk-test-utils.workspace = true
 solana-sdk.workspace = true
-solana-program-test.workspace = true
-axelar-solana-gateway-test-fixtures.workspace = true
-rstest.workspace = true
-
-[package.metadata.cargo-machete]
-ignored = ["anchor-discriminators"]
+borsh.workspace = true
 
 [lints]
 workspace = true
@@ -40,20 +30,33 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 no-entrypoint = []
+
+cpi = ["no-entrypoint"]
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
 devnet-amplifier = [
-    "axelar-solana-gateway-test-fixtures/devnet-amplifier",
-    "program-utils/devnet-amplifier",
+	"axelar-solana-operators/devnet-amplifier",
+	"axelar-solana-gas-service-legacy/devnet-amplifier",
+	"program-utils/devnet-amplifier",
 ]
 stagenet = [
-    "axelar-solana-gateway-test-fixtures/stagenet",
-    "program-utils/stagenet",
+	"axelar-solana-operators/stagenet",
+	"axelar-solana-gas-service-legacy/stagenet",
+	"program-utils/stagenet",
 ]
 testnet = [
-    "axelar-solana-gateway-test-fixtures/testnet",
-    "program-utils/testnet",
+	"axelar-solana-operators/testnet",
+	"axelar-solana-gas-service-legacy/testnet",
+	"program-utils/testnet",
 ]
 mainnet = [
-    "axelar-solana-gateway-test-fixtures/mainnet",
-    "program-utils/mainnet",
+	"axelar-solana-operators/mainnet",
+	"axelar-solana-gas-service-legacy/mainnet",
+	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]

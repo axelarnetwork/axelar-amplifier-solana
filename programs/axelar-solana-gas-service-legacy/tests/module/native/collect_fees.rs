@@ -1,11 +1,11 @@
-use axelar_solana_gas_service::events::GasPaidEvent;
+use axelar_solana_gas_service_legacy::events::GasCollectedEvent;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use event_cpi_test_utils::assert_event_cpi;
 use solana_program_test::{tokio, ProgramTest};
-use solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::Signer};
+use solana_sdk::{signature::Keypair, signer::Signer};
 
 #[tokio::test]
-async fn test_pay_native_for_contract_call() {
+async fn test_receive_funds() {
     // Setup
     let pt = ProgramTest::default();
     let mut test_fixture = TestFixture::new(pt).await;
@@ -13,16 +13,11 @@ async fn test_pay_native_for_contract_call() {
     test_fixture.init_gas_config(&gas_utils).await.unwrap();
 
     // Record balances before the transaction
-    let payer = Keypair::new();
     test_fixture
-        .fund_account(&payer.pubkey(), 1_000_000_000)
+        .fund_account(&gas_utils.config_pda, 1_000_000_000)
         .await;
-    let payer_balance_before = test_fixture
-        .try_get_account_no_checks(&payer.pubkey())
-        .await
-        .unwrap()
-        .unwrap()
-        .lamports;
+    let receiver = Keypair::new();
+    let receiver_balance_before = 0;
     let config_pda_balance_before = test_fixture
         .try_get_account_no_checks(&gas_utils.config_pda)
         .await
@@ -31,18 +26,11 @@ async fn test_pay_native_for_contract_call() {
         .lamports;
 
     // Action
-    let refund_address = Pubkey::new_unique();
-    let gas_amount = 1_000_000;
-    let destination_chain = "ethereum".to_owned();
-    let destination_addr = "destination addr 123".to_owned();
-    let payload_hash = [42; 32];
-    let ix = axelar_solana_gas_service::instructions::pay_gas_instruction(
-        &payer.pubkey(),
-        destination_chain.clone(),
-        destination_addr.clone(),
-        payload_hash,
-        refund_address,
-        gas_amount,
+    let sol_amount = 1_000_000;
+    let ix = axelar_solana_gas_service_legacy::instructions::collect_fees_instruction(
+        &gas_utils.operator.pubkey(),
+        &receiver.pubkey(),
+        sol_amount,
     )
     .unwrap();
 
@@ -53,8 +41,8 @@ async fn test_pay_native_for_contract_call() {
             &[
                 // pays for tx
                 &test_fixture.payer.insecure_clone(),
-                // pays for gas deduction
-                &payer,
+                // operator for config pda deduction
+                &gas_utils.operator,
             ],
         )
         .await
@@ -71,35 +59,30 @@ async fn test_pay_native_for_contract_call() {
         .unwrap();
     assert!(!inner_ixs.is_empty());
 
-    let expected_event = GasPaidEvent {
-        sender: payer.pubkey(),
-        destination_chain: destination_chain.clone(),
-        destination_address: destination_addr.clone(),
-        payload_hash,
-        amount: gas_amount,
-        refund_address,
+    let expected_event = GasCollectedEvent {
+        receiver: receiver.pubkey(),
+        amount: sol_amount,
         spl_token_account: None,
     };
 
     assert_event_cpi(&expected_event, &inner_ixs);
 
-    // Execute the transaction
-    let _res = test_fixture
+    test_fixture
         .send_tx_with_custom_signers(
             &[ix],
             &[
                 // pays for tx
                 &test_fixture.payer.insecure_clone(),
-                // pays for gas deduction
-                &payer,
+                // operator for config pda deduction
+                &gas_utils.operator,
             ],
         )
         .await
         .unwrap();
 
     // assert that SOL gets transferred
-    let payer_balance_after = test_fixture
-        .try_get_account_no_checks(&payer.pubkey())
+    let receiver_balance_after = test_fixture
+        .try_get_account_no_checks(&receiver.pubkey())
         .await
         .unwrap()
         .unwrap()
@@ -113,40 +96,32 @@ async fn test_pay_native_for_contract_call() {
 
     assert_eq!(
         config_pda_balance_after,
-        config_pda_balance_before + gas_amount
+        config_pda_balance_before - sol_amount
     );
-    assert_eq!(payer_balance_after, payer_balance_before - gas_amount);
+    assert_eq!(receiver_balance_after, receiver_balance_before + sol_amount);
 }
 
 #[tokio::test]
-async fn fails_if_payer_not_signer() {
+async fn test_refund_native_fails_if_not_signed_by_authority() {
     // Setup
     let pt = ProgramTest::default();
     let mut test_fixture = TestFixture::new(pt).await;
     let gas_utils = test_fixture.deploy_gas_service().await;
     test_fixture.init_gas_config(&gas_utils).await.unwrap();
-
-    // Record balances before the transaction
-    let payer = Keypair::new();
     test_fixture
-        .fund_account(&payer.pubkey(), 1_000_000_000)
+        .fund_account(&gas_utils.config_pda, 1_000_000_000)
         .await;
 
     // Action
-    let refund_address = Pubkey::new_unique();
-    let gas_amount = 1_000_000;
-    let destination_chain = "ethereum".to_owned();
-    let destination_addr = "destination addr 123".to_owned();
-    let payload_hash = [42; 32];
-    let mut ix = axelar_solana_gas_service::instructions::pay_gas_instruction(
-        &payer.pubkey(),
-        destination_chain.clone(),
-        destination_addr.clone(),
-        payload_hash,
-        refund_address,
-        gas_amount,
+    let receiver = Keypair::new();
+    let sol_amount = 1_000_000;
+    let mut ix = axelar_solana_gas_service_legacy::instructions::collect_fees_instruction(
+        &gas_utils.operator.pubkey(),
+        &receiver.pubkey(),
+        sol_amount,
     )
     .unwrap();
+    // mark that authority does not need to be a signer
     ix.accounts[0].is_signer = false;
 
     let res = test_fixture
@@ -158,5 +133,6 @@ async fn fails_if_payer_not_signer() {
             ],
         )
         .await;
+
     assert!(res.is_err());
 }

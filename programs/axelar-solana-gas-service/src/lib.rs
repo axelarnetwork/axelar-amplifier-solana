@@ -1,81 +1,75 @@
 //! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
-pub mod entrypoint;
 pub mod events;
 pub mod instructions;
-pub mod processor;
 pub mod state;
+
+use instructions::*;
+
+use anchor_lang::prelude::*;
 
 // Export current sdk types for downstream users building with a different sdk
 // version.
 use program_utils::ensure_single_feature;
-pub use solana_program;
-use solana_program::msg;
-use solana_program::program_error::ProgramError;
-use solana_program::pubkey::Pubkey;
 
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-solana_program::declare_id!("gasd4em72NAm7faq5dvjN5GkXE59dUkTThWmYDX95bK");
+declare_id!("gasd4em72NAm7faq5dvjN5GkXE59dUkTThWmYDX95bK");
 
 #[cfg(feature = "stagenet")]
-solana_program::declare_id!("gaspfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
+declare_id!("gaspfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
 
 #[cfg(feature = "testnet")]
-solana_program::declare_id!("gaspFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
+declare_id!("gaspFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
 
 #[cfg(feature = "mainnet")]
-solana_program::declare_id!("gas1111111111111111111111111111111111111111");
+declare_id!("gas1111111111111111111111111111111111111111");
 
-/// Seed prefixes for PDAs created by this program
-pub mod seed_prefixes {
-    /// The seed used when deriving the configuration PDA.
-    pub const CONFIG_SEED: &[u8] = b"gas-service";
-}
+#[program]
+pub mod axelar_solana_gas_service {
+    use super::*;
 
-/// Checks that the provided `program_id` matches the current program’s ID.
-///
-/// # Errors
-///
-/// - if the provided `program_id` does not match.
-#[inline]
-pub fn check_program_account(program_id: Pubkey) -> Result<(), ProgramError> {
-    if program_id != crate::ID {
-        return Err(ProgramError::IncorrectProgramId);
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        instructions::initialize::initialize(ctx)
     }
-    Ok(())
-}
 
-/// Derives the configuration PDA for this program.
-///
-/// Given a `program_id`, a `salt` (32-byte array), and an `operator` (`Pubkey`), this function
-/// uses [`Pubkey::find_program_address`] to return the derived PDA and its associated bump seed.
-#[inline]
-#[must_use]
-pub fn get_config_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(&[seed_prefixes::CONFIG_SEED], &crate::ID)
-}
+    //
+    // Gas-related operations with native token SOL
+    //
 
-/// Checks that the given `expected_pubkey` matches the derived PDA for the provided parameters.
-///
-/// # Panics
-/// - if the seeds + bump don't result in a valid PDA
-///
-/// # Errors
-///
-/// - if the derived PDA does not match the `expected_pubkey`.
-#[inline]
-#[track_caller]
-pub fn assert_valid_config_pda(bump: u8, expected_pubkey: &Pubkey) -> Result<(), ProgramError> {
-    let derived_pubkey =
-        Pubkey::create_program_address(&[seed_prefixes::CONFIG_SEED, &[bump]], &crate::ID)
-            .expect("invalid bump for the config pda");
+    pub fn pay_gas(
+        ctx: Context<PayGas>,
+        destination_chain: String,
+        destination_address: String,
+        payload_hash: [u8; 32],
+        amount: u64,
+        refund_address: Pubkey,
+    ) -> Result<()> {
+        instructions::pay_gas::pay_gas(
+            ctx,
+            destination_chain,
+            destination_address,
+            payload_hash,
+            amount,
+            refund_address,
+        )
+    }
 
-    if &derived_pubkey == expected_pubkey {
-        Ok(())
-    } else {
-        msg!("Error: Invalid Config PDA");
-        Err(ProgramError::IncorrectProgramId)
+    pub fn add_gas(
+        ctx: Context<AddGas>,
+        message_id: String,
+        amount: u64,
+        refund_address: Pubkey,
+    ) -> Result<()> {
+        instructions::add_gas::add_gas(ctx, message_id, amount, refund_address)
+    }
+
+    pub fn collect_fees(ctx: Context<CollectFees>, amount: u64) -> Result<()> {
+        instructions::collect_fees::collect_native_fees(ctx, amount)
+    }
+
+    pub fn refund_fees(ctx: Context<RefundFees>, message_id: String, amount: u64) -> Result<()> {
+        instructions::refund_fees::refund_native_fees(ctx, message_id, amount)
     }
 }

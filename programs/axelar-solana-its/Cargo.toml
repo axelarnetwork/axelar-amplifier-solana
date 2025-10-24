@@ -14,28 +14,28 @@ workspace = true
 no-entrypoint = []
 test-sbf = []
 devnet-amplifier = [
-	"axelar-solana-gas-service/devnet-amplifier",
+	"axelar-solana-gas-service-legacy/devnet-amplifier",
 	"axelar-solana-gateway-test-fixtures/devnet-amplifier",
 	"axelar-solana-gateway/devnet-amplifier",
 	"axelar-solana-memo-program/devnet-amplifier",
 	"program-utils/devnet-amplifier",
 ]
 stagenet = [
-	"axelar-solana-gas-service/stagenet",
+	"axelar-solana-gas-service-legacy/stagenet",
 	"axelar-solana-gateway-test-fixtures/stagenet",
 	"axelar-solana-gateway/stagenet",
 	"axelar-solana-memo-program/stagenet",
 	"program-utils/stagenet",
 ]
 testnet = [
-	"axelar-solana-gas-service/testnet",
+	"axelar-solana-gas-service-legacy/testnet",
 	"axelar-solana-gateway-test-fixtures/testnet",
 	"axelar-solana-gateway/testnet",
 	"axelar-solana-memo-program/testnet",
 	"program-utils/testnet",
 ]
 mainnet = [
-	"axelar-solana-gas-service/mainnet",
+	"axelar-solana-gas-service-legacy/mainnet",
 	"axelar-solana-gateway-test-fixtures/mainnet",
 	"axelar-solana-gateway/mainnet",
 	"axelar-solana-memo-program/mainnet",
@@ -48,7 +48,7 @@ anchor-discriminators.workspace = true
 anchor-discriminators-macros.workspace = true
 alloy-primitives.workspace = true
 axelar-solana-encoding.workspace = true
-axelar-solana-gas-service = { workspace = true, features = ["no-entrypoint"] }
+axelar-solana-gas-service-legacy = { workspace = true, features = ["no-entrypoint"] }
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"] }
 bitflags.workspace = true
 borsh.workspace = true

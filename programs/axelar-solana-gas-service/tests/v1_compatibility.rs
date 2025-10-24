@@ -1,7 +1,7 @@
 #![cfg(test)]
 use anchor_lang::InstructionData;
-use axelar_solana_gas_service::instructions as v1_instructions;
-use axelar_solana_gas_service_v2::instruction;
+use axelar_solana_gas_service::instruction;
+use axelar_solana_gas_service_legacy::instructions as v1_instructions;
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
@@ -24,8 +24,8 @@ fn test_v1_instructions_compatibility() {
 
 #[test]
 fn test_v1_treasury_compatibility() {
-    use axelar_solana_gas_service::state::Config;
-    use axelar_solana_gas_service_v2::state::Treasury;
+    use axelar_solana_gas_service::state::Treasury;
+    use axelar_solana_gas_service_legacy::state::Config;
 
     assert_eq!(
         std::mem::size_of::<Config>(),

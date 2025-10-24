@@ -1,4 +1,4 @@
-use axelar_solana_gas_service::state::Config;
+use axelar_solana_gas_service_legacy::state::Config;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::signer::Signer;

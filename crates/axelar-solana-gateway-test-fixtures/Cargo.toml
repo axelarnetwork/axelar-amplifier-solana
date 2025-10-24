@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 axelar-solana-encoding.workspace = true
-axelar-solana-gas-service = { workspace = true, default-features = false, features = ["no-entrypoint"] }
+axelar-solana-gas-service-legacy = { workspace = true, default-features = false, features = ["no-entrypoint"] }
 axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"] }
 bincode.workspace = true
 ed25519-dalek = { workspace = true, features = ["rand_core", "digest"] }
@@ -33,19 +33,19 @@ workspace = true
 
 [features]
 devnet-amplifier = [
-    "axelar-solana-gas-service/devnet-amplifier",
+    "axelar-solana-gas-service-legacy/devnet-amplifier",
     "axelar-solana-gateway/devnet-amplifier",
 ]
 stagenet = [
-    "axelar-solana-gas-service/stagenet",
+    "axelar-solana-gas-service-legacy/stagenet",
     "axelar-solana-gateway/stagenet",
 ]
 testnet = [
-    "axelar-solana-gas-service/testnet",
+    "axelar-solana-gas-service-legacy/testnet",
     "axelar-solana-gateway/testnet",
 ]
 mainnet = [
-    "axelar-solana-gas-service/mainnet",
+    "axelar-solana-gas-service-legacy/mainnet",
     "axelar-solana-gateway/mainnet",
 ]
 default = ["devnet-amplifier"]

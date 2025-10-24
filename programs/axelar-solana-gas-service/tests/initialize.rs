@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use anchor_lang::Key;
-use axelar_solana_gas_service_v2::state::Treasury;
+use axelar_solana_gas_service::state::Treasury;
 use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use {
@@ -124,14 +124,14 @@ pub(crate) fn init_gas_service(
     operator_pda: Pubkey,
     operator_pda_account: &Account,
 ) -> (Pubkey, Account) {
-    let program_id = axelar_solana_gas_service_v2::id();
+    let program_id = axelar_solana_gas_service::id();
 
     // Derive the treasury PDA
     let (treasury, _bump) = Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &program_id);
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::Initialize {
+        accounts: axelar_solana_gas_service::accounts::Initialize {
             payer: operator,
             operator,
             operator_pda,
@@ -139,7 +139,7 @@ pub(crate) fn init_gas_service(
             system_program: system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::Initialize {}.data(),
+        data: axelar_solana_gas_service::instruction::Initialize {}.data(),
     };
 
     let accounts = vec![
@@ -170,8 +170,8 @@ pub(crate) fn init_gas_service(
 
 #[test]
 fn test_initialize_success() {
-    let program_id = axelar_solana_gas_service_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service_v2");
+    let program_id = axelar_solana_gas_service::id();
+    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service");
 
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
@@ -192,8 +192,8 @@ fn test_initialize_success() {
 #[allow(clippy::should_panic_without_expect)]
 #[should_panic]
 fn test_initialize_unauthorized() {
-    let program_id = axelar_solana_gas_service_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service_v2");
+    let program_id = axelar_solana_gas_service::id();
+    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service");
 
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);

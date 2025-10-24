@@ -1,4 +1,4 @@
-use axelar_solana_gas_service::events::GasAddedEvent;
+use axelar_solana_gas_service_legacy::events::GasAddedEvent;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
 use event_cpi_test_utils::assert_event_cpi;
 use solana_program_test::{tokio, ProgramTest};
@@ -34,7 +34,7 @@ async fn test_add_native_gas() {
     let refund_address = Pubkey::new_unique();
     let gas_amount = 1_000_000;
     let message_id = "tx-sig-2.1".to_owned();
-    let ix = axelar_solana_gas_service::instructions::add_gas_instruction(
+    let ix = axelar_solana_gas_service_legacy::instructions::add_gas_instruction(
         &payer.pubkey(),
         message_id.clone(),
         gas_amount,
@@ -130,7 +130,7 @@ async fn fails_if_payer_not_signer() {
     let refund_address = Pubkey::new_unique();
     let gas_amount = 1_000_000;
     let message_id = "tx-sig-2.1".to_owned();
-    let mut ix = axelar_solana_gas_service::instructions::add_gas_instruction(
+    let mut ix = axelar_solana_gas_service_legacy::instructions::add_gas_instruction(
         &payer.pubkey(),
         message_id,
         gas_amount,

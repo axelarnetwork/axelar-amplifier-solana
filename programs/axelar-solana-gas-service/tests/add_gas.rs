@@ -14,8 +14,8 @@ use initialize::{init_gas_service, setup_mollusk, setup_operator};
 #[test]
 fn test_add_native_gas() {
     // Setup
-    let program_id = axelar_solana_gas_service_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service_v2");
+    let program_id = axelar_solana_gas_service::id();
+    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service");
 
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
@@ -46,7 +46,7 @@ fn test_add_native_gas() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::AddGas {
+        accounts: axelar_solana_gas_service::accounts::AddGas {
             sender,
             treasury,
             system_program: system_program::ID,
@@ -56,7 +56,7 @@ fn test_add_native_gas() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::AddGas {
+        data: axelar_solana_gas_service::instruction::AddGas {
             message_id,
             amount,
             refund_address,
@@ -97,8 +97,8 @@ fn test_add_native_gas() {
 fn test_add_native_gas_fails_for_zero() {
     // Setup
 
-    let program_id = axelar_solana_gas_service_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service_v2");
+    let program_id = axelar_solana_gas_service::id();
+    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service");
 
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
@@ -129,7 +129,7 @@ fn test_add_native_gas_fails_for_zero() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::AddGas {
+        accounts: axelar_solana_gas_service::accounts::AddGas {
             sender,
             treasury,
             system_program: system_program::ID,
@@ -139,7 +139,7 @@ fn test_add_native_gas_fails_for_zero() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::AddGas {
+        data: axelar_solana_gas_service::instruction::AddGas {
             message_id,
             amount: gas_fee_amount,
             refund_address,
@@ -176,8 +176,8 @@ fn test_add_native_gas_fails_for_zero() {
 fn test_add_native_gas_fails_insufficient_balance() {
     // Setup
 
-    let program_id = axelar_solana_gas_service_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service_v2");
+    let program_id = axelar_solana_gas_service::id();
+    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_gas_service");
 
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
@@ -208,7 +208,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::AddGas {
+        accounts: axelar_solana_gas_service::accounts::AddGas {
             sender,
             treasury,
             system_program: system_program::ID,
@@ -218,7 +218,7 @@ fn test_add_native_gas_fails_insufficient_balance() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::AddGas {
+        data: axelar_solana_gas_service::instruction::AddGas {
             message_id,
             amount: gas_fee_amount,
             refund_address,

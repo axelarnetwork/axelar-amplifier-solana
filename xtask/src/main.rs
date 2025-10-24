@@ -206,20 +206,22 @@ fn main() -> eyre::Result<()> {
         }
         Commands::UpdateIds { legacy } => {
             println!("Updating program IDs");
-            if legacy.is_some_and(|l| l) {
-                println!("Updating program IDs for legacy programs")
-            }
 
-            let program_prefixes = [
+            let mut program_prefixes = vec![
+                ("axelar-solana-gas-service", "gas"),
+                ("axelar-solana-operators", "opr"),
                 ("axelar-solana-gateway", "gtw"),
                 ("axelar-solana-its", "its"),
-                ("axelar-solana-gas-service", "gas"),
-                ("axelar-solana-gas-service-v2", "gas"),
-                ("axelar-solana-operators", "opr"),
                 ("axelar-solana-multicall", "mc"),
                 ("axelar-solana-memo-program", "mem"),
                 ("axelar-solana-governance", "gov"),
             ];
+
+            if legacy.is_some_and(|l| l) {
+                println!("Updating program IDs for legacy programs");
+
+                program_prefixes.extend_from_slice(&[("axelar-solana-gas-service-legacy", "gasl")]);
+            }
 
             let (solana_programs, _) = workspace_crates_by_category(&sh)?;
 
