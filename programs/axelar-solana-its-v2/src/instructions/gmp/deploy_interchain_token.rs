@@ -172,8 +172,6 @@ pub fn deploy_interchain_token_internal_handler(
         decimals,
     });
 
-    msg!("HERE!");
-
     Ok(())
 }
 
