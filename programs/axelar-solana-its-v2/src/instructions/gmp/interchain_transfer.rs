@@ -45,9 +45,11 @@ pub struct InterchainTransferInternal<'info> {
     )]
     pub destination_ata: InterfaceAccount<'info, TokenAccount>,
 
+    #[account(mut)]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
+        mut,
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
