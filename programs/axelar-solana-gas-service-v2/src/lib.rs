@@ -15,7 +15,7 @@ use program_utils::ensure_single_feature;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("gasd4em72NAm7faq5dvjN5GkXE59dUkTThWmYDX95bK");
+declare_id!("ga265e933y15ANN43gRD94Gd676sZ7YNbMYyQJQjrc9");
 
 #[cfg(feature = "stagenet")]
 declare_id!("gaspfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");

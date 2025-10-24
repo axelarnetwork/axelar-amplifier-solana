@@ -19,7 +19,7 @@ use state::Counter;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-solana_program::declare_id!("memPJFxP6H6bjEKpUSJ4KC7C4dKAfNE3xWrTpJBKDwN");
+solana_program::declare_id!("memTLbVGyuvktbGXAVADuS1LpCG2niXny4ZTK2WvvDk");
 
 #[cfg(feature = "stagenet")]
 solana_program::declare_id!("memdp6koMvx6Bneq1BJvtf7YEKNQDiNmnMFfE6fP691");
