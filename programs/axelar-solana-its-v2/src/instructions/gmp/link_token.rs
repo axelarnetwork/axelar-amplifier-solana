@@ -1,7 +1,7 @@
 use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
-    instructions::{initialize_token_manager, validate_mint_extensions},
+    instructions::validate_mint_extensions,
     seed_prefixes::TOKEN_MANAGER_SEED,
     state::{token_manager, InterchainTokenService, Roles, TokenManager, UserRoles},
 };
@@ -118,14 +118,14 @@ pub fn link_token_internal_handler(
         &ctx.accounts.token_mint.to_account_info(),
     )?;
 
-    initialize_token_manager(
+    TokenManager::init_account(
         &mut ctx.accounts.token_manager_pda,
+        token_manager_type,
         token_id,
         token_address,
         ctx.accounts.token_manager_ata.key(),
         ctx.bumps.token_manager_pda,
-        token_manager_type,
-    )?;
+    );
 
     if let Some(operator_roles_pda) = &mut ctx.accounts.operator_roles_pda {
         operator_roles_pda.bump = ctx.bumps.operator_roles_pda.unwrap();

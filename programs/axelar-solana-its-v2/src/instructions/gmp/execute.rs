@@ -1,11 +1,14 @@
 use crate::{errors::ItsError, state::InterchainTokenService};
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::{associated_token::AssociatedToken, token_interface::TokenInterface};
-use axelar_solana_gateway_v2::{executable_accounts, Message};
+use axelar_solana_gateway_v2::{
+    executable::{validate_message_raw, HasAxelarExecutable},
+    executable_accounts, Message,
+};
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_program::instruction::Instruction;
 
-executable_accounts!();
+executable_accounts!(Execute);
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -42,6 +45,8 @@ pub struct Execute<'info> {
     #[account(address = anchor_lang::solana_program::sysvar::rent::ID)]
     pub rent: Sysvar<'info, Rent>,
 
+    pub system_program: Program<'info, System>,
+
     // Remaining accounts
     #[account(mut)]
     pub deployer_ata: Option<UncheckedAccount<'info>>,
@@ -65,7 +70,7 @@ pub struct Execute<'info> {
 }
 
 pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
-    validate_message(&ctx.accounts.executable, message.clone(), &payload)?;
+    validate_message_raw(&ctx.accounts.axelar_executable(), message.clone(), &payload)?;
 
     msg!("execute_handler");
     // ITS specific logic
@@ -230,7 +235,7 @@ fn link_token_self_invoke(
     let accounts = crate::accounts::LinkTokenInternal {
         payer: ctx.accounts.payer.key(),
         deployer: ctx.accounts.deployer.clone().unwrap().key(),
-        system_program: ctx.accounts.executable.system_program.key(),
+        system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
         token_mint: ctx.accounts.token_mint.key(),
@@ -255,7 +260,7 @@ fn link_token_self_invoke(
     let account_infos = vec![
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.deployer.clone().unwrap().to_account_info(),
-        ctx.accounts.executable.system_program.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
         ctx.accounts.its_root_pda.to_account_info(),
         ctx.accounts.token_manager_pda.to_account_info(),
         ctx.accounts.token_mint.to_account_info(),
@@ -309,7 +314,7 @@ fn deploy_interchain_token_self_invoke(
     let accounts = crate::accounts::DeployInterchainTokenInternal {
         payer: ctx.accounts.payer.key(),
         deployer: ctx.accounts.deployer.clone().unwrap().key(),
-        system_program: ctx.accounts.executable.system_program.key(),
+        system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
         token_mint: ctx.accounts.token_mint.key(),
@@ -348,7 +353,7 @@ fn deploy_interchain_token_self_invoke(
     let account_infos = vec![
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.deployer.clone().unwrap().to_account_info(),
-        ctx.accounts.executable.system_program.to_account_info(),
+        ctx.accounts.system_program.to_account_info(),
         ctx.accounts.its_root_pda.to_account_info(),
         ctx.accounts.token_manager_pda.to_account_info(),
         ctx.accounts.token_mint.to_account_info(),

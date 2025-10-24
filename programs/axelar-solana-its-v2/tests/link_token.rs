@@ -9,14 +9,16 @@ use axelar_solana_its_v2::{
     state::{token_manager::Type, TokenManager},
     utils::interchain_token_id_internal,
 };
+use axelar_solana_its_v2_test_fixtures::init_gas_service;
+use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
+use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
+use axelar_solana_its_v2_test_fixtures::setup_operator;
+use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::setup_mollusk;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
-
-#[path = "initialize.rs"]
-mod initialize;
 
 fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
     let mint = Pubkey::new_unique();
@@ -46,16 +48,10 @@ fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
 
 #[test]
 fn test_link_token() {
-    // ============================================================================
-    // STEP 1: Initialize Gateway
-    // ============================================================================
     let (setup, _, _, _, _) = setup_test_with_real_signers();
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
 
-    // ============================================================================
-    // STEP 2: Initialize Gas Service (keep gas service mollusk separate!)
-    // ============================================================================
     let gas_service_program_id = axelar_solana_gas_service_v2::id();
     let mut gas_service_mollusk =
         setup_mollusk(&gas_service_program_id, "axelar_solana_gas_service_v2");
@@ -63,15 +59,15 @@ fn test_link_token() {
     let gas_operator = Pubkey::new_unique();
     let gas_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let (gas_operator_pda, gas_operator_pda_account) = initialize::setup_operator(
+    let (gas_operator_pda, gas_operator_pda_account) = setup_operator(
         &mut gas_service_mollusk,
         gas_operator,
         &gas_operator_account,
     );
 
     // Use the GAS SERVICE mollusk for gas service initialization
-    let (treasury_pubkey, treasury_account) = initialize::init_gas_service(
-        &gas_service_mollusk, // ✅ Use gas service mollusk here
+    let (_, treasury_account) = init_gas_service(
+        &gas_service_mollusk,
         gas_operator,
         &gas_operator_account,
         gas_operator_pda,
@@ -81,11 +77,8 @@ fn test_link_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    // ============================================================================
-    // STEP 3: Initialize ITS Service (separate mollusk for ITS)
-    // ============================================================================
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk(); // ✅ Now create ITS mollusk
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
@@ -99,7 +92,7 @@ fn test_link_token() {
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
 
-    let (its_root_pda, its_root_account) = initialize::init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,

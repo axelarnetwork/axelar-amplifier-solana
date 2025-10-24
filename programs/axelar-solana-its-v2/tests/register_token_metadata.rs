@@ -1,6 +1,3 @@
-use crate::initialize::init_gas_service;
-use crate::initialize::init_its_service_with_ethereum_trusted;
-use crate::initialize::setup_operator;
 use anchor_lang::system_program;
 use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
@@ -9,6 +6,10 @@ use axelar_solana_gateway_v2::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWA
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::initialize_gateway;
 use axelar_solana_gateway_v2_test_fixtures::setup_test_with_real_signers;
+use axelar_solana_its_v2_test_fixtures::init_gas_service;
+use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
+use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
+use axelar_solana_its_v2_test_fixtures::setup_operator;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_program::program_pack::Pack;
@@ -16,9 +17,6 @@ use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
 use spl_token_2022::state::Mint;
-
-#[path = "initialize.rs"]
-mod initialize;
 
 #[test]
 fn test_register_token_metadata() {
@@ -50,7 +48,7 @@ fn test_register_token_metadata() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);

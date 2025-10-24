@@ -3,20 +3,18 @@ use axelar_solana_its_v2::{
     seed_prefixes::DEPLOYMENT_APPROVAL_SEED, state::deploy_approval::DeployApproval,
 };
 use axelar_solana_its_v2_test_fixtures::{
-    approve_deploy_remote_interchain_token_helper, ApproveDeployRemoteInterchainTokenContext,
+    approve_deploy_remote_interchain_token_helper, init_its_service, initialize_mollusk,
+    ApproveDeployRemoteInterchainTokenContext,
 };
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
-#[path = "initialize.rs"]
-mod initialize;
-
 #[test]
 fn test_approve_deploy_remote_interchain_token() {
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
     let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
@@ -38,7 +36,7 @@ fn test_approve_deploy_remote_interchain_token() {
         _user_roles_account,
         _program_data,
         _program_data_account,
-    ) = initialize::init_its_service(
+    ) = init_its_service(
         &mollusk,
         payer,
         &payer_account,

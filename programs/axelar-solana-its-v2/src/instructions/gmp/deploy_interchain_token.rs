@@ -1,7 +1,7 @@
 use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
-    instructions::{initialize_token_manager, validate_mint_extensions},
+    instructions::validate_mint_extensions,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
 };
@@ -198,14 +198,14 @@ pub fn process_inbound_deploy(
         &ctx.token_mint.to_account_info(),
     )?;
 
-    initialize_token_manager(
+    TokenManager::init_account(
         &mut ctx.token_manager_pda,
+        Type::NativeInterchainToken,
         token_id,
         ctx.token_mint.key(),
         ctx.token_manager_ata.key(),
         token_manager_pda_bump,
-        Type::NativeInterchainToken,
-    )?;
+    );
 
     // Initialize UserRoles
     if ctx.minter.is_some() && ctx.minter_roles_pda.is_some() {
