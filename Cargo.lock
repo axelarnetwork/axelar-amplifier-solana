@@ -1245,7 +1245,7 @@ dependencies = [
  "axelar-solana-gateway-v2-test-fixtures",
  "axelar-solana-governance",
  "axelar-solana-governance-v2-test-fixtures",
- "axelar-solana-memo-v2",
+ "axelar-solana-memo",
  "bincode",
  "bytemuck",
  "governance-gmp",
@@ -1265,7 +1265,7 @@ dependencies = [
  "axelar-solana-gateway-v2",
  "axelar-solana-governance",
  "axelar-solana-governance-v2",
- "axelar-solana-memo-v2",
+ "axelar-solana-memo",
  "bincode",
  "governance-gmp",
  "mollusk-svm",
@@ -1329,6 +1329,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-memo"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "hex",
+ "mollusk-svm",
+ "solana-sdk",
+]
+
+[[package]]
 name = "axelar-solana-memo-legacy"
 version = "0.1.0"
 dependencies = [
@@ -1359,20 +1373,6 @@ dependencies = [
  "spl-associated-token-account 6.0.0",
  "spl-token 6.0.0",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "axelar-solana-memo-v2"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
- "axelar-solana-gateway-v2-test-fixtures",
- "bincode",
- "hex",
- "mollusk-svm",
- "solana-sdk",
 ]
 
 [[package]]

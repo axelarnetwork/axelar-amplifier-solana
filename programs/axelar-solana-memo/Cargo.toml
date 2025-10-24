@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-memo-v2"
+name = "axelar-solana-memo"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -23,7 +23,7 @@ hex.workspace = true
 workspace = true
 
 [lib]
-name = "axelar_solana_memo_v2"
+name = "axelar_solana_memo"
 crate-type = ["cdylib", "lib"]
 
 [features]

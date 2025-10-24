@@ -42,7 +42,7 @@ program-utils.workspace = true
 axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 libsecp256k1.workspace = true
 bincode.workspace = true
-axelar-solana-memo-v2 = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
+axelar-solana-memo = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 solana-sdk.workspace = true
 axelar-solana-gateway-v2-test-fixtures.workspace = true
 axelar-solana-governance-v2-test-fixtures.workspace = true

@@ -190,7 +190,7 @@ axelar-solana-its = { path = "programs/axelar-solana-its", default-features = fa
 axelar-solana-operators = { path = "programs/axelar-solana-operators", default-features = false }
 axelar-solana-gas-service = { path = "programs/axelar-solana-gas-service", default-features = false }
 axelar-solana-memo-legacy = { path = "programs/axelar-solana-memo-legacy", default-features = false }
-axelar-solana-memo-v2 = { path = "programs/axelar-solana-memo-v2", default-features = false }
+axelar-solana-memo = { path = "programs/axelar-solana-memo", default-features = false }
 axelar-solana-multicall = { path = "programs/axelar-solana-multicall", default-features = false }
 axelar-solana-gateway = { path = "programs/axelar-solana-gateway", default-features = false }
 axelar-solana-gateway-v2 = { path = "programs/axelar-solana-gateway-v2", default-features = false }
