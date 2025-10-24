@@ -55,9 +55,17 @@ custom-panic = []
 
 
 # Network features - these pass through to the gateway dependency
-devnet-amplifier = []
-stagenet = []
-testnet = []
-mainnet = []
+devnet-amplifier = [
+	"axelar-solana-gateway/devnet-amplifier",
+]
+stagenet = [
+	"axelar-solana-gateway/stagenet",
+]
+testnet = [
+	"axelar-solana-gateway/testnet",
+]
+mainnet = [
+	"axelar-solana-gateway/mainnet",
+]
 
 default = ["devnet-amplifier"]

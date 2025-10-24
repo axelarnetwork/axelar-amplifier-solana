@@ -62,36 +62,6 @@ impl U256 {
     }
 }
 
-// Implement arithmetic operators
-impl std::ops::Add for U256 {
-    type Output = U256;
-
-    fn add(self, other: U256) -> U256 {
-        self.checked_add(other).expect("U256 addition overflow")
-    }
-}
-
-impl std::ops::Sub for U256 {
-    type Output = U256;
-
-    fn sub(self, other: U256) -> U256 {
-        self.checked_sub(other).expect("U256 subtraction underflow")
-    }
-}
-
-// Implement AddAssign, SubAssign, etc.
-impl std::ops::AddAssign for U256 {
-    fn add_assign(&mut self, other: U256) {
-        *self = *self + other;
-    }
-}
-
-impl std::ops::SubAssign for U256 {
-    fn sub_assign(&mut self, other: U256) {
-        *self = *self - other;
-    }
-}
-
 impl PartialOrd for U256 {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))

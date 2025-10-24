@@ -89,8 +89,8 @@ mod tests {
         );
 
         // Create matching instances
-        let current_epoch_v1 = axelar_message_primitives::U256::from(42u64);
-        let previous_verifier_set_retention_v1 = axelar_message_primitives::U256::from(10u64);
+        let current_epoch_v1 = axelar_solana_gateway::types::U256::from(42u64);
+        let previous_verifier_set_retention_v1 = axelar_solana_gateway::types::U256::from(10u64);
 
         let current_epoch = U256::from(42u64);
         let previous_verifier_set_retention = U256::from(10u64);
