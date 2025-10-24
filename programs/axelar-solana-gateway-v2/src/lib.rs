@@ -20,7 +20,21 @@ pub mod executable;
 
 pub mod payload;
 
-declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
+use program_utils::ensure_single_feature;
+
+ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+
+#[cfg(feature = "devnet-amplifier")]
+declare_id!("gtwd4em72NAm7faq5dvjN5GkXE59dUkTThWmYDX95bK");
+
+#[cfg(feature = "stagenet")]
+declare_id!("gtwpfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
+
+#[cfg(feature = "testnet")]
+declare_id!("gtwpFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
+
+#[cfg(feature = "mainnet")]
+declare_id!("gtw1111111111111111111111111111111111111111");
 
 /// Seed prefixes for different PDAs initialized by the Gateway
 pub mod seed_prefixes {

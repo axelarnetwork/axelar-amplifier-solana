@@ -1181,6 +1181,7 @@ dependencies = [
  "mollusk-svm",
  "num-derive 0.4.2",
  "num-traits",
+ "program-utils",
  "rand 0.8.5",
  "rstest",
  "solana-sdk",
