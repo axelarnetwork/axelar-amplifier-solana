@@ -201,8 +201,6 @@ fn test_execute_deploy_interchain_token_success() {
         system_program: solana_sdk::system_program::ID,
     };
 
-    let destination_pda = Pubkey::new_unique();
-
     let accounts = axelar_solana_its_v2::accounts::Execute {
         // GMP accounts
         executable: executable_accounts,
@@ -216,16 +214,18 @@ fn test_execute_deploy_interchain_token_success() {
         token_program: spl_token_2022::id(),
         associated_token_program: spl_associated_token_account::id(),
         rent: solana_sdk::sysvar::rent::ID,
-        system_program: solana_sdk::system_program::ID,
 
         // Remaining accounts
-        deployer_ata,
+        deployer_ata: Some(deployer_ata),
         minter: None,
         minter_roles_pda: None,
-        mpl_token_metadata_account: metadata_account,
-        mpl_token_metadata_program: mpl_token_metadata::ID,
-        sysvar_instructions: solana_sdk::sysvar::instructions::ID,
-        destination: destination_pda,
+        mpl_token_metadata_account: Some(metadata_account),
+        mpl_token_metadata_program: Some(mpl_token_metadata::ID),
+        sysvar_instructions: Some(solana_sdk::sysvar::instructions::ID),
+        destination: None,
+        deployer: Some(payer),
+        authority: None,
+        destination_ata: None,
 
         // Event CPI accounts
         event_authority: its_event_authority,
@@ -250,14 +250,13 @@ fn test_execute_deploy_interchain_token_success() {
         rent_epoch: 0,
     };
 
-    // Step 11: Set up all required accounts using working patterns from test fixtures
     let execute_accounts = vec![
-        // 1. AxelarExecuteAccounts (nested in executable field) - 5 accounts
-        (*incoming_message_pda, incoming_message_account), // incoming_message_pda
+        // AxelarExecuteAccounts
+        (*incoming_message_pda, incoming_message_account),
         (
             signing_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // signing_pda
+        ),
         (
             GATEWAY_PROGRAM_ID,
             Account {
@@ -267,30 +266,29 @@ fn test_execute_deploy_interchain_token_success() {
                 executable: true,
                 rent_epoch: 0,
             },
-        ), // axelar_gateway_program
+        ),
         (
             gateway_event_authority,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // event_authority (gateway)
-        keyed_account_for_system_program(), // system_program (gateway) - using working helper
-        // 2. ITS Accounts (in struct declaration order) - 9 accounts
-        (payer, payer_account),           // payer
-        (its_root_pda, its_root_account), // its_root_pda
+        ),
+        keyed_account_for_system_program(),
+        // ITS Accounts
+        (payer, payer_account.clone()),
+        (its_root_pda, its_root_account),
         (
             token_manager_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // token_manager_pda
+        ),
         (
             token_mint_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // token_mint
+        ),
         (
             token_manager_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // token_manager_ata
-        mollusk_svm_programs_token::token2022::keyed_account(), // token_program - using working helper
-        mollusk_svm_programs_token::associated_token::keyed_account(), // associated_token_program - using working helper
-        keyed_account_for_system_program(), // system_program (its) - using working helper
+        ),
+        mollusk_svm_programs_token::token2022::keyed_account(),
+        mollusk_svm_programs_token::associated_token::keyed_account(),
         (
             solana_sdk::sysvar::rent::ID,
             Account {
@@ -300,14 +298,14 @@ fn test_execute_deploy_interchain_token_success() {
                 executable: false,
                 rent_epoch: 0,
             },
-        ), // rent - using working pattern
-        // 4. Remaining accounts (for the CPI call) - 6 accounts
+        ),
+        // Remaining accounts
         (
             deployer_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),
-        ), // deployer_ata
-        (program_id, its_program_account.clone()), // minter: None -> program_id
-        (program_id, its_program_account.clone()), // minter_roles_pda: None -> program_id
+        ),
+        (program_id, its_program_account.clone()), // minter: None
+        (program_id, its_program_account.clone()), // minter_roles_pda: None
         (
             metadata_account,
             Account::new(0, 0, &solana_sdk::system_program::ID),
@@ -331,12 +329,12 @@ fn test_execute_deploy_interchain_token_success() {
                 executable: false,
                 rent_epoch: 0,
             },
-        ), // sysvar_instructions - using working pattern
-        (
-            destination_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        // 3. Event CPI accounts
+        (program_id, its_program_account.clone()), // destination -> None
+        (payer, payer_account),                    // deployer is also payer
+        (program_id, its_program_account.clone()), // authority -> None
+        (program_id, its_program_account.clone()), // destination_ata -> None
+        // Event CPI accounts
         (its_event_authority, _event_authority_account),
         (program_id, its_program_account.clone()),
     ];
