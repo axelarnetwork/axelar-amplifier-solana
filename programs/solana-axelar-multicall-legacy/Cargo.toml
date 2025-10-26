@@ -1,10 +1,10 @@
 [package]
-name = "axelar-solana-multicall"
+name = "solana-axelar-multicall-legacy"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "axelar_solana_multicall"
+name = "solana_axelar_multicall_legacy"
 crate-type = ["cdylib", "lib"]
 
 [lints]

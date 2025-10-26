@@ -1215,25 +1215,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-multicall"
-version = "0.1.0"
-dependencies = [
- "alloy-sol-types",
- "anchor-discriminators-macros",
- "axelar-solana-gateway-test-fixtures",
- "borsh 1.5.7",
- "ethers-core",
- "evm-contracts-test-suite",
- "itertools 0.12.1",
- "solana-axelar-gateway-legacy",
- "solana-axelar-memo-legacy",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "axum"
 version = "0.6.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8068,6 +8049,25 @@ dependencies = [
  "solana-sdk-ids",
  "spl-associated-token-account 6.0.0",
  "spl-token 6.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "solana-axelar-multicall-legacy"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-discriminators-macros",
+ "axelar-solana-gateway-test-fixtures",
+ "borsh 1.5.7",
+ "ethers-core",
+ "evm-contracts-test-suite",
+ "itertools 0.12.1",
+ "solana-axelar-gateway-legacy",
+ "solana-axelar-memo-legacy",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
  "thiserror 1.0.69",
 ]
 

@@ -1,9 +1,9 @@
 use axelar_solana_gateway_test_fixtures::gateway::random_message;
-use axelar_solana_multicall::instructions::MultiCallPayloadBuilder;
 use borsh::BorshDeserialize as _;
 use solana_axelar_gateway_legacy::{events::MessageExecutedEvent, executable::EncodingScheme};
-use solana_axelar_memo_program::instruction::AxelarMemoInstruction;
-use solana_axelar_memo_program::state::Counter;
+use solana_axelar_memo_legacy::instruction::AxelarMemoInstruction;
+use solana_axelar_memo_legacy::state::Counter;
+use solana_axelar_multicall_legacy::instructions::MultiCallPayloadBuilder;
 use solana_program::instruction::AccountMeta;
 use solana_program_test::tokio;
 
@@ -26,7 +26,7 @@ async fn test_multicall_different_encodings() {
     for memo in &["Call A", "Call B", "Call C"] {
         multicall_builder = multicall_builder
             .add_instruction(
-                solana_axelar_memo_program::id(),
+                solana_axelar_memo_legacy::id(),
                 vec![counter_account.clone()],
                 borsh::to_vec(&AxelarMemoInstruction::ProcessMemo {
                     memo: (*memo).to_string(),
@@ -40,7 +40,7 @@ async fn test_multicall_different_encodings() {
         let mut builder = multicall_builder.clone().encoding_scheme(encoding);
         let payload = builder.build().expect("failed to build data payload");
         let mut message = random_message();
-        message.destination_address = axelar_solana_multicall::id().to_string();
+        message.destination_address = solana_axelar_multicall_legacy::id().to_string();
         message.payload_hash = *payload.hash().unwrap();
 
         let message_from_multisig_prover = solana_chain
@@ -81,7 +81,7 @@ async fn test_multicall_different_encodings() {
     }
 
     let counter = solana_chain
-        .get_account(&memo_program_counter_pda, &solana_axelar_memo_program::ID)
+        .get_account(&memo_program_counter_pda, &solana_axelar_memo_legacy::ID)
         .await;
     let counter = Counter::try_from_slice(&counter.data).unwrap();
     assert_eq!(counter.counter, 6);
@@ -97,7 +97,7 @@ async fn test_empty_multicall_should_succeed() {
         let mut builder = MultiCallPayloadBuilder::default().encoding_scheme(encoding);
         let payload = builder.build().expect("failed to build data payload");
         let mut message = random_message();
-        message.destination_address = axelar_solana_multicall::id().to_string();
+        message.destination_address = solana_axelar_multicall_legacy::id().to_string();
         message.payload_hash = *payload.hash().unwrap();
         let message_from_multisig_prover = solana_chain
             .sign_session_and_approve_messages(&solana_chain.signers.clone(), &[message.clone()])

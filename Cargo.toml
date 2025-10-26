@@ -189,7 +189,7 @@ mollusk-svm = "0.5.1"
 solana-axelar-operators = { path = "programs/solana-axelar-operators", default-features = false }
 solana-axelar-gas-service = { path = "programs/solana-axelar-gas-service", default-features = false }
 solana-axelar-memo = { path = "programs/solana-axelar-memo", default-features = false }
-axelar-solana-multicall = { path = "programs/axelar-solana-multicall", default-features = false }
+solana-axelar-multicall-legacy= { path = "programs/solana-axelar-multicall-legacy", default-features = false }
 solana-axelar-gateway = { path = "programs/solana-axelar-gateway", default-features = false }
 axelar-solana-governance-v2 = { path = "programs/axelar-solana-governance-v2", default-features = false }
 

@@ -213,7 +213,6 @@ fn main() -> eyre::Result<()> {
                 ("solana-axelar-memo", "mem"),
                 ("solana-axelar-operators", "opr"),
                 ("axelar-solana-its", "its"),
-                ("axelar-solana-multicall", "mc"),
                 ("axelar-solana-governance", "gov"),
             ];
 
@@ -224,6 +223,7 @@ fn main() -> eyre::Result<()> {
                     ("solana-axelar-gas-service-legacy", "gasl"),
                     ("solana-axelar-gateway-legacy", "gtwl"),
                     ("solana-axelar-memo-legacy", "meml"),
+                    ("solana-axelar-multicall-legacy", "mcl"),
                 ]);
             }
 
