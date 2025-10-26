@@ -31,8 +31,8 @@ async fn axelar_solana_setup() -> TestContext {
             solana_axelar_memo_legacy::id(),
         ),
         (
-            "axelar_solana_multicall.so".into(),
-            axelar_solana_multicall::id(),
+            "solana_axelar_multicall_legacy.so".into(),
+            solana_axelar_multicall_legacy::id(),
         ),
     ];
 

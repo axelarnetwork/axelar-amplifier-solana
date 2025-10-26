@@ -59,7 +59,7 @@ async fn test_send_from_evm_to_solana() {
     let decoded_payload =
         AxelarMessagePayload::decode(evm_gateway_event_log.payload.as_ref()).unwrap();
     let mut message = random_message();
-    message.destination_address = axelar_solana_multicall::id().to_string();
+    message.destination_address = solana_axelar_multicall_legacy::id().to_string();
     message.payload_hash = *decoded_payload.hash().unwrap();
 
     let message_from_multisig_prover = solana_chain
@@ -115,7 +115,7 @@ async fn call_evm_gateway(
         .multi_call(
             calls,
             solana_id.as_bytes().to_vec().into(),
-            axelar_solana_multicall::id().to_string(),
+            solana_axelar_multicall_legacy::id().to_string(),
         )
         .send()
         .await

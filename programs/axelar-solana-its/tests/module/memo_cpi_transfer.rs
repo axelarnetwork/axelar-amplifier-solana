@@ -4,7 +4,7 @@ use axelar_solana_its::state::token_manager::Type;
 use evm_contracts_test_suite::ethers::signers::Signer as EvmSigner;
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway_legacy::events::CallContractEvent;
-use solana_axelar_memo_program::get_counter_pda;
+use solana_axelar_memo_legacy::get_counter_pda;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::tokio;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
@@ -153,7 +153,7 @@ async fn test_memo_cpi_transfer(ctx: &mut ItsTestContext) {
     let transfer_amount = 100u64;
     let gas_value = 0u128;
 
-    let send_transfer = solana_axelar_memo_program::instruction::send_interchain_transfer(
+    let send_transfer = solana_axelar_memo_legacy::instruction::send_interchain_transfer(
         &ctx.solana_wallet,
         &setup.counter_pda,
         &setup.its_root_pda,
@@ -184,7 +184,7 @@ async fn test_memo_cpi_transfer(ctx: &mut ItsTestContext) {
 
     verify_gateway_event_and_source(
         &inner_ixs,
-        &solana_axelar_memo_program::ID.to_bytes(),
+        &solana_axelar_memo_legacy::ID.to_bytes(),
         transfer_amount,
     );
 
@@ -245,7 +245,7 @@ async fn test_cpi_transfer_fails_with_non_pda_account(ctx: &mut ItsTestContext) 
         token_mint,
         token_program,
         0u64,
-        solana_axelar_memo_program::ID,
+        solana_axelar_memo_legacy::ID,
         vec![vec![]],
     )
     .unwrap();
@@ -277,7 +277,7 @@ async fn test_cpi_transfer_fails_with_inconsistent_seeds(ctx: &mut ItsTestContex
 
     // Use the special memo instruction that provides wrong seeds
     let transfer_with_wrong_seeds =
-        solana_axelar_memo_program::instruction::send_interchain_transfer_with_wrong_seeds(
+        solana_axelar_memo_legacy::instruction::send_interchain_transfer_with_wrong_seeds(
             &ctx.solana_wallet,
             &setup.counter_pda,
             &setup.its_root_pda,
@@ -318,7 +318,7 @@ async fn test_memo_cpi_call_contract_with_interchain_token(ctx: &mut ItsTestCont
 
     // Create the CallContractWithInterchainToken instruction through memo program
     let call_contract_transfer =
-        solana_axelar_memo_program::instruction::call_contract_with_interchain_token(
+        solana_axelar_memo_legacy::instruction::call_contract_with_interchain_token(
             &ctx.solana_wallet,
             &setup.counter_pda,
             &setup.its_root_pda,
@@ -352,7 +352,7 @@ async fn test_memo_cpi_call_contract_with_interchain_token(ctx: &mut ItsTestCont
 
     let gmp_payload = verify_gateway_event_and_source(
         &inner_ixs,
-        &solana_axelar_memo_program::ID.to_bytes(),
+        &solana_axelar_memo_legacy::ID.to_bytes(),
         transfer_amount,
     );
 

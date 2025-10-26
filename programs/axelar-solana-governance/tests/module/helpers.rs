@@ -13,7 +13,7 @@ use borsh::to_vec;
 use event_cpi::CpiEvent;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use solana_axelar_gateway_legacy::state::incoming_message::command_id;
-use solana_axelar_memo_program::instruction::AxelarMemoInstruction;
+use solana_axelar_memo_legacy::instruction::AxelarMemoInstruction;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::bpf_loader_upgradeable;
 use solana_sdk::instruction::{AccountMeta, Instruction};
@@ -42,8 +42,8 @@ pub(crate) async fn setup_programs() -> (SolanaAxelarIntegrationMetadata, Pubkey
     let mut sol_integration = SolanaAxelarIntegration::builder()
         .initial_signer_weights(vec![555, 222])
         .programs_to_deploy(vec![(
-            "solana_axelar_memo_program.so".into(),
-            solana_axelar_memo_program::id(),
+            "solana_axelar_memo_legacy.so".into(),
+            solana_axelar_memo_legacy::id(),
         )])
         .build()
         .setup_with_fixture_and_authority(fixture, upgrade_authority.insecure_clone())
@@ -68,8 +68,8 @@ pub(crate) async fn setup_programs() -> (SolanaAxelarIntegrationMetadata, Pubkey
         .await;
     assert!(res.is_ok());
 
-    let memo_counter_pda = solana_axelar_memo_program::get_counter_pda();
-    let ix = solana_axelar_memo_program::instruction::initialize(
+    let memo_counter_pda = solana_axelar_memo_legacy::get_counter_pda();
+    let ix = solana_axelar_memo_legacy::instruction::initialize(
         &sol_integration.fixture.payer.pubkey(),
         &memo_counter_pda,
     )
@@ -177,7 +177,7 @@ pub(crate) fn ix_builder_with_memo_proposal_data(
     .unwrap();
 
     IxBuilder::new().with_proposal_data(
-        solana_axelar_memo_program::ID,
+        solana_axelar_memo_legacy::ID,
         native_value,
         default_proposal_eta(),
         native_target_value_account,
