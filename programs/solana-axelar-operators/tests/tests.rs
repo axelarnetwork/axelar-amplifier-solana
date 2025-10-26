@@ -1,7 +1,7 @@
 #![cfg(test)]
 use anchor_lang::{AccountDeserialize, Key};
-use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
+use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
 use solana_sdk::account::ReadableAccount;
 use {
     anchor_lang::{
@@ -27,21 +27,21 @@ fn setup_registry(
 ) -> (Pubkey, Account) {
     // Derive the registry PDA
     let (registry, _bump) = Pubkey::find_program_address(
-        &[axelar_solana_operators::OperatorRegistry::SEED_PREFIX],
+        &[solana_axelar_operators::OperatorRegistry::SEED_PREFIX],
         &program_id,
     );
 
     // Initialize the registry instruction
     let ix1 = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::Initialize {
+        accounts: solana_axelar_operators::accounts::Initialize {
             payer: owner,
             owner,
             registry,
             system_program: system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::Initialize {}.data(),
+        data: solana_axelar_operators::instruction::Initialize {}.data(),
     };
 
     let accounts = vec![
@@ -77,7 +77,7 @@ pub fn add_operator(
     // Derive the operator PDA
     let (operator_to_add_pda, _bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_operators::OperatorAccount::SEED_PREFIX,
+            solana_axelar_operators::OperatorAccount::SEED_PREFIX,
             operator_to_add.key().as_ref(),
         ],
         &program_id,
@@ -86,7 +86,7 @@ pub fn add_operator(
     // Add operator instruction
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::AddOperator {
+        accounts: solana_axelar_operators::accounts::AddOperator {
             owner,
             operator_to_add,
             registry,
@@ -94,7 +94,7 @@ pub fn add_operator(
             system_program: system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::AddOperator {}.data(),
+        data: solana_axelar_operators::instruction::AddOperator {}.data(),
     };
 
     let checks = vec![
@@ -144,14 +144,14 @@ pub fn remove_operator(
     // Remove operator instruction
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::RemoveOperator {
+        accounts: solana_axelar_operators::accounts::RemoveOperator {
             owner,
             operator_to_remove,
             registry,
             operator_account: operator_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::RemoveOperator {}.data(),
+        data: solana_axelar_operators::instruction::RemoveOperator {}.data(),
     };
 
     // The operator account should be closed and its lamports returned to owner
@@ -194,13 +194,13 @@ pub fn transfer_master(
     // Transfer master instruction
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::TransferOwner {
+        accounts: solana_axelar_operators::accounts::TransferOwner {
             owner: current_owner,
             new_owner,
             registry,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::TransferOwner {}.data(),
+        data: solana_axelar_operators::instruction::TransferOwner {}.data(),
     };
 
     let checks = vec![
@@ -227,9 +227,9 @@ pub fn transfer_master(
 
 #[test]
 fn test_initialize_add_remove() {
-    let program_id = axelar_solana_operators::id();
+    let program_id = solana_axelar_operators::id();
 
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_operators");
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_operators");
 
     let owner = Pubkey::new_unique();
     let owner_account = Account::new(1_000_000_000, 0, &system_program::ID);
@@ -282,8 +282,8 @@ fn test_initialize_add_remove() {
 
 #[test]
 fn test_transfer_master() {
-    let program_id = axelar_solana_operators::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_operators");
+    let program_id = solana_axelar_operators::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_operators");
 
     let original_owner = Pubkey::new_unique();
     let original_owner_account = Account::new(1_000_000_000, 0, &system_program::ID);

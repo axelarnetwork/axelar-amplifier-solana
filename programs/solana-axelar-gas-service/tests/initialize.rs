@@ -1,9 +1,9 @@
 #![cfg(test)]
 
 use anchor_lang::Key;
-use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use solana_axelar_gas_service::state::Treasury;
+use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, Discriminator, InstructionData,
@@ -26,24 +26,24 @@ pub(crate) fn setup_operator(
     operator: Pubkey,
     operator_account: &Account,
 ) -> (Pubkey, Account) {
-    let program_id = axelar_solana_operators::id();
+    let program_id = solana_axelar_operators::id();
 
     // Load the operators program into mollusk
     mollusk.add_program(
         &program_id,
-        "axelar_solana_operators",
+        "solana_axelar_operators",
         &bpf_loader_upgradeable::ID,
     );
 
     // Derive the registry PDA
     let (registry, _bump) = Pubkey::find_program_address(
-        &[axelar_solana_operators::OperatorRegistry::SEED_PREFIX],
+        &[solana_axelar_operators::OperatorRegistry::SEED_PREFIX],
         &program_id,
     );
     // Derive the operator PDA
     let (operator_pda, _bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_operators::OperatorAccount::SEED_PREFIX,
+            solana_axelar_operators::OperatorAccount::SEED_PREFIX,
             operator.key().as_ref(),
         ],
         &program_id,
@@ -52,14 +52,14 @@ pub(crate) fn setup_operator(
     // Initialize the registry instruction
     let ix1 = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::Initialize {
+        accounts: solana_axelar_operators::accounts::Initialize {
             payer: operator,
             owner: operator,
             registry,
             system_program: system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::Initialize {}.data(),
+        data: solana_axelar_operators::instruction::Initialize {}.data(),
     };
 
     let checks1 = vec![
@@ -73,7 +73,7 @@ pub(crate) fn setup_operator(
     // Add operator instruction
     let ix2 = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::AddOperator {
+        accounts: solana_axelar_operators::accounts::AddOperator {
             owner: operator,
             operator_to_add: operator,
             registry,
@@ -81,7 +81,7 @@ pub(crate) fn setup_operator(
             system_program: system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::AddOperator {}.data(),
+        data: solana_axelar_operators::instruction::AddOperator {}.data(),
     };
 
     let checks2 = vec![

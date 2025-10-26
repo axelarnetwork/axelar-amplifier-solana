@@ -1,8 +1,8 @@
 use crate::events::GasRefundedEvent;
 use crate::state::Treasury;
 use anchor_lang::prelude::*;
-use axelar_solana_operators::OperatorAccount;
 use program_utils::transfer_lamports_anchor;
+use solana_axelar_operators::OperatorAccount;
 
 /// Refund previously collected native SOL fees (operator only).
 #[event_cpi]
@@ -16,7 +16,7 @@ pub struct RefundFees<'info> {
             operator.key().as_ref(),
         ],
         bump = operator_pda.bump,
-        seeds::program = axelar_solana_operators::ID
+        seeds::program = solana_axelar_operators::ID
     )]
     pub operator_pda: Account<'info, OperatorAccount>,
 

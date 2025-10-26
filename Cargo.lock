@@ -1202,7 +1202,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "axelar-solana-gateway-test-fixtures",
- "axelar-solana-operators",
  "bincode",
  "bitflags 2.9.4",
  "bytemuck",
@@ -1210,6 +1209,7 @@ dependencies = [
  "mollusk-test-utils",
  "program-utils",
  "solana-axelar-gas-service",
+ "solana-axelar-operators",
  "solana-sdk",
  "solana-sdk-ids",
 ]
@@ -1231,17 +1231,6 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "axelar-solana-operators"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "mollusk-svm",
- "program-utils",
- "solana-sdk",
- "solana-sdk-ids",
 ]
 
 [[package]]
@@ -7927,13 +7916,13 @@ name = "solana-axelar-gas-service"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-operators",
  "borsh 1.5.7",
  "bytemuck",
  "mollusk-svm",
  "mollusk-test-utils",
  "program-utils",
  "solana-axelar-gas-service-legacy",
+ "solana-axelar-operators",
  "solana-sdk",
  "solana-sdk-ids",
 ]
@@ -8080,6 +8069,17 @@ dependencies = [
  "spl-associated-token-account 6.0.0",
  "spl-token 6.0.0",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "solana-axelar-operators"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "mollusk-svm",
+ "program-utils",
+ "solana-sdk",
+ "solana-sdk-ids",
 ]
 
 [[package]]

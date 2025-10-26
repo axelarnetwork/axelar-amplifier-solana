@@ -1,6 +1,6 @@
 use crate::state::Treasury;
 use anchor_lang::prelude::*;
-use axelar_solana_operators::OperatorAccount;
+use solana_axelar_operators::OperatorAccount;
 
 /// Initialize the configuration PDA.
 #[derive(Accounts)]
@@ -16,7 +16,7 @@ pub struct Initialize<'info> {
             operator.key().as_ref(),
         ],
         bump = operator_pda.bump,
-        seeds::program = axelar_solana_operators::ID
+        seeds::program = solana_axelar_operators::ID
     )]
     pub operator_pda: Account<'info, OperatorAccount>,
 

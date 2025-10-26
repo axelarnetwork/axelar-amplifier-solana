@@ -9,7 +9,7 @@ edition.workspace = true
 
 [dependencies]
 anchor-lang.workspace = true
-axelar-solana-operators = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-operators = { workspace = true, features = ["no-entrypoint"] }
 program-utils.workspace = true
 bytemuck.workspace = true
 
@@ -40,22 +40,22 @@ custom-heap = []
 custom-panic = []
 
 devnet-amplifier = [
-	"axelar-solana-operators/devnet-amplifier",
+	"solana-axelar-operators/devnet-amplifier",
 	"solana-axelar-gas-service-legacy/devnet-amplifier",
 	"program-utils/devnet-amplifier",
 ]
 stagenet = [
-	"axelar-solana-operators/stagenet",
+	"solana-axelar-operators/stagenet",
 	"solana-axelar-gas-service-legacy/stagenet",
 	"program-utils/stagenet",
 ]
 testnet = [
-	"axelar-solana-operators/testnet",
+	"solana-axelar-operators/testnet",
 	"solana-axelar-gas-service-legacy/testnet",
 	"program-utils/testnet",
 ]
 mainnet = [
-	"axelar-solana-operators/mainnet",
+	"solana-axelar-operators/mainnet",
 	"solana-axelar-gas-service-legacy/mainnet",
 	"program-utils/mainnet",
 ]

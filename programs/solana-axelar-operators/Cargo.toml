@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-operators"
+name = "solana-axelar-operators"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -20,7 +20,7 @@ solana-sdk.workspace = true
 workspace = true
 
 [lib]
-name = "axelar_solana_operators"
+name = "solana_axelar_operators"
 crate-type = ["cdylib", "lib"]
 
 [features]
