@@ -1,6 +1,6 @@
 //! Program state processor
 
-use axelar_solana_its::executable::AxelarInterchainTokenExecuteInstruction;
+use solana_axelar_its_legacy::executable::AxelarInterchainTokenExecuteInstruction;
 use borsh::{self, BorshDeserialize};
 use mpl_token_metadata::accounts::Metadata;
 use program_utils::{check_program_account, pda::ValidPDA};
@@ -314,7 +314,7 @@ pub fn process_send_interchain_transfer(
     // Pass the memo program ID as the source so events show the memo is the source address
     // The counter PDA is derived with empty seeds
     let pda_seeds = vec![];
-    let transfer_ix = axelar_solana_its::instruction::cpi_interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::cpi_interchain_transfer(
         *payer.key,
         *counter_pda.key,
         *source_ata.key,
@@ -448,7 +448,7 @@ pub fn process_send_interchain_transfer_with_wrong_seeds(
     }
 
     let wrong_pda_seeds = vec![b"wrong_seed".to_vec()];
-    let transfer_ix = axelar_solana_its::instruction::cpi_interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::cpi_interchain_transfer(
         *payer.key,
         *counter_pda.key,
         *source_ata.key,
@@ -547,7 +547,7 @@ pub fn process_call_contract_with_interchain_token(
 
     // Use correct seeds for the counter PDA (empty seeds)
     let pda_seeds = vec![];
-    let transfer_ix = axelar_solana_its::instruction::cpi_call_contract_with_interchain_token(
+    let transfer_ix = solana_axelar_its_legacy::instruction::cpi_call_contract_with_interchain_token(
         *payer.key,
         *counter_pda.key,
         *source_ata.key,

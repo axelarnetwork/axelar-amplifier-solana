@@ -11,7 +11,7 @@ use test_context::test_context;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 
 use crate::ItsTestContext;
-use axelar_solana_its::state::token_manager::Type as TokenManagerType;
+use solana_axelar_its_legacy::state::token_manager::Type as TokenManagerType;
 
 /// Helper function to create a custom mint for testing
 async fn setup_custom_mint_and_token_manager(
@@ -26,8 +26,8 @@ async fn setup_custom_mint_and_token_manager(
         .init_new_mint(ctx.solana_wallet, spl_token_2022::id(), 9)
         .await;
 
-    let token_id = axelar_solana_its::linked_token_id(&ctx.solana_wallet, &salt);
-    let register_custom_token_ix = axelar_solana_its::instruction::register_custom_token(
+    let token_id = solana_axelar_its_legacy::linked_token_id(&ctx.solana_wallet, &salt);
+    let register_custom_token_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -95,7 +95,7 @@ async fn test_inbound_transfer_using_token_account_mint_burn(
         setup_custom_mint_and_token_manager(ctx, TokenManagerType::MintBurn).await?;
 
     let authority_transfer_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id,
@@ -133,7 +133,7 @@ async fn test_inbound_transfer_using_token_account_mint_burn(
         .await;
 
     let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
+        solana_axelar_its_legacy::events::InterchainTransferReceived,
     >(&inner_ixs)
     .expect("InterchainTransferReceived event should be present");
 
@@ -164,9 +164,9 @@ async fn test_inbound_transfer_using_token_account_lock_unlock(
 
     let token_account = create_direct_token_account(ctx, custom_mint, ctx.solana_wallet).await?;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
         &custom_mint,
@@ -211,7 +211,7 @@ async fn test_inbound_transfer_using_token_account_lock_unlock(
         .await;
 
     let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
+        solana_axelar_its_legacy::events::InterchainTransferReceived,
     >(&inner_ixs)
     .expect("InterchainTransferReceived event should be present");
 
@@ -241,7 +241,7 @@ async fn test_inbound_transfer_using_wallet_mint_burn(
         setup_custom_mint_and_token_manager(ctx, TokenManagerType::MintBurn).await?;
 
     let authority_transfer_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id,
@@ -277,7 +277,7 @@ async fn test_inbound_transfer_using_wallet_mint_burn(
         .await;
 
     let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
+        solana_axelar_its_legacy::events::InterchainTransferReceived,
     >(&inner_ixs)
     .expect("InterchainTransferReceived event should be present");
 
@@ -314,9 +314,9 @@ async fn test_inbound_transfer_using_wallet_lock_unlock(
     let (token_id, custom_mint) =
         setup_custom_mint_and_token_manager(ctx, TokenManagerType::LockUnlock).await?;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
         &custom_mint,
@@ -361,7 +361,7 @@ async fn test_inbound_transfer_using_wallet_lock_unlock(
         .await;
 
     let transfer_received_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTransferReceived,
+        solana_axelar_its_legacy::events::InterchainTransferReceived,
     >(&inner_ixs)
     .expect("InterchainTransferReceived event should be present");
 

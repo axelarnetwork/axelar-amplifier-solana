@@ -30,4 +30,5 @@ bindings/generated/.anchor
 bindings/generated/pnpm-lock.yaml
 bindings/generated/temp
 bindings/generated/dist
-bindings/axelar-solana-its/dist
+bindings/solana-axelar-its-legacy/dist
+bindings/solana-axelar-its/dist

@@ -7,7 +7,7 @@ use spl_associated_token_account::{
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_its::state::token_manager::TokenManager;
+use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use evm_contracts_test_suite::ethers::signers::Signer as _;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, SendToHub};
 
@@ -16,12 +16,12 @@ use crate::ItsTestContext;
 #[test_context(ItsTestContext)]
 #[tokio::test]
 async fn test_its_gmp_payload_fail_when_paused(ctx: &mut ItsTestContext) {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
 
     ctx.solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::set_pause_status(
+            &[solana_axelar_its_legacy::instruction::set_pause_status(
                 ctx.solana_chain.upgrade_authority.pubkey(),
                 true,
             )
@@ -34,10 +34,10 @@ async fn test_its_gmp_payload_fail_when_paused(ctx: &mut ItsTestContext) {
         .await;
 
     let token_program_id = spl_token_2022::id();
-    let token_id = Pubkey::create_with_seed(&its_root_pda, "test_token", &axelar_solana_its::id())
+    let token_id = Pubkey::create_with_seed(&its_root_pda, "test_token", &solana_axelar_its_legacy::id())
         .unwrap()
         .to_bytes();
-    let (mint_authority, _) = axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+    let (mint_authority, _) = solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
     let mint = ctx
         .solana_chain
         .fixture
@@ -73,7 +73,7 @@ async fn test_outbound_message_fails_when_paused(ctx: &mut ItsTestContext) {
     ctx.solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::set_pause_status(
+            &[solana_axelar_its_legacy::instruction::set_pause_status(
                 ctx.solana_chain.upgrade_authority.pubkey(),
                 true,
             )
@@ -85,15 +85,15 @@ async fn test_outbound_message_fails_when_paused(ctx: &mut ItsTestContext) {
         )
         .await;
 
-    let (its_root_config_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (token_manager_pda, _) = axelar_solana_its::find_token_manager_pda(
+    let (its_root_config_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (token_manager_pda, _) = solana_axelar_its_legacy::find_token_manager_pda(
         &its_root_config_pda,
         &ctx.deployed_interchain_token,
     );
     let data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await
         .data;
 
@@ -113,7 +113,7 @@ async fn test_outbound_message_fails_when_paused(ctx: &mut ItsTestContext) {
         &spl_token_2022::id(),
     );
 
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         ctx.deployed_interchain_token,
         token_address,
         token_account,
@@ -122,7 +122,7 @@ async fn test_outbound_message_fails_when_paused(ctx: &mut ItsTestContext) {
         900,
     )
     .unwrap();
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_account,
@@ -153,7 +153,7 @@ async fn test_fail_to_pause_not_being_owner(ctx: &mut ItsTestContext) {
         .solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::set_pause_status(
+            &[solana_axelar_its_legacy::instruction::set_pause_status(
                 ctx.solana_chain.fixture.payer.pubkey(),
                 true,
             )
@@ -178,7 +178,7 @@ async fn test_inbound_deploy_interchain_token_fails_when_paused(ctx: &mut ItsTes
     ctx.solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::set_pause_status(
+            &[solana_axelar_its_legacy::instruction::set_pause_status(
                 ctx.solana_chain.upgrade_authority.pubkey(),
                 true,
             )
@@ -252,7 +252,7 @@ async fn test_local_deploy_interchain_token_fails_when_paused(ctx: &mut ItsTestC
     ctx.solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::set_pause_status(
+            &[solana_axelar_its_legacy::instruction::set_pause_status(
                 ctx.solana_chain.upgrade_authority.pubkey(),
                 true,
             )
@@ -272,7 +272,7 @@ async fn test_local_deploy_interchain_token_fails_when_paused(ctx: &mut ItsTestC
     let initial_supply = 1_000_000;
     let minter = Some(ctx.solana_wallet);
 
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,

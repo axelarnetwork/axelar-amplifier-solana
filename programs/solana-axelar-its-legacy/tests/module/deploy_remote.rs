@@ -17,7 +17,7 @@ async fn test_deploy_remote_interchain_token_with_valid_metadata(
 ) -> anyhow::Result<()> {
     // Deploy a local interchain token first
     let salt = solana_sdk::keccak::hash(b"ValidMetadataToken").0;
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -38,7 +38,7 @@ async fn test_deploy_remote_interchain_token_with_valid_metadata(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -54,7 +54,7 @@ async fn test_deploy_remote_interchain_token_with_valid_metadata(
 
     // Approve remote deployment
     let approve_remote_deployment =
-        axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
             ctx.solana_wallet,
             ctx.solana_wallet,
             ctx.solana_wallet,
@@ -69,7 +69,7 @@ async fn test_deploy_remote_interchain_token_with_valid_metadata(
 
     // Deploy remote with correct mint and metadata accounts
     let deploy_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_wallet,
             ctx.solana_wallet,
             salt,
@@ -89,7 +89,7 @@ async fn test_deploy_remote_interchain_token_with_valid_metadata(
         .cloned()
         .unwrap();
     let deployment_started_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeploymentStarted,
+        solana_axelar_its_legacy::events::InterchainTokenDeploymentStarted,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeploymentStarted not found"))
     .unwrap();
@@ -151,7 +151,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_metadata(
 
     // Now deploy a local interchain token
     let salt = solana_sdk::keccak::hash(b"MismatchedMetadataToken").0;
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -166,17 +166,17 @@ async fn test_deploy_remote_interchain_token_with_mismatched_metadata(
         .await
         .expect("InterchainToken deployment failed");
 
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     // Get the metadata account for the actual interchain token
     let (interchain_token_metadata_pda, _) = Metadata::find_pda(&interchain_token_pda);
 
     // Approve remote deployment
     let approve_remote_deployment =
-        axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
             ctx.solana_wallet,
             ctx.solana_wallet,
             ctx.solana_wallet,
@@ -191,7 +191,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_metadata(
 
     // Try to deploy remote with mismatched mint and metadata
     let deploy_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_wallet,
             ctx.solana_wallet,
             salt,
@@ -210,7 +210,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_metadata(
 
     // Create the modified instruction
     let mismatched_ix = Instruction {
-        program_id: axelar_solana_its::id(),
+        program_id: solana_axelar_its_legacy::id(),
         accounts,
         data: deploy_remote_ix.data,
     };
@@ -309,7 +309,7 @@ async fn test_deploy_remote_canonical_token_with_mismatched_metadata(
 
     // Register the canonical token
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             spl_token_2022::id(),
@@ -319,7 +319,7 @@ async fn test_deploy_remote_canonical_token_with_mismatched_metadata(
 
     // Try to deploy remote canonical token with mismatched mint and metadata
     let deploy_remote_canonical_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             "ethereum".to_string(),
@@ -335,7 +335,7 @@ async fn test_deploy_remote_canonical_token_with_mismatched_metadata(
 
     // Create the modified instruction
     let mismatched_canonical_ix = Instruction {
-        program_id: axelar_solana_its::id(),
+        program_id: solana_axelar_its_legacy::id(),
         accounts,
         data: deploy_remote_canonical_ix.data,
     };
@@ -401,7 +401,7 @@ async fn test_deploy_remote_without_minter_with_mismatched_metadata(
 
     // Deploy a local interchain token
     let salt = solana_sdk::keccak::hash(b"NoMinterMismatchedToken").0;
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -416,16 +416,16 @@ async fn test_deploy_remote_without_minter_with_mismatched_metadata(
         .await
         .expect("InterchainToken deployment failed");
 
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     // Get the metadata account for the actual interchain token
     let (interchain_token_metadata_pda, _) = Metadata::find_pda(&interchain_token_pda);
 
     // Deploy remote without minter
-    let deploy_remote_ix = axelar_solana_its::instruction::deploy_remote_interchain_token(
+    let deploy_remote_ix = solana_axelar_its_legacy::instruction::deploy_remote_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -443,7 +443,7 @@ async fn test_deploy_remote_without_minter_with_mismatched_metadata(
 
     // Create the modified instruction
     let mismatched_ix = Instruction {
-        program_id: axelar_solana_its::id(),
+        program_id: solana_axelar_its_legacy::id(),
         accounts,
         data: deploy_remote_ix.data,
     };
@@ -479,7 +479,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_token_manager(
 ) -> anyhow::Result<()> {
     // First, deploy two separate local interchain tokens
     let salt1 = solana_sdk::keccak::hash(b"FirstToken").0;
-    let deploy_local_ix1 = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix1 = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt1,
@@ -495,7 +495,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_token_manager(
         .expect("First InterchainToken deployment failed");
 
     let salt2 = solana_sdk::keccak::hash(b"SecondToken").0;
-    let deploy_local_ix2 = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix2 = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt2,
@@ -511,13 +511,13 @@ async fn test_deploy_remote_interchain_token_with_mismatched_token_manager(
         .expect("Second InterchainToken deployment failed");
 
     // Get the token IDs and mint addresses for both tokens
-    let token_id2 = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt2);
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (mint2, _) = axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id2);
+    let token_id2 = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt2);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (mint2, _) = solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id2);
 
     // Approve remote deployment for the first token
     let approve_remote_deployment1 =
-        axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
             ctx.solana_wallet,
             ctx.solana_wallet,
             ctx.solana_wallet,
@@ -532,7 +532,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_token_manager(
 
     // Try to deploy remote for the first token but use the second token's mint and metadata
     let deploy_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_wallet,
             ctx.solana_wallet,
             salt1,
@@ -553,7 +553,7 @@ async fn test_deploy_remote_interchain_token_with_mismatched_token_manager(
 
     // Create the modified instruction
     let mismatched_token_manager_ix = Instruction {
-        program_id: axelar_solana_its::id(),
+        program_id: solana_axelar_its_legacy::id(),
         accounts,
         data: deploy_remote_ix.data,
     };

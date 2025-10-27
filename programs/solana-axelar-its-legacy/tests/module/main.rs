@@ -57,7 +57,7 @@ use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
-use axelar_solana_its::instruction::ExecuteInstructionInputs;
+use solana_axelar_its_legacy::instruction::ExecuteInstructionInputs;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use evm_contracts_test_suite::chain::TestBlockchain;
 use evm_contracts_test_suite::ethers::abi::Detokenize;
@@ -153,7 +153,7 @@ impl ItsTestContext {
         let encoded_payload = payload.encode();
         let payload_hash = solana_sdk::keccak::hash(&encoded_payload).to_bytes();
         let message = random_hub_message_with_destination_and_payload(
-            axelar_solana_its::id().to_string(),
+            solana_axelar_its_legacy::id().to_string(),
             payload_hash,
         );
 
@@ -186,7 +186,7 @@ impl ItsTestContext {
             .mint_opt(maybe_mint)
             .build();
 
-        let instruction = axelar_solana_its::instruction::execute(its_ix_inputs)
+        let instruction = solana_axelar_its_legacy::instruction::execute(its_ix_inputs)
             .expect("failed to create instruction");
 
         // Simulate first to get inner_ixs for event extraction
@@ -304,7 +304,7 @@ impl ItsTestContext {
 
     async fn deploy_interchain_token(&mut self) {
         let salt = solana_sdk::keccak::hash(b"TestTokenSalt").0;
-        let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+        let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
             self.solana_wallet,
             self.solana_wallet,
             salt,
@@ -327,7 +327,7 @@ impl ItsTestContext {
             .cloned()
             .unwrap();
         let deploy_event = get_first_event_cpi_occurrence::<
-            axelar_solana_its::events::InterchainTokenDeployed,
+            solana_axelar_its_legacy::events::InterchainTokenDeployed,
         >(&inner_ixs)
         .unwrap();
 
@@ -337,7 +337,7 @@ impl ItsTestContext {
         assert_eq!(deploy_event.name, "Test Token", "token name does not match");
 
         let approve_remote_deployment =
-            axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+            solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
                 self.solana_wallet,
                 self.solana_wallet,
                 self.solana_wallet,
@@ -352,7 +352,7 @@ impl ItsTestContext {
             .unwrap();
 
         let deploy_remote_ix =
-            axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+            solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
                 self.solana_wallet,
                 self.solana_wallet,
                 salt,
@@ -389,7 +389,7 @@ impl ItsTestContext {
         )
         .await;
 
-        let expected_token_id = axelar_solana_its::interchain_token_id(&self.solana_wallet, &salt);
+        let expected_token_id = solana_axelar_its_legacy::interchain_token_id(&self.solana_wallet, &salt);
 
         assert_eq!(log.token_id, expected_token_id, "token_id does not match");
 
@@ -405,7 +405,7 @@ impl ItsTestContext {
     ) {
         let amount = 100;
 
-        let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+        let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
             self.solana_wallet,
             self.solana_wallet,
             token_account,
@@ -436,7 +436,7 @@ impl ItsTestContext {
 
         // Find the InterchainTransfer event
         let transfer_event = get_first_event_cpi_occurrence::<
-            axelar_solana_its::events::InterchainTransfer,
+            solana_axelar_its_legacy::events::InterchainTransfer,
         >(&inner_ixs)
         .expect("InterchainTransfer event not found");
 
@@ -502,7 +502,7 @@ impl ItsTestContext {
             )
             .await;
         let transfer_received_event = get_first_event_cpi_occurrence::<
-            axelar_solana_its::events::InterchainTransferReceived,
+            solana_axelar_its_legacy::events::InterchainTransferReceived,
         >(&inner_ixs)
         .unwrap();
         assert_eq!(transfer_received_event.amount, amount_back);
@@ -528,7 +528,7 @@ impl ItsTestContext {
 
 async fn axelar_solana_setup() -> (SolanaAxelarIntegrationMetadata, Pubkey) {
     let programs = vec![
-        ("axelar_solana_its.so".into(), axelar_solana_its::id()),
+        ("solana_axelar_its_legacy.so".into(), solana_axelar_its_legacy::id()),
         (
             workspace_root_dir()
                 .join("programs")
@@ -570,14 +570,14 @@ async fn axelar_solana_setup() -> (SolanaAxelarIntegrationMetadata, Pubkey) {
                     &solana_chain.upgrade_authority.pubkey(),
                     u32::MAX.into(),
                 ),
-                axelar_solana_its::instruction::initialize(
+                solana_axelar_its_legacy::instruction::initialize(
                     solana_chain.upgrade_authority.pubkey(),
                     solana_chain.fixture.payer.pubkey(),
                     SOLANA_CHAIN_NAME.to_owned(),
                     ITS_HUB_TRUSTED_CONTRACT_ADDRESS.to_owned(),
                 )
                 .unwrap(),
-                axelar_solana_its::instruction::set_trusted_chain(
+                solana_axelar_its_legacy::instruction::set_trusted_chain(
                     solana_chain.fixture.payer.pubkey(),
                     solana_chain.upgrade_authority.pubkey(),
                     EVM_CHAIN_NAME.to_owned(),

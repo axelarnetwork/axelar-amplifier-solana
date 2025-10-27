@@ -26,7 +26,7 @@ async fn test_metadata_retrieval_with_metaplex_fallback(
 ) -> anyhow::Result<()> {
     // Deploy a local interchain token first (this creates standard mint with Metaplex metadata)
     let salt = solana_sdk::keccak::hash(b"MetaplexFallbackToken").0;
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -48,7 +48,7 @@ async fn test_metadata_retrieval_with_metaplex_fallback(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -64,7 +64,7 @@ async fn test_metadata_retrieval_with_metaplex_fallback(
 
     // Approve remote deployment
     let approve_remote_deployment =
-        axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
             ctx.solana_wallet,
             ctx.solana_wallet,
             ctx.solana_wallet,
@@ -80,7 +80,7 @@ async fn test_metadata_retrieval_with_metaplex_fallback(
 
     // Deploy remote - this will use our get_token_metadata function
     let deploy_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_wallet,
             ctx.solana_wallet,
             salt,
@@ -101,7 +101,7 @@ async fn test_metadata_retrieval_with_metaplex_fallback(
         .cloned()
         .unwrap();
     let deployment_started_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeploymentStarted,
+        solana_axelar_its_legacy::events::InterchainTokenDeploymentStarted,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeploymentStarted not found"))
     .unwrap();
@@ -206,7 +206,7 @@ async fn test_metadata_retrieval_with_token_2022_embedded(
 
     // Register this mint as a canonical token so we can test outbound deployment
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             mint_pubkey,
             spl_token_2022::id(),
@@ -217,7 +217,7 @@ async fn test_metadata_retrieval_with_token_2022_embedded(
 
     // Deploy remote - this should use Token 2022 embedded metadata, not Metaplex
     let deploy_remote_canonical_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             mint_pubkey,
             "ethereum".to_string(),
@@ -237,7 +237,7 @@ async fn test_metadata_retrieval_with_token_2022_embedded(
         .cloned()
         .unwrap();
     let deployment_started_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeploymentStarted,
+        solana_axelar_its_legacy::events::InterchainTokenDeploymentStarted,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeploymentStarted not found"))
     .unwrap();
@@ -306,7 +306,7 @@ async fn test_metadata_retrieval_with_token_2022_external_pointer(
         .unwrap();
 
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             mint_pubkey,
             spl_token_2022::id(),
@@ -316,7 +316,7 @@ async fn test_metadata_retrieval_with_token_2022_external_pointer(
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     let deploy_remote_canonical_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             mint_pubkey,
             "ethereum".to_string(),
@@ -336,7 +336,7 @@ async fn test_metadata_retrieval_with_token_2022_external_pointer(
         .cloned()
         .unwrap();
     let deployment_started_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeploymentStarted,
+        solana_axelar_its_legacy::events::InterchainTokenDeploymentStarted,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeploymentStarted not found"))
     .unwrap();
@@ -413,7 +413,7 @@ async fn test_metadata_retrieval_fails_no_metadata(ctx: &mut ItsTestContext) -> 
         .unwrap();
 
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             mint_pubkey,
             spl_token_2022::id(),
@@ -501,7 +501,7 @@ async fn test_metadata_retrieval_fails_wrong_mint_in_metadata(
         .unwrap();
 
     let mut register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             mint_pubkey,
             spl_token_2022::id(),

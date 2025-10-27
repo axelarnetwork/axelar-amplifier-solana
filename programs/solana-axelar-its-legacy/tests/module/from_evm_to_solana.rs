@@ -12,7 +12,7 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_its::state::token_manager::{TokenManager, Type as TokenManagerType};
+use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 use evm_contracts_test_suite::ethers::{signers::Signer, types::Bytes};
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::ContractCallFilter;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::custom_test_token::CustomTestToken;
@@ -78,7 +78,7 @@ async fn custom_token(
         .init_new_mint(ctx.solana_wallet, spl_token_2022::id(), 9)
         .await;
 
-    let register_metadata = axelar_solana_its::instruction::register_token_metadata(
+    let register_metadata = solana_axelar_its_legacy::instruction::register_token_metadata(
         ctx.solana_wallet,
         custom_solana_token,
         0,
@@ -145,14 +145,14 @@ async fn custom_token(
             spl_token_2022::id(),
         )
         .await;
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await
         .data;
     let token_manager = TokenManager::try_from_slice(&data)?;
@@ -234,7 +234,7 @@ async fn test_custom_token_mint_burn_link_transfer(ctx: &mut ItsTestContext) -> 
     let (token_id, evm_token, solana_token) = custom_token(ctx, TokenManagerType::MintBurn).await?;
 
     let authority_transfer_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id,
@@ -269,7 +269,7 @@ async fn test_custom_token_mint_burn_link_transfer(ctx: &mut ItsTestContext) -> 
     );
 
     let initial_balance = 300;
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         solana_token,
         token_account,
@@ -320,9 +320,9 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
         .await?
         .await?;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (mint, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
     let (token_metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&mint);
 
     let metadata = Bytes::from(
@@ -367,14 +367,14 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
     let log =
         retrieve_evm_log_with_filter(ctx.evm_its_contracts.gateway.contract_call_filter()).await;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &ctx.deployed_interchain_token);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &ctx.deployed_interchain_token);
 
     let data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await
         .data;
     let token_manager = TokenManager::try_from_slice(&data)?;
@@ -435,7 +435,7 @@ async fn fail_when_chain_not_trusted(ctx: &mut ItsTestContext) {
     ctx.solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::remove_trusted_chain(
+            &[solana_axelar_its_legacy::instruction::remove_trusted_chain(
                 ctx.solana_chain.fixture.payer.pubkey(),
                 ctx.solana_chain.upgrade_authority.pubkey(),
                 ctx.evm_chain_name.clone(),

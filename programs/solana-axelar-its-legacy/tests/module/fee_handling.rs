@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_its::state::token_manager::TokenManager;
+use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use borsh::BorshDeserialize;
 use evm_contracts_test_suite::ethers::signers::Signer;
 use mpl_token_metadata::accounts::Metadata;
@@ -64,7 +64,7 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
 
     // Register the canonical token metadata
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             spl_token_2022::id(),
@@ -74,7 +74,7 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
 
     // Deploy remote canonical token (this creates the token manager)
     let deploy_remote_canonical_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             ctx.evm_chain_name.clone(),
@@ -107,7 +107,7 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Get the canonical token ID
-    let canonical_token_id = axelar_solana_its::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
 
     // Create user account and give them tokens for test transfer
     let user_ata = get_associated_token_address_with_program_id(
@@ -137,7 +137,7 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
 
     // Test transfer
     let transfer_amount = 1000_u64;
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         user_ata,
@@ -175,7 +175,7 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
         .cloned()
         .unwrap();
     let transfer_event =
-        get_first_event_cpi_occurrence::<axelar_solana_its::events::InterchainTransfer>(&inner_ixs)
+        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
             .ok_or_else(|| anyhow!("InterchainTransfer not found"))
             .unwrap();
 
@@ -231,7 +231,7 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
 
     // Register and deploy the canonical token
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             spl_token_2022::id(),
@@ -240,7 +240,7 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     let deploy_remote_canonical_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             ctx.evm_chain_name.clone(),
@@ -272,7 +272,7 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Test transfer with this fee configuration
-    let canonical_token_id = axelar_solana_its::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
 
     // Set up user account
     let user_ata = get_associated_token_address_with_program_id(
@@ -303,7 +303,7 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
 
     // Test transfer
     let transfer_amount = 10_000_u64;
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         user_ata,
@@ -341,7 +341,7 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
         .cloned()
         .unwrap();
     let transfer_event =
-        get_first_event_cpi_occurrence::<axelar_solana_its::events::InterchainTransfer>(&inner_ixs)
+        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
             .ok_or_else(|| anyhow!("InterchainTransfer not found"))
             .unwrap();
 
@@ -396,7 +396,7 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
 
     // Register and deploy
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             spl_token_2022::id(),
@@ -405,7 +405,7 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     let deploy_remote_canonical_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             ctx.evm_chain_name.clone(),
@@ -437,7 +437,7 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Test with large transfer that would exceed maximum fee
-    let canonical_token_id = axelar_solana_its::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
 
     let user_ata = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -466,7 +466,7 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
         .unwrap();
 
     // Test transfer
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         user_ata,
@@ -505,7 +505,7 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
         .cloned()
         .unwrap();
     let transfer_event =
-        get_first_event_cpi_occurrence::<axelar_solana_its::events::InterchainTransfer>(&inner_ixs)
+        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
             .ok_or_else(|| anyhow!("InterchainTransfer not found"))
             .unwrap();
 
@@ -570,7 +570,7 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
         .instruction();
 
     // Register token metadata
-    let register_metadata = axelar_solana_its::instruction::register_token_metadata(
+    let register_metadata = solana_axelar_its_legacy::instruction::register_token_metadata(
         ctx.solana_wallet,
         solana_custom_token,
         0,
@@ -591,13 +591,13 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
         .await?;
 
     // Register custom token with LockUnlockFee type (specifically for fee handling)
-    let token_id = axelar_solana_its::linked_token_id(&ctx.solana_wallet, &salt);
-    let register_custom_token_ix = axelar_solana_its::instruction::register_custom_token(
+    let token_id = solana_axelar_its_legacy::linked_token_id(&ctx.solana_wallet, &salt);
+    let register_custom_token_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
         solana_custom_token,
-        axelar_solana_its::state::token_manager::Type::LockUnlockFee,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlockFee,
         spl_token_2022::id(),
         None,
     )?;
@@ -607,13 +607,13 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
         .unwrap();
 
     // Link token from Solana to EVM
-    let link_token_ix = axelar_solana_its::instruction::link_token(
+    let link_token_ix = solana_axelar_its_legacy::instruction::link_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
         ctx.evm_chain_name.clone(),
         evm_custom_token.address().as_bytes().to_vec(),
-        axelar_solana_its::state::token_manager::Type::LockUnlockFee,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlockFee,
         vec![],
         0,
     )?;
@@ -640,14 +640,14 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Verify token manager was created with correct type
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await
         .data;
     let token_manager = TokenManager::try_from_slice(&data)?;
@@ -659,7 +659,7 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
     );
     assert_eq!(
         token_manager.ty,
-        axelar_solana_its::state::token_manager::Type::LockUnlockFee
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlockFee
     );
 
     // Set up EVM side - mint tokens to the token manager for unlocking
@@ -715,7 +715,7 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
 
     // Outbound transfer
     let transfer_amount = 3000_u64;
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         user_ata,
@@ -754,7 +754,7 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
         .cloned()
         .unwrap();
     let outbound_event =
-        get_first_event_cpi_occurrence::<axelar_solana_its::events::InterchainTransfer>(&inner_ixs)
+        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
             .ok_or_else(|| anyhow!("InterchainTransfer not found"))
             .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
@@ -891,7 +891,7 @@ async fn test_canonical_token_with_fee_uses_lock_unlock_fee(
 
     // Register canonical token
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             spl_token_2022::id(),
@@ -900,10 +900,10 @@ async fn test_canonical_token_with_fee_uses_lock_unlock_fee(
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     // Check that the token manager uses LockUnlockFee type
-    let canonical_token_id = axelar_solana_its::canonical_interchain_token_id(&canonical_mint);
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &canonical_token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &canonical_token_id);
 
     let token_manager_account = ctx
         .solana_chain
@@ -916,7 +916,7 @@ async fn test_canonical_token_with_fee_uses_lock_unlock_fee(
 
     assert_eq!(
         token_manager.ty,
-        axelar_solana_its::state::token_manager::Type::LockUnlockFee,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlockFee,
         "Canonical token with fee extension should use LockUnlockFee token manager"
     );
 
@@ -959,7 +959,7 @@ async fn test_canonical_token_without_fee_uses_lock_unlock(
 
     // Register canonical token
     let register_canonical_ix =
-        axelar_solana_its::instruction::register_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_mint,
             spl_token_2022::id(),
@@ -968,10 +968,10 @@ async fn test_canonical_token_without_fee_uses_lock_unlock(
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     // Check that the token manager uses LockUnlock type
-    let canonical_token_id = axelar_solana_its::canonical_interchain_token_id(&canonical_mint);
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &canonical_token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &canonical_token_id);
 
     let token_manager_account = ctx
         .solana_chain
@@ -984,7 +984,7 @@ async fn test_canonical_token_without_fee_uses_lock_unlock(
 
     assert_eq!(
         token_manager.ty,
-        axelar_solana_its::state::token_manager::Type::LockUnlock,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlock,
         "Canonical token without fee extension should use LockUnlock token manager"
     );
 
@@ -1037,12 +1037,12 @@ async fn test_custom_token_registration_rejects_lock_unlock_with_fee(
 
     // Try to register with LockUnlock (should fail)
     let salt = [1u8; 32];
-    let register_custom_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_custom_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
         custom_token,
-        axelar_solana_its::state::token_manager::Type::LockUnlock,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlock,
         spl_token_2022::id(),
         None,
     )?;
@@ -1096,12 +1096,12 @@ async fn test_custom_token_registration_rejects_lock_unlock_fee_without_fee(
 
     // Try to register with LockUnlockFee (should fail)
     let salt = [2u8; 32];
-    let register_custom_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_custom_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
         custom_token,
-        axelar_solana_its::state::token_manager::Type::LockUnlockFee,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlockFee,
         spl_token_2022::id(),
         None,
     )?;
@@ -1155,12 +1155,12 @@ async fn test_custom_token_registration_accepts_lock_unlock_without_fee(
 
     // Register with LockUnlock (should succeed)
     let salt = [3u8; 32];
-    let register_custom_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_custom_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
         custom_token,
-        axelar_solana_its::state::token_manager::Type::LockUnlock,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlock,
         spl_token_2022::id(),
         None,
     )?;
@@ -1221,12 +1221,12 @@ async fn test_custom_token_registration_accepts_lock_unlock_fee_with_fee(
 
     // Register with LockUnlockFee (should succeed)
     let salt = [4u8; 32];
-    let register_custom_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_custom_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
         custom_token,
-        axelar_solana_its::state::token_manager::Type::LockUnlockFee,
+        solana_axelar_its_legacy::state::token_manager::Type::LockUnlockFee,
         spl_token_2022::id(),
         None,
     )?;

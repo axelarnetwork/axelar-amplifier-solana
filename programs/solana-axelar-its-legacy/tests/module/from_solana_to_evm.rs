@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_its::events::InterchainTransfer;
+use solana_axelar_its_legacy::events::InterchainTransfer;
 use borsh::BorshDeserialize;
 use evm_contracts_test_suite::ethers::signers::Signer;
 use mpl_token_metadata::accounts::Metadata;
@@ -17,7 +17,7 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_its::state::token_manager::{TokenManager, Type as TokenManagerType};
+use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 use evm_contracts_test_suite::evm_contracts_rs::contracts::{
     custom_test_token::CustomTestToken, interchain_token::InterchainToken,
 };
@@ -61,7 +61,7 @@ async fn custom_token(
         .seller_fee_basis_points(0)
         .instruction();
 
-    let register_metadata = axelar_solana_its::instruction::register_token_metadata(
+    let register_metadata = solana_axelar_its_legacy::instruction::register_token_metadata(
         ctx.solana_wallet,
         custom_solana_token,
         0,
@@ -106,8 +106,8 @@ async fn custom_token(
         .await?
         .await?;
 
-    let token_id = axelar_solana_its::linked_token_id(&ctx.solana_wallet, &salt);
-    let register_custom_token_ix = axelar_solana_its::instruction::register_custom_token(
+    let token_id = solana_axelar_its_legacy::linked_token_id(&ctx.solana_wallet, &salt);
+    let register_custom_token_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -121,7 +121,7 @@ async fn custom_token(
         .await
         .unwrap();
 
-    let link_token_ix = axelar_solana_its::instruction::link_token(
+    let link_token_ix = solana_axelar_its_legacy::instruction::link_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -182,14 +182,14 @@ async fn custom_token(
     assert_eq!(log.token_id, token_id);
     assert_eq!(log.token_manager_type, token_manager_type as u8);
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await
         .data;
     let token_manager = TokenManager::try_from_slice(&data)?;
@@ -232,7 +232,7 @@ async fn canonical_token(
 
     ctx.send_solana_tx(&[metadata_ix]).await.unwrap();
 
-    let register_token = axelar_solana_its::instruction::register_canonical_interchain_token(
+    let register_token = solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
         ctx.solana_wallet,
         canonical_solana_token,
         spl_token_2022::id(),
@@ -253,12 +253,12 @@ async fn canonical_token(
         .unwrap();
 
     let expected_token_id =
-        axelar_solana_its::canonical_interchain_token_id(&canonical_solana_token);
+        solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_solana_token);
 
     assert_eq!(expected_token_id, token_id,);
 
     let deploy_remote_canonical_token_ix =
-        axelar_solana_its::instruction::deploy_remote_canonical_interchain_token(
+        solana_axelar_its_legacy::instruction::deploy_remote_canonical_interchain_token(
             ctx.solana_wallet,
             canonical_solana_token,
             ctx.evm_chain_name.clone(),
@@ -317,9 +317,9 @@ async fn canonical_token(
     assert_eq!(log.name, token_name);
     assert_eq!(log.decimals, 9);
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let evm_token_address = ctx
         .evm_its_contracts
@@ -336,7 +336,7 @@ async fn canonical_token(
     let data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await
         .data;
     let token_manager = TokenManager::try_from_slice(&data)?;
@@ -418,7 +418,7 @@ async fn test_custom_token_mint_burn_link_transfer(ctx: &mut ItsTestContext) -> 
     let (token_id, evm_token, solana_token) = custom_token(ctx, TokenManagerType::MintBurn).await?;
 
     let authority_transfer_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id,
@@ -441,7 +441,7 @@ async fn test_custom_token_mint_burn_link_transfer(ctx: &mut ItsTestContext) -> 
 
     let initial_balance = 300;
     // As the mint authority was handed over, we need to mint through ITS.
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         solana_token,
         token_account,
@@ -515,7 +515,7 @@ async fn fail_when_chain_not_trusted(ctx: &mut ItsTestContext) {
     ctx.solana_chain
         .fixture
         .send_tx_with_custom_signers(
-            &[axelar_solana_its::instruction::remove_trusted_chain(
+            &[solana_axelar_its_legacy::instruction::remove_trusted_chain(
                 ctx.solana_chain.fixture.payer.pubkey(),
                 ctx.solana_chain.upgrade_authority.pubkey(),
                 ctx.evm_chain_name.clone(),
@@ -560,7 +560,7 @@ async fn transfer_fails_with_wrong_gas_service(ctx: &mut ItsTestContext) -> anyh
     )?;
 
     ctx.send_solana_tx(&[create_ata_ix, mint_ix]).await.unwrap();
-    let mut transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let mut transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_account,
@@ -605,8 +605,8 @@ async fn test_lock_unlock_transfer_fails_with_token_manager_as_authority(
         &spl_token_2022::id(),
     );
 
-    let token_manager_pda = axelar_solana_its::find_token_manager_pda(
-        &axelar_solana_its::find_its_root_pda().0,
+    let token_manager_pda = solana_axelar_its_legacy::find_token_manager_pda(
+        &solana_axelar_its_legacy::find_its_root_pda().0,
         &token_id,
     )
     .0;
@@ -630,7 +630,7 @@ async fn test_lock_unlock_transfer_fails_with_token_manager_as_authority(
     ctx.send_solana_tx(&[create_ata_ix, mint_ix]).await.unwrap();
 
     // Try to transfer from the TokenManager to payer. This should fail after the fix
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_chain.fixture.payer.pubkey(),
         ctx.solana_chain.fixture.payer.pubkey(),
         token_manager_ata,
@@ -690,7 +690,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
         .seller_fee_basis_points(0)
         .instruction();
 
-    let register_metadata = axelar_solana_its::instruction::register_token_metadata(
+    let register_metadata = solana_axelar_its_legacy::instruction::register_token_metadata(
         ctx.solana_wallet,
         solana_token,
         0,
@@ -709,8 +709,8 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
         .await?;
 
     // Register the custom token with MintBurnFrom type
-    let token_id = axelar_solana_its::linked_token_id(&ctx.solana_wallet, &salt);
-    let register_custom_token_ix = axelar_solana_its::instruction::register_custom_token(
+    let token_id = solana_axelar_its_legacy::linked_token_id(&ctx.solana_wallet, &salt);
+    let register_custom_token_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -725,7 +725,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
         .unwrap();
 
     // Link the token
-    let link_token_ix = axelar_solana_its::instruction::link_token(
+    let link_token_ix = solana_axelar_its_legacy::instruction::link_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -771,7 +771,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
 
     // Transfer mint authority to ITS
     let authority_transfer_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id,
@@ -819,7 +819,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
 
     // Mint tokens to bob through ITS
     let mint_amount = 1000;
-    let mint_to_bob_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_to_bob_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         solana_token,
         bob_token_account,
@@ -856,7 +856,7 @@ async fn test_mint_burn_from_interchain_transfer_with_approval(
 
     // Make solana_wallet perform an interchain transfer from bob's account using approved amount
     let transfer_amount = 300;
-    let interchain_transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let interchain_transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         bob_token_account,
@@ -1001,7 +1001,7 @@ async fn test_ata_must_match_pda_derivation(ctx: &mut ItsTestContext) -> anyhow:
             .await?;
     }
 
-    let mut transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let mut transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_account,
@@ -1058,7 +1058,7 @@ async fn test_source_address_stays_consistent_through_the_transfer(
     ctx: &mut ItsTestContext,
 ) -> anyhow::Result<()> {
     let salt = solana_sdk::keccak::hash(b"SourceAddressTestToken").0;
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -1076,10 +1076,10 @@ async fn test_source_address_stays_consistent_through_the_transfer(
     .await
     .unwrap();
 
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (interchain_token_mint, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     // Get user's token account
     let user_token_account = get_associated_token_address_with_program_id(
@@ -1092,7 +1092,7 @@ async fn test_source_address_stays_consistent_through_the_transfer(
     let transfer_amount = 50;
     let destination_address = b"0x1234567890123456789012345678901234567890".to_vec();
 
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         user_token_account,
@@ -1155,7 +1155,7 @@ async fn test_source_address_stays_consistent_through_the_transfer(
 
     // Verify that the source address is NOT any system account
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
         &interchain_token_mint,

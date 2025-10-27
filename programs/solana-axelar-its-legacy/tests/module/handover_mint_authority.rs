@@ -11,9 +11,9 @@ use spl_token_2022::solana_program::program_pack::Pack;
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_its::state::token_manager::{self, TokenManager};
-use axelar_solana_its::Roles;
 use role_management::state::UserRoles;
+use solana_axelar_its_legacy::state::token_manager::{self, TokenManager};
+use solana_axelar_its_legacy::Roles;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 
@@ -73,7 +73,7 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
 
     // Register the target token as MintBurn type
     let target_salt = solana_sdk::keccak::hash(b"TargetToken").0;
-    let target_register_ix = axelar_solana_its::instruction::register_custom_token(
+    let target_register_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         legitimate_user.pubkey(),
         target_salt,
@@ -105,7 +105,7 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
         .cloned()
         .unwrap();
     let target_token_id_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenIdClaimed,
+        solana_axelar_its_legacy::events::InterchainTokenIdClaimed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenIdClaimed not found"))
     .unwrap();
@@ -172,7 +172,7 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
 
     // Step 2: Bob calls RegisterCustomToken instruction to register TokenB
     let salt = solana_sdk::keccak::hash(b"BobsTokenB").0;
-    let register_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         bob.pubkey(),
         salt,
@@ -204,7 +204,7 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
         .cloned()
         .unwrap();
     let bob_token_id_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenIdClaimed,
+        solana_axelar_its_legacy::events::InterchainTokenIdClaimed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenIdClaimed not found"))
     .unwrap();
@@ -224,14 +224,14 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
     let bob_token_id = bob_token_id_event.token_id;
 
     // Verify Bob's TokenManager was created
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (bob_token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &bob_token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &bob_token_id);
 
     let bob_token_manager_data = ctx
         .solana_chain
         .fixture
-        .get_account(&bob_token_manager_pda, &axelar_solana_its::id())
+        .get_account(&bob_token_manager_pda, &solana_axelar_its_legacy::id())
         .await;
 
     let mut bob_token_manager_account = bob_token_manager_data.clone();
@@ -243,13 +243,13 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
 
     // Step 3: Get the token manager PDA for the target token
     let (target_token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &target_token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &target_token_id);
 
     // Verify the target token manager was created with MintBurn type
     let target_token_manager_data = ctx
         .solana_chain
         .fixture
-        .get_account(&target_token_manager_pda, &axelar_solana_its::id())
+        .get_account(&target_token_manager_pda, &solana_axelar_its_legacy::id())
         .await;
 
     let mut target_token_manager_account = target_token_manager_data.clone();
@@ -263,14 +263,15 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
     // Step 4 & 5: Bob attempts the exploit by calling TokenManagerHandOverMintAuthority
     // with the target token's token_id but providing his own TokenB mint address
 
-    let handover_ix = axelar_solana_its::instruction::token_manager::handover_mint_authority(
-        ctx.solana_wallet,
-        bob.pubkey(),
-        target_token_id, // Target token's ID
-        token_b_mint,    // Bob's token mint (TokenB)
-        spl_token_2022::id(),
-    )
-    .unwrap();
+    let handover_ix =
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
+            ctx.solana_wallet,
+            bob.pubkey(),
+            target_token_id, // Target token's ID
+            token_b_mint,    // Bob's token mint (TokenB)
+            spl_token_2022::id(),
+        )
+        .unwrap();
 
     // This should fail due to the fix
     let tx_result = ctx
@@ -300,7 +301,7 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
 
     // Verify Bob does NOT have minter role on the target token
     let (bob_roles_pda, _) = role_management::find_user_roles_pda(
-        &axelar_solana_its::id(),
+        &solana_axelar_its_legacy::id(),
         &target_token_manager_pda,
         &bob.pubkey(),
     );
@@ -309,7 +310,7 @@ async fn test_handover_mint_authority_exploit_prevention(ctx: &mut ItsTestContex
     let bob_roles_result = ctx
         .solana_chain
         .fixture
-        .try_get_account(&bob_roles_pda, &axelar_solana_its::id())
+        .try_get_account(&bob_roles_pda, &solana_axelar_its_legacy::id())
         .await
         .unwrap();
 
@@ -396,7 +397,7 @@ async fn test_successful_handover_mint_authority(ctx: &mut ItsTestContext) {
         .unwrap();
 
     let salt = solana_sdk::keccak::hash(b"AliceToken").0;
-    let register_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         alice.pubkey(),
         salt,
@@ -428,7 +429,7 @@ async fn test_successful_handover_mint_authority(ctx: &mut ItsTestContext) {
         .cloned()
         .unwrap();
     let alice_token_id_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenIdClaimed,
+        solana_axelar_its_legacy::events::InterchainTokenIdClaimed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenIdClaimed not found"))
     .unwrap();
@@ -446,14 +447,15 @@ async fn test_successful_handover_mint_authority(ctx: &mut ItsTestContext) {
         .unwrap();
 
     let alice_token_id = alice_token_id_event.token_id;
-    let handover_ix = axelar_solana_its::instruction::token_manager::handover_mint_authority(
-        ctx.solana_wallet,
-        alice.pubkey(),
-        alice_token_id,   // Alice's own token ID
-        alice_token_mint, // Alice's own token mint
-        spl_token_2022::id(),
-    )
-    .unwrap();
+    let handover_ix =
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
+            ctx.solana_wallet,
+            alice.pubkey(),
+            alice_token_id,   // Alice's own token ID
+            alice_token_mint, // Alice's own token mint
+            spl_token_2022::id(),
+        )
+        .unwrap();
 
     ctx.solana_chain
         .fixture
@@ -467,12 +469,12 @@ async fn test_successful_handover_mint_authority(ctx: &mut ItsTestContext) {
         .await
         .unwrap();
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (alice_token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &alice_token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &alice_token_id);
 
     let (alice_roles_pda, _) = role_management::find_user_roles_pda(
-        &axelar_solana_its::id(),
+        &solana_axelar_its_legacy::id(),
         &alice_token_manager_pda,
         &alice.pubkey(),
     );
@@ -480,7 +482,7 @@ async fn test_successful_handover_mint_authority(ctx: &mut ItsTestContext) {
     let alice_roles_data = ctx
         .solana_chain
         .fixture
-        .get_account(&alice_roles_pda, &axelar_solana_its::id())
+        .get_account(&alice_roles_pda, &solana_axelar_its_legacy::id())
         .await;
 
     let alice_roles = UserRoles::<Roles>::try_from_slice(&alice_roles_data.data).unwrap();
@@ -529,7 +531,7 @@ async fn test_successful_handover_mint_authority(ctx: &mut ItsTestContext) {
         .unwrap();
 
     let mint_amount = 1000u64;
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         alice_token_id,
         alice_token_mint,
         alice_ata,
@@ -619,7 +621,7 @@ async fn test_fail_handover_mint_authority_for_lock_unlock_token(ctx: &mut ItsTe
 
     // Step 2: Register the token as LockUnlock type
     let salt = solana_sdk::keccak::hash(b"LockUnlockToken").0;
-    let register_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         user.pubkey(),
         salt,
@@ -652,7 +654,7 @@ async fn test_fail_handover_mint_authority_for_lock_unlock_token(ctx: &mut ItsTe
         .cloned()
         .unwrap();
     let token_id_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenIdClaimed,
+        solana_axelar_its_legacy::events::InterchainTokenIdClaimed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenIdClaimed not found"))
     .unwrap();
@@ -672,14 +674,14 @@ async fn test_fail_handover_mint_authority_for_lock_unlock_token(ctx: &mut ItsTe
     let token_id = token_id_event.token_id;
 
     // Verify the TokenManager was created with LockUnlock type
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let token_manager_data = ctx
         .solana_chain
         .fixture
-        .get_account(&token_manager_pda, &axelar_solana_its::id())
+        .get_account(&token_manager_pda, &solana_axelar_its_legacy::id())
         .await;
 
     let mut token_manager_account = token_manager_data.clone();
@@ -691,14 +693,15 @@ async fn test_fail_handover_mint_authority_for_lock_unlock_token(ctx: &mut ItsTe
     assert_eq!(token_manager.ty, token_manager::Type::LockUnlock);
 
     // Step 3: Attempt to handover mint authority (this should fail)
-    let handover_ix = axelar_solana_its::instruction::token_manager::handover_mint_authority(
-        ctx.solana_wallet,
-        user.pubkey(),
-        token_id,
-        user_token_mint,
-        spl_token_2022::id(),
-    )
-    .unwrap();
+    let handover_ix =
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
+            ctx.solana_wallet,
+            user.pubkey(),
+            token_id,
+            user_token_mint,
+            spl_token_2022::id(),
+        )
+        .unwrap();
 
     let tx_result = ctx
         .solana_chain
@@ -733,7 +736,7 @@ async fn test_fail_handover_mint_authority_for_lock_unlock_token(ctx: &mut ItsTe
 
     // Verify user does NOT have minter role
     let (user_roles_pda, _) = role_management::find_user_roles_pda(
-        &axelar_solana_its::id(),
+        &solana_axelar_its_legacy::id(),
         &token_manager_pda,
         &user.pubkey(),
     );
@@ -741,7 +744,7 @@ async fn test_fail_handover_mint_authority_for_lock_unlock_token(ctx: &mut ItsTe
     let user_roles_result = ctx
         .solana_chain
         .fixture
-        .try_get_account(&user_roles_pda, &axelar_solana_its::id())
+        .try_get_account(&user_roles_pda, &solana_axelar_its_legacy::id())
         .await
         .unwrap();
 
@@ -761,15 +764,15 @@ async fn test_fail_handover_mint_authority_for_native_interchain_token(ctx: &mut
     // The deployed_interchain_token from the test context is a NativeInterchainToken
     let target_token_id = ctx.deployed_interchain_token;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (target_token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &target_token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &target_token_id);
 
     // Get the token manager to verify it's NativeInterchainToken type
     let target_token_manager_data = ctx
         .solana_chain
         .fixture
-        .get_account(&target_token_manager_pda, &axelar_solana_its::id())
+        .get_account(&target_token_manager_pda, &solana_axelar_its_legacy::id())
         .await;
 
     let mut target_token_manager_account = target_token_manager_data.clone();
@@ -787,14 +790,15 @@ async fn test_fail_handover_mint_authority_for_native_interchain_token(ctx: &mut
 
     // The deployer (payer) should be the operator of this token
     // Attempt to handover mint authority (should fail for NativeInterchainToken)
-    let handover_ix = axelar_solana_its::instruction::token_manager::handover_mint_authority(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        target_token_id,
-        target_token_mint,
-        spl_token_2022::id(),
-    )
-    .unwrap();
+    let handover_ix =
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            target_token_id,
+            target_token_mint,
+            spl_token_2022::id(),
+        )
+        .unwrap();
 
     let tx_metadata = ctx.send_solana_tx(&[handover_ix]).await.unwrap_err();
     assert_msg_present_in_logs(tx_metadata, "Invalid TokenManager type for instruction");

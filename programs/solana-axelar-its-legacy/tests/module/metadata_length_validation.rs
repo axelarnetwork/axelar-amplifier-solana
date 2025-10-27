@@ -15,7 +15,7 @@ async fn test_local_deployment_rejects_long_name(ctx: &mut ItsTestContext) -> an
     let long_name = "A".repeat(33);
     let valid_symbol = "VALID";
 
-    let deploy_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -41,7 +41,7 @@ async fn test_local_deployment_rejects_long_symbol(ctx: &mut ItsTestContext) -> 
     let valid_name = "Valid Name";
     let long_symbol = "ABCDEFGHIJK";
 
-    let deploy_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -70,7 +70,7 @@ async fn test_local_deployment_rejects_long_name_and_symbol(
     let long_name = "This is a very long name that exceeds thirty-two characters";
     let long_symbol = "VERYLONGSYM";
 
-    let deploy_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -99,7 +99,7 @@ async fn test_local_deployment_succeeds_with_valid_lengths(
     let valid_name = "Valid Token Name";
     let valid_symbol = "VALID";
 
-    let deploy_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -120,7 +120,7 @@ async fn test_local_deployment_succeeds_with_valid_lengths(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -144,7 +144,7 @@ async fn test_local_deployment_succeeds_with_max_lengths(
     let max_name = "A".repeat(32);
     let max_symbol = "B".repeat(10);
 
-    let deploy_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -165,7 +165,7 @@ async fn test_local_deployment_succeeds_with_max_lengths(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -238,7 +238,7 @@ async fn test_incoming_deployment_truncates_long_name(
 
     // Verify the deployment event shows truncated name (32 characters)
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .expect("Should emit InterchainTokenDeployed event");
 
@@ -311,7 +311,7 @@ async fn test_incoming_deployment_truncates_long_symbol(
 
     // Verify the deployment event shows truncated symbol (10 characters)
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .expect("Should emit InterchainTokenDeployed event");
 
@@ -376,7 +376,7 @@ async fn test_incoming_deployment_truncates_long_name_and_symbol(
 
     // Verify the deployment event shows both name and symbol truncated
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .expect("Should emit InterchainTokenDeployed event");
 
@@ -446,7 +446,7 @@ async fn test_incoming_deployment_succeeds_with_valid_lengths(
 
     // Verify the deployment event shows original name and symbol
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .expect("Should emit InterchainTokenDeployed event");
 

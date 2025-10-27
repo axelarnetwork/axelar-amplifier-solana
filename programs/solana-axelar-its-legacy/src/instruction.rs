@@ -819,7 +819,7 @@ pub enum InterchainTokenServiceInstruction {
 /// # Example
 ///
 /// ```ignore
-/// use axelar_solana_its::instructions::ExecuteInstructionInputs;
+/// use solana_axelar_its_legacy::instructions::ExecuteInstructionInputs;
 ///
 /// let inputs = ExecuteInstructionInputs::builder()
 ///   .payer(payer_pubkey)

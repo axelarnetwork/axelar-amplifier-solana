@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use axelar_solana_its::instruction::InterchainTokenServiceInstruction;
+use solana_axelar_its_legacy::instruction::InterchainTokenServiceInstruction;
 use borsh::to_vec;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program::system_program;
@@ -26,7 +26,7 @@ async fn test_deploy_interchain_token_with_no_minter_and_no_initial_supply(
     let salt = solana_sdk::keccak::hash(b"NoMinterNoSupplyToken").0;
     let initial_supply = 0u64;
 
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -60,11 +60,11 @@ async fn test_deploy_interchain_token_with_no_minter_and_no_initial_supply(
 async fn test_deploy_interchain_token_with_minter_but_no_initial_supply(
     ctx: &mut ItsTestContext,
 ) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let salt = solana_sdk::keccak::hash(b"MinterNoSupplyToken").0;
     let initial_supply = 0u64;
 
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -85,7 +85,7 @@ async fn test_deploy_interchain_token_with_minter_but_no_initial_supply(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -100,9 +100,9 @@ async fn test_deploy_interchain_token_with_minter_but_no_initial_supply(
     );
     assert_eq!(deploy_event.symbol, "ZST", "token symbol does not match");
 
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     let payer_ata = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -133,7 +133,7 @@ async fn test_deploy_interchain_token_with_minter_but_no_initial_supply(
     }
 
     let mint_amount = 500u64;
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         interchain_token_pda,
         payer_ata,
@@ -168,11 +168,11 @@ async fn test_deploy_interchain_token_with_minter_but_no_initial_supply(
 async fn test_deploy_interchain_token_with_large_initial_supply(
     ctx: &mut ItsTestContext,
 ) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let salt = solana_sdk::keccak::hash(b"LargeSupplyTestToken").0;
     let initial_supply = u64::MAX;
 
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -193,7 +193,7 @@ async fn test_deploy_interchain_token_with_large_initial_supply(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -208,9 +208,9 @@ async fn test_deploy_interchain_token_with_large_initial_supply(
     );
     assert_eq!(deploy_event.symbol, "LST", "token symbol does not match");
 
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     let payer_ata = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -240,11 +240,11 @@ async fn test_deploy_interchain_token_with_large_initial_supply(
 async fn test_deploy_interchain_token_with_no_minter_but_initial_supply(
     ctx: &mut ItsTestContext,
 ) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let salt = solana_sdk::keccak::hash(b"NoMinterWithSupplyToken").0;
     let initial_supply = 1000u64;
 
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -265,7 +265,7 @@ async fn test_deploy_interchain_token_with_no_minter_but_initial_supply(
         .cloned()
         .unwrap();
     let deploy_event = get_first_event_cpi_occurrence::<
-        axelar_solana_its::events::InterchainTokenDeployed,
+        solana_axelar_its_legacy::events::InterchainTokenDeployed,
     >(&inner_ixs)
     .ok_or_else(|| anyhow!("InterchainTokenDeployed not found"))
     .unwrap();
@@ -280,9 +280,9 @@ async fn test_deploy_interchain_token_with_no_minter_but_initial_supply(
     );
     assert_eq!(deploy_event.symbol, "FST", "token symbol does not match");
 
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     let payer_ata = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -304,7 +304,7 @@ async fn test_deploy_interchain_token_with_no_minter_but_initial_supply(
         "Initial supply doesn't match expected amount"
     );
 
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         interchain_token_pda,
         payer_ata,
@@ -347,7 +347,7 @@ async fn test_prevent_deploy_approval_bypass(ctx: &mut ItsTestContext) -> anyhow
 
     // Bob deploys TokenB
     let token_b_salt = [1u8; 32];
-    let deploy_token_b_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_token_b_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         bob.pubkey(),
         bob.pubkey(),
         token_b_salt,
@@ -370,11 +370,11 @@ async fn test_prevent_deploy_approval_bypass(ctx: &mut ItsTestContext) -> anyhow
         .await
         .unwrap();
 
-    let token_b_id = axelar_solana_its::interchain_token_id(&bob.pubkey(), &token_b_salt);
+    let token_b_id = solana_axelar_its_legacy::interchain_token_id(&bob.pubkey(), &token_b_salt);
 
     // Alice creates an approval for deploying TokenA to a remote chain
     let approve_deploy_a_ix =
-        axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
             ctx.solana_chain.fixture.payer.pubkey(),
             ctx.solana_chain.fixture.payer.pubkey(),
             ctx.solana_chain.fixture.payer.pubkey(),
@@ -386,7 +386,7 @@ async fn test_prevent_deploy_approval_bypass(ctx: &mut ItsTestContext) -> anyhow
     ctx.send_solana_tx(&[approve_deploy_a_ix]).await.unwrap();
 
     // Find approval PDA for TokenA
-    let (approval_pda, _) = axelar_solana_its::find_deployment_approval_pda(
+    let (approval_pda, _) = solana_axelar_its_legacy::find_deployment_approval_pda(
         &ctx.solana_chain.fixture.payer.pubkey(),
         &token_a_id,
         destination_chain,
@@ -401,14 +401,14 @@ async fn test_prevent_deploy_approval_bypass(ctx: &mut ItsTestContext) -> anyhow
 
     assert_eq!(
         approval_account.owner,
-        axelar_solana_its::id(),
+        solana_axelar_its_legacy::id(),
         "Approval account has wrong owner"
     );
 
     // Now try to exploit by using TokenA's approval to deploy TokenB remotely
     // First, build the proper instruction for deploying TokenB
     let deploy_token_b_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_chain.fixture.payer.pubkey(),
             bob.pubkey(),
             token_b_salt,
@@ -418,7 +418,7 @@ async fn test_prevent_deploy_approval_bypass(ctx: &mut ItsTestContext) -> anyhow
             0, // gas value
         )?;
 
-    let (token_b_approval_pda, _) = axelar_solana_its::find_deployment_approval_pda(
+    let (token_b_approval_pda, _) = solana_axelar_its_legacy::find_deployment_approval_pda(
         &bob.pubkey(),
         &token_b_id,
         destination_chain,
@@ -438,7 +438,7 @@ async fn test_prevent_deploy_approval_bypass(ctx: &mut ItsTestContext) -> anyhow
 
     // Create an exploitative instruction that uses TokenA's approval for TokenB deployment
     let exploit_ix = solana_program::instruction::Instruction {
-        program_id: axelar_solana_its::id(),
+        program_id: solana_axelar_its_legacy::id(),
         accounts,
         data: deploy_token_b_remote_ix.data,
     };
@@ -493,7 +493,7 @@ async fn test_prevent_deploy_approval_created_by_anyone(
 
     // Alice deploys TokenA
     let token_a_salt = [1u8; 32];
-    let deploy_token_a_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_token_a_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         alice.pubkey(),
         alice.pubkey(),
         token_a_salt,
@@ -519,22 +519,22 @@ async fn test_prevent_deploy_approval_created_by_anyone(
     let destination_minter = vec![1, 2, 3, 4, 5];
 
     // Alice uses here Minter role over TokenA to create the approval on TokenB
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let token_id = axelar_solana_its::interchain_token_id(&alice.pubkey(), &token_a_salt);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&alice.pubkey(), &token_a_salt);
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
     let (roles_pda, _) = role_management::find_user_roles_pda(
-        &axelar_solana_its::ID,
+        &solana_axelar_its_legacy::ID,
         &token_manager_pda,
         &alice.pubkey(),
     );
-    let (deploy_approval_pda, _) = axelar_solana_its::find_deployment_approval_pda(
+    let (deploy_approval_pda, _) = solana_axelar_its_legacy::find_deployment_approval_pda(
         &alice.pubkey(),
         &ctx.deployed_interchain_token,
         destination_chain,
     );
     let (event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
+        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
 
     let accounts = vec![
         AccountMeta::new(alice.pubkey(), true),
@@ -544,7 +544,7 @@ async fn test_prevent_deploy_approval_created_by_anyone(
         AccountMeta::new(deploy_approval_pda, false),
         AccountMeta::new_readonly(system_program::ID, false),
         AccountMeta::new_readonly(event_authority, false),
-        AccountMeta::new_readonly(axelar_solana_its::ID, false),
+        AccountMeta::new_readonly(solana_axelar_its_legacy::ID, false),
     ];
 
     let data = to_vec(
@@ -557,7 +557,7 @@ async fn test_prevent_deploy_approval_created_by_anyone(
     )?;
 
     let approve_deploy_b_ix = Instruction {
-        program_id: axelar_solana_its::ID,
+        program_id: solana_axelar_its_legacy::ID,
         accounts,
         data,
     };
@@ -595,7 +595,7 @@ async fn test_deploy_remote_interchain_token_deployer_must_be_signer(
     let salt = solana_sdk::keccak::hash(b"TestTokenSalt").0;
     let fake_deployer = Pubkey::new_unique();
 
-    let approve_deploy_ix = axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+    let approve_deploy_ix = solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
         ctx.solana_chain.fixture.payer.pubkey(),
         ctx.solana_chain.fixture.payer.pubkey(),
         ctx.solana_chain.fixture.payer.pubkey(),
@@ -607,7 +607,7 @@ async fn test_deploy_remote_interchain_token_deployer_must_be_signer(
     ctx.send_solana_tx(&[approve_deploy_ix]).await.unwrap();
 
     let mut deploy_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_chain.fixture.payer.pubkey(),
             fake_deployer,
             salt,
@@ -660,7 +660,7 @@ async fn test_approve_revoke_approve_deploy_sequence(
     let salt = solana_sdk::keccak::hash(b"TestTokenSalt").0;
 
     // First approval
-    let approve_deploy_ix = axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+    let approve_deploy_ix = solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.solana_wallet,
@@ -674,8 +674,8 @@ async fn test_approve_revoke_approve_deploy_sequence(
         .unwrap();
 
     // Verify the approval account was created
-    let token_id = axelar_solana_its::interchain_token_id(&ctx.solana_wallet, &salt);
-    let (approval_pda, _) = axelar_solana_its::find_deployment_approval_pda(
+    let token_id = solana_axelar_its_legacy::interchain_token_id(&ctx.solana_wallet, &salt);
+    let (approval_pda, _) = solana_axelar_its_legacy::find_deployment_approval_pda(
         &ctx.solana_wallet,
         &token_id,
         destination_chain,
@@ -689,7 +689,7 @@ async fn test_approve_revoke_approve_deploy_sequence(
 
     assert_eq!(
         approval_account.owner,
-        axelar_solana_its::id(),
+        solana_axelar_its_legacy::id(),
         "Final approval account has wrong owner"
     );
 
@@ -701,7 +701,7 @@ async fn test_approve_revoke_approve_deploy_sequence(
     );
 
     // Now revoke that approval
-    let revoke_deploy_ix = axelar_solana_its::instruction::revoke_deploy_remote_interchain_token(
+    let revoke_deploy_ix = solana_axelar_its_legacy::instruction::revoke_deploy_remote_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.solana_wallet,
@@ -775,7 +775,7 @@ async fn test_deploy_interchain_token_authority_with_data_works(
     ctx.solana_chain
         .set_account_state(&ctx.solana_wallet, authority_acc);
 
-    let deploy_interchain_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_interchain_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         payer.pubkey(),
         ctx.solana_wallet,
         salt,

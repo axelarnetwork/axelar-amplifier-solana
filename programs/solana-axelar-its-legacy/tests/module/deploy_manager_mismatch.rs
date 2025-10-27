@@ -13,7 +13,7 @@ async fn deploy_interchain_token_for_user(
     name: &str,
     symbol: &str,
 ) -> anyhow::Result<[u8; 32]> {
-    let deploy_token_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_token_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_chain.fixture.payer.pubkey(),
         user.pubkey(),
         salt,
@@ -35,7 +35,7 @@ async fn deploy_interchain_token_for_user(
         )
         .await;
 
-    Ok(axelar_solana_its::interchain_token_id(
+    Ok(solana_axelar_its_legacy::interchain_token_id(
         &user.pubkey(),
         &salt,
     ))
@@ -49,7 +49,7 @@ async fn create_deployment_approval(
     destination_minter: &[u8],
 ) -> anyhow::Result<()> {
     let approve_deployment_ix =
-        axelar_solana_its::instruction::approve_deploy_remote_interchain_token(
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
             ctx.solana_chain.fixture.payer.pubkey(),
             minter.pubkey(),
             minter.pubkey(), // minter is the deployer
@@ -84,7 +84,7 @@ async fn attempt_deployment_with_specific_token_manager(
     solana_program_test::BanksTransactionResultWithMetadata,
 > {
     let mut deploy_remote_ix =
-        axelar_solana_its::instruction::deploy_remote_interchain_token_with_minter(
+        solana_axelar_its_legacy::instruction::deploy_remote_interchain_token_with_minter(
             ctx.solana_chain.fixture.payer.pubkey(),
             deployer.pubkey(),
             target_token_salt,
@@ -97,9 +97,9 @@ async fn attempt_deployment_with_specific_token_manager(
 
     // Replace target token's token_manager_pda with fake token's token_manager_pda,
     // trying to use their current minter privileges on fake token to deploy target token
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let fake_token_manager_pda =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &manager_token_id).0;
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &manager_token_id).0;
     deploy_remote_ix.accounts[5].pubkey = fake_token_manager_pda;
 
     ctx.solana_chain
@@ -211,7 +211,7 @@ async fn test_deployment_with_token_manager_mismatch(
 
         let error_tx = result.unwrap_err();
         assert!(
-            error_tx.find_log("Warning: failed to deserialize account as axelar_solana_its::state::deploy_approval::DeployApproval: failed to fill whole buffer. The account might not have been initialized.").is_some(),
+            error_tx.find_log("Warning: failed to deserialize account as solana_axelar_its_legacy::state::deploy_approval::DeployApproval: failed to fill whole buffer. The account might not have been initialized.").is_some(),
             "Expected deserialization error message because the account doesn't exist (because no approval was created for TokenB)"
         );
     }

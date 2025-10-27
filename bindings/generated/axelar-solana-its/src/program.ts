@@ -3,7 +3,7 @@ import { Program, AnchorProvider } from "@coral-xyz/anchor";
 
 import { AxelarSolanaItsCoder } from "./coder";
 
-export const AXELAR_SOLANA_ITS_PROGRAM_ID = new PublicKey(
+export const solana_axelar_its_legacy_PROGRAM_ID = new PublicKey(
   "itsbPmAntHfec9PpLDoh9y3UiAEPT7DnzSvoJzdzZqd"
 );
 
@@ -17,7 +17,7 @@ export function axelarSolanaItsProgram(
 ): Program<AxelarSolanaIts> {
   return new Program<AxelarSolanaIts>(
     IDL,
-    params?.programId ?? AXELAR_SOLANA_ITS_PROGRAM_ID,
+    params?.programId ?? solana_axelar_its_legacy_PROGRAM_ID,
     params?.provider,
     new AxelarSolanaItsCoder(IDL)
   );
@@ -25,7 +25,7 @@ export function axelarSolanaItsProgram(
 
 type AxelarSolanaIts = {
   version: "0.1.0";
-  name: "axelar_solana_its";
+  name: "solana_axelar_its_legacy";
   instructions: [
     {
       name: "initialize";
@@ -1934,7 +1934,7 @@ type AxelarSolanaIts = {
 
 const IDL: AxelarSolanaIts = {
   version: "0.1.0",
-  name: "axelar_solana_its",
+  name: "solana_axelar_its_legacy",
   instructions: [
     {
       name: "initialize",

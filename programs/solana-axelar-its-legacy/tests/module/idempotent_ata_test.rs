@@ -47,10 +47,10 @@ async fn test_canonical_token_registration_with_pre_existing_ata(
         .await
         .unwrap();
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let token_id = axelar_solana_its::canonical_interchain_token_id(&mint.pubkey());
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&mint.pubkey());
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
@@ -82,7 +82,7 @@ async fn test_canonical_token_registration_with_pre_existing_ata(
         "ATA should be owned by token program"
     );
 
-    let register_ix = axelar_solana_its::instruction::register_canonical_interchain_token(
+    let register_ix = solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
         ctx.solana_chain.fixture.payer.pubkey(),
         mint.pubkey(),
         spl_token_2022::id(),
@@ -105,7 +105,7 @@ async fn test_canonical_token_registration_with_pre_existing_ata(
 
     assert_eq!(
         token_manager_account.owner,
-        axelar_solana_its::id(),
+        solana_axelar_its_legacy::id(),
         "Token Manager should be owned by ITS program"
     );
 

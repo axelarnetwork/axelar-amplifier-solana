@@ -216,10 +216,10 @@ pub fn send_interchain_transfer(
     let gateway_program = solana_axelar_gateway_legacy::id();
     let gas_service_program = solana_axelar_gas_service_legacy::id();
     let (call_contract_signing_pda, _) =
-        solana_axelar_gateway_legacy::get_call_contract_signing_pda(axelar_solana_its::id());
-    let its_program = axelar_solana_its::id();
+        solana_axelar_gateway_legacy::get_call_contract_signing_pda(solana_axelar_its_legacy::id());
+    let its_program = solana_axelar_its_legacy::id();
     let (its_event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
+        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
         &solana_axelar_gateway_legacy::ID,
@@ -297,10 +297,10 @@ pub fn send_interchain_transfer_with_wrong_seeds(
     let gateway_program = solana_axelar_gateway_legacy::id();
     let gas_service_program = solana_axelar_gas_service_legacy::id();
     let (call_contract_signing_pda, _) =
-        solana_axelar_gateway_legacy::get_call_contract_signing_pda(axelar_solana_its::id());
-    let its_program = axelar_solana_its::id();
+        solana_axelar_gateway_legacy::get_call_contract_signing_pda(solana_axelar_its_legacy::id());
+    let its_program = solana_axelar_its_legacy::id();
     let (its_event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
+        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
         &solana_axelar_gateway_legacy::ID,
@@ -378,10 +378,10 @@ pub fn call_contract_with_interchain_token(
     let gateway_program = solana_axelar_gateway_legacy::id();
     let gas_service_program = solana_axelar_gas_service_legacy::id();
     let (call_contract_signing_pda, _) =
-        solana_axelar_gateway_legacy::get_call_contract_signing_pda(axelar_solana_its::id());
-    let its_program = axelar_solana_its::id();
+        solana_axelar_gateway_legacy::get_call_contract_signing_pda(solana_axelar_its_legacy::id());
+    let its_program = solana_axelar_its_legacy::id();
     let (its_event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &axelar_solana_its::ID);
+        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
         &solana_axelar_gateway_legacy::ID,

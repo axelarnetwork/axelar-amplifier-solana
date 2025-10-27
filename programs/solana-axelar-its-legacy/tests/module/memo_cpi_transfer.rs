@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_its::state::token_manager::Type;
 use evm_contracts_test_suite::ethers::signers::Signer as EvmSigner;
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway_legacy::events::CallContractEvent;
+use solana_axelar_its_legacy::state::token_manager::Type;
 use solana_axelar_memo_legacy::get_counter_pda;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::tokio;
@@ -34,9 +34,11 @@ fn setup_test_environment(ctx: &ItsTestContext) -> TestSetup {
     let payer = ctx.solana_wallet;
     let token_id = ctx.deployed_interchain_token;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let token_manager_pda = axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id).0;
-    let token_mint = axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id).0;
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let token_manager_pda =
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id).0;
+    let token_mint =
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id).0;
 
     let (counter_pda, _) = get_counter_pda();
     let token_program = spl_token_2022::id();
@@ -79,7 +81,7 @@ async fn setup_counter_pda_with_tokens(
     ctx.send_solana_tx(&[create_ata_ix]).await.unwrap();
 
     // Mint tokens to the counter PDA's account
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         setup.token_id,
         setup.token_mint,
         setup.counter_pda_ata,
@@ -100,7 +102,9 @@ async fn verify_token_manager_type(ctx: &mut ItsTestContext, token_manager_pda: 
         .unwrap()
         .unwrap();
     let token_manager = token_manager_account
-        .deserialize::<axelar_solana_its::state::token_manager::TokenManager>(token_manager_pda)
+        .deserialize::<solana_axelar_its_legacy::state::token_manager::TokenManager>(
+            token_manager_pda,
+        )
         .unwrap();
 
     let Type::NativeInterchainToken = token_manager.ty else {
@@ -199,8 +203,8 @@ async fn test_cpi_transfer_fails_with_non_pda_account(ctx: &mut ItsTestContext) 
     let payer = ctx.solana_wallet;
     let token_id = ctx.deployed_interchain_token;
 
-    let token_mint = axelar_solana_its::find_interchain_token_pda(
-        &axelar_solana_its::find_its_root_pda().0,
+    let token_mint = solana_axelar_its_legacy::find_interchain_token_pda(
+        &solana_axelar_its_legacy::find_its_root_pda().0,
         &token_id,
     )
     .0;
@@ -223,7 +227,7 @@ async fn test_cpi_transfer_fails_with_non_pda_account(ctx: &mut ItsTestContext) 
     ctx.send_solana_tx(&[create_ata_ix]).await.unwrap();
 
     let mint_amount = 1000u64;
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         token_mint,
         payer_ata,
@@ -234,7 +238,7 @@ async fn test_cpi_transfer_fails_with_non_pda_account(ctx: &mut ItsTestContext) 
     .unwrap();
     ctx.send_solana_tx(&[mint_ix]).await.unwrap();
 
-    let cpi_transfer_ix = axelar_solana_its::instruction::cpi_interchain_transfer(
+    let cpi_transfer_ix = solana_axelar_its_legacy::instruction::cpi_interchain_transfer(
         ctx.solana_wallet,
         payer,
         payer_ata,

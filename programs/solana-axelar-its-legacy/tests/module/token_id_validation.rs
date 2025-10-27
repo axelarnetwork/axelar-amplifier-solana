@@ -9,10 +9,10 @@ use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
-use axelar_solana_its::state::token_manager::Type as TokenManagerType;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::custom_test_token::CustomTestToken;
 use evm_contracts_test_suite::ContractMiddleware;
 use interchain_token_transfer_gmp::GMPPayload;
+use solana_axelar_its_legacy::state::token_manager::Type as TokenManagerType;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 
@@ -53,7 +53,7 @@ async fn setup_custom_token(
         .seller_fee_basis_points(0)
         .instruction();
 
-    let register_metadata = axelar_solana_its::instruction::register_token_metadata(
+    let register_metadata = solana_axelar_its_legacy::instruction::register_token_metadata(
         ctx.solana_wallet,
         custom_solana_token,
         0,
@@ -97,8 +97,8 @@ async fn setup_custom_token(
         .await?
         .await?;
 
-    let token_id = axelar_solana_its::linked_token_id(&ctx.solana_wallet, &salt);
-    let register_custom_token_ix = axelar_solana_its::instruction::register_custom_token(
+    let token_id = solana_axelar_its_legacy::linked_token_id(&ctx.solana_wallet, &salt);
+    let register_custom_token_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -112,7 +112,7 @@ async fn setup_custom_token(
         .await
         .unwrap();
 
-    let link_token_ix = axelar_solana_its::instruction::link_token(
+    let link_token_ix = solana_axelar_its_legacy::instruction::link_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -163,7 +163,7 @@ async fn test_valid_token_id_mint_matches_token_address(
 
     // Transfer mint authority to ITS so we can mint through ITS
     let authority_transfer_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id,
@@ -185,7 +185,7 @@ async fn test_valid_token_id_mint_matches_token_address(
     );
 
     let initial_balance = 300;
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         solana_token,
         token_account,
@@ -214,7 +214,7 @@ async fn test_valid_token_id_mint_matches_token_address(
 
     // This should succeed because the token_id corresponds to the correct mint
     let transfer_amount = 100;
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_account,
@@ -289,7 +289,7 @@ async fn test_invalid_token_id_mint_mismatch_rejected(
 
     // Transfer mint authority for both tokens to ITS
     let authority_transfer_a_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id_a,
@@ -298,7 +298,7 @@ async fn test_invalid_token_id_mint_mismatch_rejected(
         )?;
 
     let authority_transfer_b_ix =
-        axelar_solana_its::instruction::token_manager::handover_mint_authority(
+        solana_axelar_its_legacy::instruction::token_manager::handover_mint_authority(
             ctx.solana_wallet,
             ctx.solana_wallet,
             token_id_b,
@@ -333,7 +333,7 @@ async fn test_invalid_token_id_mint_mismatch_rejected(
 
     // Mint some tokens to account A
     let initial_balance = 300;
-    let mint_to_a_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_to_a_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id_a,
         solana_token_a,
         token_account_a,
@@ -348,7 +348,7 @@ async fn test_invalid_token_id_mint_mismatch_rejected(
 
     // Now try to transfer using token_id_a but with mint B (this should fail after the fix)
     let transfer_amount = 100;
-    let malicious_transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let malicious_transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_account_a,
@@ -429,7 +429,7 @@ async fn test_lock_unlock_token_id_validation(ctx: &mut ItsTestContext) -> anyho
     // Try to transfer the worthless tokens using the legitimate token_id
     // This should fail because the mint doesn't match the token_manager's token_address
     let transfer_amount = 100;
-    let malicious_transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let malicious_transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         worthless_token_account,
@@ -463,7 +463,7 @@ async fn test_lock_unlock_token_id_validation(ctx: &mut ItsTestContext) -> anyho
 #[tokio::test]
 async fn test_self_remote_deployment_rejected(ctx: &mut ItsTestContext) -> anyhow::Result<()> {
     let salt = solana_sdk::keccak::hash(b"SelfDeployTest").0;
-    let deploy_local_ix = axelar_solana_its::instruction::deploy_interchain_token(
+    let deploy_local_ix = solana_axelar_its_legacy::instruction::deploy_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -476,7 +476,7 @@ async fn test_self_remote_deployment_rejected(ctx: &mut ItsTestContext) -> anyho
 
     ctx.send_solana_tx(&[deploy_local_ix]).await.unwrap();
 
-    let deploy_remote_ix = axelar_solana_its::instruction::deploy_remote_interchain_token(
+    let deploy_remote_ix = solana_axelar_its_legacy::instruction::deploy_remote_interchain_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -497,7 +497,7 @@ async fn test_self_remote_deployment_rejected(ctx: &mut ItsTestContext) -> anyho
 #[test_context(ItsTestContext)]
 #[tokio::test]
 async fn test_self_token_linking_rejected(ctx: &mut ItsTestContext) -> anyhow::Result<()> {
-    use axelar_solana_its::state::token_manager::Type as TokenManagerType;
+    use solana_axelar_its_legacy::state::token_manager::Type as TokenManagerType;
 
     let salt = [42u8; 32];
     let custom_token = ctx
@@ -528,7 +528,7 @@ async fn test_self_token_linking_rejected(ctx: &mut ItsTestContext) -> anyhow::R
 
     ctx.send_solana_tx(&[metadata_ix]).await.unwrap();
 
-    let register_custom_token_ix = axelar_solana_its::instruction::register_custom_token(
+    let register_custom_token_ix = solana_axelar_its_legacy::instruction::register_custom_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,
@@ -542,7 +542,7 @@ async fn test_self_token_linking_rejected(ctx: &mut ItsTestContext) -> anyhow::R
         .await
         .unwrap();
 
-    let link_token_ix = axelar_solana_its::instruction::link_token(
+    let link_token_ix = solana_axelar_its_legacy::instruction::link_token(
         ctx.solana_wallet,
         ctx.solana_wallet,
         salt,

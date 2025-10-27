@@ -1,9 +1,9 @@
 use alloy_primitives::Bytes;
 use anyhow::anyhow;
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_its::state::token_manager::TokenManager;
 use borsh::BorshDeserialize;
 use interchain_token_transfer_gmp::SendToHub;
+use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use solana_program_test::tokio;
 use solana_sdk::clock::Clock;
 use solana_sdk::program_pack::Pack as _;
@@ -27,13 +27,15 @@ use crate::{retrieve_evm_log_with_filter, ItsTestContext};
 async fn test_incoming_interchain_transfer_within_limit(
     ctx: &mut ItsTestContext,
 ) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (interchain_token_pda, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let token_program_id = spl_token_2022::id();
     let flow_limit = 800;
 
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.deployed_interchain_token,
@@ -92,13 +94,15 @@ async fn test_incoming_interchain_transfer_within_limit(
 #[test_context(ItsTestContext)]
 #[tokio::test]
 async fn test_incoming_interchain_transfer_beyond_limit(ctx: &mut ItsTestContext) {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (interchain_token_pda, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let token_program_id = spl_token_2022::id();
     let flow_limit = 800;
 
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.deployed_interchain_token,
@@ -138,14 +142,16 @@ async fn test_incoming_interchain_transfer_beyond_limit(ctx: &mut ItsTestContext
 #[test_context(ItsTestContext)]
 #[tokio::test]
 async fn test_flow_reset_upon_epoch_change(ctx: &mut ItsTestContext) {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (interchain_token_pda, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let token_program_id = spl_token_2022::id();
     let flow_limit = 800;
     let transfer_amount = 401;
 
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.deployed_interchain_token,
@@ -211,7 +217,8 @@ async fn test_flow_reset_upon_epoch_change(ctx: &mut ItsTestContext) {
 
     let current_timestamp = ctx.solana_chain.get_sysvar::<Clock>().await.unix_timestamp;
     let current_epoch =
-        axelar_solana_its::state::flow_limit::flow_epoch_with_timestamp(current_timestamp).unwrap();
+        solana_axelar_its_legacy::state::flow_limit::flow_epoch_with_timestamp(current_timestamp)
+            .unwrap();
 
     // Advance time by more than 6 hours to trigger epoch change
     let epoch_duration_secs = 6 * 60 * 60; // 6 hours in seconds
@@ -225,7 +232,8 @@ async fn test_flow_reset_upon_epoch_change(ctx: &mut ItsTestContext) {
     // Verify we're in a new epoch
     let new_timestamp = ctx.solana_chain.get_sysvar::<Clock>().await.unix_timestamp;
     let new_epoch =
-        axelar_solana_its::state::flow_limit::flow_epoch_with_timestamp(new_timestamp).unwrap();
+        solana_axelar_its_legacy::state::flow_limit::flow_epoch_with_timestamp(new_timestamp)
+            .unwrap();
     assert_ne!(new_epoch, current_epoch, "Epoch should have advanced");
 
     // Now the same transfer should succeed because it's a fresh epoch
@@ -266,9 +274,11 @@ async fn test_flow_reset_upon_epoch_change(ctx: &mut ItsTestContext) {
     );
 
     // Verify new flow slot was created for the new epoch
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (token_manager_pda, _) = solana_axelar_its_legacy::find_token_manager_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
 
     let token_manager_account = ctx
         .solana_chain
@@ -299,7 +309,7 @@ async fn test_outgoing_interchain_transfer_within_limit(
     let token_id = ctx.deployed_interchain_token;
     let flow_limit = 800;
 
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_id,
@@ -308,9 +318,9 @@ async fn test_outgoing_interchain_transfer_within_limit(
 
     ctx.send_solana_tx(&[flow_limit_ix]).await;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     let associated_account_address = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -327,7 +337,7 @@ async fn test_outgoing_interchain_transfer_within_limit(
 
     ctx.send_solana_tx(&[create_token_account_ix]).await;
 
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         interchain_token_pda,
         associated_account_address,
@@ -338,7 +348,7 @@ async fn test_outgoing_interchain_transfer_within_limit(
 
     ctx.send_solana_tx(&[mint_ix]).await;
 
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,
@@ -387,7 +397,7 @@ async fn test_outgoing_interchain_transfer_within_limit(
 async fn test_outgoing_interchain_transfer_outside_limit(ctx: &mut ItsTestContext) {
     let token_id = ctx.deployed_interchain_token;
     let flow_limit = 800;
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_id,
@@ -397,9 +407,9 @@ async fn test_outgoing_interchain_transfer_outside_limit(ctx: &mut ItsTestContex
 
     ctx.send_solana_tx(&[flow_limit_ix]).await;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     let associated_account_address = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -416,7 +426,7 @@ async fn test_outgoing_interchain_transfer_outside_limit(ctx: &mut ItsTestContex
 
     ctx.send_solana_tx(&[create_token_account_ix]).await;
 
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         interchain_token_pda,
         associated_account_address,
@@ -428,7 +438,7 @@ async fn test_outgoing_interchain_transfer_outside_limit(ctx: &mut ItsTestContex
 
     ctx.send_solana_tx(&[mint_ix]).await;
 
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,
@@ -451,15 +461,17 @@ async fn test_outgoing_interchain_transfer_outside_limit(ctx: &mut ItsTestContex
 async fn test_flow_slot_initialization_incoming_transfer(
     ctx: &mut ItsTestContext,
 ) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (interchain_token_pda, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let token_program_id = spl_token_2022::id();
     let flow_limit = 500;
     let transfer_amount = 300;
 
     // Set flow limit
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.deployed_interchain_token,
@@ -554,8 +566,10 @@ async fn test_flow_slot_initialization_incoming_transfer(
     );
 
     // Check FlowSlot values on-chain
-    let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (token_manager_pda, _) = solana_axelar_its_legacy::find_token_manager_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
 
     let token_manager_account = ctx
         .solana_chain
@@ -591,7 +605,7 @@ async fn test_flow_slot_initialization_outgoing_transfer(
     let transfer_amount = 300;
 
     // Set flow limit
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         token_id,
@@ -600,9 +614,9 @@ async fn test_flow_slot_initialization_outgoing_transfer(
 
     ctx.send_solana_tx(&[flow_limit_ix]).await;
 
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &token_id);
 
     let associated_account_address = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -620,7 +634,7 @@ async fn test_flow_slot_initialization_outgoing_transfer(
     ctx.send_solana_tx(&[create_token_account_ix]).await;
 
     // Mint tokens to transfer
-    let mint_ix = axelar_solana_its::instruction::interchain_token::mint(
+    let mint_ix = solana_axelar_its_legacy::instruction::interchain_token::mint(
         token_id,
         interchain_token_pda,
         associated_account_address,
@@ -632,7 +646,7 @@ async fn test_flow_slot_initialization_outgoing_transfer(
     ctx.send_solana_tx(&[mint_ix]).await;
 
     // First outgoing transfer - this should create a new flow slot with flow_out=transfer_amount
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,
@@ -675,7 +689,7 @@ async fn test_flow_slot_initialization_outgoing_transfer(
 
     // Second outgoing transfer to ensure flow slot tracks correctly
     let second_transfer_amount = 100;
-    let transfer_ix_2 = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix_2 = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,
@@ -712,7 +726,7 @@ async fn test_flow_slot_initialization_outgoing_transfer(
 
     // Check FlowSlot values on-chain
     let (token_manager_pda, _) =
-        axelar_solana_its::find_token_manager_pda(&its_root_pda, &token_id);
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
 
     let token_manager_account = ctx
         .solana_chain
@@ -741,14 +755,16 @@ async fn test_flow_slot_initialization_outgoing_transfer(
 #[test_context(ItsTestContext)]
 #[tokio::test]
 async fn test_flow_limit_max_u64_no_overflow(ctx: &mut ItsTestContext) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (interchain_token_pda, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let token_program_id = spl_token_2022::id();
     let flow_limit = u64::MAX;
     let transfer_amount = 1000;
 
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.deployed_interchain_token,
@@ -796,7 +812,7 @@ async fn test_flow_limit_max_u64_no_overflow(ctx: &mut ItsTestContext) -> anyhow
     let token_account = Account::unpack_from_slice(&ata.data).unwrap();
     assert_eq!(token_account.amount, transfer_amount);
 
-    let outgoing_transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let outgoing_transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,
@@ -827,13 +843,15 @@ async fn test_flow_limit_max_u64_no_overflow(ctx: &mut ItsTestContext) -> anyhow
 #[test_context(ItsTestContext)]
 #[tokio::test]
 async fn test_net_flow_calculation_bidirectional(ctx: &mut ItsTestContext) -> anyhow::Result<()> {
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (interchain_token_pda, _) =
-        axelar_solana_its::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (interchain_token_pda, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let token_program_id = spl_token_2022::id();
     let flow_limit = 1000;
 
-    let flow_limit_ix = axelar_solana_its::instruction::set_flow_limit(
+    let flow_limit_ix = solana_axelar_its_legacy::instruction::set_flow_limit(
         ctx.solana_wallet,
         ctx.solana_wallet,
         ctx.deployed_interchain_token,
@@ -884,7 +902,7 @@ async fn test_net_flow_calculation_bidirectional(ctx: &mut ItsTestContext) -> an
 
     let outgoing_amount = 600;
 
-    let transfer_ix = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,
@@ -901,7 +919,7 @@ async fn test_net_flow_calculation_bidirectional(ctx: &mut ItsTestContext) -> an
     ctx.send_solana_tx(&[transfer_ix]).await.unwrap();
 
     let additional_amount = 200;
-    let transfer_ix_2 = axelar_solana_its::instruction::interchain_transfer(
+    let transfer_ix_2 = solana_axelar_its_legacy::instruction::interchain_transfer(
         ctx.solana_wallet,
         ctx.solana_wallet,
         associated_account_address,

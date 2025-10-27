@@ -1,10 +1,10 @@
 [package]
-name = "axelar-solana-its"
+name = "solana-axelar-its-legacy"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "axelar_solana_its"
+name = "solana_axelar_its_legacy"
 crate-type = ["cdylib", "lib"]
 
 [lints]
