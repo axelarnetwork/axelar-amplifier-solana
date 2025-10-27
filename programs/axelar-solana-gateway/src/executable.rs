@@ -20,7 +20,7 @@ pub use axelar_payload::{
 };
 
 /// Axelar executable command prefix
-pub const AXELAR_EXECUTE_IX_DISCRIMINATOR: &[u8; 8] = &[243, 40, 63, 132, 38, 219, 88, 120];
+pub const AXELAR_EXECUTE_IX_DISCRIMINATOR: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 
 /// The index of the first account that is expected to be passed to the
 /// destination program.
