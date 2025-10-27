@@ -20,7 +20,7 @@ pub mod executable;
 
 pub mod payload;
 
-declare_id!("7ZhLjSZJ7zWATu6PtYGgfU2V6B6EYSQTX3hDo4KtWuwZ");
+declare_id!("41ky5cHRCTPEP5c8hnS8Bwco5vnbxe31iKm26rJs3QYd");
 
 /// Seed prefixes for different PDAs initialized by the Gateway
 pub mod seed_prefixes {

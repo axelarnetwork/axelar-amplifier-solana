@@ -364,8 +364,10 @@ pub fn initialize_payload_verification_session(
     );
 
     let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { merkle_root }
-            .data();
+        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
+            merkle_root,
+        }
+        .data();
 
     let accounts = vec![
         (

@@ -20,16 +20,7 @@ pub struct ApproveMessage<'info> {
     #[account(mut)]
     pub funder: Signer<'info>,
 
-    #[account(
-        seeds = [
-            SignatureVerificationSessionData::SEED_PREFIX,
-            payload_merkle_root.as_ref(),
-            verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref()
-        ],
-        bump = verification_session_account.load()?.bump,
-        // CHECK: Validate signature verification session is complete
-        constraint = verification_session_account.load()?.is_valid() @ GatewayError::SigningSessionNotValid
-    )]
+    /// CHECK: PDA validation is performed manually in the handler
     pub verification_session_account: AccountLoader<'info, SignatureVerificationSessionData>,
 
     #[account(
@@ -50,6 +41,31 @@ pub fn approve_message_handler(
     payload_merkle_root: [u8; 32],
 ) -> Result<()> {
     msg!("Approving message!");
+
+    // Load verifier_set_hash from verification_session_account
+    let verification_session = ctx.accounts.verification_session_account.load()?;
+    let verifier_set_hash = verification_session.signature_verification.signing_verifier_set_hash;
+
+    // CHECK: Validate signature verification session is complete
+    require!(
+        verification_session.is_valid(),
+        GatewayError::SigningSessionNotValid
+    );
+
+    // Manually validate verification_session_account PDA
+    let (expected_verification_session, _bump) = Pubkey::find_program_address(
+        &[
+            SignatureVerificationSessionData::SEED_PREFIX,
+            payload_merkle_root.as_ref(),
+            verifier_set_hash.as_ref(),
+        ],
+        &crate::ID,
+    );
+    require_keys_eq!(
+        ctx.accounts.verification_session_account.key(),
+        expected_verification_session,
+        GatewayError::InvalidVerifierSetTrackerProvided // TODO: add proper error
+    );
 
     let gateway_config = &ctx.accounts.gateway_root_pda.load()?;
     let incoming_message_pda = &mut ctx.accounts.incoming_message_pda.load_init()?;
