@@ -57,7 +57,6 @@ use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
-use solana_axelar_its_legacy::instruction::ExecuteInstructionInputs;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use evm_contracts_test_suite::chain::TestBlockchain;
 use evm_contracts_test_suite::ethers::abi::Detokenize;
@@ -76,6 +75,7 @@ use interchain_token_transfer_gmp::{GMPPayload, ReceiveFromHub};
 use program_utils::pda::BorshPda;
 use solana_axelar_gateway_legacy::events::CallContractEvent;
 use solana_axelar_gateway_legacy::state::incoming_message::command_id;
+use solana_axelar_its_legacy::instruction::ExecuteInstructionInputs;
 
 const SOLANA_CHAIN_NAME: &str = "solana-localnet";
 const EVM_CHAIN_NAME: &str = "ethereum";
@@ -389,7 +389,8 @@ impl ItsTestContext {
         )
         .await;
 
-        let expected_token_id = solana_axelar_its_legacy::interchain_token_id(&self.solana_wallet, &salt);
+        let expected_token_id =
+            solana_axelar_its_legacy::interchain_token_id(&self.solana_wallet, &salt);
 
         assert_eq!(log.token_id, expected_token_id, "token_id does not match");
 
@@ -528,11 +529,14 @@ impl ItsTestContext {
 
 async fn axelar_solana_setup() -> (SolanaAxelarIntegrationMetadata, Pubkey) {
     let programs = vec![
-        ("solana_axelar_its_legacy.so".into(), solana_axelar_its_legacy::id()),
+        (
+            "solana_axelar_its_legacy.so".into(),
+            solana_axelar_its_legacy::id(),
+        ),
         (
             workspace_root_dir()
                 .join("programs")
-                .join("axelar-solana-its")
+                .join("solana-axelar-its-legacy")
                 .join("tests")
                 .join("mpl_token_metadata.so"),
             mpl_token_metadata::ID,
