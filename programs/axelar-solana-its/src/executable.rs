@@ -11,7 +11,8 @@ use crate::accounts::AxelarInterchainTokenExecutableAccounts;
 use crate::assert_valid_interchain_transfer_execute_pda;
 
 /// Axelar Interchain Token Executable command prefix
-pub(crate) const AXELAR_INTERCHAIN_TOKEN_EXECUTE: &[u8; 16] = b"axelar-its-exec_";
+pub(crate) const AXELAR_INTERCHAIN_TOKEN_EXECUTE_IX_DISCRIMINATOR: &[u8; 8] =
+    &[159, 147, 216, 149, 245, 31, 131, 238];
 
 /// This is the payload that the `executeWithInterchainToken` processor on the destination program
 /// must expect
@@ -114,12 +115,12 @@ impl TryFrom<&[u8]> for AxelarInterchainTokenExecuteInstruction {
     ///
     /// Returns [`ProgramError::BorshIoError`] if deserialization fails.
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        if !value.starts_with(AXELAR_INTERCHAIN_TOKEN_EXECUTE) {
+        if !value.starts_with(AXELAR_INTERCHAIN_TOKEN_EXECUTE_IX_DISCRIMINATOR) {
             return Err(ProgramError::InvalidInstructionData);
         }
 
         // Slicing: we already checked that slice's lower bound above.
-        borsh::from_slice(&value[AXELAR_INTERCHAIN_TOKEN_EXECUTE.len()..])
+        borsh::from_slice(&value[AXELAR_INTERCHAIN_TOKEN_EXECUTE_IX_DISCRIMINATOR.len()..])
             .map_err(|borsh_error| ProgramError::BorshIoError(borsh_error.to_string()))
     }
 }
@@ -130,7 +131,7 @@ fn serialize_instruction(
     // In our tests, randomly generated messages have, in average, 175 bytes, so 256
     // should be sufficient to avoid reallocations.
     let mut buffer = Vec::with_capacity(256);
-    buffer.extend_from_slice(AXELAR_INTERCHAIN_TOKEN_EXECUTE);
+    buffer.extend_from_slice(AXELAR_INTERCHAIN_TOKEN_EXECUTE_IX_DISCRIMINATOR);
     borsh::to_writer(&mut buffer, &instruction)
         .map_err(|borsh_error| ProgramError::BorshIoError(borsh_error.to_string()))?;
     Ok(buffer)
