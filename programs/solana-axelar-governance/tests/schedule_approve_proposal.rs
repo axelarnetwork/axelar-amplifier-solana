@@ -3,9 +3,6 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use axelar_solana_governance_v2::state::GovernanceConfigInit;
-use axelar_solana_governance_v2::ExecutableProposal;
-use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
     create_gateway_event_authority_pda, create_governance_config_pda,
     create_governance_event_authority_pda, create_governance_program_data_pda,
@@ -14,6 +11,9 @@ use axelar_solana_governance_v2_test_fixtures::{
     TestSetup,
 };
 use hex::FromHex;
+use solana_axelar_governance::state::GovernanceConfigInit;
+use solana_axelar_governance::ExecutableProposal;
+use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
 
@@ -94,7 +94,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
     // Step 10: Setup Governance
     setup.mollusk.add_program(
         &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_governance_v2",
+        "../../target/deploy/solana_axelar_governance",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
@@ -248,7 +248,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
         "Operator proposal PDA should be created"
     );
 
-    let operator_proposal = axelar_solana_governance_v2::OperatorProposal::try_deserialize(
+    let operator_proposal = solana_axelar_governance::OperatorProposal::try_deserialize(
         &mut operator_proposal_pda_account.data.as_slice(),
     );
     assert!(

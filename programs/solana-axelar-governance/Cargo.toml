@@ -1,12 +1,12 @@
 [package]
-name = "axelar-solana-governance-v2"
+name = "solana-axelar-governance"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "axelar_solana_governance_v2"
+name = "solana_axelar_governance"
 
 [features]
 default = ["devnet-amplifier"]

@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program, InstructionData};
 use solana_program::instruction::Instruction;
 
-use crate::program::AxelarSolanaGovernanceV2;
+use crate::program::SolanaAxelarGovernance;
 use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, GovernanceError};
 use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 use solana_axelar_gateway::{executable::*, executable_accounts};
@@ -42,7 +42,7 @@ pub struct ProcessGmp<'info> {
     )]
     pub governance_event_authority: SystemAccount<'info>,
 
-    pub axelar_governance_program: Program<'info, AxelarSolanaGovernanceV2>,
+    pub axelar_governance_program: Program<'info, SolanaAxelarGovernance>,
 }
 
 pub fn process_gmp_handler(

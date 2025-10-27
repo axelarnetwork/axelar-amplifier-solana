@@ -6,10 +6,6 @@ use axelar_solana_gateway_v2_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use axelar_solana_governance_v2::seed_prefixes::GOVERNANCE_CONFIG;
-use axelar_solana_governance_v2::state::GovernanceConfigInit;
-use axelar_solana_governance_v2::SolanaAccountMetadata;
-use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
     create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
     create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
@@ -18,6 +14,10 @@ use axelar_solana_governance_v2_test_fixtures::{
 };
 use governance_gmp::alloy_primitives::U256;
 use hex::FromHex;
+use solana_axelar_governance::seed_prefixes::GOVERNANCE_CONFIG;
+use solana_axelar_governance::state::GovernanceConfigInit;
+use solana_axelar_governance::SolanaAccountMetadata;
+use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::clock::Clock;
@@ -102,7 +102,7 @@ fn should_execute_scheduled_proposal() {
     // Add remaining programs to mollusk
     setup.mollusk.add_program(
         &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_governance_v2",
+        "../../target/deploy/solana_axelar_governance",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
@@ -282,7 +282,7 @@ fn should_execute_scheduled_proposal() {
 
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: axelar_solana_governance_v2::accounts::ExecuteProposal {
+        accounts: solana_axelar_governance::accounts::ExecuteProposal {
             system_program: SYSTEM_PROGRAM_ID,
             governance_config: governance_setup.governance_config,
             proposal_pda,

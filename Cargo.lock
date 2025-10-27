@@ -1091,37 +1091,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-governance-v2"
-version = "0.1.0"
-dependencies = [
- "alloy-sol-types",
- "anchor-lang",
- "axelar-solana-encoding",
- "axelar-solana-gateway-v2-test-fixtures",
- "axelar-solana-governance-v2-test-fixtures",
- "bincode",
- "bytemuck",
- "governance-gmp",
- "hex",
- "libsecp256k1",
- "mollusk-svm",
- "program-utils",
- "solana-axelar-gateway",
- "solana-axelar-governance-legacy",
- "solana-axelar-memo",
- "solana-sdk",
-]
-
-[[package]]
 name = "axelar-solana-governance-v2-test-fixtures"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-governance-v2",
  "bincode",
  "governance-gmp",
  "mollusk-svm",
  "solana-axelar-gateway",
+ "solana-axelar-governance",
  "solana-axelar-governance-legacy",
  "solana-axelar-memo",
  "solana-sdk",
@@ -7972,6 +7950,28 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "typed-builder",
+]
+
+[[package]]
+name = "solana-axelar-governance"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "axelar-solana-governance-v2-test-fixtures",
+ "bincode",
+ "bytemuck",
+ "governance-gmp",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "program-utils",
+ "solana-axelar-gateway",
+ "solana-axelar-governance-legacy",
+ "solana-axelar-memo",
+ "solana-sdk",
 ]
 
 [[package]]

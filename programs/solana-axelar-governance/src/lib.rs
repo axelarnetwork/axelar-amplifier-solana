@@ -32,7 +32,7 @@ pub mod seed_prefixes {
 }
 
 #[program]
-pub mod axelar_solana_governance_v2 {
+pub mod solana_axelar_governance {
     use super::*;
 
     pub fn initialize_config(

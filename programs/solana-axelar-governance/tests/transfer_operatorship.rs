@@ -1,11 +1,11 @@
 use anchor_lang::prelude::ToAccountMetas;
 use anchor_lang::AccountDeserialize;
-use axelar_solana_governance_v2::state::GovernanceConfig;
-use axelar_solana_governance_v2::state::GovernanceConfigInit;
-use axelar_solana_governance_v2::ID as GOVERNANCE_PROGRAM_ID;
 use axelar_solana_governance_v2_test_fixtures::{
     create_transfer_operatorship_instruction_data, initialize_governance, mock_setup_test,
 };
+use solana_axelar_governance::state::GovernanceConfig;
+use solana_axelar_governance::state::GovernanceConfigInit;
+use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
@@ -88,7 +88,7 @@ fn should_transfer_operatorship() {
 
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: axelar_solana_governance_v2::accounts::TransferOperatorship {
+        accounts: solana_axelar_governance::accounts::TransferOperatorship {
             system_program: SYSTEM_PROGRAM_ID,
             operator_account: Some(setup.operator),
             governance_config: setup.governance_config,

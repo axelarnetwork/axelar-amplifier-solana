@@ -1,6 +1,6 @@
 use anchor_lang::AccountDeserialize;
-use axelar_solana_governance_v2::state::{GovernanceConfig, GovernanceConfigInit};
 use axelar_solana_governance_v2_test_fixtures::{initialize_governance, mock_setup_test};
+use solana_axelar_governance::state::{GovernanceConfig, GovernanceConfigInit};
 
 #[test]
 fn should_initialize_config() {
