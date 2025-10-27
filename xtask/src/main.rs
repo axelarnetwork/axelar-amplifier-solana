@@ -210,10 +210,10 @@ fn main() -> eyre::Result<()> {
             let mut program_prefixes = vec![
                 ("solana-axelar-gas-service", "gas"),
                 ("solana-axelar-gateway", "gtw"),
+                ("solana-axelar-governance", "gov"),
+                ("solana-axelar-its", "its"),
                 ("solana-axelar-memo", "mem"),
                 ("solana-axelar-operators", "opr"),
-                ("solana-axelar-its", "its"),
-                ("axelar-solana-governance", "gov"),
             ];
 
             if legacy.is_some_and(|l| l) {
@@ -222,9 +222,10 @@ fn main() -> eyre::Result<()> {
                 program_prefixes.extend_from_slice(&[
                     ("solana-axelar-gas-service-legacy", "gasl"),
                     ("solana-axelar-gateway-legacy", "gtwl"),
+                    ("solana-axelar-governance-legacy", "govl"),
+                    ("solana-axelar-its-legacy", "itsl"),
                     ("solana-axelar-memo-legacy", "meml"),
                     ("solana-axelar-multicall-legacy", "mcl"),
-                    ("solana-axelar-its-legacy", "itsl"),
                 ]);
             }
 
