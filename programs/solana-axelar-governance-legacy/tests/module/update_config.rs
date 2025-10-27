@@ -1,7 +1,7 @@
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
-use axelar_solana_governance::instructions::builder::IxBuilder;
-use axelar_solana_governance::state::{
+use solana_axelar_governance_legacy::instructions::builder::IxBuilder;
+use solana_axelar_governance_legacy::state::{
     GovernanceConfig, GovernanceConfigUpdate, VALID_PROPOSAL_DELAY_RANGE,
 };
 use solana_program_test::{tokio, ProgramTest};
@@ -81,7 +81,7 @@ async fn test_program_checks_config_pda_successfully_derived() {
 
     // Store the config in the wrong pda
     let mut fake_config_account =
-        Account::new(1_000_000_000, 10000, &axelar_solana_governance::id());
+        Account::new(1_000_000_000, 10000, &solana_axelar_governance_legacy::id());
 
     fake_config_account.data = borsh::to_vec(&fake_config).unwrap();
 
@@ -97,7 +97,7 @@ async fn test_program_checks_config_pda_successfully_derived() {
     // Set governance program as owner of the wrong config pda
     let ix = solana_sdk::system_instruction::assign(
         &wrong_config_pda.pubkey(),
-        &axelar_solana_governance::id(),
+        &solana_axelar_governance_legacy::id(),
     );
     fixture
         .send_tx_with_custom_signers(

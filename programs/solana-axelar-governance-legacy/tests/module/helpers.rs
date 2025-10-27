@@ -5,10 +5,10 @@ use axelar_solana_gateway_test_fixtures::base::{workspace_root_dir, TestFixture}
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
-use axelar_solana_governance::instructions::builder::{
+use solana_axelar_governance_legacy::instructions::builder::{
     prepend_gateway_accounts_to_ix, GmpCallData, IxBuilder,
 };
-use axelar_solana_governance::state::GovernanceConfig;
+use solana_axelar_governance_legacy::state::GovernanceConfig;
 use borsh::to_vec;
 use event_cpi::CpiEvent;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
@@ -86,7 +86,7 @@ pub(crate) async fn deploy_governance_program_with_upgrade_authority(
     upgrade_authority: &Pubkey,
 ) {
     let program_bytecode =
-        tokio::fs::read(workspace_root_dir().join("target/deploy/axelar_solana_governance.so"))
+        tokio::fs::read(workspace_root_dir().join("target/deploy/solana_axelar_governance_legacy.so"))
             .await
             .unwrap();
 
@@ -94,7 +94,7 @@ pub(crate) async fn deploy_governance_program_with_upgrade_authority(
         .register_upgradeable_program(
             &program_bytecode,
             upgrade_authority,
-            &axelar_solana_governance::ID,
+            &solana_axelar_governance_legacy::ID,
         )
         .await;
 }
@@ -110,7 +110,7 @@ pub(crate) async fn init_contract_with_operator(
 ) -> Result<(Pubkey, u8), ProgramError> {
     let (config_pda, bump) = GovernanceConfig::pda();
 
-    let config = axelar_solana_governance::state::GovernanceConfig::new(
+    let config = solana_axelar_governance_legacy::state::GovernanceConfig::new(
         SOURCE_CHAIN_NAME_KECCAK_HASH,
         SOURCE_CHAIN_ADDRESS_KECCAK_HASH,
         MINIMUM_PROPOSAL_DELAY,
@@ -140,14 +140,14 @@ pub(crate) fn gmp_sample_metadata() -> Message {
             id: uuid::Uuid::new_v4().to_string(),
         },
         source_address: SOURCE_CHAIN_ADDRESS.to_string(),
-        destination_address: axelar_solana_governance::ID.to_string(),
+        destination_address: solana_axelar_governance_legacy::ID.to_string(),
         destination_chain: "solana".to_string(),
         payload_hash: [0_u8; 32],
     }
 }
 
 pub(crate) fn ix_builder_with_sample_proposal_data(
-) -> IxBuilder<axelar_solana_governance::instructions::builder::ProposalRelated> {
+) -> IxBuilder<solana_axelar_governance_legacy::instructions::builder::ProposalRelated> {
     IxBuilder::new().with_proposal_data(
         Pubkey::new_from_array(fixtures::PROPOSAL_TARGET_ADDRESS),
         1,
@@ -168,7 +168,7 @@ pub(crate) fn ix_builder_with_memo_proposal_data(
     solana_accounts: &[AccountMeta],
     native_value: u64,
     native_target_value_account: Option<AccountMeta>,
-) -> IxBuilder<axelar_solana_governance::instructions::builder::ProposalRelated> {
+) -> IxBuilder<solana_axelar_governance_legacy::instructions::builder::ProposalRelated> {
     let memo_instruction = to_vec(&AxelarMemoInstruction::SendToGateway {
         memo: "\u{1f42a}\u{1f42a}\u{1f42a}\u{1f42a}".to_string(),
         destination_chain: "ethereum".to_string(),
@@ -193,7 +193,7 @@ pub(crate) fn gmp_memo_metadata() -> Message {
             id: uuid::Uuid::new_v4().to_string(),
         },
         source_address: SOURCE_CHAIN_ADDRESS.to_string(),
-        destination_address: axelar_solana_governance::ID.to_string(),
+        destination_address: solana_axelar_governance_legacy::ID.to_string(),
         destination_chain: "solana".to_string(),
         payload_hash: [0_u8; 32],
     }

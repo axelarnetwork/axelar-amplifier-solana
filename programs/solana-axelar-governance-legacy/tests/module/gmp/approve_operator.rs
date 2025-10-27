@@ -2,8 +2,8 @@ use axelar_solana_gateway_test_fixtures::base::FindLog;
 use axelar_solana_gateway_test_fixtures::{
     assert_msg_present_in_logs, SolanaAxelarIntegrationMetadata,
 };
-use axelar_solana_governance::events;
-use axelar_solana_governance::instructions::builder::{IxBuilder, ProposalRelated};
+use solana_axelar_governance_legacy::events;
+use solana_axelar_governance_legacy::instructions::builder::{IxBuilder, ProposalRelated};
 use borsh::to_vec;
 use solana_program_test::{tokio, BanksTransactionResultWithMetadata};
 use solana_sdk::instruction::AccountMeta;

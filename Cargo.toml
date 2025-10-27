@@ -195,7 +195,7 @@ axelar-solana-governance-v2 = { path = "programs/axelar-solana-governance-v2", d
 
 # legacy solana programs
 axelar-solana-its = { path = "programs/axelar-solana-its", default-features = false }
-axelar-solana-governance = { path = "programs/axelar-solana-governance", default-features = false }
+solana-axelar-governance-legacy = { path = "programs/solana-axelar-governance-legacy", default-features = false }
 solana-axelar-gas-service-legacy = { path = "programs/solana-axelar-gas-service-legacy", default-features = false }
 solana-axelar-gateway-legacy = { path = "programs/solana-axelar-gateway-legacy", default-features = false }
 solana-axelar-memo-legacy = { path = "programs/solana-axelar-memo-legacy", default-features = false }

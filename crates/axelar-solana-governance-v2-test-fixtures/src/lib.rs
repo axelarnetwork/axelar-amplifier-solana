@@ -1,10 +1,5 @@
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
-use axelar_solana_governance::seed_prefixes;
-use axelar_solana_governance::{
-    processor::gmp::payload_conversions,
-    state::proposal::ExecutableProposal as ExecutableProposalV1,
-};
 use axelar_solana_governance_v2::{
     ExecuteProposalCallData, ExecuteProposalData, GovernanceConfigInit, GovernanceConfigUpdate,
     SolanaAccountMetadata, ID as GOVERNANCE_PROGRAM_ID,
@@ -13,6 +8,11 @@ use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::Message;
 use solana_axelar_gateway::{
     seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
+};
+use solana_axelar_governance_legacy::seed_prefixes;
+use solana_axelar_governance_legacy::{
+    processor::gmp::payload_conversions,
+    state::proposal::ExecutableProposal as ExecutableProposalV1,
 };
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,

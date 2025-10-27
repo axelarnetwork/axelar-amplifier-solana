@@ -1,8 +1,8 @@
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_governance::events;
-use axelar_solana_governance::instructions::builder::{IxBuilder, ProposalRelated};
-use axelar_solana_governance::state::operator;
-use axelar_solana_governance::state::proposal::ExecutableProposal;
+use solana_axelar_governance_legacy::events;
+use solana_axelar_governance_legacy::instructions::builder::{IxBuilder, ProposalRelated};
+use solana_axelar_governance_legacy::state::operator;
+use solana_axelar_governance_legacy::state::proposal::ExecutableProposal;
 use borsh::to_vec;
 use solana_program_test::tokio;
 use solana_sdk::signature::Signer;
@@ -41,7 +41,7 @@ async fn test_successfully_process_gmp_schedule_time_proposal() {
     // Assert account with correct proposal data was created
     let got_proposal = sol_integration
         .fixture
-        .get_account_with_borsh::<axelar_solana_governance::state::proposal::ExecutableProposal>(
+        .get_account_with_borsh::<solana_axelar_governance_legacy::state::proposal::ExecutableProposal>(
             &ix_builder.proposal_pda(),
         )
         .await
@@ -105,7 +105,7 @@ async fn test_time_lock_default_is_enforced() {
 
     let got_proposal = sol_integration
         .fixture
-        .get_account_with_borsh::<axelar_solana_governance::state::proposal::ExecutableProposal>(
+        .get_account_with_borsh::<solana_axelar_governance_legacy::state::proposal::ExecutableProposal>(
             &ix_builder.proposal_pda(),
         )
         .await

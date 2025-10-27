@@ -1,6 +1,6 @@
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_governance::{
+use solana_axelar_governance_legacy::{
     events,
     instructions::builder::{IxBuilder, ProposalRelated},
 };

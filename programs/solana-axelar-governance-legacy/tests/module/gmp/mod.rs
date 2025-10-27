@@ -1,6 +1,6 @@
 use axelar_solana_encoding::types::messages::CrossChainId;
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_governance::state::proposal::ExecutableProposal;
+use solana_axelar_governance_legacy::state::proposal::ExecutableProposal;
 use solana_program_test::tokio;
 use solana_sdk::{instruction::AccountMeta, signature::Signer};
 

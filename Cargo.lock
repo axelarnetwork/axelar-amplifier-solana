@@ -1091,37 +1091,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-governance"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "anchor-discriminators",
- "anchor-discriminators-macros",
- "anyhow",
- "axelar-solana-encoding",
- "axelar-solana-gateway-test-fixtures",
- "borsh 1.5.7",
- "dummy-axelar-solana-gateway",
- "ethers",
- "event-cpi",
- "event-cpi-macros",
- "event-cpi-test-utils",
- "governance-gmp",
- "program-utils",
- "role-management",
- "serde",
- "solana-axelar-gateway-legacy",
- "solana-axelar-memo-legacy",
- "solana-logger",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "solana-sdk-ids",
- "uuid 1.16.0",
-]
-
-[[package]]
 name = "axelar-solana-governance-v2"
 version = "0.1.0"
 dependencies = [
@@ -1129,7 +1098,6 @@ dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
  "axelar-solana-gateway-v2-test-fixtures",
- "axelar-solana-governance",
  "axelar-solana-governance-v2-test-fixtures",
  "bincode",
  "bytemuck",
@@ -1139,6 +1107,7 @@ dependencies = [
  "mollusk-svm",
  "program-utils",
  "solana-axelar-gateway",
+ "solana-axelar-governance-legacy",
  "solana-axelar-memo",
  "solana-sdk",
 ]
@@ -1148,12 +1117,12 @@ name = "axelar-solana-governance-v2-test-fixtures"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-governance",
  "axelar-solana-governance-v2",
  "bincode",
  "governance-gmp",
  "mollusk-svm",
  "solana-axelar-gateway",
+ "solana-axelar-governance-legacy",
  "solana-axelar-memo",
  "solana-sdk",
 ]
@@ -8003,6 +7972,37 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "typed-builder",
+]
+
+[[package]]
+name = "solana-axelar-governance-legacy"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "anyhow",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-test-fixtures",
+ "borsh 1.5.7",
+ "dummy-axelar-solana-gateway",
+ "ethers",
+ "event-cpi",
+ "event-cpi-macros",
+ "event-cpi-test-utils",
+ "governance-gmp",
+ "program-utils",
+ "role-management",
+ "serde",
+ "solana-axelar-gateway-legacy",
+ "solana-axelar-memo-legacy",
+ "solana-logger",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "uuid 1.16.0",
 ]
 
 [[package]]

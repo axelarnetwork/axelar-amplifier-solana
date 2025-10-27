@@ -17,16 +17,20 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
 
 devnet-amplifier = [
-	"axelar-solana-governance/devnet-amplifier",
+	"solana-axelar-gateway/devnet-amplifier",
+	"solana-axelar-governance-legacy/devnet-amplifier",
 ]
 stagenet = [
-	"axelar-solana-governance/stagenet",
+	"solana-axelar-gateway/stagenet",
+	"solana-axelar-governance-legacy/stagenet",
 ]
 testnet = [
-	"axelar-solana-governance/testnet",
+	"solana-axelar-gateway/testnet",
+	"solana-axelar-governance-legacy/testnet",
 ]
 mainnet = [
-	"axelar-solana-governance/mainnet",
+	"solana-axelar-gateway/mainnet",
+	"solana-axelar-governance-legacy/mainnet",
 ]
 
 [dependencies]
@@ -39,7 +43,7 @@ bytemuck.workspace = true
 program-utils.workspace = true
 
 [dev-dependencies]
-axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
+solana-axelar-governance-legacy = { workspace = true, features = ["no-entrypoint"], default-features = false }
 libsecp256k1.workspace = true
 bincode.workspace = true
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }

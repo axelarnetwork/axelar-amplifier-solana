@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-governance"
+name = "solana-axelar-governance-legacy"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 workspace = true
 
 [lib]
-name = "axelar_solana_governance"
+name = "solana_axelar_governance_legacy"
 crate-type = ["cdylib", "lib"]
 
 [features]
