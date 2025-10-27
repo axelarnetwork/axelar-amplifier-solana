@@ -1143,25 +1143,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-its-v2"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "axelar-solana-gateway-test-fixtures",
- "bincode",
- "bitflags 2.9.4",
- "bytemuck",
- "mollusk-svm",
- "mollusk-test-utils",
- "program-utils",
- "solana-axelar-gas-service",
- "solana-axelar-operators",
- "solana-sdk",
- "solana-sdk-ids",
-]
-
-[[package]]
 name = "axum"
 version = "0.6.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8003,6 +7984,25 @@ dependencies = [
  "solana-sdk",
  "solana-sdk-ids",
  "uuid 1.16.0",
+]
+
+[[package]]
+name = "solana-axelar-its"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-gateway-test-fixtures",
+ "bincode",
+ "bitflags 2.9.4",
+ "bytemuck",
+ "mollusk-svm",
+ "mollusk-test-utils",
+ "program-utils",
+ "solana-axelar-gas-service",
+ "solana-axelar-operators",
+ "solana-sdk",
+ "solana-sdk-ids",
 ]
 
 [[package]]

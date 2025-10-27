@@ -1,7 +1,7 @@
 use anchor_lang::AccountDeserialize;
-use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{create_program_data_account, setup_mollusk};
+use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, Discriminator, InstructionData,
@@ -22,12 +22,12 @@ pub(crate) fn init_its_service(
     chain_name: String,
     its_hub_address: String,
 ) -> (Pubkey, Account, Pubkey, Account, Pubkey, Account) {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
 
     // Derive the program data PDA for the upgradeable program
     let (program_data, _bump) =
         Pubkey::find_program_address(&[program_id.as_ref()], &bpf_loader_upgradeable::ID);
-    let its_elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
+    let its_elf = mollusk_svm::file::load_program_elf("solana_axelar_its");
     let program_data_account = create_program_data_account(&its_elf, upgrade_authority);
 
     if payer != upgrade_authority {
@@ -46,7 +46,7 @@ pub(crate) fn init_its_service(
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::Initialize {
+        accounts: solana_axelar_its::accounts::Initialize {
             payer,
             program_data,
             its_root_pda,
@@ -55,7 +55,7 @@ pub(crate) fn init_its_service(
             user_roles_account: user_roles_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::Initialize {
+        data: solana_axelar_its::instruction::Initialize {
             chain_name,
             its_hub_address,
         }
@@ -108,8 +108,8 @@ pub(crate) fn init_its_service(
 
 #[test]
 fn test_initialize_success() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
 
@@ -182,8 +182,8 @@ fn test_initialize_success() {
 #[test]
 #[should_panic = "InvalidAccountData"]
 fn test_initialize_unauthorized_payer() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
 

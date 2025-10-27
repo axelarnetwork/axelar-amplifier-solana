@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::ProgramError, AccountDeserialize, Discriminator};
-use axelar_solana_its_v2::state::{InterchainTokenService, Roles, RolesError, UserRoles};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
+use solana_axelar_its::state::{InterchainTokenService, Roles, RolesError, UserRoles};
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
@@ -15,8 +15,8 @@ use initialize::init_its_service;
 
 #[test]
 fn test_set_trusted_chain_success() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority; // Must be upgrade authority
@@ -60,7 +60,7 @@ fn test_set_trusted_chain_success() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer,
             user_roles: None,
             program_data: Some(program_data),
@@ -72,7 +72,7 @@ fn test_set_trusted_chain_success() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -110,8 +110,8 @@ fn test_set_trusted_chain_success() {
 
 #[test]
 fn test_set_trusted_chain_operator_success() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
 
@@ -157,7 +157,7 @@ fn test_set_trusted_chain_operator_success() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer: operator,
             user_roles: Some(user_roles_pda),
             program_data: None,
@@ -169,7 +169,7 @@ fn test_set_trusted_chain_operator_success() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -207,8 +207,8 @@ fn test_set_trusted_chain_operator_success() {
 
 #[test]
 fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
 
@@ -254,7 +254,7 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer: operator,
             user_roles: Some(user_roles_pda),
             program_data: Some(program_data),
@@ -266,7 +266,7 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -304,8 +304,8 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
 
 #[test]
 fn test_set_trusted_chain_already_exists() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
@@ -344,7 +344,7 @@ fn test_set_trusted_chain_already_exists() {
     // First, add a trusted chain successfully
     let add_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer,
             user_roles: None,
             program_data: Some(program_data),
@@ -354,7 +354,7 @@ fn test_set_trusted_chain_already_exists() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -377,7 +377,7 @@ fn test_set_trusted_chain_already_exists() {
     // Now try to add the same chain again (should fail)
     let duplicate_add_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer,
             user_roles: None,
             program_data: Some(program_data),
@@ -387,7 +387,7 @@ fn test_set_trusted_chain_already_exists() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -410,8 +410,8 @@ fn test_set_trusted_chain_already_exists() {
 
 #[test]
 fn test_set_trusted_chain_unauthorized() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let authorized_payer = upgrade_authority;
@@ -454,7 +454,7 @@ fn test_set_trusted_chain_unauthorized() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer: unauthorized_payer, // Different from upgrade authority
             user_roles: None,
             program_data: Some(program_data),
@@ -464,7 +464,7 @@ fn test_set_trusted_chain_unauthorized() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -487,8 +487,8 @@ fn test_set_trusted_chain_unauthorized() {
 
 #[test]
 fn test_set_trusted_chain_missing_operator_role() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
 
@@ -531,7 +531,7 @@ fn test_set_trusted_chain_missing_operator_role() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer: operator,
             user_roles: Some(user_roles_pda),
             program_data: None,
@@ -541,7 +541,7 @@ fn test_set_trusted_chain_missing_operator_role() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),
@@ -564,8 +564,8 @@ fn test_set_trusted_chain_missing_operator_role() {
 
 #[test]
 fn test_set_multiple_trusted_chains() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
@@ -608,7 +608,7 @@ fn test_set_multiple_trusted_chains() {
     for (i, trusted_chain_name) in trusted_chains.iter().enumerate() {
         let ix = Instruction {
             program_id,
-            accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+            accounts: solana_axelar_its::accounts::SetTrustedChain {
                 payer,
                 user_roles: None,
                 program_data: Some(program_data),
@@ -618,7 +618,7 @@ fn test_set_multiple_trusted_chains() {
                 program: program_id,
             }
             .to_account_metas(None),
-            data: axelar_solana_its_v2::instruction::SetTrustedChain {
+            data: solana_axelar_its::instruction::SetTrustedChain {
                 chain_name: trusted_chain_name.clone(),
             }
             .data(),

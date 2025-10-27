@@ -24,7 +24,7 @@ declare_id!("itsZEirFsnRmLejCsRRNZKHqWTzMsKGyYi6Qr962os4");
 declare_id!("its1111111111111111111111111111111111111111");
 
 #[program]
-pub mod axelar_solana_its_v2 {
+pub mod solana_axelar_its {
     use super::*;
 
     pub fn initialize(

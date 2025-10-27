@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::ProgramError, AccountDeserialize};
-use axelar_solana_its_v2::state::InterchainTokenService;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
+use solana_axelar_its::state::InterchainTokenService;
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
@@ -15,8 +15,8 @@ use initialize::init_its_service;
 
 #[test]
 fn test_set_pause_status_success() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority; // Must be upgrade authority
@@ -55,13 +55,13 @@ fn test_set_pause_status_success() {
     // Now test pausing
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetPauseStatus {
+        accounts: solana_axelar_its::accounts::SetPauseStatus {
             payer,
             program_data,
             its_root_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetPauseStatus { paused: true }.data(),
+        data: solana_axelar_its::instruction::SetPauseStatus { paused: true }.data(),
     };
 
     let accounts = vec![
@@ -88,13 +88,13 @@ fn test_set_pause_status_success() {
     // Test unpausing
     let unpause_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetPauseStatus {
+        accounts: solana_axelar_its::accounts::SetPauseStatus {
             payer,
             program_data,
             its_root_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetPauseStatus { paused: false }.data(),
+        data: solana_axelar_its::instruction::SetPauseStatus { paused: false }.data(),
     };
 
     let unpause_accounts = vec![
@@ -120,8 +120,8 @@ fn test_set_pause_status_success() {
 
 #[test]
 fn test_set_pause_status_already_paused() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
@@ -155,13 +155,13 @@ fn test_set_pause_status_already_paused() {
     // First, pause the service
     let pause_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetPauseStatus {
+        accounts: solana_axelar_its::accounts::SetPauseStatus {
             payer,
             program_data,
             its_root_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetPauseStatus { paused: true }.data(),
+        data: solana_axelar_its::instruction::SetPauseStatus { paused: true }.data(),
     };
 
     let pause_accounts = vec![
@@ -177,13 +177,13 @@ fn test_set_pause_status_already_paused() {
     // Now try to pause again (should fail due to constraint)
     let duplicate_pause_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetPauseStatus {
+        accounts: solana_axelar_its::accounts::SetPauseStatus {
             payer,
             program_data,
             its_root_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetPauseStatus { paused: true }.data(),
+        data: solana_axelar_its::instruction::SetPauseStatus { paused: true }.data(),
     };
 
     let duplicate_pause_accounts = vec![
@@ -203,8 +203,8 @@ fn test_set_pause_status_already_paused() {
 
 #[test]
 fn test_set_pause_status_unauthorized() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let authorized_payer = upgrade_authority;
@@ -242,13 +242,13 @@ fn test_set_pause_status_unauthorized() {
     // Try to pause with unauthorized user (should fail)
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetPauseStatus {
+        accounts: solana_axelar_its::accounts::SetPauseStatus {
             payer: unauthorized_payer, // Different from upgrade authority
             program_data,
             its_root_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetPauseStatus { paused: true }.data(),
+        data: solana_axelar_its::instruction::SetPauseStatus { paused: true }.data(),
     };
 
     let accounts = vec![
@@ -271,8 +271,8 @@ fn test_set_pause_status_unauthorized() {
 
 #[test]
 fn test_set_pause_status_already_unpaused() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
@@ -306,13 +306,13 @@ fn test_set_pause_status_already_unpaused() {
     // Try to unpause when already unpaused (should fail due to constraint)
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetPauseStatus {
+        accounts: solana_axelar_its::accounts::SetPauseStatus {
             payer,
             program_data,
             its_root_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetPauseStatus { paused: false }.data(),
+        data: solana_axelar_its::instruction::SetPauseStatus { paused: false }.data(),
     };
 
     let accounts = vec![

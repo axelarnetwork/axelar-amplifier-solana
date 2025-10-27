@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-its-v2"
+name = "solana-axelar-its"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -29,7 +29,7 @@ mollusk-test-utils.workspace = true
 workspace = true
 
 [lib]
-name = "axelar_solana_its_v2"
+name = "solana_axelar_its"
 crate-type = ["cdylib", "lib"]
 
 [features]
