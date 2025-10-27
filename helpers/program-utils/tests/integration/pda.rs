@@ -4,6 +4,7 @@ use axelar_solana_gateway_test_fixtures::{
 };
 use solana_program_test::tokio;
 use solana_sdk::signer::Signer;
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
 
 // Test a solana account cannot be initialized if already has lamports (exploratory test)

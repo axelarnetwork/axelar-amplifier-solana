@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use axelar_solana_governance::instructions::builder::IxBuilder;
 use solana_program_test::tokio;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;

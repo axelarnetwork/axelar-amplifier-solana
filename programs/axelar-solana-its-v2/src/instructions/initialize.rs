@@ -1,3 +1,4 @@
+#![allow(clippy::missing_asserts_for_indexing)]
 use crate::state::{InterchainTokenService, Roles, UserRoles};
 use anchor_lang::prelude::*;
 #[allow(deprecated)]

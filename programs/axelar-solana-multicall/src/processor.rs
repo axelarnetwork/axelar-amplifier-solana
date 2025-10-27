@@ -33,6 +33,7 @@ impl Processor {
     ) -> ProgramResult {
         check_program_account(*program_id)?;
 
+        #[allow(clippy::indexing_slicing)]
         if let Ok(execute_data) = AxelarExecuteInstruction::try_from(instruction_data) {
             msg!("Instruction: AxelarExecute");
             validate_message(accounts, &execute_data)?;

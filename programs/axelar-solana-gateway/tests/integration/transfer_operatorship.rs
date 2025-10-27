@@ -12,6 +12,7 @@ use program_utils::pda::BytemuckedPda;
 use solana_program_test::tokio::fs;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::account::ReadableAccount;
+#[allow(deprecated)]
 use solana_sdk::bpf_loader_upgradeable;
 use solana_sdk::instruction::{AccountMeta, Instruction, InstructionError};
 use solana_sdk::pubkey::Pubkey;

@@ -2,12 +2,14 @@ use anyhow::anyhow;
 use axelar_solana_its::instruction::InterchainTokenServiceInstruction;
 use borsh::to_vec;
 use solana_program::instruction::{AccountMeta, Instruction};
+#[allow(deprecated)]
 use solana_program::system_program;
 use solana_program_test::tokio;
 use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use test_context::test_context;

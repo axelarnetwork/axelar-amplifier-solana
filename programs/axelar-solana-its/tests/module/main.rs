@@ -47,6 +47,7 @@ use solana_sdk::program_pack::Pack as _;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
 use test_context::AsyncTestContext;
 
