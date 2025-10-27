@@ -1,16 +1,19 @@
 use anchor_lang::prelude::*;
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TrustedChainSet {
     pub chain_name: String,
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TrustedChainRemoved {
     pub chain_name: String,
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InterchainTokenIdClaimed {
     pub token_id: [u8; 32],
     pub deployer: Pubkey,
@@ -18,6 +21,7 @@ pub struct InterchainTokenIdClaimed {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InterchainTokenDeployed {
     pub token_id: [u8; 32],
     pub token_address: Pubkey,
@@ -28,6 +32,7 @@ pub struct InterchainTokenDeployed {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenManagerDeployed {
     pub token_id: [u8; 32],
     pub token_manager: Pubkey,
@@ -36,6 +41,7 @@ pub struct TokenManagerDeployed {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InterchainTokenDeploymentStarted {
     pub token_id: [u8; 32],
     pub token_name: String,
@@ -46,6 +52,7 @@ pub struct InterchainTokenDeploymentStarted {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DeployRemoteInterchainTokenApproval {
     pub minter: Pubkey,
     pub deployer: Pubkey,
@@ -55,6 +62,7 @@ pub struct DeployRemoteInterchainTokenApproval {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RevokeDeployRemoteInterchainTokenApproval {
     pub minter: Pubkey,
     pub deployer: Pubkey,
@@ -63,12 +71,14 @@ pub struct RevokeDeployRemoteInterchainTokenApproval {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenMetadataRegistered {
     pub token_address: Pubkey,
     pub decimals: u8,
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LinkTokenStarted {
     pub token_id: [u8; 32],
     pub destination_chain: String,
@@ -79,6 +89,7 @@ pub struct LinkTokenStarted {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FlowLimitSet {
     pub token_id: [u8; 32],
     pub operator: Pubkey,
