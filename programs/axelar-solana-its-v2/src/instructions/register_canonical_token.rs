@@ -1,7 +1,7 @@
 use crate::{
     errors::ItsError,
     events::{InterchainTokenIdClaimed, TokenManagerDeployed},
-    instructions::{get_token_metadata, initialize_token_manager, validate_mint_extensions},
+    instructions::{get_token_metadata, validate_mint_extensions},
     seed_prefixes::TOKEN_MANAGER_SEED,
     state::{InterchainTokenService, TokenManager, Type},
     utils::{
@@ -26,6 +26,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
+
     /// CHECK: decoded using get_token_metadata
     #[account(
         seeds = [
@@ -81,14 +82,11 @@ pub struct RegisterCanonicalInterchainToken<'info> {
 
     /// Associated token program
     pub associated_token_program: Program<'info, AssociatedToken>,
-
-    /// Rent sysvar
-    pub rent: Sysvar<'info, Rent>,
 }
 
 pub fn register_canonical_interchain_token_handler(
     ctx: Context<RegisterCanonicalInterchainToken>,
-) -> Result<()> {
+) -> Result<[u8; 32]> {
     msg!("Instruction: RegisterCanonicalInterchainToken");
 
     // Metadata is required for canonical tokens
@@ -128,24 +126,21 @@ pub fn register_canonical_interchain_token_handler(
     });
 
     // Initialize the Token Manager
-    initialize_token_manager(
+    TokenManager::init_account(
         &mut ctx.accounts.token_manager_pda,
+        token_manager_type,
         token_id,
         ctx.accounts.token_mint.key(),
         ctx.accounts.token_manager_ata.key(),
         ctx.bumps.token_manager_pda,
-        token_manager_type,
-    )?;
+    );
 
     emit_cpi!(TokenManagerDeployed {
         token_id,
         token_manager: *ctx.accounts.token_manager_pda.to_account_info().key,
         token_manager_type: token_manager_type.into(),
-        params: Vec::new(), // No additional params for canonical tokens
+        params: Vec::with_capacity(0), // No additional params for canonical tokens
     });
 
-    // Set return data with token_id
-    anchor_lang::solana_program::program::set_return_data(&token_id);
-
-    Ok(())
+    Ok(token_id)
 }

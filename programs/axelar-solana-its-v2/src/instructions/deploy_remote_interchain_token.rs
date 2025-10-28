@@ -1,6 +1,5 @@
 use crate::gmp::{GMPAccounts, ToGMPAccounts};
 use crate::program::AxelarSolanaItsV2;
-use crate::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
 use crate::{
@@ -9,7 +8,6 @@ use crate::{
     seed_prefixes::INTERCHAIN_TOKEN_SEED,
     state::{InterchainTokenService, TokenManager},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
-    ITS_HUB_CHAIN_NAME,
 };
 use alloy_primitives::Bytes;
 use anchor_lang::{prelude::*, solana_program};
@@ -79,7 +77,7 @@ pub struct DeployRemoteInterchainToken<'info> {
 
     #[account(
         seeds = [
-            DEPLOYMENT_APPROVAL_SEED,
+            DeployApproval::SEED_PREFIX,
             minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt),
             &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
@@ -134,7 +132,9 @@ pub struct DeployRemoteInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
+        constraint = its_root_pda.chain_name != destination_chain @ ItsError::InvalidDestinationChain,
+        constraint = its_root_pda.is_trusted_chain_or_hub(&destination_chain) @ ItsError::UntrustedDestinationChain,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -194,11 +194,6 @@ pub fn deploy_remote_interchain_token_handler(
 ) -> Result<()> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
-
-    if destination_chain == ctx.accounts.its_root_pda.chain_name {
-        msg!("Cannot deploy remotely to the origin chain");
-        return err!(ItsError::InvalidInstructionData);
-    }
 
     msg!("Instruction: OutboundDeploy");
 
@@ -277,15 +272,6 @@ pub fn process_outbound(
     signing_pda_bump: u8,
     inner_payload: GMPPayload,
 ) -> Result<()> {
-    if !gmp_accounts
-        .its_root_pda
-        .is_trusted_chain(&destination_chain)
-        && destination_chain != ITS_HUB_CHAIN_NAME
-    {
-        msg!("Untrusted destination chain: {}", destination_chain);
-        return err!(ItsError::InvalidInstructionData);
-    }
-
     // Wrap the inner payload
     let payload = GMPPayload::SendToHub(SendToHub {
         selector: SendToHub::MESSAGE_TYPE_ID

@@ -1,7 +1,6 @@
 use crate::{
     errors::ItsError,
     events::DeployRemoteInterchainTokenApproval,
-    seed_prefixes::{DEPLOYMENT_APPROVAL_SEED, TOKEN_MANAGER_SEED},
     state::{deploy_approval::DeployApproval, InterchainTokenService, TokenManager, UserRoles},
     utils::interchain_token_id,
 };
@@ -21,7 +20,7 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
     /// Token Manager PDA for this token
     #[account(
         seeds = [
-            TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             InterchainTokenService::find_pda().0.key().as_ref(),
             &interchain_token_id(&deployer, &salt)
         ],
@@ -46,7 +45,7 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
         payer = payer,
         space = DeployApproval::DISCRIMINATOR.len() + DeployApproval::INIT_SPACE,
         seeds = [
-            DEPLOYMENT_APPROVAL_SEED,
+            DeployApproval::SEED_PREFIX,
             minter.key().as_ref(),
             &interchain_token_id(&deployer, &salt),
             &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()

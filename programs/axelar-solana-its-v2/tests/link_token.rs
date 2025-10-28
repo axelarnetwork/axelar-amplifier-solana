@@ -155,7 +155,6 @@ fn test_link_token() {
         token_manager_ata,
         token_program: spl_token_2022::ID,
         associated_token_program: anchor_spl::associated_token::ID,
-        rent: solana_program::sysvar::rent::ID,
         operator: None,
         operator_roles_pda: None,
         // for event cpi

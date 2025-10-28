@@ -49,6 +49,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
         ],
         seeds::program = crate::ID,
         bump = token_manager_pda.bump,
+        constraint = token_manager_pda.token_address == token_mint.key() @ ItsError::InvalidArgument
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -87,7 +88,9 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
+        constraint = its_root_pda.chain_name != destination_chain @ ItsError::InvalidDestinationChain,
+        constraint = its_root_pda.is_trusted_chain_or_hub(&destination_chain) @ ItsError::UntrustedDestinationChain,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -148,11 +151,6 @@ pub fn deploy_remote_canonical_interchain_token_handler(
     let deploy_salt = canonical_interchain_token_deploy_salt(&ctx.accounts.token_mint.key());
     let token_id = interchain_token_id_internal(&deploy_salt);
 
-    if destination_chain == ctx.accounts.its_root_pda.chain_name {
-        msg!("Cannot deploy remotely to the origin chain");
-        return err!(ItsError::InvalidInstructionData);
-    }
-
     msg!("Instruction: OutboundCanonicalDeploy");
 
     // get token metadata
@@ -161,11 +159,6 @@ pub fn deploy_remote_canonical_interchain_token_handler(
         Some(&ctx.accounts.metadata_account),
     )?;
     let decimals = ctx.accounts.token_mint.decimals;
-
-    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
-        msg!("TokenManager doesn't match mint");
-        return err!(ItsError::InvalidArgument);
-    }
 
     emit_cpi!(InterchainTokenDeploymentStarted {
         token_id,
@@ -188,6 +181,7 @@ pub fn deploy_remote_canonical_interchain_token_handler(
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
+
     process_outbound(
         gmp_accounts,
         destination_chain,

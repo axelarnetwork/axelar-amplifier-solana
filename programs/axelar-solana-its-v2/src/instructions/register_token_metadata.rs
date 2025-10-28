@@ -141,7 +141,7 @@ pub fn register_token_metadata_handler(
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
     process_outbound(
         gmp_accounts,
-        ITS_HUB_CHAIN_NAME.to_string(),
+        ITS_HUB_CHAIN_NAME.to_owned(),
         gas_value,
         signing_pda_bump,
         inner_payload,

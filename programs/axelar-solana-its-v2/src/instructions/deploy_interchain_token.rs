@@ -2,9 +2,7 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{
-        token_manager, FlowState, InterchainTokenService, Roles, TokenManager, Type, UserRoles,
-    },
+    state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::prelude::*;
@@ -88,9 +86,6 @@ pub struct DeployInterchainToken<'info> {
     /// Associated token program
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    /// Rent sysvar
-    pub rent: Sysvar<'info, Rent>,
-
     /// Sysvar for instructions (used by Metaplex)
     #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
@@ -147,7 +142,7 @@ pub fn deploy_interchain_token_handler(
     symbol: String,
     decimals: u8,
     initial_supply: u64,
-) -> Result<()> {
+) -> Result<[u8; 32]> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
 
@@ -235,9 +230,7 @@ pub fn deploy_interchain_token_handler(
         decimals,
     });
 
-    anchor_lang::solana_program::program::set_return_data(&token_id);
-
-    Ok(())
+    Ok(token_id)
 }
 
 fn mint_initial_supply<'info>(
@@ -344,24 +337,6 @@ pub fn validate_mint_extensions(
         msg!("The mint extension is not compatible with the TokenManager type");
         return err!(ItsError::InvalidInstructionData);
     }
-
-    Ok(())
-}
-
-pub fn initialize_token_manager(
-    token_manager_pda: &mut Account<TokenManager>,
-    token_id: [u8; 32],
-    token_address: Pubkey,
-    associated_token_account: Pubkey,
-    bump: u8,
-    token_manager_type: Type,
-) -> Result<()> {
-    token_manager_pda.ty = token_manager_type;
-    token_manager_pda.token_id = token_id;
-    token_manager_pda.token_address = token_address;
-    token_manager_pda.associated_token_account = associated_token_account;
-    token_manager_pda.flow_slot = FlowState::new(None, 0);
-    token_manager_pda.bump = bump;
 
     Ok(())
 }

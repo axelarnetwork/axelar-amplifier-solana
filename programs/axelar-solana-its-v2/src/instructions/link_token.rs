@@ -80,7 +80,9 @@ pub struct LinkToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
+        constraint = its_root_pda.chain_name != destination_chain @ ItsError::InvalidDestinationChain,
+        constraint = its_root_pda.is_trusted_chain_or_hub(&destination_chain) @ ItsError::UntrustedDestinationChain,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -132,6 +134,7 @@ impl<'info> LinkToken<'info> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn link_token_handler(
     ctx: Context<LinkToken>,
     salt: [u8; 32],
@@ -141,14 +144,8 @@ pub fn link_token_handler(
     link_params: Vec<u8>,
     gas_value: u64,
     signing_pda_bump: u8,
-) -> Result<()> {
+) -> Result<[u8; 32]> {
     msg!("Instruction: LinkToken");
-
-    // Validate that destination chain is different from current chain
-    if destination_chain == ctx.accounts.its_root_pda.chain_name {
-        msg!("Cannot link to another token on the same chain");
-        return err!(ItsError::InvalidInstructionData);
-    }
 
     if token_manager_type == Type::NativeInterchainToken {
         return err!(ItsError::InvalidInstructionData);
@@ -203,8 +200,5 @@ pub fn link_token_handler(
         message,
     )?;
 
-    // Set return data to the token_id
-    anchor_lang::solana_program::program::set_return_data(&token_id);
-
-    Ok(())
+    Ok(token_id)
 }

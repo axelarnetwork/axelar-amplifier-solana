@@ -124,7 +124,7 @@ pub mod axelar_solana_its_v2 {
         symbol: String,
         decimals: u8,
         initial_supply: u64,
-    ) -> Result<()> {
+    ) -> Result<[u8; 32]> {
         instructions::deploy_interchain_token_handler(
             ctx,
             salt,
@@ -205,7 +205,7 @@ pub mod axelar_solana_its_v2 {
 
     pub fn register_canonical_interchain_token(
         ctx: Context<RegisterCanonicalInterchainToken>,
-    ) -> Result<()> {
+    ) -> Result<[u8; 32]> {
         instructions::register_canonical_interchain_token_handler(ctx)
     }
 
@@ -228,7 +228,7 @@ pub mod axelar_solana_its_v2 {
         salt: [u8; 32],
         token_manager_type: crate::state::Type,
         operator: Option<Pubkey>,
-    ) -> Result<()> {
+    ) -> Result<[u8; 32]> {
         instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
     }
 
@@ -242,7 +242,7 @@ pub mod axelar_solana_its_v2 {
         link_params: Vec<u8>,
         gas_value: u64,
         signing_pda_bump: u8,
-    ) -> Result<()> {
+    ) -> Result<[u8; 32]> {
         instructions::link_token_handler(
             ctx,
             salt,

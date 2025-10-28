@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::ITS_HUB_CHAIN_NAME;
+
 // TODO(v2) check sizes
 pub const ITS_HUB_ADDRESS_MAX_LEN: usize = 45;
 pub const DEFAULT_RESERVED_LEN_TRUSTED_CHAINS: usize = 30;
@@ -73,6 +75,10 @@ impl InterchainTokenService {
 
     pub fn is_trusted_chain(&self, chain_name: &str) -> bool {
         self.trusted_chains.iter().any(|chain| *chain == chain_name)
+    }
+
+    pub fn is_trusted_chain_or_hub(&self, chain_name: &str) -> bool {
+        self.is_trusted_chain(chain_name) || chain_name == ITS_HUB_CHAIN_NAME
     }
 
     /// Add a chain as trusted

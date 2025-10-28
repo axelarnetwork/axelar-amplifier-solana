@@ -24,7 +24,7 @@ use solana_sdk::{
 mod initialize;
 
 #[test]
-fn test_deploy_remote_canonical_interchain_token() {
+fn test_deploy_remote_canonical_token() {
     // Initialize gateway
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 

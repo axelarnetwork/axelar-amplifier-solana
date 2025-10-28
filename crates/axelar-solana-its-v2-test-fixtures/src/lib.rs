@@ -174,7 +174,6 @@ pub fn deploy_interchain_token_helper(
             token_manager_ata,
             token_program: spl_token_2022::ID,
             associated_token_program: anchor_spl::associated_token::ID,
-            rent: solana_sdk::sysvar::rent::ID,
             sysvar_instructions: solana_sdk::sysvar::instructions::ID,
             mpl_token_metadata_program: mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
             mpl_token_metadata_account: metadata_account,
@@ -736,7 +735,6 @@ pub fn register_canonical_interchain_token_helper(
             token_manager_ata,
             token_program: spl_token_2022::ID,
             associated_token_program: spl_associated_token_account::ID,
-            rent: solana_program::sysvar::rent::ID,
             // for event cpi
             event_authority,
             program: program_id,
