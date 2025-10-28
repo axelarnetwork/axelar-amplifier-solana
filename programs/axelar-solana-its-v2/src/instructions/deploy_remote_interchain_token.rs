@@ -1,5 +1,5 @@
-use crate::deploy_remote_interchain_token::solana_program::program::invoke_signed;
 use crate::gmp::{GMPAccounts, ToGMPAccounts};
+use crate::program::AxelarSolanaItsV2;
 use crate::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
@@ -12,7 +12,6 @@ use crate::{
     ITS_HUB_CHAIN_NAME,
 };
 use alloy_primitives::Bytes;
-use anchor_lang::InstructionData;
 use anchor_lang::{prelude::*, solana_program};
 use anchor_spl::token_2022::spl_token_2022::{
     extension::{metadata_pointer::MetadataPointer, BaseStateWithExtensions, StateWithExtensions},
@@ -26,7 +25,7 @@ use axelar_solana_gas_service_v2::{
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, SendToHub};
 use mpl_token_metadata::accounts::Metadata;
-use spl_token_metadata_interface::{solana_instruction::Instruction, state::TokenMetadata};
+use spl_token_metadata_interface::state::TokenMetadata;
 
 /// Accounts required for deploying a remote interchain token
 #[derive(Accounts)]
@@ -77,6 +76,7 @@ pub struct DeployRemoteInterchainToken<'info> {
 
     // Optional Minter accounts
     pub minter: Option<Signer<'info>>,
+
     #[account(
         seeds = [
             DEPLOYMENT_APPROVAL_SEED,
@@ -87,6 +87,7 @@ pub struct DeployRemoteInterchainToken<'info> {
         bump = deploy_approval_pda.bump,
     )]
     pub deploy_approval_pda: Option<Account<'info, DeployApproval>>,
+
     #[account(
         seeds = [
             UserRoles::SEED_PREFIX,
@@ -145,9 +146,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub call_contract_signing_pda: Signer<'info>,
 
-    /// The ITS program account (this program)
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
+    /// The ITS program account
+    pub its_program: Program<'info, AxelarSolanaItsV2>,
 
     /// Event authority - derived from gateway program
     #[account(
@@ -177,7 +177,7 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.clone(),
+            its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self.gas_event_authority.to_account_info(),
         }
@@ -308,38 +308,33 @@ pub fn process_outbound(
         )?;
     }
 
-    let destination_contract_address = gmp_accounts.its_root_pda.its_hub_address.clone();
+    // Call contract instruction
 
-    let call_contract_ix = Instruction {
-        program_id: axelar_solana_gateway_v2::ID,
-        accounts: vec![
-            AccountMeta::new_readonly(gmp_accounts.its_program.key(), false),
-            AccountMeta::new_readonly(gmp_accounts.call_contract_signing_pda.key(), true),
-            AccountMeta::new_readonly(gmp_accounts.gateway_root_pda.key(), false),
-            AccountMeta::new_readonly(gmp_accounts.gateway_event_authority.key(), false),
-            AccountMeta::new_readonly(gmp_accounts.axelar_gateway_program.key(), false),
-        ],
-        data: axelar_solana_gateway_v2::instruction::CallContract {
-            destination_chain,
-            destination_contract_address,
-            payload,
-            signing_pda_bump,
-        }
-        .data(),
+    let destination_address = gmp_accounts.its_root_pda.its_hub_address.clone();
+
+    let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
+
+    let cpi_accounts = axelar_solana_gateway_v2::cpi::accounts::CallContract {
+        caller: gmp_accounts.its_program.to_account_info(),
+        signing_pda: Some(gmp_accounts.call_contract_signing_pda.to_account_info()),
+        gateway_root_pda: gmp_accounts.gateway_root_pda.to_account_info(),
+        // For event_cpi
+        event_authority: gmp_accounts.gateway_event_authority.to_account_info(),
+        program: gmp_accounts.axelar_gateway_program.to_account_info(),
     };
 
-    let accounts_for_invoke = &[
-        gmp_accounts.its_program,
-        gmp_accounts.call_contract_signing_pda,
-        gmp_accounts.gateway_root_pda,
-        gmp_accounts.gateway_event_authority,
-        gmp_accounts.axelar_gateway_program,
-    ];
+    let cpi_ctx = CpiContext::new_with_signer(
+        gmp_accounts.axelar_gateway_program.to_account_info(),
+        cpi_accounts,
+        signer_seeds,
+    );
 
-    invoke_signed(
-        &call_contract_ix,
-        accounts_for_invoke,
-        &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]],
+    axelar_solana_gateway_v2::cpi::call_contract(
+        cpi_ctx,
+        destination_chain,
+        destination_address,
+        payload,
+        signing_pda_bump,
     )?;
 
     Ok(())
