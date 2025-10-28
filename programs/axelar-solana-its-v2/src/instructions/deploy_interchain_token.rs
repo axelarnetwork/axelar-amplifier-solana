@@ -275,23 +275,14 @@ fn create_token_metadata<'info>(
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
-    // Truncate name and symbol to fit Metaplex limits
-    let truncated_name = if name.chars().count() > mpl_token_metadata::MAX_NAME_LENGTH {
-        name.chars()
-            .take(mpl_token_metadata::MAX_NAME_LENGTH)
-            .collect::<String>()
-    } else {
-        name.clone()
-    };
+    // NOTE: truncate panics if MAX_LENTH
+    // does not lie on a char boundary.
+    // TODO should we handle it gracefully?
 
-    let truncated_symbol = if symbol.chars().count() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
-        symbol
-            .chars()
-            .take(mpl_token_metadata::MAX_SYMBOL_LENGTH)
-            .collect::<String>()
-    } else {
-        symbol.clone()
-    };
+    let mut truncated_name = name;
+    let mut truncated_symbol = symbol;
+    truncated_name.truncate(mpl_token_metadata::MAX_NAME_LENGTH);
+    truncated_symbol.truncate(mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
     // Create the token metadata using Metaplex CPI
     CreateV1CpiBuilder::new(&accounts.mpl_token_metadata_program.to_account_info())
