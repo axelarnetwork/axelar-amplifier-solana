@@ -9,8 +9,9 @@ pub enum ItsError {
     InvalidAccountOwner,
     DeployApprovalPDANotProvided,
     MinterNotProvided,
-    InvalidRole,
     InvalidAccountData,
+    #[msg("The role provided is invalid")]
+    InvalidRole,
     #[msg("The token manager type is invalid")]
     InvalidTokenManagerType,
     #[msg("The destination chain name is untrusted")]

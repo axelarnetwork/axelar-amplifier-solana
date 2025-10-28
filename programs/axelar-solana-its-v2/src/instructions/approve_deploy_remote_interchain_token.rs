@@ -36,7 +36,7 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
             minter.key().as_ref()
         ],
         bump = minter_roles.bump,
-        constraint = minter_roles.has_minter_role() @ ItsError::InvalidArgument
+        constraint = minter_roles.has_minter_role() @ ItsError::InvalidRole
     )]
     pub minter_roles: Account<'info, UserRoles>,
 

@@ -124,7 +124,6 @@ pub struct DeployInterchainToken<'info> {
         init,
         payer = payer,
         space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
-        constraint = minter.is_some(),
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
