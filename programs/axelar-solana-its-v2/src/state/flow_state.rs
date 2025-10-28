@@ -8,8 +8,11 @@ pub(crate) enum FlowDirection {
     Out,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize, InitSpace)]
 /// Struct containing flow information for a specific epoch.
+// TODO should this be an account? for now it's only used
+// as a value in ITS and TokenManager accounts
+#[account]
+#[derive(Debug, Eq, PartialEq, InitSpace)]
 pub struct FlowState {
     pub flow_limit: Option<u64>,
     pub flow_in: u64,

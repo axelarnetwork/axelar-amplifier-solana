@@ -32,6 +32,10 @@ pub struct InterchainTokenService {
 impl InterchainTokenService {
     pub const SEED_PREFIX: &'static [u8] = b"interchain-token-service";
 
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+    }
+
     pub fn space(trusted_chains_len: usize) -> usize {
         InterchainTokenService::DISCRIMINATOR.len() + // Anchor account discriminator
 		4 + ITS_HUB_ADDRESS_MAX_LEN + // its_hub_address
@@ -82,10 +86,6 @@ impl InterchainTokenService {
     /// Remove a chain from trusted
     pub fn remove_trusted_chain(&mut self, chain_name: String) {
         self.trusted_chains.retain(|chain| *chain != chain_name);
-    }
-
-    pub fn find_pda() -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &crate::ID)
     }
 }
 

@@ -1,6 +1,60 @@
-use crate::state::FlowState;
+use crate::{errors::ITSError, state::FlowState};
 use alloy_primitives::U256;
 use anchor_lang::prelude::*;
+use anchor_spl::token_2022::spl_token_2022::{
+    extension::{BaseStateWithExtensions, ExtensionType::TransferFeeConfig, StateWithExtensions},
+    state::Mint as SplMint,
+};
+
+#[account]
+#[derive(Debug, Eq, PartialEq, InitSpace)]
+pub struct TokenManager {
+    /// The type of `TokenManager`.
+    pub ty: Type,
+
+    /// The interchain token id.
+    pub token_id: [u8; 32],
+
+    /// The token address within the Solana chain.
+    pub token_address: Pubkey,
+
+    /// The associated token account owned by the token manager.
+    pub associated_token_account: Pubkey,
+
+    /// The flow limit for the token manager.
+    pub flow_slot: FlowState,
+
+    /// The token manager PDA bump seed.
+    pub bump: u8,
+}
+
+impl TokenManager {
+    pub const SEED_PREFIX: &'static [u8] = b"token-manager";
+
+    pub fn find_pda(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[Self::SEED_PREFIX, its_root_pda.as_ref(), &token_id],
+            &crate::ID,
+        )
+    }
+
+    /// Initializes a `TokenManager` account with given values.
+    pub fn init_account(
+        account: &mut Account<Self>,
+        token_manager_type: Type,
+        token_id: [u8; 32],
+        token_address: Pubkey,
+        associated_token_account: Pubkey,
+        bump: u8,
+    ) {
+        account.ty = token_manager_type;
+        account.token_id = token_id;
+        account.token_address = token_address;
+        account.associated_token_account = associated_token_account;
+        account.flow_slot = FlowState::new(None, 0);
+        account.bump = bump;
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, AnchorSerialize, AnchorDeserialize, InitSpace)]
 pub enum Type {
@@ -55,6 +109,32 @@ pub enum Type {
     MintBurn,
 }
 
+impl Type {
+    pub fn supports_mint_extensions(
+        &self,
+        token_mint: StateWithExtensions<'_, SplMint>,
+    ) -> Result<bool> {
+        let has_transfer_fee = token_mint
+            .get_extension_types()?
+            .contains(&TransferFeeConfig);
+
+        match (self, has_transfer_fee) {
+            (Self::LockUnlock, true) | (Self::LockUnlockFee, false) => Ok(false),
+            _ => Ok(true),
+        }
+    }
+
+    pub fn assert_supports_mint_extensions(
+        &self,
+        token_mint: StateWithExtensions<'_, SplMint>,
+    ) -> Result<()> {
+        if !self.supports_mint_extensions(token_mint)? {
+            return Err(error!(ITSError::TokenManagerMintExtensionMismatch));
+        }
+        Ok(())
+    }
+}
+
 impl From<Type> for U256 {
     fn from(value: Type) -> Self {
         match value {
@@ -76,40 +156,5 @@ impl From<Type> for u8 {
             Type::LockUnlockFee => 3,
             Type::MintBurn => 4,
         }
-    }
-}
-
-#[account]
-#[derive(Debug, Eq, PartialEq, InitSpace)]
-pub struct TokenManager {
-    /// The type of `TokenManager`.
-    pub ty: Type,
-
-    /// The interchain token id.
-    pub token_id: [u8; 32],
-
-    /// The token address within the Solana chain.
-    pub token_address: Pubkey,
-
-    /// The associated token account owned by the token manager.
-    pub associated_token_account: Pubkey,
-
-    /// The flow limit for the token manager.
-    pub flow_slot: FlowState,
-
-    /// The token manager PDA bump seed.
-    pub bump: u8,
-}
-
-impl TokenManager {
-    pub fn find_pda(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
-        Pubkey::find_program_address(
-            &[
-                crate::seed_prefixes::TOKEN_MANAGER_SEED,
-                its_root_pda.as_ref(),
-                &token_id,
-            ],
-            &crate::ID,
-        )
     }
 }

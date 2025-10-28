@@ -12,6 +12,8 @@ pub struct DeployApproval {
 }
 
 impl DeployApproval {
+    pub const SEED_PREFIX: &'static [u8] = b"deployment-approval";
+
     pub fn find_pda(
         minter: &Pubkey,
         deployer: &Pubkey,
@@ -24,7 +26,7 @@ impl DeployApproval {
 
         Pubkey::find_program_address(
             &[
-                crate::seed_prefixes::DEPLOYMENT_APPROVAL_SEED,
+                Self::SEED_PREFIX,
                 minter.as_ref(),
                 &token_id,
                 &destination_chain_hash,

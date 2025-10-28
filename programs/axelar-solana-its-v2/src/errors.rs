@@ -10,4 +10,8 @@ pub enum ITSError {
     MinterNotProvided,
     InvalidRole,
     InvalidAccountData,
+    #[msg("The token mint cannot have fixed zero supply")]
+    ZeroSupplyToken,
+    #[msg("The mint extension is not compatible with the TokenManager type")]
+    TokenManagerMintExtensionMismatch,
 }

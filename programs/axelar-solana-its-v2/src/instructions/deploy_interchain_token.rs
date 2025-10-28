@@ -124,14 +124,16 @@ pub struct DeployInterchainToken<'info> {
 
     // Minter accounts
     pub minter: Option<UncheckedAccount<'info>>,
+
     #[account(
         init,
         payer = payer,
         space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
+        constraint = minter.is_some(),
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.as_ref().unwrap().key().as_ref()
+            minter.as_ref().ok_or(ITSError::MinterNotProvided)?.key().as_ref()
         ],
         bump
     )]
@@ -152,7 +154,7 @@ pub fn deploy_interchain_token_handler(
     if initial_supply == 0
         && (ctx.accounts.minter.is_none() || ctx.accounts.minter_roles_pda.is_none())
     {
-        return err!(ITSError::InvalidArgument);
+        return err!(ITSError::ZeroSupplyToken);
     }
 
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
@@ -173,7 +175,7 @@ pub fn deploy_interchain_token_handler(
     // setup_mint
     if initial_supply > 0 {
         mint_initial_supply(
-            &ctx.accounts,
+            ctx.accounts,
             token_id,
             initial_supply,
             ctx.bumps.token_manager_pda,
@@ -182,31 +184,25 @@ pub fn deploy_interchain_token_handler(
 
     // setup_metadata
     create_token_metadata(
-        &ctx.accounts,
+        ctx.accounts,
         name.clone(),
         symbol.clone(),
         token_id,
         ctx.bumps.token_manager_pda,
     )?;
 
-    // super::token_manager::deploy(...)
-    validate_mint_extensions(
-        Type::NativeInterchainToken,
-        &ctx.accounts.token_mint.to_account_info(),
-    )?;
-
-    initialize_token_manager(
+    TokenManager::init_account(
         &mut ctx.accounts.token_manager_pda,
+        Type::NativeInterchainToken,
         token_id,
         ctx.accounts.token_mint.key(),
         ctx.accounts.token_manager_ata.key(),
         ctx.bumps.token_manager_pda,
-        Type::NativeInterchainToken,
-    )?;
+    );
 
     emit_cpi!(TokenManagerDeployed {
         token_id,
-        token_manager: *ctx.accounts.token_manager_pda.to_account_info().key,
+        token_manager: ctx.accounts.token_manager_pda.key(),
         token_manager_type: Type::NativeInterchainToken.into(),
         params: ctx
             .accounts
@@ -217,24 +213,26 @@ pub fn deploy_interchain_token_handler(
     });
 
     // Initialize UserRoles
-    if ctx.accounts.minter.is_some() && ctx.accounts.minter_roles_pda.is_some() {
-        let minter_roles_pda = &mut ctx.accounts.minter_roles_pda.as_mut().unwrap();
-        minter_roles_pda.bump = ctx.bumps.minter_roles_pda.unwrap();
+    if let (Some(minter_roles_pda), Some(bump)) = (
+        ctx.accounts.minter_roles_pda.as_mut(),
+        ctx.bumps.minter_roles_pda,
+    ) {
+        minter_roles_pda.bump = bump;
         minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
     }
 
     emit_cpi!(InterchainTokenDeployed {
         token_id,
-        token_address: *ctx.accounts.token_mint.to_account_info().key,
+        token_address: ctx.accounts.token_mint.key(),
         minter: ctx
             .accounts
             .minter
-            .clone()
+            .as_ref()
             .map(|account| *account.key)
             .unwrap_or_default(),
-        name: name.clone(),
-        symbol: symbol.clone(),
-        decimals: decimals,
+        name,
+        symbol,
+        decimals,
     });
 
     anchor_lang::solana_program::program::set_return_data(&token_id);
@@ -285,14 +283,19 @@ fn create_token_metadata<'info>(
     token_manager_bump: u8,
 ) -> Result<()> {
     // Truncate name and symbol to fit Metaplex limits
-    let truncated_name = if name.len() > mpl_token_metadata::MAX_NAME_LENGTH {
-        name[..mpl_token_metadata::MAX_NAME_LENGTH].to_string()
+    let truncated_name = if name.chars().count() > mpl_token_metadata::MAX_NAME_LENGTH {
+        name.chars()
+            .take(mpl_token_metadata::MAX_NAME_LENGTH)
+            .collect::<String>()
     } else {
         name.clone()
     };
 
-    let truncated_symbol = if symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
-        symbol[..mpl_token_metadata::MAX_SYMBOL_LENGTH].to_string()
+    let truncated_symbol = if symbol.chars().count() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
+        symbol
+            .chars()
+            .take(mpl_token_metadata::MAX_SYMBOL_LENGTH)
+            .collect::<String>()
     } else {
         symbol.clone()
     };
@@ -322,6 +325,7 @@ fn create_token_metadata<'info>(
     Ok(())
 }
 
+// TODO: deprecate this, replace with Type::assert_supports_mint_extensions
 pub fn validate_mint_extensions(
     ty: token_manager::Type,
     token_mint: &AccountInfo<'_>,
@@ -337,7 +341,7 @@ pub fn validate_mint_extensions(
         ),
         (token_manager::Type::LockUnlock, true) | (token_manager::Type::LockUnlockFee, false)
     ) {
-        msg!("The mint is not compatible with the type");
+        msg!("The mint extension is not compatible with the TokenManager type");
         return err!(ITSError::InvalidInstructionData);
     }
 

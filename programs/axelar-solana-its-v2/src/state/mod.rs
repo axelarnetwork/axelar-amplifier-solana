@@ -14,3 +14,4 @@ pub mod flow_state;
 pub use flow_state::*;
 
 pub mod deploy_approval;
+pub use deploy_approval::*;
