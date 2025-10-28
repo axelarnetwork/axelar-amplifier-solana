@@ -23,7 +23,7 @@ pub(crate) fn initialize_mollusk() -> Mollusk {
 
     mollusk.add_program(
         &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        "../../target/deploy/mpl_token_metadata",
+        "./tests/mpl_token_metadata",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 

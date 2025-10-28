@@ -780,7 +780,7 @@ pub fn initialize_mollusk() -> Mollusk {
 
     mollusk.add_program(
         &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        "../../target/deploy/mpl_token_metadata",
+        "../../programs/axelar-solana-its-v2/tests/mpl_token_metadata",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
