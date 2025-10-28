@@ -1,5 +1,5 @@
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::{InterchainTokenIdClaimed, TokenManagerDeployed},
     instructions::{initialize_token_manager, validate_mint_extensions},
     seed_prefixes::TOKEN_MANAGER_SEED,
@@ -30,7 +30,7 @@ pub struct RegisterCustomToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -98,16 +98,16 @@ pub fn register_custom_token_handler(
 
     // Validate that the token manager type is not NativeInterchainToken
     if token_manager_type == Type::NativeInterchainToken {
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     // Validate operator consistency
     if operator.is_some() != ctx.accounts.operator.is_some() {
-        return err!(ITSError::InvalidArgument);
+        return err!(ItsError::InvalidArgument);
     }
 
     if ctx.accounts.operator.is_some() != ctx.accounts.operator_roles_pda.is_some() {
-        return err!(ITSError::InvalidArgument);
+        return err!(ItsError::InvalidArgument);
     }
 
     let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);

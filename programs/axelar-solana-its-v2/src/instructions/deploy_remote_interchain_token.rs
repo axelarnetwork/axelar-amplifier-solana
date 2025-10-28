@@ -4,7 +4,7 @@ use crate::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::InterchainTokenDeploymentStarted,
     seed_prefixes::INTERCHAIN_TOKEN_SEED,
     state::{InterchainTokenService, TokenManager},
@@ -80,7 +80,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     #[account(
         seeds = [
             DEPLOYMENT_APPROVAL_SEED,
-            minter.as_ref().ok_or(ITSError::MinterNotProvided)?.key().as_ref(),
+            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt),
             &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
         ],
@@ -91,10 +91,10 @@ pub struct DeployRemoteInterchainToken<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.as_ref().ok_or(ITSError::MinterNotProvided)?.key().as_ref()
+            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref()
         ],
         bump = minter_roles.bump,
-        constraint = minter_roles.has_minter_role() @ ITSError::InvalidRole
+        constraint = minter_roles.has_minter_role() @ ItsError::InvalidRole
     )]
     pub minter_roles: Option<Account<'info, UserRoles>>,
 
@@ -133,7 +133,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -197,7 +197,7 @@ pub fn deploy_remote_interchain_token_handler(
 
     if destination_chain == ctx.accounts.its_root_pda.chain_name {
         msg!("Cannot deploy remotely to the origin chain");
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     msg!("Instruction: OutboundDeploy");
@@ -207,12 +207,12 @@ pub fn deploy_remote_interchain_token_handler(
             .accounts
             .deploy_approval_pda
             .as_ref()
-            .ok_or(ITSError::DeployApprovalPDANotProvided)?;
+            .ok_or(ItsError::DeployApprovalPDANotProvided)?;
         let minter = ctx
             .accounts
             .minter
             .as_ref()
-            .ok_or(ITSError::MinterNotProvided)?
+            .ok_or(ItsError::MinterNotProvided)?
             .to_account_info();
 
         Some((Bytes::from(destination_minter), deploy_approval, minter))
@@ -229,7 +229,7 @@ pub fn deploy_remote_interchain_token_handler(
 
     if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
         msg!("TokenManager doesn't match mint");
-        return err!(ITSError::InvalidArgument);
+        return err!(ItsError::InvalidArgument);
     }
 
     emit_cpi!(InterchainTokenDeploymentStarted {
@@ -283,7 +283,7 @@ pub fn process_outbound(
         && destination_chain != ITS_HUB_CHAIN_NAME
     {
         msg!("Untrusted destination chain: {}", destination_chain);
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     // Wrap the inner payload
@@ -401,13 +401,13 @@ pub(crate) fn get_token_metadata(
     let metadata_account = maybe_metadata_account.ok_or(ProgramError::NotEnoughAccountKeys)?;
     if *metadata_account.owner != mpl_token_metadata::ID {
         msg!("Invalid Metaplex metadata account");
-        return err!(ITSError::InvalidAccountOwner);
+        return err!(ItsError::InvalidAccountOwner);
     }
 
     let token_metadata = Metadata::from_bytes(&metadata_account.try_borrow_data()?)?;
     if token_metadata.mint != *mint.key {
         msg!("The metadata and mint accounts passed don't match");
-        return err!(ITSError::InvalidArgument);
+        return err!(ItsError::InvalidArgument);
     }
 
     let name = token_metadata.name.trim_end_matches('\0').to_owned();

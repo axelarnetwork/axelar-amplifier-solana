@@ -1,5 +1,5 @@
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{
@@ -37,7 +37,7 @@ pub struct DeployInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -133,7 +133,7 @@ pub struct DeployInterchainToken<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.as_ref().ok_or(ITSError::MinterNotProvided)?.key().as_ref()
+            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref()
         ],
         bump
     )]
@@ -154,14 +154,14 @@ pub fn deploy_interchain_token_handler(
     if initial_supply == 0
         && (ctx.accounts.minter.is_none() || ctx.accounts.minter_roles_pda.is_none())
     {
-        return err!(ITSError::ZeroSupplyToken);
+        return err!(ItsError::ZeroSupplyToken);
     }
 
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
         msg!("Name and/or symbol length too long");
-        return err!(ITSError::InvalidArgument);
+        return err!(ItsError::InvalidArgument);
     }
 
     emit_cpi!(InterchainTokenIdClaimed {
@@ -342,7 +342,7 @@ pub fn validate_mint_extensions(
         (token_manager::Type::LockUnlock, true) | (token_manager::Type::LockUnlockFee, false)
     ) {
         msg!("The mint extension is not compatible with the TokenManager type");
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     Ok(())

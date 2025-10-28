@@ -1,5 +1,5 @@
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::{InterchainTokenIdClaimed, TokenManagerDeployed},
     instructions::{get_token_metadata, initialize_token_manager, validate_mint_extensions},
     seed_prefixes::TOKEN_MANAGER_SEED,
@@ -45,7 +45,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -96,7 +96,7 @@ pub fn register_canonical_interchain_token_handler(
         &ctx.accounts.token_mint.to_account_info(),
         Some(&ctx.accounts.metadata_account),
     ) {
-        return err!(ITSError::InvalidAccountData);
+        return err!(ItsError::InvalidAccountData);
     }
 
     // Check if token has fee extension to determine manager type

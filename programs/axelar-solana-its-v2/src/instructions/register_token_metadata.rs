@@ -1,7 +1,7 @@
 use crate::gmp::{GMPAccounts, ToGMPAccounts};
 use crate::instructions::process_outbound;
 use crate::{
-    errors::ITSError, events::TokenMetadataRegistered, state::InterchainTokenService,
+    errors::ItsError, events::TokenMetadataRegistered, state::InterchainTokenService,
     ITS_HUB_CHAIN_NAME,
 };
 use anchor_lang::prelude::*;
@@ -61,7 +61,7 @@ pub struct RegisterTokenMetadata<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 

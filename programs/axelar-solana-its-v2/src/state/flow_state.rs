@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::errors::ITSError;
+use crate::errors::ItsError;
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum FlowDirection {
@@ -47,7 +47,7 @@ impl FlowState {
         // Individual transfer amount cannot exceed the flow limit
         if amount > flow_limit {
             msg!("Flow limit exceeded");
-            return err!(ITSError::InvalidArgument);
+            return err!(ItsError::InvalidArgument);
         }
 
         // Calculate new flow amount after adding the transfer
@@ -67,7 +67,7 @@ impl FlowState {
         // Check if net flow exceeds the limit
         if net_flow > flow_limit {
             msg!("Flow limit exceeded");
-            return err!(ITSError::InvalidArgument);
+            return err!(ItsError::InvalidArgument);
         }
 
         *to_add = new_flow;

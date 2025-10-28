@@ -1,7 +1,7 @@
 use crate::gmp::{GMPAccounts, ToGMPAccounts};
 use crate::instructions::deploy_remote_interchain_token::{get_token_metadata, process_outbound};
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::InterchainTokenDeploymentStarted,
     state::{InterchainTokenService, TokenManager},
     utils::{
@@ -87,7 +87,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -150,7 +150,7 @@ pub fn deploy_remote_canonical_interchain_token_handler(
 
     if destination_chain == ctx.accounts.its_root_pda.chain_name {
         msg!("Cannot deploy remotely to the origin chain");
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     msg!("Instruction: OutboundCanonicalDeploy");
@@ -164,7 +164,7 @@ pub fn deploy_remote_canonical_interchain_token_handler(
 
     if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
         msg!("TokenManager doesn't match mint");
-        return err!(ITSError::InvalidArgument);
+        return err!(ItsError::InvalidArgument);
     }
 
     emit_cpi!(InterchainTokenDeploymentStarted {

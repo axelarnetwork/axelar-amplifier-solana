@@ -1,5 +1,5 @@
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
     gmp::GMPAccounts,
     instructions::process_outbound,
@@ -80,7 +80,7 @@ pub struct LinkToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ITSError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -147,11 +147,11 @@ pub fn link_token_handler(
     // Validate that destination chain is different from current chain
     if destination_chain == ctx.accounts.its_root_pda.chain_name {
         msg!("Cannot link to another token on the same chain");
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     if token_manager_type == Type::NativeInterchainToken {
-        return err!(ITSError::InvalidInstructionData);
+        return err!(ItsError::InvalidInstructionData);
     }
 
     // Derive the token ID using the same logic as the existing implementation

@@ -1,5 +1,5 @@
 use crate::{
-    errors::ITSError,
+    errors::ItsError,
     events::DeployRemoteInterchainTokenApproval,
     seed_prefixes::{DEPLOYMENT_APPROVAL_SEED, TOKEN_MANAGER_SEED},
     state::{deploy_approval::DeployApproval, InterchainTokenService, TokenManager, UserRoles},
@@ -37,7 +37,7 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
             minter.key().as_ref()
         ],
         bump = minter_roles.bump,
-        constraint = minter_roles.has_minter_role() @ ITSError::InvalidArgument
+        constraint = minter_roles.has_minter_role() @ ItsError::InvalidArgument
     )]
     pub minter_roles: Account<'info, UserRoles>,
 

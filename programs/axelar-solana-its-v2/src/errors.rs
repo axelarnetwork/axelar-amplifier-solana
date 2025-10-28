@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum ITSError {
+pub enum ItsError {
     InvalidArgument,
     Paused,
     InvalidInstructionData,

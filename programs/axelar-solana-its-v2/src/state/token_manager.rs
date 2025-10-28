@@ -1,4 +1,4 @@
-use crate::{errors::ITSError, state::FlowState};
+use crate::{errors::ItsError, state::FlowState};
 use alloy_primitives::U256;
 use anchor_lang::prelude::*;
 use anchor_spl::token_2022::spl_token_2022::{
@@ -129,7 +129,7 @@ impl Type {
         token_mint: StateWithExtensions<'_, SplMint>,
     ) -> Result<()> {
         if !self.supports_mint_extensions(token_mint)? {
-            return Err(error!(ITSError::TokenManagerMintExtensionMismatch));
+            return Err(error!(ItsError::TokenManagerMintExtensionMismatch));
         }
         Ok(())
     }
