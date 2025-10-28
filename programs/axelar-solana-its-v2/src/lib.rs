@@ -11,16 +11,14 @@ use instructions::*;
 use anchor_lang::prelude::*;
 use program_utils::ensure_single_feature;
 
+pub(crate) const ITS_HUB_CHAIN_NAME: &str = "axelar";
+
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+
+// Program ID
 
 #[cfg(feature = "devnet-amplifier")]
 declare_id!("itsqybuNsChBo3LgVhCWWnTJVJdoVTUJaodmqQcG6z7");
-pub const CHAIN_NAME_HASH: [u8; 32] = [
-    10, 171, 102, 67, 72, 176, 161, 92, 42, 179, 148, 228, 13, 72, 172, 178, 168, 16, 138, 252, 99,
-    222, 187, 187, 25, 30, 121, 52, 235, 103, 11, 169,
-]; // keccak256("solana-devnet")
-
-pub(crate) const ITS_HUB_CHAIN_NAME: &str = "axelar";
 
 #[cfg(feature = "stagenet")]
 declare_id!("itsediSVCwwKc6UuxfrsEiF8AEuEFk34RFAscPEDEpJ");
@@ -31,12 +29,41 @@ declare_id!("itsZEirFsnRmLejCsRRNZKHqWTzMsKGyYi6Qr962os4");
 #[cfg(feature = "mainnet")]
 declare_id!("its1111111111111111111111111111111111111111");
 
+// Chain name hash
+
+// Chain name hash constants for token ID derivation
+#[cfg(feature = "devnet-amplifier")]
+pub const CHAIN_NAME_HASH: [u8; 32] = [
+    10, 171, 102, 67, 72, 176, 161, 92, 42, 179, 148, 228, 13, 72, 172, 178, 168, 16, 138, 252, 99,
+    222, 187, 187, 25, 30, 121, 52, 235, 103, 11, 169,
+]; // keccak256("solana-devnet")
+
+#[cfg(feature = "stagenet")]
+pub const CHAIN_NAME_HASH: [u8; 32] = [
+    67, 5, 100, 18, 3, 83, 80, 76, 10, 94, 7, 166, 63, 92, 244, 200, 233, 32, 8, 242, 33, 188, 46,
+    11, 38, 32, 244, 151, 37, 161, 40, 0,
+]; // keccak256("solana-stagenet")
+
+#[cfg(feature = "testnet")]
+pub const CHAIN_NAME_HASH: [u8; 32] = [
+    159, 1, 245, 195, 103, 184, 207, 215, 88, 74, 183, 125, 33, 47, 221, 82, 55, 77, 255, 177, 89,
+    88, 76, 133, 128, 193, 177, 171, 2, 107, 173, 86,
+]; // keccak256("solana-testnet")
+
+#[cfg(feature = "mainnet")]
+pub const CHAIN_NAME_HASH: [u8; 32] = [
+    110, 239, 41, 235, 176, 58, 162, 20, 74, 26, 107, 98, 18, 206, 116, 245, 4, 163, 77, 183, 153,
+    184, 22, 26, 33, 20, 0, 23, 232, 13, 61, 138,
+]; // keccak256("solana")
+
 pub mod seed_prefixes {
+    use crate::state;
+
     /// The seed prefix for deriving the ITS root PDA
-    pub const ITS_SEED: &[u8] = b"interchain-token-service";
+    pub const ITS_SEED: &[u8] = state::InterchainTokenService::SEED_PREFIX;
 
     /// The seed prefix for deriving the token manager PDA
-    pub const TOKEN_MANAGER_SEED: &[u8] = b"token-manager";
+    pub const TOKEN_MANAGER_SEED: &[u8] = state::TokenManager::SEED_PREFIX;
 
     /// The seed prefix for deriving the interchain token PDA
     pub const INTERCHAIN_TOKEN_SEED: &[u8] = b"interchain-token";
@@ -57,7 +84,7 @@ pub mod seed_prefixes {
     pub const FLOW_SLOT_SEED: &[u8] = b"flow-slot";
 
     /// The seed prefix for deriving the deployment approval PDA
-    pub const DEPLOYMENT_APPROVAL_SEED: &[u8] = b"deployment-approval";
+    pub const DEPLOYMENT_APPROVAL_SEED: &[u8] = state::DeployApproval::SEED_PREFIX;
 
     /// The seed prefix for deriving the interchain transfer execute signing PDA
     pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] = b"interchain-transfer-execute";
@@ -205,6 +232,7 @@ pub mod axelar_solana_its_v2 {
         instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn link_token(
         ctx: Context<LinkToken>,
         salt: [u8; 32],
