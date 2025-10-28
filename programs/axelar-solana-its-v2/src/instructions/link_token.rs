@@ -57,8 +57,7 @@ pub struct LinkToken<'info> {
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
     /// The GMP gateway program account
-    #[account(address = axelar_solana_gateway_v2::ID)]
-    pub axelar_gateway_program: AccountInfo<'info>,
+    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
     /// The GMP gas treasury account
     #[account(
@@ -102,7 +101,7 @@ pub struct LinkToken<'info> {
     #[account(
         seeds = [b"__event_authority"],
         bump,
-        seeds::program = axelar_gateway_program.key()
+        seeds::program = axelar_solana_gateway_v2::ID,
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
@@ -121,7 +120,7 @@ impl<'info> LinkToken<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
-            axelar_gateway_program: self.axelar_gateway_program.clone(),
+            gateway_program: self.gateway_program.to_account_info(),
             gas_treasury: self.gas_treasury.to_account_info(),
             gas_service: self.gas_service.clone(),
             system_program: self.system_program.to_account_info(),

@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 pub struct GMPAccounts<'info> {
     pub payer: AccountInfo<'info>,
     pub gateway_root_pda: AccountInfo<'info>,
-    pub axelar_gateway_program: AccountInfo<'info>,
+    pub gateway_program: AccountInfo<'info>,
     pub gas_treasury: AccountInfo<'info>,
     pub gas_service: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,

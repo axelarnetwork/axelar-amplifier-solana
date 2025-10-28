@@ -109,8 +109,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
     /// The GMP gateway program account
-    #[account(address = axelar_solana_gateway_v2::ID)]
-    pub axelar_gateway_program: AccountInfo<'info>,
+    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
     /// The GMP gas treasury account
     #[account(
@@ -153,7 +152,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     #[account(
         seeds = [b"__event_authority"],
         bump,
-        seeds::program = axelar_gateway_program.key()
+        seeds::program = axelar_solana_gateway_v2::ID,
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
@@ -171,7 +170,7 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
-            axelar_gateway_program: self.axelar_gateway_program.clone(),
+            gateway_program: self.gateway_program.to_account_info(),
             gas_treasury: self.gas_treasury.to_account_info(),
             gas_service: self.gas_service.clone(),
             system_program: self.system_program.to_account_info(),
@@ -306,11 +305,11 @@ pub fn process_outbound(
         gateway_root_pda: gmp_accounts.gateway_root_pda.to_account_info(),
         // For event_cpi
         event_authority: gmp_accounts.gateway_event_authority.to_account_info(),
-        program: gmp_accounts.axelar_gateway_program.to_account_info(),
+        program: gmp_accounts.gateway_program.to_account_info(),
     };
 
     let cpi_ctx = CpiContext::new_with_signer(
-        gmp_accounts.axelar_gateway_program.to_account_info(),
+        gmp_accounts.gateway_program.to_account_info(),
         cpi_accounts,
         signer_seeds,
     );

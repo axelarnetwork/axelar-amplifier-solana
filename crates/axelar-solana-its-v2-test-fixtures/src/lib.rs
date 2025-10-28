@@ -407,7 +407,7 @@ pub fn deploy_remote_interchain_token_helper(
             minter_roles: ctx.minter_roles,
             //
             gateway_root_pda,
-            axelar_gateway_program: axelar_solana_gateway_v2::ID,
+            gateway_program: axelar_solana_gateway_v2::ID,
             gas_treasury,
             gas_service: axelar_solana_gas_service_v2::ID,
             system_program: system_program::ID,

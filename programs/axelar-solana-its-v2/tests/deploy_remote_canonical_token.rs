@@ -200,7 +200,7 @@ fn test_deploy_remote_canonical_token() {
             metadata_account: metadata_account_pda,
             token_manager_pda,
             gateway_root_pda,
-            axelar_gateway_program: axelar_solana_gateway_v2::ID,
+            gateway_program: axelar_solana_gateway_v2::ID,
             gas_treasury: gas_treasury_pda,
             gas_service: axelar_solana_gas_service_v2::id(),
             system_program: system_program::ID,
