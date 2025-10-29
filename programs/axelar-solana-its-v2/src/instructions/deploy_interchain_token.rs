@@ -40,7 +40,7 @@ pub struct DeployInterchainToken<'info> {
         payer = payer,
         space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
-            TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt)
         ],
@@ -282,7 +282,7 @@ fn create_token_metadata<'info>(
         .is_mutable(false)
         .name(truncated_name)
         .symbol(truncated_symbol)
-        .uri(String::new())
+        .uri(String::with_capacity(0))
         .seller_fee_basis_points(0)
         .system_program(&accounts.system_program.to_account_info())
         .sysvar_instructions(&accounts.sysvar_instructions.to_account_info())

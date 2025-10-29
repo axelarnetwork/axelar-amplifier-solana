@@ -214,7 +214,6 @@ fn test_execute_link_token() {
         token_manager_ata,
         token_program: spl_token_2022::id(),
         associated_token_program: spl_associated_token_account::id(),
-        rent: solana_sdk::sysvar::rent::ID,
         system_program: solana_sdk::system_program::ID,
 
         // Remaining accounts

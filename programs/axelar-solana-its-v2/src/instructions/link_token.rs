@@ -1,7 +1,7 @@
 use crate::{
     errors::ItsError,
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
-    gmp::GMPAccounts,
+    gmp::*,
     instructions::process_outbound,
     state::{
         token_manager::{TokenManager, Type},
@@ -10,7 +10,6 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
-use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
 
@@ -22,7 +21,7 @@ use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
     token_manager_type: Type,
     link_params: Vec<u8>,
     gas_value: u64,
-    signing_pda_bump: u8
+    signing_pda_bump: u8,
 )]
 #[event_cpi]
 pub struct LinkToken<'info> {
@@ -31,9 +30,20 @@ pub struct LinkToken<'info> {
 
     pub deployer: Signer<'info>,
 
+    pub its_program: Program<'info, crate::program::AxelarSolanaItsV2>,
+
+    #[account(
+        seeds = [InterchainTokenService::SEED_PREFIX],
+        bump = its_root_pda.bump,
+        constraint = !its_root_pda.paused @ ItsError::Paused,
+        constraint = its_root_pda.chain_name != destination_chain @ ItsError::InvalidDestinationChain,
+        constraint = its_root_pda.is_trusted_chain_or_hub(&destination_chain) @ ItsError::UntrustedDestinationChain,
+    )]
+    pub its_root_pda: Account<'info, InterchainTokenService>,
+
     #[account(
         seeds = [
-            crate::seed_prefixes::TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
             &interchain_token_id_internal(&linked_token_deployer_salt(&deployer.key(), &salt))
         ],
@@ -54,27 +64,7 @@ pub struct LinkToken<'info> {
 
     pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
-    #[account(
-        mut,
-        seeds = [Treasury::SEED_PREFIX],
-        seeds::program = axelar_solana_gas_service_v2::ID,
-        bump = gas_treasury.load()?.bump,
-    )]
-    pub gas_treasury: AccountLoader<'info, Treasury>,
-
-    #[account(address = axelar_solana_gas_service_v2::ID)]
-    pub gas_service: AccountInfo<'info>,
-
     pub system_program: Program<'info, System>,
-
-    #[account(
-        seeds = [InterchainTokenService::SEED_PREFIX],
-        bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused,
-        constraint = its_root_pda.chain_name != destination_chain @ ItsError::InvalidDestinationChain,
-        constraint = its_root_pda.is_trusted_chain_or_hub(&destination_chain) @ ItsError::UntrustedDestinationChain,
-    )]
-    pub its_root_pda: Account<'info, InterchainTokenService>,
 
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
@@ -82,9 +72,6 @@ pub struct LinkToken<'info> {
         seeds::program = crate::ID
     )]
     pub call_contract_signing_pda: Signer<'info>,
-
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
 
     // Event authority accounts
     #[account(
@@ -94,12 +81,7 @@ pub struct LinkToken<'info> {
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = gas_service.key()
-    )]
-    pub gas_event_authority: SystemAccount<'info>,
+    pub gas_service_accounts: GasServiceAccounts<'info>,
 }
 
 impl<'info> LinkToken<'info> {
@@ -108,14 +90,18 @@ impl<'info> LinkToken<'info> {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_program: self.gateway_program.to_account_info(),
-            gas_treasury: self.gas_treasury.to_account_info(),
-            gas_service: self.gas_service.clone(),
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.clone(),
+            its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
-            gas_event_authority: self.gas_event_authority.to_account_info(),
+            // Gas Service
+            gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
+            gas_service: self.gas_service_accounts.gas_service.to_account_info(),
+            gas_event_authority: self
+                .gas_service_accounts
+                .gas_event_authority
+                .to_account_info(),
         }
     }
 }

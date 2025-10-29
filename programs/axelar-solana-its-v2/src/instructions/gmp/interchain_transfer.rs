@@ -1,20 +1,22 @@
 use crate::{
     errors::ItsError,
     events::InterchainTransferReceived,
-    seed_prefixes::TOKEN_MANAGER_SEED,
     state::{
         current_flow_epoch, token_manager, FlowDirection, InterchainTokenService, TokenManager,
     },
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token_2022::spl_token_2022::{
-        extension::{
-            transfer_fee::TransferFeeConfig, BaseStateWithExtensions, StateWithExtensions,
+    token_2022::{
+        spl_token_2022::{
+            extension::{
+                transfer_fee::TransferFeeConfig, BaseStateWithExtensions, StateWithExtensions,
+            },
+            state::Mint as SplMint,
         },
-        state::Mint as SplMint,
+        Token2022,
     },
-    token_interface::{Mint, TokenAccount, TokenInterface},
+    token_interface::{Mint, TokenAccount},
 };
 use axelar_solana_gateway_v2::Message;
 use solana_program::{entrypoint::ProgramResult, program_option::COption, program_pack::Pack};
@@ -51,7 +53,7 @@ pub struct InterchainTransferInternal<'info> {
     #[account(
         mut,
         seeds = [
-            TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
             &token_id
         ],
@@ -66,8 +68,7 @@ pub struct InterchainTransferInternal<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    #[account(address = anchor_spl::token_2022::ID)]
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token2022>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -126,7 +127,7 @@ fn handle_give_token_transfer(
     let its_root_key = ctx.accounts.its_root_pda.key();
     let bump_seed = [token_manager_pda_bump];
     let signer_seeds: &[&[&[u8]]] = &[&[
-        TOKEN_MANAGER_SEED,
+        TokenManager::SEED_PREFIX,
         its_root_key.as_ref(),
         token_id.as_ref(),
         &bump_seed,
@@ -139,14 +140,14 @@ fn handle_give_token_transfer(
         }
         LockUnlock => {
             let decimals = get_mint_decimals(&ctx.accounts.token_mint.to_account_info())?;
-            transfer_to(ctx, amount, decimals, &signer_seeds)?;
+            transfer_to(ctx, amount, decimals, signer_seeds)?;
             amount
         }
         LockUnlockFee => {
             let (fee, decimals) =
                 get_fee_and_decimals(&ctx.accounts.token_mint.to_account_info(), amount)?;
 
-            transfer_with_fee_to(ctx, amount, decimals, fee, &signer_seeds)?;
+            transfer_with_fee_to(ctx, amount, decimals, fee, signer_seeds)?;
 
             amount
                 .checked_sub(fee)
@@ -264,7 +265,7 @@ fn get_mint_decimals(token_mint: &AccountInfo) -> std::result::Result<u8, Progra
     Ok(mint_state.base.decimals)
 }
 
-fn mint_to_receiver<'info>(
+fn mint_to_receiver(
     ctx: &Context<InterchainTransferInternal>,
     token_id: [u8; 32],
     initial_supply: u64,
@@ -282,7 +283,7 @@ fn mint_to_receiver<'info>(
     let its_root_key = ctx.accounts.its_root_pda.key();
     let bump_seed = [token_manager_bump];
     let signer_seeds: &[&[&[u8]]] = &[&[
-        TOKEN_MANAGER_SEED,
+        TokenManager::SEED_PREFIX,
         its_root_key.as_ref(),
         token_id.as_ref(),
         &bump_seed,

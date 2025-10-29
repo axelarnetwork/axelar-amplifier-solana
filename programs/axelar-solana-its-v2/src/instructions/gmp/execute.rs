@@ -1,6 +1,6 @@
 use crate::{errors::ItsError, state::InterchainTokenService};
 use anchor_lang::{prelude::*, InstructionData, Key};
-use anchor_spl::{associated_token::AssociatedToken, token_interface::TokenInterface};
+use anchor_spl::{associated_token::AssociatedToken, token_2022::Token2022};
 use axelar_solana_gateway_v2::{
     executable::{validate_message_raw, HasAxelarExecutable},
     executable_accounts, Message,
@@ -36,14 +36,9 @@ pub struct Execute<'info> {
     #[account(mut)]
     pub token_manager_ata: UncheckedAccount<'info>,
 
-    #[account(address = anchor_spl::token_2022::ID)]
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token2022>,
 
-    #[account(address = anchor_spl::associated_token::ID)]
     pub associated_token_program: Program<'info, AssociatedToken>,
-
-    #[account(address = anchor_lang::solana_program::sysvar::rent::ID)]
-    pub rent: Sysvar<'info, Rent>,
 
     pub system_program: Program<'info, System>,
 
@@ -246,7 +241,6 @@ fn link_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.key(),
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
-        rent: ctx.accounts.rent.key(),
         operator: ctx.accounts.minter.as_ref().map(Key::key), // Use minter as operator
         operator_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(Key::key),
         // for event cpi
@@ -271,7 +265,6 @@ fn link_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
         associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-        rent: ctx.accounts.rent.to_account_info(),
         operator: ctx
             .accounts
             .minter
@@ -324,7 +317,6 @@ fn deploy_interchain_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.key(),
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
-        rent: ctx.accounts.rent.key(),
         sysvar_instructions: ctx.accounts.sysvar_instructions.clone().unwrap().key(),
         mpl_token_metadata_program: ctx
             .accounts
@@ -363,7 +355,6 @@ fn deploy_interchain_token_self_invoke(
 		token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
 		token_program: ctx.accounts.token_program.to_account_info(),
 		associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-		rent: ctx.accounts.rent.to_account_info(),
 		sysvar_instructions: ctx.accounts.sysvar_instructions.clone().unwrap().to_account_info(),
 		mpl_token_metadata_program: ctx
 			.accounts

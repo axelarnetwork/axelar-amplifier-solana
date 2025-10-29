@@ -6,11 +6,8 @@ use crate::{
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::TokenAccount;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_interface::{Mint, TokenInterface},
-};
+use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
+use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 
 #[derive(Accounts)]
@@ -69,12 +66,10 @@ pub struct DeployInterchainTokenInternal<'info> {
         associated_token::token_program = token_program
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
-    #[account(address = anchor_spl::token_2022::ID)]
-    pub token_program: Interface<'info, TokenInterface>,
-    #[account(address = anchor_spl::associated_token::ID)]
-    pub associated_token_program: Program<'info, AssociatedToken>,
 
-    pub rent: Sysvar<'info, Rent>,
+    pub token_program: Program<'info, Token2022>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
 
     #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
@@ -105,6 +100,7 @@ pub struct DeployInterchainTokenInternal<'info> {
 
     // Optional accounts
     pub minter: Option<UncheckedAccount<'info>>,
+
     #[account(
         init,
         payer = payer,
@@ -275,7 +271,7 @@ fn create_token_metadata<'info>(
         .is_mutable(false)
         .name(truncated_name)
         .symbol(truncated_symbol)
-        .uri(String::new())
+        .uri(String::with_capacity(0))
         .seller_fee_basis_points(0)
         .system_program(&accounts.system_program.to_account_info())
         .sysvar_instructions(&accounts.sysvar_instructions.to_account_info())

@@ -2,7 +2,6 @@ use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
-    seed_prefixes::TOKEN_MANAGER_SEED,
     state::{token_manager, InterchainTokenService, Roles, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
@@ -13,7 +12,12 @@ use anchor_spl::{
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], destination_token_address: [u8; 32], token_manager_type: u8, link_params: Vec<u8>)]
+#[instruction(
+	token_id: [u8; 32],
+	destination_token_address: [u8; 32],
+	token_manager_type: u8,
+	link_params: Vec<u8>,
+)]
 pub struct LinkTokenInternal<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -35,11 +39,11 @@ pub struct LinkTokenInternal<'info> {
         payer = payer,
         space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
-            TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
             &token_id,
         ],
-        bump
+        bump,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -53,13 +57,10 @@ pub struct LinkTokenInternal<'info> {
         associated_token::token_program = token_program
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
-    #[account(address = anchor_spl::token_2022::ID)]
+
     pub token_program: Interface<'info, TokenInterface>,
 
-    #[account(address = anchor_spl::associated_token::ID)]
     pub associated_token_program: Program<'info, AssociatedToken>,
-
-    pub rent: Sysvar<'info, Rent>,
 
     pub operator: Option<UncheckedAccount<'info>>,
 

@@ -1,4 +1,4 @@
-use crate::gmp::{GMPAccounts, ToGMPAccounts};
+use crate::gmp::*;
 use crate::program::AxelarSolanaItsV2;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
@@ -16,10 +16,7 @@ use anchor_spl::token_2022::spl_token_2022::{
     state::Mint as SplMint,
 };
 use anchor_spl::token_interface::Mint;
-use axelar_solana_gas_service_v2::{
-    cpi::{accounts::PayGas, pay_gas},
-    state::Treasury,
-};
+use axelar_solana_gas_service_v2::cpi::{accounts::PayGas, pay_gas};
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, SendToHub};
 use mpl_token_metadata::accounts::Metadata;
@@ -105,17 +102,6 @@ pub struct DeployRemoteInterchainToken<'info> {
 
     pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
 
-    #[account(
-        mut,
-        seeds = [Treasury::SEED_PREFIX],
-        seeds::program = axelar_solana_gas_service_v2::ID,
-        bump = gas_treasury.load()?.bump,
-    )]
-    pub gas_treasury: AccountLoader<'info, Treasury>,
-
-    #[account(address = axelar_solana_gas_service_v2::ID)]
-    pub gas_service: AccountInfo<'info>,
-
     pub system_program: Program<'info, System>,
 
     #[account(
@@ -144,13 +130,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
-    /// Event authority for gas service - derived from gas service program
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = gas_service.key()
-    )]
-    pub gas_event_authority: SystemAccount<'info>,
+    pub gas_service_accounts: GasServiceAccounts<'info>,
 }
 
 impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
@@ -159,14 +139,14 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_program: self.gateway_program.to_account_info(),
-            gas_treasury: self.gas_treasury.to_account_info(),
-            gas_service: self.gas_service.clone(),
+            gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
+            gas_service: self.gas_service_accounts.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
             its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
-            gas_event_authority: self.gas_event_authority.to_account_info(),
+            gas_event_authority: self.gas_service_accounts.gas_event_authority.to_account_info(),
         }
     }
 }
