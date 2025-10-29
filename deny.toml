@@ -136,107 +136,142 @@ exceptions = [
 # adding a clarification entry for it allows you to manually specify the
 # licensing information
 [[licenses.clarify]]
-crate = "axelar-solana-gateway"
+crate = "solana-axelar-gateway"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "axelar-solana-encoding"
 expression = "MIT"
 license-files = []
-[[licenses.clarify]]
-crate = "axelar-rkyv-encoding"
-expression = "MIT"
-license-files = []
-[[licenses.clarify]]
-crate = "axelar-executable-old"
-expression = "MIT"
-license-files = []
-[[licenses.clarify]]
-crate = "gmp-gateway"
-expression = "MIT"
-license-files = []
+
 [[licenses.clarify]]
 crate = "governance-gmp"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "role-management"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "interchain-token-transfer-gmp"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
-crate = "axelar-solana-its"
+crate = "solana-axelar-its"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
-crate = "axelar-solana-governance"
+crate = "solana-axelar-governance"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
-crate = "axelar-solana-its"
+crate = "solana-axelar-memo"
 expression = "MIT"
 license-files = []
-[[licenses.clarify]]
-crate = "axelar-solana-memo-program"
-expression = "MIT"
-license-files = []
+
 [[licenses.clarify]]
 crate = "program-utils"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "axelar-message-primitives"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "its-instruction-builder"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "axelar-solana-gateway-test-fixtures"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
-crate = "axelar-solana-multicall"
+crate = "axelar-solana-gateway-v2-test-fixtures"
 expression = "MIT"
 license-files = []
+
+[[licenses.clarify]]
+crate = "mollusk-test-utils"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+crate = "solana-axelar-multicall-legacy"
+expression = "MIT"
+license-files = []
+
 [[licenses.clarify]]
 crate = "dummy-axelar-solana-gateway"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "evm-contracts-rs"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "evm-contracts-test-suite"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "dummy-axelar-solana-event-cpi"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "event-cpi"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "event-cpi-macros"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "event-cpi-test-utils"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "anchor-discriminators"
 expression = "MIT"
 license-files = []
+
 [[licenses.clarify]]
 crate = "anchor-discriminators-macros"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+crate = "solana-axelar-gateway-legacy"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+crate = "solana-axelar-its-legacy"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+crate = "solana-axelar-governance-legacy"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
+crate = "solana-axelar-memo-legacy"
 expression = "MIT"
 license-files = []
 

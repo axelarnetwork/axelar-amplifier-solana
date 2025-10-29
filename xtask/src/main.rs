@@ -31,12 +31,6 @@ enum Commands {
     UnusedDeps,
     Typos,
     Docs,
-    CreateBindings {
-        program: String,
-        /// Copies them from temp folder to corresponding
-        #[clap(short, long, default_value_t = false)]
-        update: bool,
-    },
     Audit {
         #[clap(last = true)]
         args: Vec<String>,
@@ -45,7 +39,9 @@ enum Commands {
         #[clap(last = true)]
         args: Vec<String>,
     },
-    UpdateIds,
+    UpdateIds {
+        legacy: Option<bool>,
+    },
 }
 
 fn main() -> eyre::Result<()> {
@@ -153,45 +149,6 @@ fn main() -> eyre::Result<()> {
                 cmd!(sh, "xdg-open target/doc/relayer/index.html").run()?;
             }
         }
-        Commands::CreateBindings { program, update } => {
-            println!("Creating bindings for: {}", program);
-            let program = "axelar-solana-".to_owned() + &program;
-            let temp_folder = "bindings/generated/temp/".to_owned();
-            let temp_folder_program = temp_folder.clone() + &program;
-
-            if std::fs::metadata(&temp_folder).is_err() {
-                cmd!(sh, "mkdir {temp_folder}").run()?;
-            }
-            if std::fs::metadata(&temp_folder_program).is_err() {
-                cmd!(sh, "mkdir {temp_folder_program}").run()?;
-            }
-            cmd!(
-                sh,
-                "../native-to-anchor/generator/target/debug/native-to-anchor package
-                programs/{program}
-                -o bindings/generated/temp
-                -d bindings/anchor_lib/{program}.rs
-                -k"
-            )
-            .run()?;
-            if update {
-                cmd!(
-                    sh,
-                    "rm -rf bindings/generated/{program}/src bindings/generated/{program}/idl.json"
-                )
-                .run()?;
-                cmd!(
-                    sh,
-                    "cp -r bindings/generated/temp/{program}/src bindings/generated/{program}/"
-                )
-                .run()?;
-                cmd!(
-                    sh,
-                    "cp bindings/generated/temp/{program}/idl.json bindings/generated/{program}/"
-                )
-                .run()?;
-            }
-        }
         Commands::Audit { args } => {
             println!("cargo audit");
             cmd!(sh, "cargo install cargo-audit --locked").run()?;
@@ -202,18 +159,30 @@ fn main() -> eyre::Result<()> {
             cmd!(sh, "cargo +nightly install cargo-deny").run()?;
             cmd!(sh, "cargo deny check {args...}").run()?;
         }
-        Commands::UpdateIds => {
+        Commands::UpdateIds { legacy } => {
             println!("Updating program IDs");
-            let program_prefixes = [
-                ("axelar-solana-gateway", "gtw"),
-                ("axelar-solana-its", "its"),
-                ("axelar-solana-gas-service", "gas"),
-                ("axelar-solana-gas-service-v2", "gas2"),
-                ("axelar-solana-operators", "opr"),
-                ("axelar-solana-multicall", "mc"),
-                ("axelar-solana-memo-program", "mem"),
-                ("axelar-solana-governance", "gov"),
+
+            let mut program_prefixes = vec![
+                ("solana-axelar-gas-service", "gas"),
+                ("solana-axelar-gateway", "gtw"),
+                ("solana-axelar-governance", "gov"),
+                ("solana-axelar-its", "its"),
+                ("solana-axelar-memo", "mem"),
+                ("solana-axelar-operators", "opr"),
             ];
+
+            if legacy.is_some_and(|l| l) {
+                println!("Updating program IDs for legacy programs");
+
+                program_prefixes.extend_from_slice(&[
+                    ("solana-axelar-gas-service-legacy", "gasl"),
+                    ("solana-axelar-gateway-legacy", "gtwl"),
+                    ("solana-axelar-governance-legacy", "govl"),
+                    ("solana-axelar-its-legacy", "itsl"),
+                    ("solana-axelar-memo-legacy", "meml"),
+                    ("solana-axelar-multicall-legacy", "mcl"),
+                ]);
+            }
 
             let (solana_programs, _) = workspace_crates_by_category(&sh)?;
 
@@ -258,13 +227,24 @@ fn main() -> eyre::Result<()> {
                     // Update the declare_id! macro in lib.rs
                     // Read the current lib.rs content
                     let lib_content = std::fs::read_to_string(&lib_rs_path)?;
-                    let updated_content = lib_content.replace(
-                        lib_content
-                            .lines()
-                            .find(|line| line.contains("solana_program::declare_id!("))
-                            .unwrap_or("declare_id!(\"NoMatch\");"),
-                        &format!("solana_program::declare_id!(\"{}\");", new_id),
-                    );
+
+                    // Find the existing declare_id! line (with or without solana_program:: prefix)
+                    let old_line = lib_content
+                        .lines()
+                        .find(|line| {
+                            line.trim().starts_with("solana_program::declare_id!(")
+                                || line.trim().starts_with("declare_id!(")
+                        })
+                        .unwrap_or("declare_id!(\"NoMatch\");");
+
+                    // Preserve the original format (with or without solana_program:: prefix)
+                    let new_line = if old_line.trim().starts_with("solana_program::") {
+                        format!("solana_program::declare_id!(\"{}\");", new_id)
+                    } else {
+                        format!("declare_id!(\"{}\");", new_id)
+                    };
+
+                    let updated_content = lib_content.replace(old_line, &new_line);
 
                     std::fs::write(&lib_rs_path, updated_content)?;
                     println!("Updated declare_id! macro in {lib_rs_path:?}");

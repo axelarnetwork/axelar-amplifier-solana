@@ -12,20 +12,20 @@ use axelar_solana_encoding::types::messages::{CrossChainId, Message, Messages};
 use axelar_solana_encoding::types::payload::Payload;
 use axelar_solana_encoding::types::verifier_set::{verifier_set_hash, VerifierSet};
 use axelar_solana_encoding::{borsh, hash_payload};
-use axelar_solana_gateway::error::GatewayError;
-use axelar_solana_gateway::instructions::InitialVerifierSet;
-use axelar_solana_gateway::num_traits::FromPrimitive;
-use axelar_solana_gateway::state::incoming_message::{command_id, IncomingMessage};
-use axelar_solana_gateway::state::signature_verification_pda::SignatureVerificationSessionData;
-use axelar_solana_gateway::state::verifier_set_tracker::VerifierSetTracker;
-use axelar_solana_gateway::state::GatewayConfig;
-use axelar_solana_gateway::{
-    get_gateway_root_config_pda, get_incoming_message_pda, get_verifier_set_tracker_pda,
-    BytemuckedPda,
-};
 use event_cpi::CpiEvent;
 use event_cpi_test_utils::assert_event_cpi;
 use rand::Rng as _;
+use solana_axelar_gateway_legacy::error::GatewayError;
+use solana_axelar_gateway_legacy::instructions::InitialVerifierSet;
+use solana_axelar_gateway_legacy::num_traits::FromPrimitive;
+use solana_axelar_gateway_legacy::state::incoming_message::{command_id, IncomingMessage};
+use solana_axelar_gateway_legacy::state::signature_verification_pda::SignatureVerificationSessionData;
+use solana_axelar_gateway_legacy::state::verifier_set_tracker::VerifierSetTracker;
+use solana_axelar_gateway_legacy::state::GatewayConfig;
+use solana_axelar_gateway_legacy::{
+    get_gateway_root_config_pda, get_incoming_message_pda, get_verifier_set_tracker_pda,
+    BytemuckedPda,
+};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::{BanksTransactionResultWithMetadata, ProgramTest};
 use solana_sdk::account::ReadableAccount as _;
@@ -91,9 +91,9 @@ impl SolanaAxelarIntegrationMetadata {
     pub async fn initialize_gateway_config_account(
         &mut self,
     ) -> Result<Pubkey, BanksTransactionResultWithMetadata> {
-        let (gateway_config_pda, _) = axelar_solana_gateway::get_gateway_root_config_pda();
+        let (gateway_config_pda, _) = solana_axelar_gateway_legacy::get_gateway_root_config_pda();
         let initial_verifier_set = self.init_gateway_config_verifier_set_data();
-        let ix = axelar_solana_gateway::instructions::initialize_config(
+        let ix = solana_axelar_gateway_legacy::instructions::initialize_config(
             self.fixture.payer.pubkey(),
             self.upgrade_authority.pubkey(),
             self.domain_separator,
@@ -116,7 +116,7 @@ impl SolanaAxelarIntegrationMetadata {
 
         // we use this query to check the expected owner
         let _account = self
-            .get_account(&gateway_config_pda, &axelar_solana_gateway::id())
+            .get_account(&gateway_config_pda, &solana_axelar_gateway_legacy::id())
             .await;
 
         Ok(gateway_config_pda)
@@ -127,13 +127,14 @@ impl SolanaAxelarIntegrationMetadata {
         &mut self,
         execute_data: &ExecuteData,
     ) -> Result<BanksTransactionResultWithMetadata, BanksTransactionResultWithMetadata> {
-        let ix = axelar_solana_gateway::instructions::initialize_payload_verification_session(
-            self.payer.pubkey(),
-            self.gateway_root_pda,
-            execute_data.payload_merkle_root,
-            execute_data.signing_verifier_set_merkle_root,
-        )
-        .unwrap();
+        let ix =
+            solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
+                self.payer.pubkey(),
+                self.gateway_root_pda,
+                execute_data.payload_merkle_root,
+                execute_data.signing_verifier_set_merkle_root,
+            )
+            .unwrap();
         self.fixture.send_tx(&[ix]).await
     }
 
@@ -152,11 +153,11 @@ impl SolanaAxelarIntegrationMetadata {
         for signature_leaves in &execute_data.signing_verifier_set_leaves {
             // Verify the signature
             let (verification_session_pda, _) =
-                axelar_solana_gateway::get_signature_verification_pda(
+                solana_axelar_gateway_legacy::get_signature_verification_pda(
                     &execute_data.payload_merkle_root,
                     &execute_data.signing_verifier_set_merkle_root,
                 );
-            let ix = axelar_solana_gateway::instructions::verify_signature(
+            let ix = solana_axelar_gateway_legacy::instructions::verify_signature(
                 gateway_config_pda,
                 verifier_set_tracker_pda,
                 verification_session_pda,
@@ -174,10 +175,11 @@ impl SolanaAxelarIntegrationMetadata {
         }
 
         // Check that the PDA contains the expected data
-        let (verification_pda, _bump) = axelar_solana_gateway::get_signature_verification_pda(
-            &execute_data.payload_merkle_root,
-            &execute_data.signing_verifier_set_merkle_root,
-        );
+        let (verification_pda, _bump) =
+            solana_axelar_gateway_legacy::get_signature_verification_pda(
+                &execute_data.payload_merkle_root,
+                &execute_data.signing_verifier_set_merkle_root,
+            );
         Ok(verification_pda)
     }
 
@@ -267,7 +269,7 @@ impl SolanaAxelarIntegrationMetadata {
         let (incoming_message_pda, _incoming_message_pda_bump) =
             get_incoming_message_pda(&command_id);
 
-        axelar_solana_gateway::instructions::approve_message(
+        solana_axelar_gateway_legacy::instructions::approve_message(
             message,
             payload_merkle_root,
             self.gateway_root_pda,
@@ -348,8 +350,8 @@ impl SolanaAxelarIntegrationMetadata {
         let gateway_config_pda = get_gateway_root_config_pda().0;
 
         let (new_vs_tracker_pda, _new_vs_tracker_bump) =
-            axelar_solana_gateway::get_verifier_set_tracker_pda(new_verifier_set_hash);
-        axelar_solana_gateway::instructions::rotate_signers(
+            solana_axelar_gateway_legacy::get_verifier_set_tracker_pda(new_verifier_set_hash);
+        solana_axelar_gateway_legacy::instructions::rotate_signers(
             gateway_config_pda,
             verification_session_account,
             signers.verifier_set_tracker().0,
@@ -430,7 +432,7 @@ impl SolanaAxelarIntegrationMetadata {
     ) -> Result<BanksTransactionResultWithMetadata, BanksTransactionResultWithMetadata> {
         let (incoming_message_pda, _bump) =
             get_incoming_message_pda(&command_id(&message.cc_id.chain, &message.cc_id.id));
-        let ix = axelar_solana_gateway::executable::construct_axelar_executable_ix(
+        let ix = solana_axelar_gateway_legacy::executable::construct_axelar_executable_ix(
             message,
             raw_payload,
             incoming_message_pda,
@@ -461,7 +463,7 @@ impl SolanaAxelarIntegrationMetadata {
         verification_pda: Pubkey,
     ) -> SignatureVerificationSessionData {
         let verification_session_account = self
-            .get_account(&verification_pda, &axelar_solana_gateway::id())
+            .get_account(&verification_pda, &solana_axelar_gateway_legacy::id())
             .await;
         *SignatureVerificationSessionData::read(verification_session_account.data()).unwrap()
     }
@@ -469,7 +471,7 @@ impl SolanaAxelarIntegrationMetadata {
     /// Get the gateway root config data
     pub async fn gateway_config(&mut self, gateway_root_pda: Pubkey) -> GatewayConfig {
         let gateway_root_pda_account = self
-            .get_account(&gateway_root_pda, &axelar_solana_gateway::id())
+            .get_account(&gateway_root_pda, &solana_axelar_gateway_legacy::id())
             .await;
         *GatewayConfig::read(gateway_root_pda_account.data()).unwrap()
     }
@@ -480,7 +482,10 @@ impl SolanaAxelarIntegrationMetadata {
         verifiers_set_tracker_pda: Pubkey,
     ) -> VerifierSetTracker {
         let verifiers_set_tracker_pda_account = self
-            .get_account(&verifiers_set_tracker_pda, &axelar_solana_gateway::id())
+            .get_account(
+                &verifiers_set_tracker_pda,
+                &solana_axelar_gateway_legacy::id(),
+            )
             .await;
         *VerifierSetTracker::read(verifiers_set_tracker_pda_account.data()).unwrap()
     }
@@ -488,7 +493,7 @@ impl SolanaAxelarIntegrationMetadata {
     /// Get the verifier set tracker data
     pub async fn incoming_message(&mut self, incoming_message_pda: Pubkey) -> IncomingMessage {
         let incoming_message_pda_acc = self
-            .get_account(&incoming_message_pda, &axelar_solana_gateway::id())
+            .get_account(&incoming_message_pda, &solana_axelar_gateway_legacy::id())
             .await;
         *IncomingMessage::read(incoming_message_pda_acc.data()).unwrap()
     }
@@ -582,14 +587,14 @@ impl SolanaAxelarIntegration {
 
         // deploy solana gateway
         let gateway_program_bytecode =
-            tokio::fs::read("../../target/deploy/axelar_solana_gateway.so")
+            tokio::fs::read("../../target/deploy/solana_axelar_gateway_legacy.so")
                 .await
                 .unwrap();
         fixture
             .register_upgradeable_program(
                 &gateway_program_bytecode,
                 &upgrade_authority.pubkey(),
-                &axelar_solana_gateway::id(),
+                &solana_axelar_gateway_legacy::id(),
             )
             .await;
         let operator = Keypair::new();
@@ -605,7 +610,7 @@ impl SolanaAxelarIntegration {
             upgrade_authority,
             fixture,
             signers: initial_signers,
-            gateway_root_pda: axelar_solana_gateway::get_gateway_root_config_pda().0,
+            gateway_root_pda: solana_axelar_gateway_legacy::get_gateway_root_config_pda().0,
             operator,
             previous_signers_retention: self.previous_signers_retention,
             minimum_rotate_signers_delay_seconds: self.minimum_rotate_signers_delay_seconds,

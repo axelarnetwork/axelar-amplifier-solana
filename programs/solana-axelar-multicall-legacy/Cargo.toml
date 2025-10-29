@@ -1,0 +1,53 @@
+[package]
+name = "solana-axelar-multicall-legacy"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "solana_axelar_multicall_legacy"
+crate-type = ["cdylib", "lib"]
+
+[lints]
+workspace = true
+
+[features]
+no-entrypoint = []
+test-sbf = []
+devnet-amplifier = [
+    "axelar-solana-gateway-test-fixtures/devnet-amplifier",
+    "solana-axelar-gateway-legacy/devnet-amplifier",
+    "solana-axelar-memo-legacy/devnet-amplifier"
+]
+stagenet = [
+    "axelar-solana-gateway-test-fixtures/stagenet",
+    "solana-axelar-gateway-legacy/stagenet",
+    "solana-axelar-memo-legacy/stagenet",
+]
+testnet = [
+    "axelar-solana-gateway-test-fixtures/testnet",
+    "solana-axelar-gateway-legacy/testnet",
+    "solana-axelar-memo-legacy/testnet",
+]
+mainnet = [
+    "axelar-solana-gateway-test-fixtures/mainnet",
+    "solana-axelar-gateway-legacy/mainnet",
+    "solana-axelar-memo-legacy/mainnet",
+]
+default = ["devnet-amplifier"]
+
+[dependencies]
+anchor-discriminators-macros.workspace = true
+alloy-sol-types.workspace = true
+borsh.workspace = true
+solana-axelar-gateway-legacy = { workspace = true, features = ["no-entrypoint"] }
+solana-program.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+solana-axelar-memo-legacy = { workspace = true, features = ["no-entrypoint"] }
+axelar-solana-gateway-test-fixtures.workspace = true
+ethers-core.workspace = true
+evm-contracts-test-suite.workspace = true
+itertools.workspace = true
+solana-program-test.workspace = true
+solana-sdk.workspace = true

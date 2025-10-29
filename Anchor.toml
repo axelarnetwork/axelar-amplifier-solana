@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-axelar_solana_gas_service_v2 = "69wy2gqpFZowKEAvjMva8Gtsqaxx4eNw2VQ9eHytYXLe"
+solana_axelar_gas_service = "69wy2gqpFZowKEAvjMva8Gtsqaxx4eNw2VQ9eHytYXLe"
 
 [registry]
 url = "https://api.apr.dev"

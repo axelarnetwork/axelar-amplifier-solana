@@ -5,18 +5,18 @@ use anchor_lang::{
     ToAccountMetas,
 };
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
-use axelar_solana_gateway_v2::seed_prefixes::{
+use libsecp256k1::SecretKey;
+use mollusk_svm::{result::InstructionResult, Mollusk};
+use solana_axelar_gateway::seed_prefixes::{
     self, CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
 };
-use axelar_solana_gateway_v2::{
+use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
     MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID, U256,
 };
-use axelar_solana_gateway_v2::{
+use solana_axelar_gateway::{
     CrossChainId, IncomingMessage, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
 };
-use libsecp256k1::SecretKey;
-use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_sdk::{
     account::Account,
     instruction::{AccountMeta, Instruction},
@@ -49,7 +49,7 @@ pub struct TestSetup {
 pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
     let mollusk = Mollusk::new(
         &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_gateway_v2",
+        "../../target/deploy/solana_axelar_gateway",
     );
 
     let payer = Pubkey::new_unique();
@@ -139,7 +139,7 @@ pub fn setup_test_with_real_signers() -> (
 ) {
     let mollusk = Mollusk::new(
         &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_gateway_v2",
+        "../../target/deploy/solana_axelar_gateway",
     );
 
     let payer = Pubkey::new_unique();
@@ -241,8 +241,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
         previous_verifier_retention: setup.previous_verifier_retention,
     };
 
-    let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializeConfig { params }.data();
+    let instruction_data = solana_axelar_gateway::instruction::InitializeConfig { params }.data();
 
     let program_data_state = UpgradeableLoaderState::ProgramData {
         slot: 0,
@@ -363,7 +362,7 @@ pub fn initialize_payload_verification_session(
     );
 
     let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession { merkle_root }
+        solana_axelar_gateway::instruction::InitializePayloadVerificationSession { merkle_root }
             .data();
 
     let accounts = vec![
@@ -484,7 +483,7 @@ pub fn initialize_payload_verification_session_with_root(
     );
 
     let instruction_data =
-        axelar_solana_gateway_v2::instruction::InitializePayloadVerificationSession {
+        solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
         }
         .data();
@@ -553,7 +552,7 @@ pub fn create_verifier_info(
     verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
 ) -> SigningVerifierSetInfo {
     let hashed_message =
-        axelar_solana_gateway_v2::SignatureVerificationSessionData::prefixed_message_hash(
+        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
             &payload_merkle_root,
         );
 
@@ -630,7 +629,7 @@ pub fn call_contract_helper(
 
     let signing_pda_bump = setup.gateway_caller_bump.unwrap();
 
-    let ix_data = axelar_solana_gateway_v2::instruction::CallContract {
+    let ix_data = solana_axelar_gateway::instruction::CallContract {
         destination_chain,
         destination_contract_address,
         payload,
@@ -641,7 +640,7 @@ pub fn call_contract_helper(
     // Full account metas (must include event_authority + program)
     let ix = Instruction {
         program_id: GATEWAY_PROGRAM_ID,
-        accounts: axelar_solana_gateway_v2::accounts::CallContract {
+        accounts: solana_axelar_gateway::accounts::CallContract {
             caller: memo_program_id,
             signing_pda: Some(signing_pda),
             gateway_root_pda: setup.gateway_root_pda,
@@ -665,7 +664,7 @@ pub fn verify_signature_helper(
     verifier_set_tracker_pda: Pubkey,
     verifier_set_tracker_account: Account,
 ) -> InstructionResult {
-    let instruction_data = axelar_solana_gateway_v2::instruction::VerifySignature {
+    let instruction_data = solana_axelar_gateway::instruction::VerifySignature {
         payload_merkle_root,
         verifier_info,
     }
@@ -697,7 +696,7 @@ pub fn rotate_signers_helper(
     verification_session_pda: Pubkey,
     verify_result: InstructionResult,
 ) -> InstructionResult {
-    let instruction_data = axelar_solana_gateway_v2::instruction::RotateSigners {
+    let instruction_data = solana_axelar_gateway::instruction::RotateSigners {
         new_verifier_set_merkle_root: new_verifier_set_hash,
     }
     .data();
@@ -827,7 +826,7 @@ pub fn transfer_operatorship_helper(
     init_result: InstructionResult,
     new_operator: Pubkey,
 ) -> InstructionResult {
-    let instruction_data = axelar_solana_gateway_v2::instruction::TransferOperatorship {}.data();
+    let instruction_data = solana_axelar_gateway::instruction::TransferOperatorship {}.data();
 
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
@@ -992,7 +991,7 @@ pub fn approve_message_helper(
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
-    let approve_instruction_data = axelar_solana_gateway_v2::instruction::ApproveMessage {
+    let approve_instruction_data = solana_axelar_gateway::instruction::ApproveMessage {
         merkleised_message: merkleised_message.clone(),
         payload_merkle_root,
     }

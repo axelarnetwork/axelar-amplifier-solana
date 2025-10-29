@@ -3,11 +3,11 @@
 use core::ops::Deref;
 
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway::executable::AxelarMessagePayload;
-use axelar_solana_its::instruction::ExecuteInstructionInputs;
-use axelar_solana_its::state::token_manager::TokenManager;
 use borsh::BorshDeserialize;
 use interchain_token_transfer_gmp::GMPPayload;
+use solana_axelar_gateway_legacy::executable::AxelarMessagePayload;
+use solana_axelar_its_legacy::instruction::ExecuteInstructionInputs;
+use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::program_error::ProgramError;
@@ -30,8 +30,8 @@ where
 {
     let payload = GMPPayload::decode(&abi_payload).map_err(|_err| ProgramError::InvalidArgument)?;
     ensure_payer_is_not_forwarded(payer, &payload)?;
-    let (its_root_pda, _) = axelar_solana_its::find_its_root_pda();
-    let (token_manager_pda, _) = axelar_solana_its::find_token_manager_pda(
+    let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
+    let (token_manager_pda, _) = solana_axelar_its_legacy::find_token_manager_pda(
         &its_root_pda,
         &payload
             .token_id()
@@ -50,7 +50,7 @@ where
         .mint_opt(mint)
         .build();
 
-    axelar_solana_its::instruction::execute(inputs)
+    solana_axelar_its_legacy::instruction::execute(inputs)
 }
 
 #[async_recursion::async_recursion]

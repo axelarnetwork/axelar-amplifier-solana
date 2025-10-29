@@ -1,0 +1,69 @@
+[package]
+name = "solana-axelar-memo-legacy"
+version = "0.1.0"
+description = "Utility program to test Axelar Gateway and other integrations"
+edition = "2021"
+
+[lib]
+name = "solana_axelar_memo_legacy"
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+devnet-amplifier = [
+    "solana-axelar-gateway-legacy/devnet-amplifier",
+    "solana-axelar-gas-service-legacy/devnet-amplifier",
+    "solana-axelar-its-legacy/devnet-amplifier",
+    "program-utils/devnet-amplifier"
+]
+stagenet = [
+    "solana-axelar-gateway-legacy/stagenet",
+    "solana-axelar-gas-service-legacy/stagenet",
+    "solana-axelar-its-legacy/stagenet",
+    "program-utils/stagenet"
+]
+testnet = [
+    "solana-axelar-gateway-legacy/testnet",
+    "solana-axelar-gas-service-legacy/testnet",
+    "solana-axelar-its-legacy/testnet",
+    "program-utils/testnet"
+]
+mainnet = [
+    "solana-axelar-gateway-legacy/mainnet",
+    "solana-axelar-gas-service-legacy/mainnet",
+    "solana-axelar-its-legacy/mainnet",
+    "program-utils/mainnet"
+]
+default = ["devnet-amplifier"]
+
+[dependencies]
+anchor-discriminators.workspace = true
+anchor-discriminators-macros.workspace = true
+axelar-solana-encoding.workspace = true
+solana-axelar-gas-service-legacy = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-gateway-legacy = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-its-legacy = { workspace = true, features = ["no-entrypoint"] }
+borsh.workspace = true
+event-cpi.workspace = true
+hex.workspace = true
+mpl-token-metadata.workspace = true
+program-utils = { workspace = true, default-features = false }
+solana-program.workspace = true
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
+solana-sdk-ids.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
+axelar-solana-gateway-test-fixtures.workspace = true
+ethers-core.workspace = true
+event-cpi-test-utils.workspace = true
+evm-contracts-test-suite.workspace = true
+itertools.workspace = true
+pretty_assertions.workspace = true
+rstest.workspace = true
+serde_json.workspace = true
+solana-program-test.workspace = true
+solana-sdk.workspace = true
+spl-associated-token-account.workspace = true
+spl-token.workspace = true
+thiserror.workspace = true

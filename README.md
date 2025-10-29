@@ -33,18 +33,18 @@ cargo xtask --help
 ### Solana contracts
 
 - [**Gateway**](programs/axelar-solana-gateway/README.md): The core contract responsible for authenticating GMP messages.
-- [**Gas Service**](programs/axelar-solana-gas-service/README.md): Used for gas payments for the relayer.
+- [**Gas Service**](programs/solana-axelar-gas-service/README.md): Used for gas payments for the relayer.
 - [**Interchain Token Service**](programs/axelar-solana-its/README.md): Bridge tokens between chains.
 - [**Multicall**](programs/axelar-solana-multicall): Execute multiple actions from a single GMP message.
 - [**Governance**](programs/axelar-solana-governance/README.md): The governing entity over on-chain programs, responsible for program upgrades.
-- [**Memo**](programs/axelar-solana-memo-program): An example program that sends and receives GMP messages.
+- [**Memo**](programs/solana-axelar-memo): An example program that sends and receives GMP messages.
 
 
 #### Utility crates
 - [**Axelar Solana Encoding**](solana/crates/axelar-solana-encoding/README.md): Encoding used by the Multisig Prover to encode the data in a way that the relayer & the Solana Gateway can interpret.
 
 ### EVM Smart Contracts
-- [**Axelar Memo**](evm-contracts/src/AxelarMemo.sol): A counterpart of the `axelar-solana-memo` program that acts as an example program used to send GMP messages back and forth Solana.
+- [**Axelar Memo**](evm-contracts/src/AxelarMemo.sol): A counterpart of the `solana-axelar-memo` program that acts as an example program used to send GMP messages back and forth Solana.
 - [**Axelar Solana Multi Call**](evm-contracts/src/AxelarSolanaMultiCall.sol): An example contract used to showcase how to compose Multicall payloads for Solana.
 - [**Solana Gateway Payload**](evm-contracts/src/ExampleEncoder.sol): A Solditiy library that can create Solana-specific GMP payloads.
 
