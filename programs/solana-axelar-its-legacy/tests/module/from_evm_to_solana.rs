@@ -12,7 +12,6 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 use evm_contracts_test_suite::ethers::{signers::Signer, types::Bytes};
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::ContractCallFilter;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::custom_test_token::CustomTestToken;
@@ -22,6 +21,7 @@ use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway_legacy::executable::{
     AxelarMessagePayload, EncodingScheme, SolanaAccountRepr,
 };
+use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 use solana_axelar_memo_legacy::state::Counter;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
@@ -321,8 +321,10 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
         .await?;
 
     let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
-    let (mint, _) =
-        solana_axelar_its_legacy::find_interchain_token_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (mint, _) = solana_axelar_its_legacy::find_interchain_token_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
     let (token_metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&mint);
 
     let metadata = Bytes::from(
@@ -368,8 +370,10 @@ async fn test_call_contract_with_token(ctx: &mut ItsTestContext) -> anyhow::Resu
         retrieve_evm_log_with_filter(ctx.evm_its_contracts.gateway.contract_call_filter()).await;
 
     let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
-    let (token_manager_pda, _) =
-        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &ctx.deployed_interchain_token);
+    let (token_manager_pda, _) = solana_axelar_its_legacy::find_token_manager_pda(
+        &its_root_pda,
+        &ctx.deployed_interchain_token,
+    );
 
     let data = ctx
         .solana_chain

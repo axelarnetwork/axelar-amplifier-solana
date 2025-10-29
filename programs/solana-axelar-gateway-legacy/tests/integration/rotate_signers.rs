@@ -5,16 +5,16 @@ use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
 use axelar_solana_encoding::types::messages::Messages;
 use axelar_solana_encoding::types::payload::Payload;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
-use solana_axelar_gateway_legacy::error::GatewayError;
-use solana_axelar_gateway_legacy::events::VerifierSetRotatedEvent;
-use solana_axelar_gateway_legacy::get_verifier_set_tracker_pda;
-use solana_axelar_gateway_legacy::state::verifier_set_tracker::VerifierSetTracker;
-use solana_axelar_gateway_legacy::types::U256;
 use axelar_solana_gateway_test_fixtures::gateway::{
     make_messages, make_verifier_set, random_bytes, random_message, GetGatewayError,
 };
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use event_cpi_test_utils::assert_event_cpi;
+use solana_axelar_gateway_legacy::error::GatewayError;
+use solana_axelar_gateway_legacy::events::VerifierSetRotatedEvent;
+use solana_axelar_gateway_legacy::get_verifier_set_tracker_pda;
+use solana_axelar_gateway_legacy::state::verifier_set_tracker::VerifierSetTracker;
+use solana_axelar_gateway_legacy::types::U256;
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;

@@ -218,8 +218,10 @@ pub fn send_interchain_transfer(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway_legacy::get_call_contract_signing_pda(solana_axelar_its_legacy::id());
     let its_program = solana_axelar_its_legacy::id();
-    let (its_event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
+    let (its_event_authority, _bump) = Pubkey::find_program_address(
+        &[event_cpi::EVENT_AUTHORITY_SEED],
+        &solana_axelar_its_legacy::ID,
+    );
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
         &solana_axelar_gateway_legacy::ID,
@@ -299,8 +301,10 @@ pub fn send_interchain_transfer_with_wrong_seeds(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway_legacy::get_call_contract_signing_pda(solana_axelar_its_legacy::id());
     let its_program = solana_axelar_its_legacy::id();
-    let (its_event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
+    let (its_event_authority, _bump) = Pubkey::find_program_address(
+        &[event_cpi::EVENT_AUTHORITY_SEED],
+        &solana_axelar_its_legacy::ID,
+    );
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
         &solana_axelar_gateway_legacy::ID,
@@ -380,8 +384,10 @@ pub fn call_contract_with_interchain_token(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway_legacy::get_call_contract_signing_pda(solana_axelar_its_legacy::id());
     let its_program = solana_axelar_its_legacy::id();
-    let (its_event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
+    let (its_event_authority, _bump) = Pubkey::find_program_address(
+        &[event_cpi::EVENT_AUTHORITY_SEED],
+        &solana_axelar_its_legacy::ID,
+    );
     let (gateway_event_authority, _bump) = Pubkey::find_program_address(
         &[event_cpi::EVENT_AUTHORITY_SEED],
         &solana_axelar_gateway_legacy::ID,

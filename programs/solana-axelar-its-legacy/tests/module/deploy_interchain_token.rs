@@ -1,13 +1,15 @@
 use anyhow::anyhow;
-use solana_axelar_its_legacy::instruction::InterchainTokenServiceInstruction;
 use borsh::to_vec;
+use solana_axelar_its_legacy::instruction::InterchainTokenServiceInstruction;
 use solana_program::instruction::{AccountMeta, Instruction};
+#[allow(deprecated)]
 use solana_program::system_program;
 use solana_program_test::tokio;
 use solana_sdk::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use test_context::test_context;
@@ -533,8 +535,10 @@ async fn test_prevent_deploy_approval_created_by_anyone(
         &ctx.deployed_interchain_token,
         destination_chain,
     );
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[event_cpi::EVENT_AUTHORITY_SEED], &solana_axelar_its_legacy::ID);
+    let (event_authority, _bump) = Pubkey::find_program_address(
+        &[event_cpi::EVENT_AUTHORITY_SEED],
+        &solana_axelar_its_legacy::ID,
+    );
 
     let accounts = vec![
         AccountMeta::new(alice.pubkey(), true),
@@ -595,14 +599,15 @@ async fn test_deploy_remote_interchain_token_deployer_must_be_signer(
     let salt = solana_sdk::keccak::hash(b"TestTokenSalt").0;
     let fake_deployer = Pubkey::new_unique();
 
-    let approve_deploy_ix = solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        salt,
-        destination_chain.to_string(),
-        destination_minter.clone(),
-    )?;
+    let approve_deploy_ix =
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            salt,
+            destination_chain.to_string(),
+            destination_minter.clone(),
+        )?;
 
     ctx.send_solana_tx(&[approve_deploy_ix]).await.unwrap();
 
@@ -660,14 +665,15 @@ async fn test_approve_revoke_approve_deploy_sequence(
     let salt = solana_sdk::keccak::hash(b"TestTokenSalt").0;
 
     // First approval
-    let approve_deploy_ix = solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
-        ctx.solana_wallet,
-        ctx.solana_wallet,
-        ctx.solana_wallet,
-        salt,
-        destination_chain.to_string(),
-        destination_minter.clone(),
-    )?;
+    let approve_deploy_ix =
+        solana_axelar_its_legacy::instruction::approve_deploy_remote_interchain_token(
+            ctx.solana_wallet,
+            ctx.solana_wallet,
+            ctx.solana_wallet,
+            salt,
+            destination_chain.to_string(),
+            destination_minter.clone(),
+        )?;
 
     ctx.send_solana_tx(&[approve_deploy_ix.clone()])
         .await
@@ -701,13 +707,14 @@ async fn test_approve_revoke_approve_deploy_sequence(
     );
 
     // Now revoke that approval
-    let revoke_deploy_ix = solana_axelar_its_legacy::instruction::revoke_deploy_remote_interchain_token(
-        ctx.solana_wallet,
-        ctx.solana_wallet,
-        ctx.solana_wallet,
-        salt,
-        destination_chain.to_string(),
-    )?;
+    let revoke_deploy_ix =
+        solana_axelar_its_legacy::instruction::revoke_deploy_remote_interchain_token(
+            ctx.solana_wallet,
+            ctx.solana_wallet,
+            ctx.solana_wallet,
+            salt,
+            destination_chain.to_string(),
+        )?;
 
     ctx.send_solana_tx(&[revoke_deploy_ix.clone()])
         .await

@@ -1,12 +1,12 @@
 //! Program state processor
 
-use solana_axelar_its_legacy::executable::AxelarInterchainTokenExecuteInstruction;
 use borsh::{self, BorshDeserialize};
 use mpl_token_metadata::accounts::Metadata;
 use program_utils::{check_program_account, pda::ValidPDA};
 use solana_axelar_gateway_legacy::executable::{
     validate_message, AxelarExecuteInstruction, AxelarMessagePayload, PROGRAM_ACCOUNTS_START_INDEX,
 };
+use solana_axelar_its_legacy::executable::AxelarInterchainTokenExecuteInstruction;
 use solana_program::account_info::{next_account_info, AccountInfo};
 use solana_program::entrypoint::ProgramResult;
 use solana_program::msg;
@@ -67,8 +67,7 @@ pub fn process_message_from_axelar_with_token<'a>(
     );
 
     let payload = AxelarMessagePayload::decode(&execute_data.data)?;
-    let instruction: AxelarMemoInstruction =
-        borsh::from_slice(&payload.payload_without_accounts())?;
+    let instruction: AxelarMemoInstruction = borsh::from_slice(payload.payload_without_accounts())?;
 
     process_native_ix(program_id, accounts_iter.as_slice(), instruction)
 }
@@ -547,23 +546,24 @@ pub fn process_call_contract_with_interchain_token(
 
     // Use correct seeds for the counter PDA (empty seeds)
     let pda_seeds = vec![];
-    let transfer_ix = solana_axelar_its_legacy::instruction::cpi_call_contract_with_interchain_token(
-        *payer.key,
-        *counter_pda.key,
-        *source_ata.key,
-        token_id,
-        destination_chain.clone(),
-        destination_address.clone(),
-        amount,
-        *token_mint.key,
-        data.clone(),
-        *token_program.key,
-        gas_value
-            .try_into()
-            .map_err(|_| ProgramError::InvalidInstructionData)?,
-        crate::ID,
-        pda_seeds,
-    )?;
+    let transfer_ix =
+        solana_axelar_its_legacy::instruction::cpi_call_contract_with_interchain_token(
+            *payer.key,
+            *counter_pda.key,
+            *source_ata.key,
+            token_id,
+            destination_chain.clone(),
+            destination_address.clone(),
+            amount,
+            *token_mint.key,
+            data.clone(),
+            *token_program.key,
+            gas_value
+                .try_into()
+                .map_err(|_| ProgramError::InvalidInstructionData)?,
+            crate::ID,
+            pda_seeds,
+        )?;
 
     invoke_signed(
         &transfer_ix,

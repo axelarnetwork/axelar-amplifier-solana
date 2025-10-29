@@ -1,6 +1,6 @@
+use borsh::BorshDeserialize;
 use solana_axelar_memo_legacy::get_counter_pda;
 use solana_axelar_memo_legacy::state::Counter;
-use borsh::BorshDeserialize;
 use solana_program_test::tokio;
 use solana_sdk::signature::Signer;
 

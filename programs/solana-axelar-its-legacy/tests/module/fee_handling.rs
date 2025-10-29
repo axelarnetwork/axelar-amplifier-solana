@@ -1,11 +1,11 @@
 use anyhow::anyhow;
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use borsh::BorshDeserialize;
 use evm_contracts_test_suite::ethers::signers::Signer;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::instructions::CreateV1Builder;
 use mpl_token_metadata::types::TokenStandard;
+use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use solana_program_test::tokio;
 use solana_sdk::clock::Clock;
 use solana_sdk::program_pack::Pack;
@@ -107,7 +107,8 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Get the canonical token ID
-    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id =
+        solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
 
     // Create user account and give them tokens for test transfer
     let user_ata = get_associated_token_address_with_program_id(
@@ -174,10 +175,11 @@ async fn test_canonical_token_with_fee_lock_unlock(ctx: &mut ItsTestContext) -> 
         .first()
         .cloned()
         .unwrap();
-    let transfer_event =
-        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
-            .ok_or_else(|| anyhow!("InterchainTransfer not found"))
-            .unwrap();
+    let transfer_event = get_first_event_cpi_occurrence::<
+        solana_axelar_its_legacy::events::InterchainTransfer,
+    >(&inner_ixs)
+    .ok_or_else(|| anyhow!("InterchainTransfer not found"))
+    .unwrap();
 
     ctx.send_solana_tx(&[transfer_ix]).await.unwrap();
 
@@ -272,7 +274,8 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Test transfer with this fee configuration
-    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id =
+        solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
 
     // Set up user account
     let user_ata = get_associated_token_address_with_program_id(
@@ -340,10 +343,11 @@ async fn test_canonical_token_various_fee_configs(ctx: &mut ItsTestContext) -> a
         .first()
         .cloned()
         .unwrap();
-    let transfer_event =
-        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
-            .ok_or_else(|| anyhow!("InterchainTransfer not found"))
-            .unwrap();
+    let transfer_event = get_first_event_cpi_occurrence::<
+        solana_axelar_its_legacy::events::InterchainTransfer,
+    >(&inner_ixs)
+    .ok_or_else(|| anyhow!("InterchainTransfer not found"))
+    .unwrap();
 
     ctx.send_solana_tx(&[transfer_ix]).await.unwrap();
 
@@ -437,7 +441,8 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
     ctx.relay_to_evm(&call_contract_event.payload).await;
 
     // Test with large transfer that would exceed maximum fee
-    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id =
+        solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
 
     let user_ata = get_associated_token_address_with_program_id(
         &ctx.solana_wallet,
@@ -504,10 +509,11 @@ async fn test_canonical_token_maximum_fee_cap(ctx: &mut ItsTestContext) -> anyho
         .first()
         .cloned()
         .unwrap();
-    let transfer_event =
-        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
-            .ok_or_else(|| anyhow!("InterchainTransfer not found"))
-            .unwrap();
+    let transfer_event = get_first_event_cpi_occurrence::<
+        solana_axelar_its_legacy::events::InterchainTransfer,
+    >(&inner_ixs)
+    .ok_or_else(|| anyhow!("InterchainTransfer not found"))
+    .unwrap();
 
     ctx.send_solana_tx(&[transfer_ix]).await.unwrap();
 
@@ -753,10 +759,11 @@ async fn test_custom_token_with_fee_lock_unlock_fee(
         .first()
         .cloned()
         .unwrap();
-    let outbound_event =
-        get_first_event_cpi_occurrence::<solana_axelar_its_legacy::events::InterchainTransfer>(&inner_ixs)
-            .ok_or_else(|| anyhow!("InterchainTransfer not found"))
-            .unwrap();
+    let outbound_event = get_first_event_cpi_occurrence::<
+        solana_axelar_its_legacy::events::InterchainTransfer,
+    >(&inner_ixs)
+    .ok_or_else(|| anyhow!("InterchainTransfer not found"))
+    .unwrap();
     let call_contract_event = get_first_event_cpi_occurrence::<
         solana_axelar_gateway_legacy::events::CallContractEvent,
     >(&inner_ixs)
@@ -900,7 +907,8 @@ async fn test_canonical_token_with_fee_uses_lock_unlock_fee(
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     // Check that the token manager uses LockUnlockFee type
-    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id =
+        solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
     let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
         solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &canonical_token_id);
@@ -968,7 +976,8 @@ async fn test_canonical_token_without_fee_uses_lock_unlock(
     ctx.send_solana_tx(&[register_canonical_ix]).await.unwrap();
 
     // Check that the token manager uses LockUnlock type
-    let canonical_token_id = solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
+    let canonical_token_id =
+        solana_axelar_its_legacy::canonical_interchain_token_id(&canonical_mint);
     let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let (token_manager_pda, _) =
         solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &canonical_token_id);

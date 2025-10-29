@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use std::time::SystemTime;
 
 use axelar_solana_encoding::types::messages::{CrossChainId, Message};
@@ -5,14 +6,14 @@ use axelar_solana_gateway_test_fixtures::base::{workspace_root_dir, TestFixture}
 use axelar_solana_gateway_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
-use solana_axelar_governance_legacy::instructions::builder::{
-    prepend_gateway_accounts_to_ix, GmpCallData, IxBuilder,
-};
-use solana_axelar_governance_legacy::state::GovernanceConfig;
 use borsh::to_vec;
 use event_cpi::CpiEvent;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use solana_axelar_gateway_legacy::state::incoming_message::command_id;
+use solana_axelar_governance_legacy::instructions::builder::{
+    prepend_gateway_accounts_to_ix, GmpCallData, IxBuilder,
+};
+use solana_axelar_governance_legacy::state::GovernanceConfig;
 use solana_axelar_memo_legacy::instruction::AxelarMemoInstruction;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::bpf_loader_upgradeable;
@@ -85,10 +86,11 @@ pub(crate) async fn deploy_governance_program_with_upgrade_authority(
     fixture: &mut TestFixture,
     upgrade_authority: &Pubkey,
 ) {
-    let program_bytecode =
-        tokio::fs::read(workspace_root_dir().join("target/deploy/solana_axelar_governance_legacy.so"))
-            .await
-            .unwrap();
+    let program_bytecode = tokio::fs::read(
+        workspace_root_dir().join("target/deploy/solana_axelar_governance_legacy.so"),
+    )
+    .await
+    .unwrap();
 
     fixture
         .register_upgradeable_program(

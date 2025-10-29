@@ -20,13 +20,13 @@ pub use axelar_payload::{
 };
 
 /// Axelar executable command prefix
-pub const AXELAR_EXECUTE: &[u8; 16] = b"axelar-execute__";
+pub const AXELAR_EXECUTE_IX_DISCRIMINATOR: &[u8; 8] = &[130, 221, 242, 154, 13, 193, 189, 29];
 
 /// The index of the first account that is expected to be passed to the
 /// destination program.
 pub const PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
 
-#[derive(Debug, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub struct AxelarExecuteInstruction {
     pub message: Message,
     pub payload_without_accounts: Vec<u8>,
@@ -262,7 +262,7 @@ fn serialize_instruction(instruction: &AxelarExecuteInstruction) -> Result<Vec<u
     // In our tests, randomly generated messages have, in average, 175 bytes, so 256
     // should be sufficient to avoid reallocations.
     let mut buffer = Vec::with_capacity(256);
-    buffer.extend_from_slice(AXELAR_EXECUTE);
+    buffer.extend_from_slice(AXELAR_EXECUTE_IX_DISCRIMINATOR);
     borsh::to_writer(&mut buffer, &instruction)
         .map_err(|borsh_error| ProgramError::BorshIoError(borsh_error.to_string()))?;
     Ok(buffer)
@@ -302,16 +302,17 @@ impl TryFrom<&[u8]> for AxelarExecuteInstruction {
     /// # Errors
     ///
     /// Returns [`ProgramError::InvalidInstructionData`] in case the buffer data doesn't start with
-    /// the [`AXELAR_EXECUTE`] discriminator.
+    /// the [`AXELAR_EXECUTE_IX_DISCRIMINATOR`] discriminator.
     ///
     /// Returns [`ProgramError::BorshIoError`] if deserialization fails.
+    #[allow(clippy::indexing_slicing)]
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        if !value.starts_with(AXELAR_EXECUTE) {
+        if !value.starts_with(AXELAR_EXECUTE_IX_DISCRIMINATOR) {
             return Err(ProgramError::InvalidInstructionData);
         }
 
         // Slicing: we already checked that slice's lower bound above.
-        borsh::from_slice(&value[AXELAR_EXECUTE.len()..])
+        borsh::from_slice(&value[AXELAR_EXECUTE_IX_DISCRIMINATOR.len()..])
             .map_err(|borsh_error| ProgramError::BorshIoError(borsh_error.to_string()))
     }
 }

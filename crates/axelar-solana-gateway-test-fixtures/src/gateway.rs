@@ -453,9 +453,8 @@ impl SolanaAxelarIntegrationMetadata {
                 .unwrap();
             assert_event_cpi(&event_to_assert, &inner_ixs);
         }
-        let execute_results = self.send_tx(&[ix]).await;
 
-        execute_results
+        self.send_tx(&[ix]).await
     }
 
     /// Get the signature verification session data (deserialised)

@@ -1,3 +1,7 @@
+#![cfg(test)]
+#![allow(clippy::str_to_string)]
+#![allow(clippy::print_stdout)]
+
 use anchor_lang::{prelude::ProgramError, AccountDeserialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
@@ -67,7 +71,7 @@ fn test_set_trusted_chain_success() {
             its_root_pda,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }
@@ -164,7 +168,7 @@ fn test_set_trusted_chain_operator_success() {
             its_root_pda,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }
@@ -261,7 +265,7 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
             its_root_pda,
             system_program: system_program::ID,
             // Event authority
-            event_authority: event_authority,
+            event_authority,
             // The current program account
             program: program_id,
         }
@@ -486,6 +490,7 @@ fn test_set_trusted_chain_unauthorized() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_set_trusted_chain_missing_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");

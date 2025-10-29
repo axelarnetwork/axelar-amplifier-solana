@@ -1,3 +1,7 @@
+#![cfg(test)]
+#![allow(clippy::str_to_string)]
+#![allow(clippy::print_stdout)]
+
 use anchor_lang::AccountDeserialize;
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{create_program_data_account, setup_mollusk};
@@ -12,6 +16,7 @@ use {
     solana_sdk_ids::bpf_loader_upgradeable,
 };
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn init_its_service(
     mollusk: &Mollusk,
     payer: Pubkey,
@@ -147,7 +152,7 @@ fn test_initialize_success() {
 
     assert_eq!(its_data.chain_name, chain_name);
     assert_eq!(its_data.its_hub_address, its_hub_address);
-    assert_eq!(its_data.paused, false);
+    assert!(!its_data.paused);
     assert_eq!(its_data.trusted_chains.len(), 0);
 
     // Verify the user roles PDA is properly initialized

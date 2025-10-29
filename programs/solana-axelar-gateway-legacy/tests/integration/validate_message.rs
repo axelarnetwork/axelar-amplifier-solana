@@ -1,12 +1,14 @@
 use axelar_solana_encoding::types::messages::Message;
-use solana_axelar_gateway_legacy::error::GatewayError;
-use solana_axelar_gateway_legacy::instructions::validate_message;
-use solana_axelar_gateway_legacy::state::incoming_message::{command_id, IncomingMessage, MessageStatus};
-use solana_axelar_gateway_legacy::{get_incoming_message_pda, get_validate_message_signing_pda};
 use axelar_solana_gateway_test_fixtures::base::FindLog;
 use axelar_solana_gateway_test_fixtures::gateway::{make_messages, GetGatewayError};
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use program_utils::pda::BytemuckedPda;
+use solana_axelar_gateway_legacy::error::GatewayError;
+use solana_axelar_gateway_legacy::instructions::validate_message;
+use solana_axelar_gateway_legacy::state::incoming_message::{
+    command_id, IncomingMessage, MessageStatus,
+};
+use solana_axelar_gateway_legacy::{get_incoming_message_pda, get_validate_message_signing_pda};
 use solana_program_test::tokio;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::program_error::ProgramError;

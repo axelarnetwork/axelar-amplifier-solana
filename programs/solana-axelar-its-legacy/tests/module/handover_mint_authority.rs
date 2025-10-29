@@ -5,6 +5,7 @@ use mpl_token_metadata::types::TokenStandard;
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_token_2022::solana_program::program_pack::Pack;

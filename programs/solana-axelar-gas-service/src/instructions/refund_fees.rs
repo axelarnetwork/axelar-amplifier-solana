@@ -46,6 +46,11 @@ pub fn refund_native_fees(ctx: Context<RefundFees>, message_id: String, amount: 
         amount
     );
 
+    if !Rent::get()?.is_exempt(ctx.accounts.treasury.get_lamports(), Treasury::INIT_SPACE) {
+        msg!("Treasury account is not rent exempt after fee refund");
+        return Err(ProgramError::InvalidAccountData.into());
+    }
+
     emit_cpi!(GasRefundedEvent {
         receiver: ctx.accounts.receiver.key(),
         message_id,

@@ -31,6 +31,14 @@ pub fn withdraw_tokens_handler(ctx: Context<WithdrawTokens>, amount: u64) -> Res
     // governance_config which is a data account
     transfer_lamports_anchor!(governance_account_info, receiver, amount);
 
+    if !Rent::get()?.is_exempt(
+        governance_account_info.get_lamports(),
+        GovernanceConfig::INIT_SPACE,
+    ) {
+        msg!("GovernanceConfig account is not rent exempt after token withdrawal");
+        return Err(ProgramError::InvalidAccountData.into());
+    }
+
     msg!(
         "{} lamports were transferred from {}",
         amount,

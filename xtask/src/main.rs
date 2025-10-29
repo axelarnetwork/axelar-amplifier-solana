@@ -31,12 +31,6 @@ enum Commands {
     UnusedDeps,
     Typos,
     Docs,
-    CreateBindings {
-        program: String,
-        /// Copies them from temp folder to corresponding
-        #[clap(short, long, default_value_t = false)]
-        update: bool,
-    },
     Audit {
         #[clap(last = true)]
         args: Vec<String>,

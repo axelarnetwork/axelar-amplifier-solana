@@ -24,7 +24,7 @@ impl IncomingMessage {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, AnchorSerialize, AnchorDeserialize, Pod, Zeroable)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Pod, Zeroable)]
 pub struct MessageStatus(u8);
 
 impl MessageStatus {

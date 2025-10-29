@@ -1,5 +1,5 @@
-use solana_axelar_gas_service_legacy::instructions::transfer_operatorship;
 use axelar_solana_gateway_test_fixtures::base::TestFixture;
+use solana_axelar_gas_service_legacy::instructions::transfer_operatorship;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{signature::Keypair, signer::Signer};
 

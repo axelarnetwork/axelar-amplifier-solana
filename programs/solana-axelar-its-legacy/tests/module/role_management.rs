@@ -2,7 +2,9 @@ use borsh::BorshDeserialize;
 use solana_program::instruction::AccountMeta;
 use solana_program_test::tokio;
 use solana_sdk::signer::Signer;
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
+#[allow(deprecated)]
 use solana_sdk::{signature::Keypair, system_program};
 use spl_associated_token_account::{
     get_associated_token_address_with_program_id, instruction::create_associated_token_account,
@@ -10,10 +12,10 @@ use spl_associated_token_account::{
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::{assert_msg_present_in_logs, base::FindLog};
+use role_management::state::UserRoles;
 use solana_axelar_its_legacy::{
     instruction::InterchainTokenServiceInstruction, state::token_manager::TokenManager, Roles,
 };
-use role_management::state::UserRoles;
 
 use crate::ItsTestContext;
 
@@ -199,13 +201,14 @@ async fn test_successful_add_and_remove_flow_limiter(ctx: &mut ItsTestContext) {
         &bob.pubkey(),
     );
 
-    let add_flow_limiter_ix = solana_axelar_its_legacy::instruction::token_manager::add_flow_limiter(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        token_id,
-        bob.pubkey(),
-    )
-    .unwrap();
+    let add_flow_limiter_ix =
+        solana_axelar_its_legacy::instruction::token_manager::add_flow_limiter(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            token_id,
+            bob.pubkey(),
+        )
+        .unwrap();
 
     ctx.send_solana_tx(&[add_flow_limiter_ix]).await.unwrap();
 
@@ -593,13 +596,14 @@ async fn test_successful_token_manager_minter_proposal_acceptance(ctx: &mut ItsT
 
     assert!(payer_roles.contains(Roles::MINTER));
 
-    let accept_mintership_ix = solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
-        bob.pubkey(),
-        bob.pubkey(),
-        token_id,
-        ctx.solana_chain.fixture.payer.pubkey(),
-    )
-    .unwrap();
+    let accept_mintership_ix =
+        solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
+            bob.pubkey(),
+            bob.pubkey(),
+            token_id,
+            ctx.solana_chain.fixture.payer.pubkey(),
+        )
+        .unwrap();
 
     let payer_keys = ctx.solana_chain.fixture.payer.insecure_clone();
     ctx.solana_chain
@@ -666,13 +670,14 @@ async fn test_fail_token_manager_minter_proposal_acceptance(ctx: &mut ItsTestCon
     assert!(payer_roles.contains(Roles::MINTER));
 
     // Trying to accept role that wasn't proposed should fail
-    let accept_mintership_ix = solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
-        bob.pubkey(),
-        bob.pubkey(),
-        token_id,
-        ctx.solana_chain.fixture.payer.pubkey(),
-    )
-    .unwrap();
+    let accept_mintership_ix =
+        solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
+            bob.pubkey(),
+            bob.pubkey(),
+            token_id,
+            ctx.solana_chain.fixture.payer.pubkey(),
+        )
+        .unwrap();
 
     let payer_keys = ctx.solana_chain.fixture.payer.insecure_clone();
     let tx_metadata = ctx
@@ -802,7 +807,8 @@ async fn test_set_trusted_chain_with_upgrade_authority(ctx: &mut ItsTestContext)
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
 
     assert!(its_root.trusted_chains.contains(&chain_name));
 }
@@ -863,7 +869,8 @@ async fn test_set_trusted_chain_with_operator_role(ctx: &mut ItsTestContext) {
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
 
     assert!(its_root.trusted_chains.contains(&chain_name));
 }
@@ -918,7 +925,8 @@ async fn test_set_trusted_chain_failure_without_authority(ctx: &mut ItsTestConte
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
 
     assert!(!its_root.trusted_chains.contains(&chain_name));
 }
@@ -966,7 +974,8 @@ async fn test_remove_trusted_chain_with_upgrade_authority(ctx: &mut ItsTestConte
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
     assert!(its_root.trusted_chains.contains(&chain_name));
 
     // Now remove the chain using upgrade authority
@@ -997,7 +1006,8 @@ async fn test_remove_trusted_chain_with_upgrade_authority(ctx: &mut ItsTestConte
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
 
     assert!(!its_root.trusted_chains.contains(&chain_name));
 }
@@ -1085,7 +1095,8 @@ async fn test_remove_trusted_chain_with_operator_role(ctx: &mut ItsTestContext) 
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
 
     assert!(!its_root.trusted_chains.contains(&chain_name));
 }
@@ -1167,7 +1178,8 @@ async fn test_remove_trusted_chain_failure_without_authority(ctx: &mut ItsTestCo
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
 
     assert!(its_root.trusted_chains.contains(&chain_name));
 }
@@ -1193,13 +1205,14 @@ async fn test_prevent_privilege_escalation_through_different_token(ctx: &mut Its
     .unwrap();
 
     // Alice gives Bob Flow Limiter role on TokenA
-    let add_flow_limiter_ix = solana_axelar_its_legacy::instruction::token_manager::add_flow_limiter(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        token_a_id,
-        bob.pubkey(),
-    )
-    .unwrap();
+    let add_flow_limiter_ix =
+        solana_axelar_its_legacy::instruction::token_manager::add_flow_limiter(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            token_a_id,
+            bob.pubkey(),
+        )
+        .unwrap();
 
     ctx.send_solana_tx(&[add_flow_limiter_ix]).await.unwrap();
 
@@ -1365,13 +1378,14 @@ async fn test_fail_add_flow_limiter_to_its_root_config(ctx: &mut ItsTestContext)
     let (its_root_pda, _) = solana_axelar_its_legacy::find_its_root_pda();
     let bob = Keypair::new();
 
-    let mut add_flow_limiter_ix = solana_axelar_its_legacy::instruction::token_manager::add_flow_limiter(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        [0u8; 32],
-        bob.pubkey(),
-    )
-    .unwrap();
+    let mut add_flow_limiter_ix =
+        solana_axelar_its_legacy::instruction::token_manager::add_flow_limiter(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            [0u8; 32],
+            bob.pubkey(),
+        )
+        .unwrap();
 
     add_flow_limiter_ix.accounts[5].pubkey = its_root_pda;
 
@@ -1618,13 +1632,14 @@ async fn test_fail_token_manager_transfer_operatorship_to_self(ctx: &mut ItsTest
     let token_id = ctx.deployed_interchain_token;
 
     // Attempt to transfer token manager operatorship to self
-    let transfer_to_self_ix = solana_axelar_its_legacy::instruction::token_manager::transfer_operatorship(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        token_id,
-        ctx.solana_chain.fixture.payer.pubkey(), // Transferring to self
-    )
-    .unwrap();
+    let transfer_to_self_ix =
+        solana_axelar_its_legacy::instruction::token_manager::transfer_operatorship(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            token_id,
+            ctx.solana_chain.fixture.payer.pubkey(), // Transferring to self
+        )
+        .unwrap();
 
     let tx_metadata = ctx
         .send_solana_tx(&[transfer_to_self_ix])
@@ -1665,13 +1680,14 @@ async fn test_fail_propose_token_manager_operatorship_to_self(ctx: &mut ItsTestC
     let token_id = ctx.deployed_interchain_token;
 
     // Attempt to propose token manager operatorship to self
-    let propose_to_self_ix = solana_axelar_its_legacy::instruction::token_manager::propose_operatorship(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        token_id,
-        ctx.solana_chain.fixture.payer.pubkey(), // Proposing to self
-    )
-    .unwrap();
+    let propose_to_self_ix =
+        solana_axelar_its_legacy::instruction::token_manager::propose_operatorship(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            token_id,
+            ctx.solana_chain.fixture.payer.pubkey(), // Proposing to self
+        )
+        .unwrap();
 
     let tx_metadata = ctx.send_solana_tx(&[propose_to_self_ix]).await.unwrap_err();
 
@@ -1685,13 +1701,14 @@ async fn test_fail_propose_mintership_to_self(ctx: &mut ItsTestContext) {
     let token_id = ctx.deployed_interchain_token;
 
     // Attempt to propose mintership to self
-    let propose_to_self_ix = solana_axelar_its_legacy::instruction::interchain_token::propose_mintership(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        ctx.solana_chain.fixture.payer.pubkey(),
-        token_id,
-        ctx.solana_chain.fixture.payer.pubkey(), // Proposing to self
-    )
-    .unwrap();
+    let propose_to_self_ix =
+        solana_axelar_its_legacy::instruction::interchain_token::propose_mintership(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            ctx.solana_chain.fixture.payer.pubkey(),
+            token_id,
+            ctx.solana_chain.fixture.payer.pubkey(), // Proposing to self
+        )
+        .unwrap();
 
     let tx_metadata = ctx.send_solana_tx(&[propose_to_self_ix]).await.unwrap_err();
 
@@ -1749,7 +1766,8 @@ async fn test_fail_remove_non_existing_trusted_chain(ctx: &mut ItsTestContext) {
         .await
         .data;
 
-    let its_root = solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
+    let its_root =
+        solana_axelar_its_legacy::state::InterchainTokenService::try_from_slice(&data).unwrap();
     assert!(!its_root.trusted_chains.contains(&non_existing_chain));
 }
 
@@ -1922,13 +1940,14 @@ async fn test_simultaneous_role_proposals_different_roles(ctx: &mut ItsTestConte
         .contains(solana_axelar_its_legacy::Roles::OPERATOR));
 
     // Alice can accept both proposals independently
-    let accept_mintership_ix = solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
-        alice.pubkey(),
-        alice.pubkey(),
-        token_id,
-        ctx.solana_chain.fixture.payer.pubkey(),
-    )
-    .unwrap();
+    let accept_mintership_ix =
+        solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
+            alice.pubkey(),
+            alice.pubkey(),
+            token_id,
+            ctx.solana_chain.fixture.payer.pubkey(),
+        )
+        .unwrap();
 
     ctx.solana_chain
         .fixture
@@ -2141,13 +2160,14 @@ async fn test_fail_accept_mintership_to_self(ctx: &mut ItsTestContext) {
 
     // Now try to accept the proposal with bob as both origin and destination
     // This should fail because origin and destination are the same
-    let accept_self_ix = solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
-        ctx.solana_chain.fixture.payer.pubkey(),
-        bob.pubkey(),
-        token_id,
-        bob.pubkey(), // Using bob as both origin and destination
-    )
-    .unwrap();
+    let accept_self_ix =
+        solana_axelar_its_legacy::instruction::interchain_token::accept_mintership(
+            ctx.solana_chain.fixture.payer.pubkey(),
+            bob.pubkey(),
+            token_id,
+            bob.pubkey(), // Using bob as both origin and destination
+        )
+        .unwrap();
 
     let tx_metadata = ctx
         .solana_chain

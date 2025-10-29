@@ -1,9 +1,9 @@
 use axelar_solana_gateway_test_fixtures::base::FindLog;
+use borsh::to_vec;
 use solana_axelar_governance_legacy::events;
 use solana_axelar_governance_legacy::instructions::builder::{IxBuilder, ProposalRelated};
 use solana_axelar_governance_legacy::state::operator;
 use solana_axelar_governance_legacy::state::proposal::ExecutableProposal;
-use borsh::to_vec;
 use solana_program_test::tokio;
 use solana_sdk::signature::Signer;
 

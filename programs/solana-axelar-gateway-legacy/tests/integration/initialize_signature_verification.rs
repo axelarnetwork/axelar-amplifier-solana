@@ -1,10 +1,10 @@
 use axelar_solana_encoding::hasher::NativeHasher;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
-use solana_axelar_gateway_legacy::get_gateway_root_config_pda;
-use solana_axelar_gateway_legacy::state::signature_verification::SignatureVerification;
 use axelar_solana_gateway_test_fixtures::gateway::{make_verifier_set, random_bytes};
 use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use bytemuck::Zeroable;
+use solana_axelar_gateway_legacy::get_gateway_root_config_pda;
+use solana_axelar_gateway_legacy::state::signature_verification::SignatureVerification;
 use solana_program_test::tokio;
 use solana_sdk::instruction::InstructionError;
 use solana_sdk::signer::Signer;
@@ -85,13 +85,14 @@ async fn test_cannot_initialize_pda_twice() {
     let _tx_result = metadata.send_tx(&[ix]).await.unwrap();
 
     // Attempt to initialize the PDA a second time
-    let ix_second = solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
-        metadata.payer.pubkey(),
-        gateway_config_pda,
-        payload_merkle_root,
-        signing_verifier_set_hash,
-    )
-    .unwrap();
+    let ix_second =
+        solana_axelar_gateway_legacy::instructions::initialize_payload_verification_session(
+            metadata.payer.pubkey(),
+            gateway_config_pda,
+            payload_merkle_root,
+            signing_verifier_set_hash,
+        )
+        .unwrap();
     let tx_result_second = metadata.send_tx(&[ix_second]).await.unwrap_err();
 
     // Assert that the second initialization fails

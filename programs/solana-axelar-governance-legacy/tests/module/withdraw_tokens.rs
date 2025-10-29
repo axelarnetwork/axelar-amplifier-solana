@@ -2,6 +2,7 @@ use solana_axelar_governance_legacy::instructions::builder::IxBuilder;
 use solana_program_test::tokio;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::signature::{Keypair, Signer};
+#[allow(deprecated)]
 use solana_sdk::system_instruction;
 use solana_sdk::transaction::TransactionError;
 

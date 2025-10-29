@@ -7,9 +7,9 @@ use spl_associated_token_account::{
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use evm_contracts_test_suite::ethers::signers::Signer as _;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, SendToHub};
+use solana_axelar_its_legacy::state::token_manager::TokenManager;
 
 use crate::ItsTestContext;
 
@@ -34,10 +34,12 @@ async fn test_its_gmp_payload_fail_when_paused(ctx: &mut ItsTestContext) {
         .await;
 
     let token_program_id = spl_token_2022::id();
-    let token_id = Pubkey::create_with_seed(&its_root_pda, "test_token", &solana_axelar_its_legacy::id())
-        .unwrap()
-        .to_bytes();
-    let (mint_authority, _) = solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
+    let token_id =
+        Pubkey::create_with_seed(&its_root_pda, "test_token", &solana_axelar_its_legacy::id())
+            .unwrap()
+            .to_bytes();
+    let (mint_authority, _) =
+        solana_axelar_its_legacy::find_token_manager_pda(&its_root_pda, &token_id);
     let mint = ctx
         .solana_chain
         .fixture

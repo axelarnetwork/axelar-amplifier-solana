@@ -1,11 +1,11 @@
 use anyhow::anyhow;
 use axelar_solana_gateway_test_fixtures::base::FindLog;
-use solana_axelar_its_legacy::events::InterchainTransfer;
 use borsh::BorshDeserialize;
 use evm_contracts_test_suite::ethers::signers::Signer;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::instructions::CreateV1Builder;
 use mpl_token_metadata::types::TokenStandard;
+use solana_axelar_its_legacy::events::InterchainTransfer;
 use solana_program_test::tokio;
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use solana_sdk::program_pack::Pack as _;
@@ -17,12 +17,12 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
 use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 use evm_contracts_test_suite::evm_contracts_rs::contracts::{
     custom_test_token::CustomTestToken, interchain_token::InterchainToken,
 };
 use evm_contracts_test_suite::ContractMiddleware;
 use interchain_token_transfer_gmp::GMPPayload;
+use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 
@@ -232,11 +232,12 @@ async fn canonical_token(
 
     ctx.send_solana_tx(&[metadata_ix]).await.unwrap();
 
-    let register_token = solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
-        ctx.solana_wallet,
-        canonical_solana_token,
-        spl_token_2022::id(),
-    )?;
+    let register_token =
+        solana_axelar_its_legacy::instruction::register_canonical_interchain_token(
+            ctx.solana_wallet,
+            canonical_solana_token,
+            spl_token_2022::id(),
+        )?;
 
     let tx = ctx.send_solana_tx(&[register_token]).await.unwrap();
 
