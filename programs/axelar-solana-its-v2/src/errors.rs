@@ -15,6 +15,8 @@ pub enum ItsError {
     InvalidRole,
     #[msg("The token manager type is invalid")]
     InvalidTokenManagerType,
+    #[msg("The source chain name is untrusted")]
+    UntrustedSourceChain,
     #[msg("The destination chain name is untrusted")]
     UntrustedDestinationChain,
     #[msg("The destination chain name is invalid")]

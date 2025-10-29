@@ -70,6 +70,7 @@ pub struct InterchainTransferInternal<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn interchain_transfer_internal_handler(
     mut ctx: Context<InterchainTransferInternal>,
     token_id: [u8; 32],
@@ -86,7 +87,7 @@ pub fn interchain_transfer_internal_handler(
         &ctx.accounts.token_manager_pda.to_account_info(),
     )?;
 
-    let destination_token_account = ctx.accounts.destination.key().clone();
+    let destination_token_account = ctx.accounts.destination.key();
     let token_manager_account_info = ctx.accounts.token_manager_pda.clone();
     let transferred_amount =
         handle_give_token_transfer(&mut ctx, &token_manager_account_info, amount)?;

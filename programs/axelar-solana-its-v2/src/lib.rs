@@ -296,6 +296,7 @@ pub mod axelar_solana_its_v2 {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn interchain_transfer_internal(
         ctx: Context<InterchainTransferInternal>,
         token_id: [u8; 32],

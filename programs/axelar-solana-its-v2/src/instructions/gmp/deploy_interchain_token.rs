@@ -120,7 +120,7 @@ pub struct DeployInterchainTokenInternal<'info> {
 }
 
 pub fn deploy_interchain_token_internal_handler(
-    mut ctx: Context<DeployInterchainTokenInternal>,
+    ctx: Context<DeployInterchainTokenInternal>,
     token_id: [u8; 32],
     name: String,
     symbol: String,
@@ -137,7 +137,7 @@ pub fn deploy_interchain_token_internal_handler(
 
     // Call process_inbound_deploy directly with the context accounts
     process_inbound_deploy(
-        &mut ctx.accounts,
+        ctx.accounts,
         token_id,
         &name,
         &symbol,
@@ -165,7 +165,7 @@ pub fn deploy_interchain_token_internal_handler(
             .accounts
             .minter
             .as_ref()
-            .map(|account| account.key())
+            .map(anchor_lang::Key::key)
             .unwrap_or_default(),
         name: name.clone(),
         symbol: symbol.clone(),
@@ -259,18 +259,10 @@ fn create_token_metadata<'info>(
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
-    // Truncate name and symbol to fit Metaplex limits
-    let truncated_name = if name.len() > mpl_token_metadata::MAX_NAME_LENGTH {
-        name[..mpl_token_metadata::MAX_NAME_LENGTH].to_string()
-    } else {
-        name.to_string()
-    };
-
-    let truncated_symbol = if symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH {
-        symbol[..mpl_token_metadata::MAX_SYMBOL_LENGTH].to_string()
-    } else {
-        symbol.to_string()
-    };
+    let mut truncated_name = name.to_owned();
+    let mut truncated_symbol = symbol.to_owned();
+    truncated_name.truncate(mpl_token_metadata::MAX_NAME_LENGTH);
+    truncated_symbol.truncate(mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
     // Create the token metadata using Metaplex CPI
     CreateV1CpiBuilder::new(&accounts.mpl_token_metadata_program.to_account_info())

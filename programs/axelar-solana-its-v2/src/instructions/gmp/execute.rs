@@ -1,5 +1,5 @@
 use crate::{errors::ItsError, state::InterchainTokenService};
-use anchor_lang::{prelude::*, InstructionData};
+use anchor_lang::{prelude::*, InstructionData, Key};
 use anchor_spl::{associated_token::AssociatedToken, token_interface::TokenInterface};
 use axelar_solana_gateway_v2::{
     executable::{validate_message_raw, HasAxelarExecutable},
@@ -59,9 +59,11 @@ pub struct Execute<'info> {
     pub minter: Option<UncheckedAccount<'info>>,
     #[account(mut)]
     pub minter_roles_pda: Option<UncheckedAccount<'info>>,
+
     #[account(mut)]
     pub mpl_token_metadata_account: Option<UncheckedAccount<'info>>,
     pub mpl_token_metadata_program: Option<UncheckedAccount<'info>>,
+
     pub sysvar_instructions: Option<UncheckedAccount<'info>>,
     #[account(mut)]
     pub destination: Option<UncheckedAccount<'info>>,
@@ -80,7 +82,7 @@ pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>
         return err!(ItsError::InvalidInstructionData);
     }
 
-    let GMPPayload::ReceiveFromHub(inner) =
+    let GMPPayload::ReceiveFromHub(inner_msg) =
         GMPPayload::decode(&payload).map_err(|_err| ProgramError::InvalidInstructionData)?
     else {
         msg!("Unsupported GMP payload");
@@ -90,16 +92,15 @@ pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>
     if !ctx
         .accounts
         .its_root_pda
-        .is_trusted_chain(&inner.source_chain)
+        .is_trusted_chain(&inner_msg.source_chain)
     {
-        msg!("Untrusted source chain: {}", inner.source_chain);
-        return err!(ItsError::InvalidInstructionData);
+        return err!(ItsError::UntrustedSourceChain);
     }
 
-    let payload =
-        GMPPayload::decode(&inner.payload).map_err(|_err| ProgramError::InvalidInstructionData)?;
+    let payload = GMPPayload::decode(&inner_msg.payload)
+        .map_err(|_err| ProgramError::InvalidInstructionData)?;
 
-    perform_self_cpi(payload, ctx, message, &inner.source_chain)?;
+    perform_self_cpi(payload, ctx, message, &inner_msg.source_chain)?;
 
     Ok(())
 }
@@ -178,24 +179,27 @@ fn interchain_transfer_self_invoke(
         data: instruction_data.data(),
     };
 
-    let account_infos = vec![
-        ctx.accounts.payer.to_account_info(),
-        ctx.accounts.authority.clone().unwrap().to_account_info(),
-        ctx.accounts.its_root_pda.to_account_info(),
-        ctx.accounts.destination.clone().unwrap().to_account_info(),
-        ctx.accounts
-            .destination_ata
-            .clone()
-            .unwrap()
-            .to_account_info(),
-        ctx.accounts.token_mint.to_account_info(),
-        ctx.accounts.token_manager_pda.to_account_info(),
-        ctx.accounts.token_manager_ata.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        // Event CPI accounts
-        ctx.accounts.event_authority.to_account_info(),
-        ctx.accounts.program.to_account_info(),
-    ];
+    let account_infos =
+        crate::__cpi_client_accounts_interchain_transfer_internal::InterchainTransferInternal {
+            payer: ctx.accounts.payer.to_account_info(),
+            authority: ctx.accounts.authority.clone().unwrap().to_account_info(),
+            its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
+            destination: ctx.accounts.destination.clone().unwrap().to_account_info(),
+            destination_ata: ctx
+                .accounts
+                .destination_ata
+                .clone()
+                .unwrap()
+                .to_account_info(),
+            token_mint: ctx.accounts.token_mint.to_account_info(),
+            token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
+            token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+            // Event CPI accounts
+            event_authority: ctx.accounts.event_authority.to_account_info(),
+            program: ctx.accounts.program.to_account_info(),
+        }
+        .to_account_infos();
 
     // Invoke the instruction with ITS root PDA as signer
     invoke_signed_with_its_root_pda(
@@ -243,8 +247,8 @@ fn link_token_self_invoke(
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
         rent: ctx.accounts.rent.key(),
-        operator: ctx.accounts.minter.as_ref().map(|acc| acc.key()), // Use minter as operator
-        operator_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(|acc| acc.key()),
+        operator: ctx.accounts.minter.as_ref().map(Key::key), // Use minter as operator
+        operator_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(Key::key),
         // for event cpi
         event_authority: ctx.accounts.event_authority.key(),
         program: ctx.accounts.program.key(),
@@ -257,33 +261,32 @@ fn link_token_self_invoke(
         data: instruction_data.data(),
     };
 
-    let account_infos = vec![
-        ctx.accounts.payer.to_account_info(),
-        ctx.accounts.deployer.clone().unwrap().to_account_info(),
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.its_root_pda.to_account_info(),
-        ctx.accounts.token_manager_pda.to_account_info(),
-        ctx.accounts.token_mint.to_account_info(),
-        ctx.accounts.token_manager_ata.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.associated_token_program.to_account_info(),
-        ctx.accounts.rent.to_account_info(),
-        // Optional operator: use actual account if exists, else use program ID
-        ctx.accounts
+    let account_infos = crate::__cpi_client_accounts_link_token_internal::LinkTokenInternal {
+        payer: ctx.accounts.payer.to_account_info(),
+        deployer: ctx.accounts.deployer.clone().unwrap().to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
+        token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
+        token_mint: ctx.accounts.token_mint.to_account_info(),
+        token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+        rent: ctx.accounts.rent.to_account_info(),
+        operator: ctx
+            .accounts
             .minter
             .as_ref()
-            .map(|acc| acc.to_account_info())
-            .unwrap_or(ctx.accounts.program.to_account_info()),
-        // Optional operator_roles_pda: use actual account if exists, else use program ID
-        ctx.accounts
+            .map(ToAccountInfo::to_account_info),
+        operator_roles_pda: ctx
+            .accounts
             .minter_roles_pda
             .as_ref()
-            .map(|acc| acc.to_account_info())
-            .unwrap_or(ctx.accounts.program.to_account_info()),
+            .map(ToAccountInfo::to_account_info),
         // Event CPI accounts
-        ctx.accounts.event_authority.to_account_info(),
-        ctx.accounts.program.to_account_info(),
-    ];
+        event_authority: ctx.accounts.event_authority.to_account_info(),
+        program: ctx.accounts.program.to_account_info(),
+    }
+    .to_account_infos();
 
     invoke_signed_with_its_root_pda(
         &link_instruction,
@@ -336,8 +339,8 @@ fn deploy_interchain_token_self_invoke(
             .unwrap()
             .key(),
         deployer_ata: ctx.accounts.deployer_ata.clone().unwrap().key(),
-        minter: ctx.accounts.minter.as_ref().map(|acc| acc.key()),
-        minter_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(|acc| acc.key()),
+        minter: ctx.accounts.minter.as_ref().map(Key::key),
+        minter_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(Key::key),
         // for event cpi
         event_authority: ctx.accounts.event_authority.key(),
         program: ctx.accounts.program.key(),
@@ -350,49 +353,45 @@ fn deploy_interchain_token_self_invoke(
         data: instruction_data.data(),
     };
 
-    let account_infos = vec![
-        ctx.accounts.payer.to_account_info(),
-        ctx.accounts.deployer.clone().unwrap().to_account_info(),
-        ctx.accounts.system_program.to_account_info(),
-        ctx.accounts.its_root_pda.to_account_info(),
-        ctx.accounts.token_manager_pda.to_account_info(),
-        ctx.accounts.token_mint.to_account_info(),
-        ctx.accounts.token_manager_ata.to_account_info(),
-        ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.associated_token_program.to_account_info(),
-        ctx.accounts.rent.to_account_info(),
-        ctx.accounts
-            .sysvar_instructions
-            .clone()
-            .unwrap()
-            .to_account_info(),
-        ctx.accounts
-            .mpl_token_metadata_program
-            .clone()
-            .unwrap()
-            .to_account_info(),
-        ctx.accounts
-            .mpl_token_metadata_account
-            .clone()
-            .unwrap()
-            .to_account_info(),
-        ctx.accounts.deployer_ata.clone().unwrap().to_account_info(),
-        // Optional minter: use actual account if exists, else use program ID
-        ctx.accounts
-            .minter
-            .as_ref()
-            .map(|acc| acc.to_account_info())
-            .unwrap_or(ctx.accounts.program.to_account_info()),
-        // Optional minter_roles_pda: use actual account if exists, else use program ID
-        ctx.accounts
-            .minter_roles_pda
-            .as_ref()
-            .map(|acc| acc.to_account_info())
-            .unwrap_or(ctx.accounts.program.to_account_info()),
-        // Event CPI accounts
-        ctx.accounts.event_authority.to_account_info(),
-        ctx.accounts.program.to_account_info(),
-    ];
+    let account_infos = crate::__cpi_client_accounts_deploy_interchain_token_internal::DeployInterchainTokenInternal {
+		payer: ctx.accounts.payer.to_account_info(),
+		deployer: ctx.accounts.deployer.clone().unwrap().to_account_info(),
+		system_program: ctx.accounts.system_program.to_account_info(),
+		its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
+		token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
+		token_mint: ctx.accounts.token_mint.to_account_info(),
+		token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
+		token_program: ctx.accounts.token_program.to_account_info(),
+		associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+		rent: ctx.accounts.rent.to_account_info(),
+		sysvar_instructions: ctx.accounts.sysvar_instructions.clone().unwrap().to_account_info(),
+		mpl_token_metadata_program: ctx
+			.accounts
+			.mpl_token_metadata_program
+			.clone()
+			.unwrap()
+			.to_account_info(),
+		mpl_token_metadata_account: ctx
+			.accounts
+			.mpl_token_metadata_account
+			.clone()
+			.unwrap()
+			.to_account_info(),
+		deployer_ata: ctx.accounts.deployer_ata.clone().unwrap().to_account_info(),
+		minter: ctx
+			.accounts
+			.minter
+			.as_ref()
+			.map(ToAccountInfo::to_account_info),
+		minter_roles_pda: ctx
+			.accounts
+			.minter_roles_pda
+			.as_ref()
+			.map(ToAccountInfo::to_account_info),
+		// Event CPI accounts
+		event_authority: ctx.accounts.event_authority.to_account_info(),
+		program: ctx.accounts.program.to_account_info(),
+	}.to_account_infos();
 
     invoke_signed_with_its_root_pda(
         &deploy_instruction,
