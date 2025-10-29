@@ -1,4 +1,5 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{AnchorDeserialize, AnchorSerialize};
+
 use bytemuck::{Pod, Zeroable};
 
 /// Custom u128 type with 8-byte alignment instead of the default 16-byte alignment.

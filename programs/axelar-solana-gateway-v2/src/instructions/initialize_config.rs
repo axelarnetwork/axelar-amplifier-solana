@@ -2,8 +2,7 @@
 use crate::seed_prefixes::{GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     state::config::{GatewayConfig, InitializeConfigParams},
-    u256::U256,
-    GatewayError, VerifierSetTracker,
+    GatewayError, VerifierSetTracker, U256,
 };
 use anchor_lang::prelude::*;
 
@@ -58,7 +57,7 @@ pub fn initialize_config_handler(
     let config = &mut ctx.accounts.gateway_root_pda.load_init()?;
 
     // Initialize GatewayConfig (i.e. gateway config pda) state
-    config.current_epoch = U256::from(1);
+    config.current_epoch = U256::from(1u64);
     config.previous_verifier_set_retention = params.previous_verifier_retention;
     config.minimum_rotation_delay = params.minimum_rotation_delay;
     config.last_rotation_timestamp = Clock::get()?.unix_timestamp as u64;
@@ -70,7 +69,7 @@ pub fn initialize_config_handler(
 
     // Initialize verifier set tracker pda state
     set_tracker.bump = ctx.bumps.verifier_set_tracker_pda;
-    set_tracker.epoch = U256::from(1);
+    set_tracker.epoch = U256::from(1u64);
     set_tracker.verifier_set_hash = params.initial_verifier_set.hash;
 
     Ok(())

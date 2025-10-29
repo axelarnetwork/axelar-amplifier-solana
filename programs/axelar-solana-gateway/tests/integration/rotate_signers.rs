@@ -1,6 +1,5 @@
 use std::ops::IndexMut;
 
-use axelar_message_primitives::U256;
 use axelar_solana_encoding::hasher::NativeHasher;
 use axelar_solana_encoding::types::execute_data::MerkleisedPayload;
 use axelar_solana_encoding::types::messages::Messages;
@@ -10,6 +9,7 @@ use axelar_solana_gateway::error::GatewayError;
 use axelar_solana_gateway::events::VerifierSetRotatedEvent;
 use axelar_solana_gateway::get_verifier_set_tracker_pda;
 use axelar_solana_gateway::state::verifier_set_tracker::VerifierSetTracker;
+use axelar_solana_gateway::types::U256;
 use axelar_solana_gateway_test_fixtures::gateway::{
     make_messages, make_verifier_set, random_bytes, random_message, GetGatewayError,
 };

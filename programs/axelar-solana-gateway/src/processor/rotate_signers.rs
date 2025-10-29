@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use axelar_message_primitives::U256;
+use crate::types::U256;
 use event_cpi_macros::{emit_cpi, event_cpi_accounts};
 use program_utils::{
     pda::{BytemuckedPda, ValidPDA},

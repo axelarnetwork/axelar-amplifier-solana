@@ -1,5 +1,4 @@
-use anchor_lang::{AnchorDeserialize, AnchorSerialize};
-use std::io::{Read, Write};
+use anchor_lang::prelude::*;
 
 pub const ED25519_PUBKEY_LEN: usize = 32;
 pub const SECP256K1_COMPRESSED_PUBKEY_LEN: usize = 33;
@@ -15,22 +14,10 @@ pub type Ed25519Pubkey = [u8; ED25519_PUBKEY_LEN];
     Eq,
     Debug,
     udigest::Digestable,
-    borsh::BorshDeserialize,
-    borsh::BorshSerialize,
+    AnchorSerialize,
+    AnchorDeserialize,
 )]
 pub enum PublicKey {
     Secp256k1(Secp256k1Pubkey),
     Ed25519(Ed25519Pubkey),
-}
-
-impl AnchorSerialize for PublicKey {
-    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
-        borsh::BorshSerialize::serialize(self, writer)
-    }
-}
-
-impl AnchorDeserialize for PublicKey {
-    fn deserialize_reader<R: Read>(reader: &mut R) -> Result<Self, std::io::Error> {
-        borsh::BorshDeserialize::deserialize_reader(reader)
-    }
 }

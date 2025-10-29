@@ -39,7 +39,6 @@ bytemuck.workspace = true
 program-utils.workspace = true
 
 [dev-dependencies]
-axelar-solana-gateway.workspace = true
 axelar-solana-governance = { workspace = true, features = ["no-entrypoint"], default-features = false }
 libsecp256k1.workspace = true
 bincode.workspace = true
