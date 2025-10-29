@@ -10,6 +10,7 @@ use anchor_spl::{
 };
 use axelar_solana_gas_service_v2::state::Treasury;
 use axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
+use axelar_solana_its_v2::accounts::GasServiceAccounts;
 use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
 use axelar_solana_its_v2::{
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
@@ -409,14 +410,16 @@ pub fn deploy_remote_interchain_token_helper(
             //
             gateway_root_pda,
             gateway_program: axelar_solana_gateway_v2::ID,
-            gas_treasury,
-            gas_service: axelar_solana_gas_service_v2::ID,
+            gas_service_accounts: GasServiceAccounts {
+                gas_service: axelar_solana_gas_service_v2::ID,
+                gas_treasury,
+                gas_event_authority,
+            },
             system_program: solana_sdk::system_program::ID,
             its_root_pda: ctx.its_root_pda,
             call_contract_signing_pda,
             its_program: ctx.program_id,
             gateway_event_authority,
-            gas_event_authority,
             event_authority: its_event_authority,
             program: ctx.program_id,
         }
