@@ -9,3 +9,33 @@ pub use set_trusted_chain::*;
 
 pub mod remove_trusted_chain;
 pub use remove_trusted_chain::*;
+
+pub mod deploy_interchain_token;
+pub use deploy_interchain_token::*;
+
+pub mod deploy_remote_interchain_token;
+pub use deploy_remote_interchain_token::*;
+
+pub mod approve_deploy_remote_interchain_token;
+pub use approve_deploy_remote_interchain_token::*;
+
+pub mod revoke_deploy_remote_interchain_token;
+pub use revoke_deploy_remote_interchain_token::*;
+
+pub mod register_token_metadata;
+pub use register_token_metadata::*;
+
+pub mod register_canonical_token;
+pub use register_canonical_token::*;
+
+pub mod deploy_remote_canonical_token;
+pub use deploy_remote_canonical_token::*;
+
+pub mod register_custom_token;
+pub use register_custom_token::*;
+
+pub mod link_token;
+pub use link_token::*;
+
+pub mod set_flow_limit;
+pub use set_flow_limit::*;
