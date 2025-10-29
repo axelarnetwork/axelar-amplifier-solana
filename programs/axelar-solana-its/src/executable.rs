@@ -114,6 +114,7 @@ impl TryFrom<&[u8]> for AxelarInterchainTokenExecuteInstruction {
     /// the [`AXELAR_INTERCHAIN_TOKEN_EXECUTE`] discriminator.
     ///
     /// Returns [`ProgramError::BorshIoError`] if deserialization fails.
+    #[allow(clippy::indexing_slicing)]
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         if !value.starts_with(AXELAR_INTERCHAIN_TOKEN_EXECUTE_IX_DISCRIMINATOR) {
             return Err(ProgramError::InvalidInstructionData);

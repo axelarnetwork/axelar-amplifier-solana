@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 use std::time::SystemTime;
 
 use axelar_solana_encoding::types::messages::{CrossChainId, Message};

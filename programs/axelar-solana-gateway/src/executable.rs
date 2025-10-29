@@ -26,7 +26,7 @@ pub const AXELAR_EXECUTE_IX_DISCRIMINATOR: &[u8; 8] = &[130, 221, 242, 154, 13, 
 /// destination program.
 pub const PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
 
-#[derive(Debug, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, PartialEq, Eq, BorshSerialize, BorshDeserialize)]
 pub struct AxelarExecuteInstruction {
     pub message: Message,
     pub payload_without_accounts: Vec<u8>,
@@ -305,6 +305,7 @@ impl TryFrom<&[u8]> for AxelarExecuteInstruction {
     /// the [`AXELAR_EXECUTE_IX_DISCRIMINATOR`] discriminator.
     ///
     /// Returns [`ProgramError::BorshIoError`] if deserialization fails.
+    #[allow(clippy::indexing_slicing)]
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         if !value.starts_with(AXELAR_EXECUTE_IX_DISCRIMINATOR) {
             return Err(ProgramError::InvalidInstructionData);

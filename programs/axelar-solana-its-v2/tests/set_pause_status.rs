@@ -1,3 +1,7 @@
+#![cfg(test)]
+#![allow(clippy::str_to_string)]
+#![allow(clippy::print_stdout)]
+
 use anchor_lang::{prelude::ProgramError, AccountDeserialize};
 use axelar_solana_its_v2::state::InterchainTokenService;
 use mollusk_svm::result::Check;
@@ -50,7 +54,7 @@ fn test_set_pause_status_success() {
     // Verify initial state is unpaused
     let its_data = InterchainTokenService::try_deserialize(&mut its_root_account.data.as_slice())
         .expect("Failed to deserialize ITS data");
-    assert_eq!(its_data.paused, false);
+    assert!(!its_data.paused);
 
     // Now test pausing
     let ix = Instruction {
@@ -83,7 +87,7 @@ fn test_set_pause_status_success() {
         InterchainTokenService::try_deserialize(&mut updated_its_account.data.as_slice())
             .expect("Failed to deserialize updated ITS data");
 
-    assert_eq!(updated_its_data.paused, true);
+    assert!(updated_its_data.paused);
 
     // Test unpausing
     let unpause_ix = Instruction {
@@ -115,7 +119,7 @@ fn test_set_pause_status_success() {
         InterchainTokenService::try_deserialize(&mut final_its_account.data.as_slice())
             .expect("Failed to deserialize final ITS data");
 
-    assert_eq!(final_its_data.paused, false);
+    assert!(!final_its_data.paused);
 }
 
 #[test]
@@ -266,7 +270,7 @@ fn test_set_pause_status_unauthorized() {
         InterchainTokenService::try_deserialize(&mut its_root_account.data.as_slice())
             .expect("Failed to deserialize unchanged ITS data");
 
-    assert_eq!(unchanged_its_data.paused, false); // Should still be unpaused
+    assert!(!unchanged_its_data.paused); // Should still be unpaused
 }
 
 #[test]

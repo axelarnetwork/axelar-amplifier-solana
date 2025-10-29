@@ -67,8 +67,7 @@ pub fn process_message_from_axelar_with_token<'a>(
     );
 
     let payload = AxelarMessagePayload::decode(&execute_data.data)?;
-    let instruction: AxelarMemoInstruction =
-        borsh::from_slice(&payload.payload_without_accounts())?;
+    let instruction: AxelarMemoInstruction = borsh::from_slice(payload.payload_without_accounts())?;
 
     process_native_ix(program_id, accounts_iter.as_slice(), instruction)
 }
