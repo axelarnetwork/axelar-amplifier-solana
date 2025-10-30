@@ -1,0 +1,26 @@
+[package]
+name = "relayer-discovery"
+version = "0.0.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+bytemuck.workspace = true
+mpl-token-metadata.workspace = true
+solana-program.workspace = true
+spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
+program-utils.workspace = true
+axelar-solana-encoding.workspace = true
+solana-axelar-gateway.workspace = true
+anchor-lang.workspace = true
+
+[dev-dependencies]
+solana-sdk.workspace = true
+solana-program-test.workspace = true
+axelar-solana-gateway-v2-test-fixtures = { workspace = true, default-features = false }
+dummy-axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }

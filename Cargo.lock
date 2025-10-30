@@ -833,7 +833,519 @@ dependencies = [
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+<<<<<<< HEAD
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
+=======
+checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
+
+[[package]]
+name = "autotools"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef941527c41b0fc0dd48511a8154cd5fc7e29200a0ff8b7203c5d777dbc795cf"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "axelar-message-primitives"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "bnum",
+ "borsh 1.5.7",
+ "bytemuck",
+ "evm-contracts-rs",
+ "evm-contracts-test-suite",
+ "rstest",
+ "solana-program",
+ "test-log",
+ "thiserror 1.0.69",
+ "tokio",
+]
+
+[[package]]
+name = "axelar-solana-encoding"
+version = "0.1.0"
+dependencies = [
+ "arrayref",
+ "borsh 1.5.7",
+ "bs58",
+ "hex",
+ "rand 0.8.5",
+ "rs_merkle",
+ "sha3",
+ "solana-program",
+ "thiserror 1.0.69",
+ "udigest",
+]
+
+[[package]]
+name = "axelar-solana-executable"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "borsh 1.5.7",
+ "hex",
+ "mollusk-svm",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-program",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-gas-service"
+version = "0.1.0"
+dependencies = [
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "axelar-solana-gateway-test-fixtures",
+ "borsh 1.5.7",
+ "bytemuck",
+ "event-cpi",
+ "event-cpi-macros",
+ "event-cpi-test-utils",
+ "program-utils",
+ "rstest",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "spl-associated-token-account 6.0.0",
+ "spl-token 6.0.0",
+ "spl-token-2022 6.0.0",
+]
+
+[[package]]
+name = "axelar-solana-gas-service-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-gas-service",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-operators",
+ "borsh 1.5.7",
+ "bytemuck",
+ "mollusk-svm",
+ "mollusk-test-utils",
+ "program-utils",
+ "solana-sdk",
+ "solana-sdk-ids",
+]
+
+[[package]]
+name = "axelar-solana-gateway"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "axelar-message-primitives",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-test-fixtures",
+ "bincode",
+ "bitvec",
+ "borsh 1.5.7",
+ "bytemuck",
+ "ed25519-dalek 2.1.1",
+ "event-cpi",
+ "event-cpi-macros",
+ "event-cpi-test-utils",
+ "evm-contracts-rs",
+ "evm-contracts-test-suite",
+ "hex",
+ "itertools 0.12.1",
+ "lazy_static",
+ "libsecp256k1",
+ "num-derive 0.4.2",
+ "num-traits",
+ "pretty_assertions",
+ "program-utils",
+ "rand 0.8.5",
+ "role-management",
+ "rstest",
+ "sha3",
+ "solana-client",
+ "solana-logger",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "test-log",
+ "thiserror 1.0.69",
+ "tokio",
+ "typed-builder",
+]
+
+[[package]]
+name = "axelar-solana-gateway-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "axelar-solana-encoding",
+ "axelar-solana-gas-service",
+ "axelar-solana-gateway",
+ "bincode",
+ "ed25519-dalek 2.1.1",
+ "event-cpi",
+ "event-cpi-test-utils",
+ "libsecp256k1",
+ "rand 0.7.3",
+ "rand 0.8.5",
+ "solana-banks-interface",
+ "solana-program",
+ "solana-program-test",
+ "solana-rpc-client-api",
+ "solana-sdk",
+ "solana-test-validator",
+ "spl-associated-token-account 6.0.0",
+ "spl-token-2022 6.0.0",
+ "tokio",
+ "typed-builder",
+]
+
+[[package]]
+name = "axelar-solana-gateway-v2"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-lang",
+ "axelar-message-primitives",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bitvec",
+ "borsh 1.5.7",
+ "bytemuck",
+ "evm-contracts-rs",
+ "evm-contracts-test-suite",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "num-derive 0.4.2",
+ "num-traits",
+ "rand 0.8.5",
+ "rstest",
+ "solana-sdk",
+ "test-log",
+ "tokio",
+ "udigest",
+]
+
+[[package]]
+name = "axelar-solana-gateway-v2-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "bincode",
+ "libsecp256k1",
+ "mollusk-svm",
+ "rand 0.8.5",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-governance"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "anyhow",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-memo-program",
+ "borsh 1.5.7",
+ "dummy-axelar-solana-gateway",
+ "ethers",
+ "event-cpi",
+ "event-cpi-macros",
+ "event-cpi-test-utils",
+ "governance-gmp",
+ "program-utils",
+ "role-management",
+ "serde",
+ "solana-logger",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "uuid 1.16.0",
+]
+
+[[package]]
+name = "axelar-solana-governance-v2"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "axelar-solana-governance",
+ "axelar-solana-governance-v2-test-fixtures",
+ "axelar-solana-memo-v2",
+ "bincode",
+ "bytemuck",
+ "governance-gmp",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "program-utils",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-governance-v2-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-governance",
+ "axelar-solana-governance-v2",
+ "axelar-solana-memo-v2",
+ "bincode",
+ "governance-gmp",
+ "mollusk-svm",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-its"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "anyhow",
+ "axelar-message-primitives",
+ "axelar-solana-encoding",
+ "axelar-solana-gas-service",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-memo-program",
+ "bitflags 2.9.4",
+ "borsh 1.5.7",
+ "event-cpi",
+ "event-cpi-macros",
+ "event-cpi-test-utils",
+ "evm-contracts-test-suite",
+ "interchain-token-transfer-gmp",
+ "itertools 0.12.1",
+ "mpl-token-metadata",
+ "program-utils",
+ "role-management",
+ "rstest",
+ "solana-banks-interface",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "spl-associated-token-account 6.0.0",
+ "spl-token-2022 6.0.0",
+ "spl-token-metadata-interface 0.6.0",
+ "test-context",
+ "typed-builder",
+]
+
+[[package]]
+name = "axelar-solana-its-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-gas-service",
+ "axelar-solana-gas-service-v2",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-operators",
+ "bincode",
+ "bitflags 2.9.4",
+ "bytemuck",
+ "mollusk-svm",
+ "mollusk-test-utils",
+ "program-utils",
+ "solana-sdk",
+ "solana-sdk-ids",
+]
+
+[[package]]
+name = "axelar-solana-memo-program"
+version = "0.1.0"
+dependencies = [
+ "anchor-discriminators",
+ "anchor-discriminators-macros",
+ "anyhow",
+ "axelar-solana-encoding",
+ "axelar-solana-gas-service",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-its",
+ "borsh 1.5.7",
+ "ethers-core",
+ "event-cpi",
+ "event-cpi-test-utils",
+ "evm-contracts-test-suite",
+ "hex",
+ "itertools 0.12.1",
+ "mpl-token-metadata",
+ "pretty_assertions",
+ "program-utils",
+ "rstest",
+ "serde_json",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "spl-associated-token-account 6.0.0",
+ "spl-token 6.0.0",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "axelar-solana-memo-v2"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "hex",
+ "mollusk-svm",
+ "solana-sdk",
+]
+
+[[package]]
+name = "axelar-solana-multicall"
+version = "0.1.0"
+dependencies = [
+ "alloy-sol-types",
+ "anchor-discriminators-macros",
+ "axelar-solana-gateway",
+ "axelar-solana-gateway-test-fixtures",
+ "axelar-solana-memo-program",
+ "borsh 1.5.7",
+ "ethers-core",
+ "evm-contracts-test-suite",
+ "itertools 0.12.1",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "axelar-solana-operators"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "mollusk-svm",
+ "program-utils",
+ "solana-sdk",
+ "solana-sdk-ids",
+]
+
+[[package]]
+name = "axum"
+version = "0.6.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b829e4e32b91e643de6eafe82b1d90675f5874230191a4ffbc1b336dec4d6bf"
+dependencies = [
+ "async-trait",
+ "axum-core",
+ "bitflags 1.3.2",
+ "bytes",
+ "futures-util",
+ "http 0.2.12",
+ "http-body 0.4.6",
+ "hyper 0.14.32",
+ "itoa",
+ "matchit",
+ "memchr",
+ "mime",
+ "percent-encoding 2.3.1",
+ "pin-project-lite",
+ "rustversion",
+ "serde",
+ "sync_wrapper 0.1.2",
+ "tower 0.4.13",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
+name = "axum-core"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "759fa577a247914fd3f7f76d62972792636412fbfd634cd452f6a385a74d2d2c"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "futures-util",
+ "http 0.2.12",
+ "http-body 0.4.6",
+ "mime",
+ "rustversion",
+ "tower-layer",
+ "tower-service",
+]
+
+[[package]]
+name = "aya"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d18bc4e506fbb85ab7392ed993a7db4d1a452c71b75a246af4a80ab8c9d2dd50"
+dependencies = [
+ "assert_matches",
+ "aya-obj",
+ "bitflags 2.9.4",
+ "bytes",
+ "libc",
+ "log",
+ "object 0.36.7",
+ "once_cell",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "aya-obj"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c51b96c5a8ed8705b40d655273bc4212cbbf38d4e3be2788f36306f154523ec7"
+dependencies = [
+ "bytes",
+ "core-error",
+ "hashbrown 0.15.2",
+ "log",
+ "object 0.36.7",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "backoff"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b62ddb9cb1ec0a098ad4bbf9344d0713fa193ae1a80af55febcff2627b6a00c1"
+dependencies = [
+ "futures-core",
+ "getrandom 0.2.16",
+ "instant",
+ "pin-project-lite",
+ "rand 0.8.5",
+ "tokio",
+]
+>>>>>>> 2cee6911 (at a good place, lots to add still)
 
 [[package]]
 name = "backtrace"
@@ -2956,7 +3468,153 @@ dependencies = [
 name = "regex-syntax"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+<<<<<<< HEAD
 checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
+=======
+checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "relative-path"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
+
+[[package]]
+name = "relayer-discovery"
+version = "0.0.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bytemuck",
+ "dummy-axelar-solana-gateway",
+ "mpl-token-metadata",
+ "program-utils",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-associated-token-account 6.0.0",
+]
+
+[[package]]
+name = "relayer-discovery-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "libsecp256k1",
+ "mollusk-svm",
+ "rand 0.8.5",
+ "relayer-discovery",
+ "solana-sdk",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "reqwest"
+version = "0.11.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd67538700a17451e7cba03ac727fb961abb7607553461627b97de0b89cf4a62"
+dependencies = [
+ "base64 0.21.7",
+ "bytes",
+ "encoding_rs",
+ "futures-core",
+ "futures-util",
+ "h2",
+ "http 0.2.12",
+ "http-body 0.4.6",
+ "hyper 0.14.32",
+ "hyper-rustls 0.24.2",
+ "hyper-tls",
+ "ipnet",
+ "js-sys",
+ "log",
+ "mime",
+ "native-tls",
+ "once_cell",
+ "percent-encoding 2.3.1",
+ "pin-project-lite",
+ "rustls 0.21.12",
+ "rustls-pemfile",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sync_wrapper 0.1.2",
+ "system-configuration",
+ "tokio",
+ "tokio-native-tls",
+ "tokio-rustls 0.24.1",
+ "tower-service",
+ "url 2.5.4",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "webpki-roots 0.25.4",
+ "winreg",
+]
+
+[[package]]
+name = "reqwest"
+version = "0.12.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d429f34c8092b2d42c7c93cec323bb4adeb7c67698f70839adec842ec10c7ceb"
+dependencies = [
+ "async-compression",
+ "base64 0.22.1",
+ "bytes",
+ "futures-channel",
+ "futures-core",
+ "futures-util",
+ "http 1.3.1",
+ "http-body 1.0.1",
+ "http-body-util",
+ "hyper 1.7.0",
+ "hyper-rustls 0.27.7",
+ "hyper-util",
+ "js-sys",
+ "log",
+ "percent-encoding 2.3.1",
+ "pin-project-lite",
+ "quinn",
+ "rustls 0.23.31",
+ "rustls-pki-types",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "sync_wrapper 1.0.2",
+ "tokio",
+ "tokio-rustls 0.26.2",
+ "tokio-util 0.7.15",
+ "tower 0.5.2",
+ "tower-http",
+ "tower-service",
+ "url 2.5.4",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "webpki-roots 1.0.2",
+]
+
+[[package]]
+name = "reqwest-middleware"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57f17d28a6e6acfe1733fe24bcd30774d13bffa4b8a22535b4c8c98423088d4e"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "http 1.3.1",
+ "reqwest 0.12.23",
+ "serde",
+ "thiserror 1.0.69",
+ "tower-service",
+]
+>>>>>>> 2cee6911 (at a good place, lots to add still)
 
 [[package]]
 name = "rfc6979"
