@@ -1,14 +1,14 @@
+use crate::get_fee_and_decimals;
+use crate::get_mint_decimals;
+use crate::gmp::{GMPAccounts, ToGMPAccounts};
+use crate::instructions::process_outbound;
+use crate::state::{token_manager, FlowDirection};
 use crate::{
     errors::ItsError,
-    gmp::{GMPAccounts, ToGMPAccounts},
-    instructions::{
-        get_fee_and_decimals, get_mint_decimals, process_outbound, validate_token_manager_type,
-    },
-    state::{
-        current_flow_epoch, token_manager, FlowDirection, InterchainTokenService, TokenManager,
-    },
+    instructions::validate_token_manager_type,
+    state::{current_flow_epoch, InterchainTokenService, TokenManager},
 };
-use anchor_lang::{prelude::*, system_program};
+use anchor_lang::prelude::*;
 use anchor_spl::{
     token_2022::Token2022,
     token_interface::{Mint, TokenAccount},
@@ -20,14 +20,11 @@ use interchain_token_transfer_gmp::GMPPayload;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], destination_chain: String, destination_address: Vec<u8>, amount: u64, gas_value: u64, signing_pda_bump: u8, data: Option<Vec<u8>>)]
-pub struct InterchainTransfer<'info> {
+#[instruction(token_id: [u8; 32], destination_chain: String, destination_address: Vec<u8>, amount: u64, gas_value: u64, signing_pda_bump: u8, source_id: Pubkey, pda_seeds: Vec<Vec<u8>>, data: Option<Vec<u8>>)]
+pub struct CpiInterchainTransfer {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(
-        constraint = authority.owner == &system_program::ID @ ItsError::InvalidAccountOwner
-    )]
     pub authority: Signer<'info>,
 
     #[account(
@@ -120,7 +117,7 @@ pub struct InterchainTransfer<'info> {
     pub its_program: AccountInfo<'info>,
 }
 
-impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
+impl<'info> ToGMPAccounts<'info> for CpiInterchainTransfer<'info> {
     fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
@@ -138,24 +135,43 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
     }
 }
 
-pub fn interchain_transfer_handler(
-    ctx: Context<InterchainTransfer>,
+pub fn cpi_interchain_transfer_handler(
+    ctx: Context<CpiInterchainTransfer>,
     token_id: [u8; 32],
     destination_chain: String,
     destination_address: Vec<u8>,
     amount: u64,
     gas_value: u64,
     signing_pda_bump: u8,
+    source_id: Pubkey,
+    pda_seeds: Vec<Vec<u8>>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
-    let source_address = *ctx.accounts.authority.key;
-
-    // todo: do we need to add this to execute interchain transfer?
-    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
-        msg!("Mint and token ID don't match");
+    // The sender should be a PDA owned by the source program
+    if ctx.accounts.authority.owner != &source_id {
+        msg!(
+            "Sender account must be owned by the source program. Expected: {}, Got: {}",
+            source_id,
+            ctx.accounts.authority.owner
+        );
         return err!(ItsError::InvalidAccountData);
     }
 
+    // Validate that the PDA can be derived using the provided seeds
+    let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
+    let (expected_pda, _bump) =
+        solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
+
+    if expected_pda != *ctx.accounts.authority.key {
+        msg!(
+            "PDA derivation mismatch. Expected: {}, Got: {}",
+            expected_pda,
+            ctx.accounts.authority.key
+        );
+        return err!(ItsError::InvalidAccountData);
+    }
+
+    let source_address = *ctx.accounts.authority.key;
     process_outbound_transfer(
         ctx,
         token_id,
@@ -172,7 +188,7 @@ pub fn interchain_transfer_handler(
 }
 
 fn process_outbound_transfer(
-    mut ctx: Context<InterchainTransfer>,
+    mut ctx: Context<CpiInterchainTransfer>,
     token_id: [u8; 32],
     destination_chain: String,
     destination_address: Vec<u8>,
@@ -229,7 +245,7 @@ fn process_outbound_transfer(
 }
 
 fn take_token(
-    ctx: &mut Context<InterchainTransfer>,
+    ctx: &mut Context<CpiInterchainTransfer>,
     token_manager: &TokenManager,
     amount: u64,
 ) -> Result<u64> {
@@ -271,7 +287,7 @@ fn take_token(
 }
 
 fn transfer_with_fee_to(
-    ctx: &Context<InterchainTransfer>,
+    ctx: &Context<CpiInterchainTransfer>,
     amount: u64,
     decimals: u8,
     fee: u64,
@@ -297,7 +313,7 @@ fn transfer_with_fee_to(
     Ok(())
 }
 
-fn transfer_to(ctx: &Context<InterchainTransfer>, amount: u64, decimals: u8) -> Result<()> {
+fn transfer_to(ctx: &Context<CpiInterchainTransfer>, amount: u64, decimals: u8) -> Result<()> {
     use anchor_spl::token_interface;
 
     let cpi_accounts = token_interface::TransferChecked {
@@ -318,7 +334,7 @@ fn transfer_to(ctx: &Context<InterchainTransfer>, amount: u64, decimals: u8) -> 
     Ok(())
 }
 
-fn burn_from_source(ctx: &Context<InterchainTransfer>, amount: u64) -> Result<()> {
+fn burn_from_source(ctx: &Context<CpiInterchainTransfer>, amount: u64) -> Result<()> {
     use anchor_spl::token_interface;
 
     let cpi_accounts = token_interface::Burn {
@@ -339,7 +355,7 @@ fn burn_from_source(ctx: &Context<InterchainTransfer>, amount: u64) -> Result<()
 }
 
 fn track_token_flow(
-    ctx: &mut Context<InterchainTransfer>,
+    ctx: &mut Context<CpiInterchainTransfer>,
     amount: u64,
     direction: FlowDirection,
 ) -> Result<()> {
