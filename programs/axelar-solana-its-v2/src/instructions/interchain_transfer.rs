@@ -37,12 +37,9 @@ pub struct InterchainTransfer<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    #[account(mut)]
-    pub source: AccountInfo<'info>,
-
     #[account(
         mut,
-        constraint = source_ata.owner == source.key()
+        constraint = source_ata.owner == authority.key()
     )]
     pub source_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -114,9 +111,10 @@ pub struct InterchainTransfer<'info> {
 
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
-        bump,
+        bump = signing_pda_bump,
+        seeds::program = crate::ID
     )]
-    pub signing_pda: AccountInfo<'info>,
+    pub signing_pda: Signer<'info>,
 
     #[account(address = crate::ID)]
     pub its_program: AccountInfo<'info>,
@@ -323,7 +321,7 @@ fn burn_from_source(
     let cpi_accounts = token_interface::Burn {
         mint: ctx.accounts.token_mint.to_account_info(),
         from: ctx.accounts.source_ata.to_account_info(),
-        authority: ctx.accounts.token_manager_pda.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
     };
 
     // Create signer seeds with proper lifetimes
