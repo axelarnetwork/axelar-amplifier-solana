@@ -42,3 +42,7 @@ pub use set_flow_limit::*;
 
 pub mod gmp;
 pub use gmp::*;
+
+pub mod interchain_transfer;
+pub use interchain_transfer::*;
+

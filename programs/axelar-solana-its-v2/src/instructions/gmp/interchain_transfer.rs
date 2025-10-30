@@ -190,7 +190,7 @@ fn track_token_flow(
     Ok(())
 }
 
-fn get_fee_and_decimals(
+pub fn get_fee_and_decimals(
     token_mint: &AccountInfo,
     amount: u64,
 ) -> std::result::Result<(u64, u8), ProgramError> {
@@ -259,7 +259,7 @@ fn transfer_with_fee_to(
     Ok(())
 }
 
-fn get_mint_decimals(token_mint: &AccountInfo) -> std::result::Result<u8, ProgramError> {
+pub fn get_mint_decimals(token_mint: &AccountInfo) -> std::result::Result<u8, ProgramError> {
     let mint_data = token_mint.try_borrow_data()?;
     let mint_state = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
     Ok(mint_state.base.decimals)
@@ -300,7 +300,7 @@ fn mint_to_receiver(
     Ok(())
 }
 
-fn validate_token_manager_type(
+pub fn validate_token_manager_type(
     ty: token_manager::Type,
     token_mint: &AccountInfo,
     token_manager_pda: &AccountInfo,
