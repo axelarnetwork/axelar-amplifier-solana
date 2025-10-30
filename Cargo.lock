@@ -1069,6 +1069,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-executable"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "borsh 1.5.7",
+ "hex",
+ "mollusk-svm",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-program",
+ "solana-sdk",
+]
+
+[[package]]
 name = "axelar-solana-gas-service"
 version = "0.1.0"
 dependencies = [
@@ -6895,6 +6913,41 @@ name = "relative-path"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
+
+[[package]]
+name = "relayer-discovery"
+version = "0.0.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bytemuck",
+ "dummy-axelar-solana-gateway",
+ "mpl-token-metadata",
+ "program-utils",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-associated-token-account 6.0.0",
+]
+
+[[package]]
+name = "relayer-discovery-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "libsecp256k1",
+ "mollusk-svm",
+ "rand 0.8.5",
+ "relayer-discovery",
+ "solana-sdk",
+ "thiserror 1.0.69",
+]
 
 [[package]]
 name = "reqwest"

@@ -205,6 +205,7 @@ axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
 axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
 axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
+relayer-discovery-test-fixtures = { path = "crates/relayer-discovery-test-fixtures", default-features = false }
 event-cpi = { path = "helpers/event-cpi" }
 event-cpi-macros = { path = "helpers/event-cpi-macros" }
 anchor-discriminators = { path = "helpers/anchor-discriminators" }
@@ -218,6 +219,7 @@ its-instruction-builder = { path = "helpers/its-instruction-builder", default-fe
 program-utils = { path = "helpers/program-utils", default-features = false }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 role-management = { path = "helpers/role-management" }
+relayer-discovery = { path = "helpers/relayer-discovery", default-features = false }
 
 [workspace.metadata.cargo-machete]
 ignored = ["num-traits"]
