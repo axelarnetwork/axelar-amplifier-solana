@@ -59,11 +59,10 @@ pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Resu
     let origin_roles = &mut ctx.accounts.origin_roles_account;
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
-    // Add OPERATOR role to destination user
-    destination_roles.roles |= Roles::OPERATOR;
+    origin_roles.roles.remove(Roles::OPERATOR);
 
-    // Remove OPERATOR role from origin user
-    origin_roles.roles &= !Roles::OPERATOR;
+    destination_roles.roles.insert(Roles::OPERATOR);
+    destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(
         "Transferred operatorship from {} to {}",

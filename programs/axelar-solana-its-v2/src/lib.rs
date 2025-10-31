@@ -353,4 +353,8 @@ pub mod axelar_solana_its_v2 {
     pub fn propose_operatorship(ctx: Context<ProposeOperatorship>) -> Result<()> {
         instructions::propose_operatorship_handler(ctx)
     }
+
+    pub fn accept_operatorship(ctx: Context<AcceptOperatorship>) -> Result<()> {
+        instructions::accept_operatorship_handler(ctx)
+    }
 }
