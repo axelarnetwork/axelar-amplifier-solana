@@ -49,3 +49,5 @@ pub use interchain_transfer::*;
 pub mod transfer_operatorship;
 pub use transfer_operatorship::*;
 
+pub mod propose_operatorship;
+pub use propose_operatorship::*;

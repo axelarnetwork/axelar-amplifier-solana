@@ -349,4 +349,8 @@ pub mod axelar_solana_its_v2 {
     pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {
         instructions::transfer_operatorship_handler(ctx)
     }
+
+    pub fn propose_operatorship(ctx: Context<ProposeOperatorship>) -> Result<()> {
+        instructions::propose_operatorship_handler(ctx)
+    }
 }
