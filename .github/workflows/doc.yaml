@@ -21,7 +21,7 @@ defaults:
 name: docs
 jobs:
   doc:
-    runs-on: self-hosted
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     name: doc
     steps:
       - uses: actions/checkout@v4

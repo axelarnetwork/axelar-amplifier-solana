@@ -12,7 +12,7 @@ defaults:
 
 jobs:
   release-dyn-libs:
-    runs-on: self-hosted
+    runs-on: blacksmith-8vcpu-ubuntu-2204
     name: Build and Release Dynamic Libraries
     steps:
       - uses: actions/checkout@v4

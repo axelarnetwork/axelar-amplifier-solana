@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     name: "Build the code"
     steps:
       - name: Checkout repository

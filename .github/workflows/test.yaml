@@ -19,7 +19,7 @@ defaults:
 name: test
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: blacksmith-8vcpu-ubuntu-2204
     name: test
     steps:
       - uses: actions/checkout@v4

@@ -16,7 +16,7 @@ defaults:
 name: deny
 jobs:
   check:
-    runs-on: self-hosted
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     name: deny
     steps:
       - uses: actions/checkout@v4
