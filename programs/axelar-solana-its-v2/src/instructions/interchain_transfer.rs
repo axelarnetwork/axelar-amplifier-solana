@@ -10,6 +10,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
+use anchor_spl::associated_token::spl_associated_token_account;
 use anchor_spl::{
     token_2022::Token2022,
     token_interface::{Mint, TokenAccount},
@@ -53,7 +54,8 @@ pub struct InterchainTransfer {
             its_root_pda.key().as_ref(),
             &token_id
         ],
-        bump = token_manager_pda.bump
+        bump = token_manager_pda.bump,
+        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -61,6 +63,11 @@ pub struct InterchainTransfer {
         mut,
         constraint = token_manager_ata.mint == token_mint.key(),
         constraint = token_manager_ata.owner == token_manager_pda.key(),
+        constraint = token_manager_ata.key() == spl_associated_token_account::get_associated_token_address_with_program_id(
+               &token_manager_pda.key(),
+               &token_mint.key(),
+               &token_program.key()
+           ) @ ItsError::InvalidTokenManagerAta
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -212,6 +219,10 @@ fn process_outbound_transfer(
     data: Option<Vec<u8>>,
     source_address: Pubkey,
 ) -> Result<()> {
+    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
+        return err!(ItsError::TokenMintMismatch);
+    }
+
     let token_manager_account_info = ctx.accounts.token_manager_pda.clone();
     let amount_minus_fees = take_token(&mut ctx, &token_manager_account_info, amount)?;
     amount = amount_minus_fees;

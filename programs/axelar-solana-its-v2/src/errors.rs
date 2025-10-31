@@ -25,4 +25,7 @@ pub enum ItsError {
     ZeroSupplyToken,
     #[msg("The mint extension is not compatible with the TokenManager type")]
     TokenManagerMintExtensionMismatch,
+    TokenMintMismatch,
+    InvalidTokenManagerAta,
+    InvalidTokenManagerPda,
 }
