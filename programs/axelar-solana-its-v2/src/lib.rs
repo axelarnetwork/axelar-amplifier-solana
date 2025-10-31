@@ -328,33 +328,11 @@ pub mod axelar_solana_its_v2 {
         amount: u64,
         gas_value: u64,
         signing_pda_bump: u8,
+        source_id: Option<Pubkey>,
+        pda_seeds: Option<Vec<Vec<u8>>>,
         data: Option<Vec<u8>>,
     ) -> Result<()> {
         instructions::interchain_transfer_handler(
-            ctx,
-            token_id,
-            destination_chain,
-            destination_address,
-            amount,
-            gas_value,
-            signing_pda_bump,
-            data,
-        )
-    }
-
-    pub fn cpi_interchain_transfer(
-        ctx: Context<CpiInterchainTransfer>,
-        token_id: [u8; 32],
-        destination_chain: String,
-        destination_address: Vec<u8>,
-        amount: u64,
-        gas_value: u64,
-        signing_pda_bump: u8,
-        source_id: Pubkey,
-        pda_seeds: Vec<Vec<u8>>,
-        data: Option<Vec<u8>>,
-    ) -> Result<()> {
-        instructions::cpi_interchain_transfer_handler(
             ctx,
             token_id,
             destination_chain,
