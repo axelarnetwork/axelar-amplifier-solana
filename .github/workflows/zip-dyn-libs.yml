@@ -66,6 +66,6 @@ jobs:
                 "download_url": "https://github.com/${{ github.repository }}/releases/download/dyn-libs-${{ steps.commit.outputs.short_sha }}/solana-dynamic-libraries-${{ steps.commit.outputs.short_sha }}.zip"
               }
             }'
-          
+
           echo "✅ Successfully triggered relayer workflow!"
           echo "View workflow runs at: https://github.com/eigerco/axelar-solana-relayer/actions/workflows/so-libs-update.yml"
