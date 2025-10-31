@@ -1,26 +1,13 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
-use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use axelar_solana_encoding::hasher::MerkleTree;
-use axelar_solana_encoding::hasher::SolanaSyscallHasher;
-use axelar_solana_gateway_v2::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
-use axelar_solana_gateway_v2::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
-use axelar_solana_gateway_v2::IncomingMessage;
-use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
-use axelar_solana_gateway_v2::{CrossChainId, Message, MessageLeaf};
-use axelar_solana_gateway_v2_test_fixtures::{
-    approve_message_helper, create_verifier_info, initialize_gateway,
-    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
-    verify_signature_helper,
-};
-use axelar_solana_executable::Counter;
+use anchor_lang::{InstructionData, ToAccountMetas};
+use axelar_solana_gateway_v2::{CrossChainId, Message};
+
 use axelar_solana_executable::Payload;
-use axelar_solana_executable::ID as MEMO_PROGRAM_ID;
-use solana_sdk::msg;
-use solana_sdk::pubkey::Pubkey;
+use axelar_solana_executable::ID as EXECUTABLE_ID;
 use solana_sdk::{
     account::Account,
-    instruction::{AccountMeta, Instruction},
+    instruction::Instruction,
     native_token::LAMPORTS_PER_SOL,
     system_program::ID as SYSTEM_PROGRAM_ID,
 };
@@ -49,7 +36,7 @@ fn test_execute() {
         system_program: SYSTEM_PROGRAM_ID,
     };
     let init_instruction = Instruction {
-        program_id: MEMO_PROGRAM_ID,
+        program_id: EXECUTABLE_ID,
         accounts: init_accounts.to_account_metas(None),
         data: init_ix.data(),
     };
@@ -118,8 +105,7 @@ fn test_execute() {
         payload_hash: payload_hash,
     };
 
-    let result = fixture.approve_and_execute(&message, payload_bytes, init_result.resulting_accounts);
+    let result = fixture.approve_and_execute(&message, payload_bytes, init_result.resulting_accounts.clone());
 
-    msg!("{}", format!("{result:?}"));
     assert!(result.is_ok());
 }

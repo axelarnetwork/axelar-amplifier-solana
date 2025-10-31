@@ -39,8 +39,6 @@ macro_rules! log_everywhere {
 pub struct RelayerDiscovery {
     /// The message that is being relayed.
     pub message: Message,
-    /// The message pda.
-    pub message_pda: Pubkey,
     /// The raw payload.
     pub payload: Vec<u8>,
     /// The payload pda, if uploading is done.
@@ -84,7 +82,6 @@ impl RelayerDiscovery {
             } else {
                 Ok(AccountMeta::new_readonly(*pubkey, false))
             }
-            RelayerAccount::IncomingMessage => Ok(AccountMeta { pubkey: self.message_pda, is_signer: false, is_writable: false }),
             RelayerAccount::MessagePayload => match self.payload_pda {
                 Some(payload_pda) => Ok(AccountMeta { pubkey: payload_pda, is_signer: false, is_writable: false }),
                 None => Err(ConvertError::NeedMessagePayload),
@@ -115,9 +112,15 @@ impl RelayerDiscovery {
             },
             RelayerData::Payload => {
                 let mut bytes = Vec::with_capacity(size_of::<Message>());
-                self.message.serialize(&mut bytes).map_err(|_| ConvertError::FailedPayloadSerialization)?;
+                self.payload.serialize(&mut bytes).map_err(|_| ConvertError::FailedPayloadSerialization)?;
                 Ok(bytes)
             },
+            RelayerData::PayloadRaw => {
+                Ok(self.payload.clone())
+            },
+            RelayerData::CommandId => {
+                Ok(Vec::from(self.message.command_id()))
+            }
         }
     }
 
@@ -126,6 +129,7 @@ impl RelayerDiscovery {
         let mut used_payers = vec![];
         let accounts: Result<Vec<AccountMeta>, ConvertError> = instruction.accounts.iter().map(|account| self.convert_account(account, &mut used_payers)).collect();
         let data: Result<Vec<Vec<u8>>, ConvertError> = instruction.data.iter().map(|data| self.convert_data(data)).collect();
+
         //let data = instruction.data.iter().map(|data| self.convert_data(data)).collect()?;
         Ok(Instruction {
             program_id: instruction.program_id,

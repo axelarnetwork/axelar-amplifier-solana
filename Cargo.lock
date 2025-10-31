@@ -885,6 +885,7 @@ dependencies = [
 name = "axelar-solana-executable"
 version = "0.1.0"
 dependencies = [
+ "anchor-discriminators",
  "anchor-lang",
  "axelar-solana-encoding",
  "axelar-solana-gateway-v2",

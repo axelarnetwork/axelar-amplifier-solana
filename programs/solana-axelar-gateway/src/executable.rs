@@ -26,7 +26,11 @@ pub struct AxelarExecutableAccountRefs<'a, 'info> {
     pub signing_pda: &'a AccountInfo<'info>,
     pub gateway_root_pda: &'a AccountLoader<'info, solana_axelar_gateway::state::GatewayConfig>,
     pub axelar_gateway_program:
+<<<<<<< HEAD:programs/solana-axelar-gateway/src/executable.rs
         &'a Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,
+=======
+        &'a Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+>>>>>>> 99813262 (works, now formatting):programs/axelar-solana-gateway-v2/src/executable.rs
     pub event_authority: &'a AccountInfo<'info>,
 }
 
@@ -138,8 +142,17 @@ macro_rules! executable_accounts {
         )]
         pub gateway_root_pda: AccountLoader<'info, solana_axelar_gateway::state::GatewayConfig>,
 
+<<<<<<< HEAD:programs/solana-axelar-gateway/src/executable.rs
         #[account(address = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP.0)]
         pub event_authority: UncheckedAccount<'info>,
+=======
+        #[account(
+            seeds = [b"__event_authority"],
+            bump,
+            seeds::program = axelar_gateway_program.key()
+        )]
+        pub event_authority: AccountInfo<'info>,
+>>>>>>> 99813262 (works, now formatting):programs/axelar-solana-gateway-v2/src/executable.rs
 
         pub axelar_gateway_program:
             Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,

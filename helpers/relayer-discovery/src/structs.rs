@@ -16,6 +16,10 @@ pub enum RelayerData {
 	Message,
 	/// The payload, length prefixed.
 	Payload,
+	/// The payload, length ommitted.
+	PayloadRaw,
+	/// The command id
+	CommandId,
 }
 #[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
 /// This can be used to specify an account that the relayer will pass to the executable. This can be converted to an `AccountMeta` by the relayer.
@@ -27,8 +31,6 @@ pub enum RelayerAccount {
 		/// Whether or not this account is writable.
 		is_writable: bool,
 	},
-	/// The incoming message PDA, which contains all the message information aside from the payload. This should only be specified once per instruction.
-	IncomingMessage,
 	/// An account that has the payload as its data. This account if and only if it is requested by the executable. This should only be specified once per instruction.
 	MessagePayload,
 	/// A signer account that has the amount of lamports specified. These lamports will be subtracted from the gas for the execution of the program. 

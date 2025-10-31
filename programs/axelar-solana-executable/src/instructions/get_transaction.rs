@@ -1,51 +1,37 @@
-use anchor_lang::prelude::*;
-use relayer_discovery::{structs::{RelayerData, RelayerInstruction, RelayerTransaction}};
+use anchor_lang::{prelude::*, system_program};
+use axelar_solana_gateway_v2::{GatewayConfig, IncomingMessage, ID as GATEWAY_PROGRAM_ID};
+use relayer_discovery::structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTransaction};
+use crate::{Counter, Payload, instruction::Execute};
 
 #[derive(Accounts)]
-pub struct GetTransaction<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
-
-    #[account(
-        mut,
-        seeds = [
-            &relayer_discovery::TRANSACTION_PDA_SEED,
-        ],
-        bump = relayer_discovery::find_transaction_pda(&crate::id()).1,
-        // CHECK: Validate signature verification session is complete
-    )]
-    pub relayer_transaction: AccountInfo<'info>,
-
-    pub system_program: Program<'info, System>,
+#[instruction(payload: Payload)]
+pub struct GetTransaction {
 }
 
-pub fn get_transaction_handler(ctx: Context<GetTransaction>) -> Result<RelayerTransaction> {
-    relayer_transaction().init(
-        &crate::id(),
-        &ctx.accounts.system_program.to_account_info(),
-        &ctx.accounts.payer.to_account_info(),
-        &ctx.accounts.relayer_transaction,
-    )?;
+pub fn get_transaction_handler(_: Context<GetTransaction>, payload: Payload, command_id: [u8; 32]) -> Result<RelayerTransaction> {
+    let incoming_message = IncomingMessage::find_pda(&command_id).0;
+    let signing_pda = IncomingMessage::find_signing_pda(&command_id, &crate::id()).0;
+    let gateway_root_pda = GatewayConfig::find_pda().0;
+    let event_authority = Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID).0;
+    let counter_pda = Counter::get_pda(payload.storage_id).0;
     Ok(RelayerTransaction::Final(vec![
       RelayerInstruction {
         program_id: crate::id(),
         accounts: vec![
-
+            RelayerAccount::Account { pubkey: incoming_message, is_writable: true },
+            RelayerAccount::Account { pubkey: signing_pda, is_writable: false },
+            RelayerAccount::Account { pubkey: gateway_root_pda, is_writable: false },
+            RelayerAccount::Account { pubkey: event_authority, is_writable: false },
+            RelayerAccount::Account { pubkey: GATEWAY_PROGRAM_ID, is_writable: false },
+            RelayerAccount::Payer(1000000000),
+            RelayerAccount::Account { pubkey: counter_pda, is_writable: true },
+            RelayerAccount::Account { pubkey: system_program::ID, is_writable: false },
         ],
         data: vec! [
-            
+            RelayerData::Bytes(Vec::from(Execute::DISCRIMINATOR)),
+            RelayerData::PayloadRaw,
+            RelayerData::Message,
         ]
       }  
     ]))
-}
-
-fn relayer_transaction() -> RelayerTransaction {
-    RelayerTransaction::Discovery(RelayerInstruction {
-        program_id: crate::ID,
-        accounts: vec![],
-        data: vec![
-            RelayerData::Bytes(vec![]),
-            RelayerData::Payload,
-        ],
-    })
 }
