@@ -175,12 +175,12 @@ fn main() -> eyre::Result<()> {
                 println!("Updating program IDs for legacy programs");
 
                 program_prefixes.extend_from_slice(&[
-                    ("solana-axelar-gas-service-legacy", "gasl"),
-                    ("solana-axelar-gateway-legacy", "gtwl"),
-                    ("solana-axelar-governance-legacy", "govl"),
-                    ("solana-axelar-its-legacy", "itsl"),
-                    ("solana-axelar-memo-legacy", "meml"),
-                    ("solana-axelar-multicall-legacy", "mcl"),
+                    ("solana-axelar-gas-service-legacy", "lgas"),
+                    ("solana-axelar-gateway-legacy", "lgtw"),
+                    ("solana-axelar-governance-legacy", "lgov"),
+                    ("solana-axelar-its-legacy", "lits"),
+                    ("solana-axelar-memo-legacy", "lmem"),
+                    ("solana-axelar-multicall-legacy", "lmc"),
                 ]);
             }
 
