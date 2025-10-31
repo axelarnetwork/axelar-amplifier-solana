@@ -14,7 +14,7 @@ program-utils.workspace = true
 bytemuck.workspace = true
 
 [dev-dependencies]
-solana-axelar-gas-service-legacy.workspace = true
+solana-axelar-gas-service-legacy = { workspace = true, features = ["no-entrypoint"] }
 solana-sdk-ids.workspace = true
 mollusk-svm.workspace = true
 mollusk-test-utils.workspace = true
