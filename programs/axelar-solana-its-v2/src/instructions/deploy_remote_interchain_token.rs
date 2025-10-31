@@ -62,6 +62,7 @@ pub struct DeployRemoteInterchainToken<'info> {
         ],
         seeds::program = crate::ID,
         bump = token_manager_pda.bump,
+        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -146,7 +147,10 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
             its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
-            gas_event_authority: self.gas_service_accounts.gas_event_authority.to_account_info(),
+            gas_event_authority: self
+                .gas_service_accounts
+                .gas_event_authority
+                .to_account_info(),
         }
     }
 }

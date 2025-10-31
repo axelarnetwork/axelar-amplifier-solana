@@ -57,7 +57,8 @@ pub struct InterchainTransferInternal<'info> {
             its_root_pda.key().as_ref(),
             &token_id
         ],
-        bump = token_manager_pda.bump
+        bump = token_manager_pda.bump,
+        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
