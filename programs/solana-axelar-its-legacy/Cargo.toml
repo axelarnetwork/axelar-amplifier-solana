@@ -12,7 +12,6 @@ workspace = true
 
 [features]
 no-entrypoint = []
-test-sbf = []
 devnet-amplifier = [
 	"solana-axelar-gas-service-legacy/devnet-amplifier",
 	"axelar-solana-gateway-test-fixtures/devnet-amplifier",

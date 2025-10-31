@@ -13,12 +13,12 @@ concurrency:
 
 defaults:
   run:
-    shell: bash    
+    shell: bash
 
 name: unused-deps
 jobs:
   unused-deps:
-    runs-on: self-hosted
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     name: unused-deps
     steps:
       - uses: actions/checkout@v4

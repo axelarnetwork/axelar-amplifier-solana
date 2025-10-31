@@ -13,7 +13,6 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 no-entrypoint = []
-test-sbf = []
 devnet-amplifier = [
 	"axelar-solana-gateway-test-fixtures/devnet-amplifier",
 	"program-utils/devnet-amplifier",

@@ -44,6 +44,7 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 no-entrypoint = []
+test-sbf = []
 
 cpi = ["no-entrypoint"]
 no-idl = []

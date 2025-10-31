@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     name: "Build the code"
     steps:
       - name: Checkout repository
@@ -18,7 +18,7 @@ jobs:
         with:
           repository: eigerco/axelar-amplifier
           fetch-depth: 0
-      
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v3
 
@@ -30,7 +30,7 @@ jobs:
       #     cache-on-failure: true
       #     workspaces: "ampd -> target"
       #     shared-key: "ampd"
-      
+
       - name: Configure Git
         run: |
           git config --global user.email "someone@example.com"
@@ -38,17 +38,17 @@ jobs:
           git remote add upstream https://github.com/axelarnetwork/axelar-amplifier.git
 
       - name: Bring changes from upstream to main
-        run: |          
+        run: |
           git fetch upstream
           git merge --allow-unrelated-histories upstream/main
-      
+
       - name: Try to integrate the changes from main into solana branch
         run: |
           git checkout solana
           git merge main
-      
+
       - name: Build the code
         run: cargo clean && cargo build
-      
+
       - name: Test the code
         run: cargo test

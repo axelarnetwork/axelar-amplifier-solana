@@ -1096,7 +1096,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "bincode",
- "governance-gmp",
  "mollusk-svm",
  "solana-axelar-gateway",
  "solana-axelar-governance",
@@ -7817,9 +7816,6 @@ dependencies = [
  "solana-program-test",
  "solana-sdk",
  "solana-sdk-ids",
- "spl-associated-token-account 6.0.0",
- "spl-token 6.0.0",
- "spl-token-2022 6.0.0",
 ]
 
 [[package]]
@@ -7902,11 +7898,9 @@ version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
- "axelar-solana-encoding",
  "axelar-solana-gateway-v2-test-fixtures",
  "axelar-solana-governance-v2-test-fixtures",
  "bincode",
- "bytemuck",
  "governance-gmp",
  "hex",
  "libsecp256k1",

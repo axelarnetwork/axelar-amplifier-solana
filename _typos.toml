@@ -3,6 +3,9 @@
 itsEzMDnPNKysu4aGVaZBCpa34Bz58soandtrG2G5tT = "itsEzMDnPNKysu4aGVaZBCpa34Bz58soandtrG2G5tT"
 B3gam8xC15TDne4XtAVAvDDfqJFeSH6mv6sn6TanVJju = "B3gam8xC15TDne4XtAVAvDDfqJFeSH6mv6sn6TanVJju"
 
+[default.extend-words]
+lits = "lits"
+
 [files]
 extend-exclude = [
   "axelar-amplifier",

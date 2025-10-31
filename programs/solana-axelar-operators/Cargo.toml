@@ -33,6 +33,7 @@ idl-build = ["anchor-lang/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []
+test-sbf = []
 
 devnet-amplifier = ["program-utils/devnet-amplifier"]
 stagenet = ["program-utils/stagenet"]
