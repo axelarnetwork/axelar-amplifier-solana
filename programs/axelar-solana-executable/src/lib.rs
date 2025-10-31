@@ -6,13 +6,13 @@ pub use instructions::*;
 pub mod state;
 pub use state::*;
 
-use axelar_solana_gateway_v2::executable::{ExecutablePayloadEncodingScheme, Message};
+use axelar_solana_gateway_v2::executable::Message;
 use relayer_discovery::structs::RelayerTransaction;
 
 declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
 
 #[program]
-pub mod memo {
+pub mod executable {
 
     use super::*;
 
@@ -20,16 +20,15 @@ pub mod memo {
         instructions::init_handler(ctx)
     }
 
-    pub fn get_transaction(ctx: Context<GetTransaction>) -> Result<RelayerTransaction> {
-        instructions::get_transaction_handler(ctx)
+    pub fn get_transaction(ctx: Context<GetTransaction>, payload: Payload, command_id: [u8;32]) -> Result<RelayerTransaction> {
+        instructions::get_transaction_handler(ctx, payload, command_id)
     }
 
     pub fn execute(
         ctx: Context<Execute>,
-        message: Message,
         payload: Payload,
-        encoding_scheme: ExecutablePayloadEncodingScheme,
+        message: Message,
     ) -> Result<()> {
-        instructions::execute_handler(ctx, message, payload, encoding_scheme)
+        instructions::execute_handler(ctx, payload, message)
     }
 }

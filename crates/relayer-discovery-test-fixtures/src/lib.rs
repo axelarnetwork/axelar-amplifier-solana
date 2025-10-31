@@ -11,12 +11,13 @@ use axelar_solana_gateway_v2::{
 use libsecp256k1::SecretKey;
 use mollusk_svm::result::ProgramResult;
 use mollusk_svm::result::InstructionResult;
-use relayer_discovery::structs::RelayerTransaction;
+use relayer_discovery::structs::{RelayerTransaction};
 use solana_sdk::pubkey::ParsePubkeyError;
 use solana_sdk::{
     account::Account,
     instruction::Instruction,
     pubkey::Pubkey,
+    system_program::ID as SYSTEM_PROGRAM_ID,
 };
 use axelar_solana_gateway_v2_test_fixtures::{
     TestSetup, approve_message_helper, create_verifier_info, initialize_gateway, initialize_payload_verification_session_with_root, setup_test_with_real_signers, verify_signature_helper
@@ -45,6 +46,8 @@ pub enum RelayerDiscoveryFixtureError {
     DiscoveryInstructionFailed(Instruction, ProgramResult),
     #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
     ConvertError(ConvertError),
+    #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
+    ExecuteFailed(Vec<Instruction>, ProgramResult),
 }
 
 impl From<ParsePubkeyError> for RelayerDiscoveryFixtureError {
@@ -77,7 +80,7 @@ impl RelayerDiscoveryTestFixture {
         RelayerDiscoveryTestFixture { setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2, init_result }
     }
 
-    pub fn approve(&mut self, message: &Message) -> Pubkey {
+    pub fn approve(&mut self, message: &Message) -> InstructionResult {
         let messages = vec![message.clone()];
 
         let message_leaves: Vec<MessageLeaf> = messages
@@ -161,7 +164,7 @@ impl RelayerDiscoveryTestFixture {
         );
 
         // Step 6: Approve the message
-        let (approve_result, incoming_message_pda) = approve_message_helper(
+        let (approve_result, _) = approve_message_helper(
             &self.setup,
             message_merkle_tree,
             message_leaves,
@@ -176,13 +179,12 @@ impl RelayerDiscoveryTestFixture {
             !approve_result.program_result.is_err(),
             "Message approval should succeed"
         );
-        incoming_message_pda
+        approve_result
     }
 
-    pub fn execute(&mut self, message: &Message, incoming_message_pda: Pubkey, payload: Vec<u8>, mut accounts: Vec<(Pubkey, Account)>) -> Result<(), RelayerDiscoveryFixtureError> {
+    pub fn execute(&mut self, message: &Message, payload: Vec<u8>, mut accounts: Vec<(Pubkey, Account)>) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
         let mut relayer_discovery = RelayerDiscovery {
             message: message.clone(),
-            message_pda: incoming_message_pda,
             payload,
             payload_pda: None,
             payers: vec![],
@@ -236,7 +238,7 @@ impl RelayerDiscoveryTestFixture {
                                         Account {
                                             lamports: amount,
                                             data: vec![],
-                                            owner: self.setup.payer.key(),
+                                            owner: SYSTEM_PROGRAM_ID,
                                             executable: false,
                                             rent_epoch: 0,
                                         }
@@ -252,8 +254,70 @@ impl RelayerDiscoveryTestFixture {
                     }
 
                 },
-                RelayerTransaction::Final(relayer_instructions) => {
-                    return Ok(());
+                RelayerTransaction::Final(ref relayer_instructions) => {
+                    let instructions: Result<Vec<Instruction>, ConvertError> = relayer_instructions.iter().map(|relayer_instruction| relayer_discovery.convert_instruction(relayer_instruction)).collect();
+                    match instructions {
+                        Ok(instructions) => {
+                            // Add all accounts that are potentially empty.
+                            instructions.iter().for_each(|instruction| instruction.accounts.iter().for_each(|account| {
+                                if accounts.iter().find(|(existing, _)| existing == &account.pubkey).is_none() {
+                                    if !account.is_signer {
+                                        accounts.push((account.pubkey, Account {
+                                            lamports: 0,
+                                            data: vec![],
+                                            owner: SYSTEM_PROGRAM_ID,
+                                            executable: false,
+                                            rent_epoch: 0,
+                                        }));
+                                    }
+                                }
+                            }));
+                            let result = self.setup.mollusk.process_instruction_chain(&instructions, &accounts);
+                            match result.program_result {
+                                ProgramResult::Success => {
+                                    return Ok(result);
+                                }
+                                _ => {
+                                    return Err(RelayerDiscoveryFixtureError::ExecuteFailed(instructions, result.program_result));
+                                }
+                            }
+                        },
+                        Err(error) => {
+                            match error {
+                                ConvertError::NeedMessagePayload => {
+                                    let account = (
+                                        Pubkey::new_unique(),
+                                        Account {
+                                            lamports: 0,
+                                            data: relayer_discovery.payload.clone(),
+                                            owner: self.setup.payer.key(),
+                                            executable: false,
+                                            rent_epoch: 0,
+                                        }
+                                    );
+                                    relayer_discovery.add_payload_pda(account.0);
+                                    accounts.push(account);
+                                }
+                                ConvertError::NeedPayer(amount) => {
+                                    let account = (
+                                        Pubkey::new_unique(),
+                                        Account {
+                                            lamports: amount,
+                                            data: vec![],
+                                            owner: SYSTEM_PROGRAM_ID,
+                                            executable: false,
+                                            rent_epoch: 0,
+                                        }
+                                    );
+                                    relayer_discovery.add_payer(account.0, amount);
+                                    accounts.push(account);
+                                }
+                                _ => {
+                                    return Err(error.into());
+                                }
+                            }
+                        }
+                    }
                 },
             }
         }
@@ -261,8 +325,9 @@ impl RelayerDiscoveryTestFixture {
 
     }
 
-    pub fn approve_and_execute(&mut self, message: &Message, payload: Vec<u8>, accounts: Vec<(Pubkey, Account)>) -> Result<(), RelayerDiscoveryFixtureError> {
-        let incoming_message_pda = self.approve(message);
-        self.execute(message, incoming_message_pda, payload, accounts)
+    pub fn approve_and_execute(&mut self, message: &Message, payload: Vec<u8>, mut accounts: Vec<(Pubkey, Account)>) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
+        let mut approval_result = self.approve(message);
+        accounts.append(&mut approval_result.resulting_accounts);
+        self.execute(message, payload, accounts)
     }   
 }

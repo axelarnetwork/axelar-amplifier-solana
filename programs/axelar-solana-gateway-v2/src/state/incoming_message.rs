@@ -3,6 +3,8 @@ use anchor_lang::solana_program;
 use bytemuck::{Pod, Zeroable};
 use udigest::{encoding::EncodeValue, Digestable};
 
+use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+
 #[account(zero_copy)]
 #[derive(Debug, PartialEq, Eq)]
 #[allow(clippy::pub_underscore_fields)]
@@ -20,6 +22,16 @@ impl IncomingMessage {
 
     pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
         Pubkey::find_program_address(&[Self::SEED_PREFIX, command_id], &crate::ID)
+    }
+
+    pub fn find_signing_pda(command_id: &[u8; 32], destination_address: &Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                VALIDATE_MESSAGE_SIGNING_SEED,
+                command_id,
+            ],
+            &destination_address,
+        )
     }
 }
 

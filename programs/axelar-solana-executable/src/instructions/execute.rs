@@ -12,20 +12,30 @@ pub struct Execute<'info> {
     // GMP Accounts
     pub executable: AxelarExecuteAccounts<'info>,
 
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     // The counter account
-    #[account(mut, seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()], bump)]
+    #[account(
+        init_if_needed,
+        space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
+        payer = payer,
+        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()], 
+        bump
+    )]
     pub counter: Account<'info, Counter>,
+
+    pub system_program: Program<'info, System>,
 }
 
 pub fn execute_handler(
     ctx: Context<Execute>,
-    message: Message,
     payload: Payload,
-    encoding_scheme: axelar_solana_gateway_v2::executable::ExecutablePayloadEncodingScheme,
+    message: Message,
 ) -> Result<()> {
     let mut payload_bytes = Vec::new();
     payload.serialize(&mut payload_bytes).unwrap();
-    validate_message(ctx.accounts, message, &payload_bytes, encoding_scheme)?;
+    validate_message_raw(&ctx.accounts.axelar_executable(), message, payload_bytes.as_slice())?;
 
     msg!("Payload size: {}", payload_bytes.len());
 

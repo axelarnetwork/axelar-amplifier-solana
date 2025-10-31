@@ -250,7 +250,7 @@ fn test_execute() {
         (
             signing_pda,
             Account {
-                lamports: LAMPORTS_PER_SOL,
+                lamports: 0,
                 data: vec![],
                 owner: GATEWAY_PROGRAM_ID,
                 executable: false,
@@ -260,7 +260,7 @@ fn test_execute() {
         (
             GATEWAY_PROGRAM_ID,
             Account {
-                lamports: 1,
+                lamports: 0,
                 data: vec![],
                 owner: solana_sdk::bpf_loader_upgradeable::id(),
                 executable: true,
@@ -278,16 +278,6 @@ fn test_execute() {
             },
         ),
         (setup.gateway_root_pda, gateway_root_account.clone()),
-        (
-            MEMO_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
         (counter_pda, counter_pda_account.clone()),
     ];
 
