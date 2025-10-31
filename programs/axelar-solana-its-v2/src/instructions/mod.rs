@@ -51,3 +51,6 @@ pub use transfer_operatorship::*;
 
 pub mod propose_operatorship;
 pub use propose_operatorship::*;
+
+pub mod accept_operatorship;
+pub use accept_operatorship::*;

@@ -1,5 +1,5 @@
 use anchor_lang::AccountDeserialize;
-use axelar_solana_its_v2::state::{Roles, UserRoles};
+use axelar_solana_its_v2::state::{RoleProposal, Roles, UserRoles};
 use axelar_solana_its_v2_test_fixtures::init_its_service;
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::setup_mollusk;
@@ -9,7 +9,7 @@ use {
 };
 
 #[test]
-fn test_transfer_operatorship_success() {
+fn test_accept_operatorship() {
     let program_id = axelar_solana_its_v2::id();
     let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
 
@@ -49,27 +49,28 @@ fn test_transfer_operatorship_success() {
             .expect("Failed to deserialize current operator roles");
     assert!(current_roles_data.roles.contains(Roles::OPERATOR));
 
-    let (new_operator_roles_pda, new_operator_roles_pda_bump) = Pubkey::find_program_address(
-        &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
+    // First create a proposal
+    let (proposal_pda, _bump) = Pubkey::find_program_address(
+        &RoleProposal::pda_seeds(&its_root_pda, &new_operator)[..],
         &program_id,
     );
 
-    let ix = Instruction {
+    let propose_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::TransferOperatorship {
+        accounts: axelar_solana_its_v2::accounts::ProposeOperatorship {
             system_program: solana_sdk::system_program::ID,
             payer,
             origin_user_account: current_operator,
             origin_roles_account: current_operator_roles_pda,
             resource_account: its_root_pda,
             destination_user_account: new_operator,
-            destination_roles_account: new_operator_roles_pda,
+            proposal_account: proposal_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::TransferOperatorship {}.data(),
+        data: axelar_solana_its_v2::instruction::ProposeOperatorship {}.data(),
     };
 
-    let accounts = vec![
+    let propose_accounts = vec![
         keyed_account_for_system_program(),
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
@@ -80,16 +81,62 @@ fn test_transfer_operatorship_success() {
         (its_root_pda, its_root_account.clone()),
         (new_operator, new_operator_account.clone()),
         (
-            new_operator_roles_pda,
+            proposal_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
     ];
 
-    let result = mollusk.process_instruction(&ix, &accounts);
+    let propose_result = mollusk.process_instruction(&propose_ix, &propose_accounts);
+    assert!(propose_result.program_result.is_ok());
 
-    assert!(result.program_result.is_ok());
+    let proposal_account_after_propose = propose_result
+        .get_account(&proposal_pda)
+        .expect("Proposal account should exist after propose");
 
-    let updated_current_roles_account = result
+    // Now create the destination roles PDA
+    let (new_operator_roles_pda, _bump) = Pubkey::find_program_address(
+        &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
+        &program_id,
+    );
+
+    let accept_ix = Instruction {
+        program_id,
+        accounts: axelar_solana_its_v2::accounts::AcceptOperatorship {
+            system_program: solana_sdk::system_program::ID,
+            payer,
+            destination_user_account: new_operator,
+            destination_roles_account: new_operator_roles_pda,
+            resource_account: its_root_pda,
+            origin_user_account: current_operator,
+            origin_roles_account: current_operator_roles_pda,
+            proposal_account: proposal_pda,
+        }
+        .to_account_metas(None),
+        data: axelar_solana_its_v2::instruction::AcceptOperatorship {}.data(),
+    };
+
+    let accept_accounts = vec![
+        keyed_account_for_system_program(),
+        (payer, payer_account.clone()),
+        (new_operator, new_operator_account.clone()),
+        (
+            new_operator_roles_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (its_root_pda, its_root_account.clone()),
+        (current_operator, current_operator_account.clone()),
+        (
+            current_operator_roles_pda,
+            current_operator_roles_account.clone(),
+        ),
+        (proposal_pda, proposal_account_after_propose.clone()),
+    ];
+
+    let accept_result = mollusk.process_instruction(&accept_ix, &accept_accounts);
+    assert!(accept_result.program_result.is_ok());
+
+    // Verify the operatorship transfer
+    let updated_current_roles_account = accept_result
         .get_account(&current_operator_roles_pda)
         .expect("Current operator roles account should exist");
 
@@ -97,13 +144,9 @@ fn test_transfer_operatorship_success() {
         UserRoles::try_deserialize(&mut updated_current_roles_account.data.as_slice())
             .expect("Failed to deserialize updated current operator roles");
 
-    // Current operator should no longer have OPERATOR role
-    assert!(
-        !updated_current_roles.roles.contains(Roles::OPERATOR),
-        "Current operator should no longer have OPERATOR role"
-    );
+    assert!(!updated_current_roles.roles.contains(Roles::OPERATOR));
 
-    let new_operator_roles_account = result
+    let new_operator_roles_account = accept_result
         .get_account(&new_operator_roles_pda)
         .expect("New operator roles account should exist");
 
@@ -111,10 +154,9 @@ fn test_transfer_operatorship_success() {
         UserRoles::try_deserialize(&mut new_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize new operator roles");
 
-    assert_eq!(new_operator_roles.bump, new_operator_roles_pda_bump);
+    assert!(new_operator_roles.roles.contains(Roles::OPERATOR));
 
-    assert!(
-        new_operator_roles.roles.contains(Roles::OPERATOR),
-        "New operator should have OPERATOR role"
-    );
+    // Check that proposal was closed
+    let proposal_account = accept_result.get_account(&proposal_pda).unwrap();
+    assert!(proposal_account.data.len() == 0);
 }
