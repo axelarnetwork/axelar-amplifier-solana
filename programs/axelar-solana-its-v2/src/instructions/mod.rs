@@ -45,6 +45,3 @@ pub use gmp::*;
 
 pub mod interchain_transfer;
 pub use interchain_transfer::*;
-
-pub mod cpi_interchain_transfer;
-pub use cpi_interchain_transfer::*;

@@ -1,14 +1,15 @@
+use crate::get_fee_and_decimals;
+use crate::get_mint_decimals;
+use crate::gmp::{GMPAccounts, ToGMPAccounts};
+use crate::instructions::process_outbound;
+use crate::state::{token_manager, FlowDirection};
 use crate::{
     errors::ItsError,
-    gmp::{GMPAccounts, ToGMPAccounts},
-    instructions::{
-        get_fee_and_decimals, get_mint_decimals, process_outbound, validate_token_manager_type,
-    },
-    state::{
-        current_flow_epoch, token_manager, FlowDirection, InterchainTokenService, TokenManager,
-    },
+    instructions::validate_token_manager_type,
+    state::{current_flow_epoch, InterchainTokenService, TokenManager},
 };
-use anchor_lang::{prelude::*, system_program};
+use anchor_lang::prelude::*;
+use anchor_lang::system_program;
 use anchor_spl::{
     token_2022::Token2022,
     token_interface::{Mint, TokenAccount},
@@ -20,14 +21,13 @@ use interchain_token_transfer_gmp::GMPPayload;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], destination_chain: String, destination_address: Vec<u8>, amount: u64, gas_value: u64, signing_pda_bump: u8, data: Option<Vec<u8>>)]
-pub struct InterchainTransfer<'info> {
+#[instruction(token_id: [u8; 32], destination_chain: String, destination_address: Vec<u8>, amount: u64, gas_value: u64, signing_pda_bump: u8, source_id: Option<Pubkey>, pda_seeds: Option<Vec<Vec<u8>>>, data: Option<Vec<u8>>)]
+pub struct InterchainTransfer {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account(
-        constraint = authority.owner == &system_program::ID @ ItsError::InvalidAccountOwner
-    )]
+    /// Could be source_id PDA or reguilar user account
+    /// Checked at runtime
     pub authority: Signer<'info>,
 
     #[account(
@@ -146,16 +146,46 @@ pub fn interchain_transfer_handler(
     amount: u64,
     gas_value: u64,
     signing_pda_bump: u8,
+    source_id: Option<Pubkey>,
+    pda_seeds: Option<Vec<Vec<u8>>>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
-    let source_address = *ctx.accounts.authority.key;
+    let is_cpi = source_id.is_some() && pda_seeds.is_some();
 
-    // todo: do we need to add this to execute interchain transfer?
-    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
-        msg!("Mint and token ID don't match");
-        return err!(ItsError::InvalidAccountData);
+    if is_cpi {
+        let source_id = source_id.unwrap();
+        let pda_seeds = pda_seeds.unwrap();
+
+        // The sender should be a PDA owned by the source program
+        if ctx.accounts.authority.owner != &source_id {
+            msg!(
+                "Sender account must be owned by the source program. Expected: {}, Got: {}",
+                source_id,
+                ctx.accounts.authority.owner
+            );
+            return err!(ItsError::InvalidAccountData);
+        }
+
+        // Validate that the PDA can be derived using the provided seeds
+        let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
+        let (expected_pda, _bump) =
+            solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
+
+        if expected_pda != *ctx.accounts.authority.key {
+            msg!(
+                "PDA derivation mismatch. Expected: {}, Got: {}",
+                expected_pda,
+                ctx.accounts.authority.key
+            );
+            return err!(ItsError::InvalidAccountData);
+        }
+    } else {
+        if ctx.accounts.authority.owner != &system_program::ID {
+            return err!(ItsError::InvalidAccountOwner);
+        }
     }
 
+    let source_address = *ctx.accounts.authority.key;
     process_outbound_transfer(
         ctx,
         token_id,

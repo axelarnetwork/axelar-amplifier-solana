@@ -167,6 +167,8 @@ fn test_interchain_transfer_mint_burn() {
         amount: transfer_amount,
         gas_value,
         signing_pda_bump,
+        source_id: None,
+        pda_seeds: None,
         data: None,
     };
 
@@ -434,6 +436,8 @@ fn test_interchain_transfer_lock_unlock() {
         amount: transfer_amount,
         gas_value,
         signing_pda_bump,
+        source_id: None,
+        pda_seeds: None,
         data: None,
     };
 
