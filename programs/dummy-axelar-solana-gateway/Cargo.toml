@@ -12,7 +12,6 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 no-entrypoint = []
-test-sbf = []
 devnet-amplifier = ["program-utils/devnet-amplifier"]
 stagenet = ["program-utils/stagenet"]
 testnet = ["program-utils/testnet"]
