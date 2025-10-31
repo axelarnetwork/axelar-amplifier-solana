@@ -45,3 +45,7 @@ pub use gmp::*;
 
 pub mod interchain_transfer;
 pub use interchain_transfer::*;
+
+pub mod transfer_operatorship;
+pub use transfer_operatorship::*;
+
