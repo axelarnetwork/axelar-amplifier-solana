@@ -28,4 +28,5 @@ pub enum ItsError {
     TokenMintMismatch,
     InvalidTokenManagerAta,
     InvalidTokenManagerPda,
+    AccountNotProvided,
 }
