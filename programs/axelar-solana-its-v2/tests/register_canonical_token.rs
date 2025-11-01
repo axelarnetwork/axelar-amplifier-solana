@@ -8,27 +8,26 @@ use axelar_solana_its_v2::{
         interchain_token_id_internal,
     },
 };
-use axelar_solana_its_v2_test_fixtures::register_canonical_interchain_token_helper;
-use solana_program::{program_pack::Pack, system_program};
+use axelar_solana_its_v2_test_fixtures::{
+    init_its_service, initialize_mollusk, register_canonical_interchain_token_helper,
+};
+use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair,
     signer::Signer,
 };
 use spl_token_2022::state::Account as Token2022Account;
 
-#[path = "initialize.rs"]
-mod initialize;
-
 #[test]
 fn test_register_canonical_token() {
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -41,7 +40,7 @@ fn test_register_canonical_token() {
         _user_roles_account,
         _program_data,
         _program_data_account,
-    ) = initialize::init_its_service(
+    ) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -90,7 +89,14 @@ fn test_register_canonical_token() {
     );
 
     let token_id = canonical_interchain_token_id(&mint_pubkey);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
 
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,

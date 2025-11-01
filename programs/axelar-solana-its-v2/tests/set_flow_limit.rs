@@ -4,31 +4,27 @@ use axelar_solana_its_v2::{
     utils::interchain_token_id,
 };
 use axelar_solana_its_v2_test_fixtures::{
-    deploy_interchain_token_helper, DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
+    DeployInterchainTokenContext,
 };
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_program::instruction::Instruction;
-use solana_sdk::{
-    account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
-};
-
-#[path = "initialize.rs"]
-mod initialize;
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_set_flow_limit_success() {
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -37,11 +33,11 @@ fn test_set_flow_limit_success() {
     let (
         its_root_pda,
         its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
+        user_roles_pda,
+        user_roles_account,
         _program_data,
         _program_data_account,
-    ) = initialize::init_its_service(
+    ) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -58,10 +54,11 @@ fn test_set_flow_limit_success() {
     let symbol = "TEST".to_string();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
+
     let minter = Pubkey::new_unique();
 
     let token_id = interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
 
     let ctx = DeployInterchainTokenContext::new(
@@ -94,25 +91,17 @@ fn test_set_flow_limit_success() {
         ctx,
     );
 
-    assert!(
-        result.program_result.is_ok(),
-        "Deploy interchain token instruction should succeed: {:?}",
-        result.program_result
-    );
+    assert!(result.program_result.is_ok());
 
     // Verify the token manager was created with no flow limit initially
     let token_manager_account = result.get_account(&token_manager_pda).unwrap();
     let token_manager =
         TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
 
-    assert_eq!(
-        token_manager.flow_slot.flow_limit, None,
-        "Initial flow limit should be None"
-    );
+    assert_eq!(token_manager.flow_slot.flow_limit, None);
 
     // Now set the flow limit
     let flow_limit: Option<u64> = Some(1_000_000_000); // 1 billion tokens
-    let (operator_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
 
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&program_id);
@@ -121,9 +110,9 @@ fn test_set_flow_limit_success() {
         program_id,
         accounts: axelar_solana_its_v2::accounts::SetFlowLimit {
             payer,
-            operator: minter, // Using minter as operator
+            operator: operator,
             its_root_pda,
-            its_roles_pda: operator_roles_pda,
+            its_roles_pda: user_roles_pda,
             token_manager_pda,
             system_program: solana_sdk::system_program::ID,
             // for emit cpi
@@ -136,14 +125,13 @@ fn test_set_flow_limit_success() {
 
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
-    let operator_roles_account = result.get_account(&operator_roles_pda).unwrap();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let accounts = vec![
         (payer, payer_account),
-        (minter, operator_account),
+        (operator, operator_account),
         (its_root_pda, updated_its_root_account.clone()),
-        (operator_roles_pda, operator_roles_account.clone()),
+        (user_roles_pda, user_roles_account.clone()),
         (token_manager_pda, updated_token_manager_account.clone()),
         keyed_account_for_system_program(),
         // for event cpi
@@ -157,10 +145,7 @@ fn test_set_flow_limit_success() {
     let updated_token_manager =
         TokenManager::try_deserialize(&mut updated_token_manager_account.data.as_ref()).unwrap();
 
-    assert_eq!(
-        updated_token_manager.flow_slot.flow_limit, flow_limit,
-        "Flow limit should be set to the specified value"
-    );
+    assert_eq!(updated_token_manager.flow_slot.flow_limit, flow_limit);
 
     assert_eq!(updated_token_manager.token_id, token_manager.token_id);
     assert_eq!(

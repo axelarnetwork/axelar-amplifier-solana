@@ -39,3 +39,24 @@ pub use link_token::*;
 
 pub mod set_flow_limit;
 pub use set_flow_limit::*;
+
+pub mod gmp;
+pub use gmp::*;
+
+pub mod interchain_transfer;
+pub use interchain_transfer::*;
+
+pub mod transfer_operatorship;
+pub use transfer_operatorship::*;
+
+pub mod propose_operatorship;
+pub use propose_operatorship::*;
+
+pub mod accept_operatorship;
+pub use accept_operatorship::*;
+
+pub mod add_token_manager_flow_limiter;
+pub use add_token_manager_flow_limiter::*;
+
+pub mod remove_token_manager_flow_limiter;
+pub use remove_token_manager_flow_limiter::*;

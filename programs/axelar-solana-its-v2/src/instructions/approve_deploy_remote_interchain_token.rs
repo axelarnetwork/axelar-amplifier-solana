@@ -10,14 +10,11 @@ use anchor_lang::prelude::*;
 #[event_cpi]
 #[instruction(deployer: Pubkey, salt: [u8; 32], destination_chain: String, destination_minter: Vec<u8>)]
 pub struct ApproveDeployRemoteInterchainToken<'info> {
-    /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The minter who is approving the deployment (must be a signer with minter role)
     pub minter: Signer<'info>,
 
-    /// Token Manager PDA for this token
     #[account(
         seeds = [
             TokenManager::SEED_PREFIX,
@@ -28,7 +25,6 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// Minter's roles account (must have minter role)
     #[account(
         seeds = [
             UserRoles::SEED_PREFIX,
@@ -54,7 +50,6 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
     )]
     pub deploy_approval_pda: Account<'info, DeployApproval>,
 
-    /// System program
     pub system_program: Program<'info, System>,
 }
 

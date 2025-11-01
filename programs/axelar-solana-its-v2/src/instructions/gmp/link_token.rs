@@ -1,10 +1,8 @@
 use crate::{
     errors::ItsError,
-    events::{InterchainTokenIdClaimed, TokenManagerDeployed},
+    events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
-    seed_prefixes::TOKEN_MANAGER_SEED,
-    state::{token_manager::Type, InterchainTokenService, Roles, TokenManager, UserRoles},
-    utils::{interchain_token_id_internal, linked_token_deployer_salt},
+    state::{token_manager, InterchainTokenService, Roles, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -14,8 +12,13 @@ use anchor_spl::{
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(salt: [u8; 32], token_manager_type: Type, operator: Option<Pubkey>)]
-pub struct RegisterCustomToken<'info> {
+#[instruction(
+	token_id: [u8; 32],
+	destination_token_address: [u8; 32],
+	token_manager_type: u8,
+	link_params: Vec<u8>,
+)]
+pub struct LinkTokenInternal<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -26,7 +29,8 @@ pub struct RegisterCustomToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
+        signer, // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -35,11 +39,11 @@ pub struct RegisterCustomToken<'info> {
         payer = payer,
         space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
-            TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
-            &interchain_token_id_internal(&linked_token_deployer_salt(&deployer.key(), &salt))
+            &token_id,
         ],
-        bump
+        bump,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -74,20 +78,34 @@ pub struct RegisterCustomToken<'info> {
     pub operator_roles_pda: Option<Account<'info, UserRoles>>,
 }
 
-pub fn register_custom_token_handler(
-    ctx: Context<RegisterCustomToken>,
-    salt: [u8; 32],
-    token_manager_type: Type,
-    operator: Option<Pubkey>,
-) -> Result<[u8; 32]> {
-    msg!("Instruction: RegisterCustomToken");
+pub fn link_token_internal_handler(
+    ctx: Context<LinkTokenInternal>,
+    token_id: [u8; 32],
+    destination_token_address: [u8; 32],
+    token_manager_type: u8,
+    link_params: Vec<u8>,
+) -> Result<()> {
+    msg!("link_token_internal_handler");
 
-    // Validate that the token manager type is not NativeInterchainToken
-    if token_manager_type == Type::NativeInterchainToken {
+    let token_manager_type: token_manager::Type = token_manager_type
+        .try_into()
+        .map_err(|_| ItsError::InvalidInstructionData)?;
+    if token_manager::Type::NativeInterchainToken == token_manager_type {
         return err!(ItsError::InvalidInstructionData);
     }
 
-    // Validate operator consistency
+    let token_address = Pubkey::new_from_array(
+        destination_token_address
+            .as_ref()
+            .try_into()
+            .map_err(|_err| ProgramError::InvalidAccountData)?,
+    );
+
+    let operator = match link_params.try_into() {
+        Ok(operator_bytes) => Some(Pubkey::new_from_array(operator_bytes)),
+        Err(_err) => None,
+    };
+
     if operator.is_some() != ctx.accounts.operator.is_some() {
         return err!(ItsError::InvalidArgument);
     }
@@ -96,43 +114,25 @@ pub fn register_custom_token_handler(
         return err!(ItsError::InvalidArgument);
     }
 
-    let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
-    let token_id = interchain_token_id_internal(&deploy_salt);
-
-    // Emit InterchainTokenIdClaimed event
-    emit_cpi!(InterchainTokenIdClaimed {
-        token_id,
-        deployer: ctx.accounts.payer.key(),
-        salt: deploy_salt,
-    });
-
-    // Not needed for custom tokens
     validate_mint_extensions(
         token_manager_type,
         &ctx.accounts.token_mint.to_account_info(),
     )?;
 
-    // Initialize the token manager
     TokenManager::init_account(
         &mut ctx.accounts.token_manager_pda,
         token_manager_type,
         token_id,
-        ctx.accounts.token_mint.key(),
+        token_address,
         ctx.accounts.token_manager_ata.key(),
         ctx.bumps.token_manager_pda,
     );
 
-    // Initialize operator roles if provided
-
-    if let (Some(operator_roles_pda), Some(bump)) = (
-        ctx.accounts.operator_roles_pda.as_mut(),
-        ctx.bumps.operator_roles_pda,
-    ) {
-        operator_roles_pda.bump = bump;
+    if let Some(operator_roles_pda) = &mut ctx.accounts.operator_roles_pda {
+        operator_roles_pda.bump = ctx.bumps.operator_roles_pda.unwrap();
         operator_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
     }
 
-    // Emit TokenManagerDeployed event
     emit_cpi!(TokenManagerDeployed {
         token_id,
         token_manager: ctx.accounts.token_manager_pda.key(),
@@ -142,5 +142,5 @@ pub fn register_custom_token_handler(
             .unwrap_or_default(),
     });
 
-    Ok(token_id)
+    Ok(())
 }

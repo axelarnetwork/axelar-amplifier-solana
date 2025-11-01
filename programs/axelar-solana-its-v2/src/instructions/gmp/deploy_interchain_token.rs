@@ -1,26 +1,19 @@
 use crate::{
     errors::ItsError,
-    events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
+    events::{InterchainTokenDeployed, TokenManagerDeployed},
+    instructions::validate_mint_extensions,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
-    utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
+    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token_2022::spl_token_2022::extension::BaseStateWithExtensions;
-use anchor_spl::{
-    associated_token::AssociatedToken,
-    token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
-};
-use anchor_spl::{
-    token_2022::spl_token_2022::extension::ExtensionType,
-    token_interface::{Mint, TokenAccount, TokenInterface},
-};
+use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
+use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(salt: [u8; 32], name: String, symbol: String, decimals: u8, initial_supply: u64)]
-pub struct DeployInterchainToken<'info> {
+#[instruction(token_id: [u8; 32], name: String, symbol: String, decimals: u8)]
+pub struct DeployInterchainTokenInternal<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -31,7 +24,8 @@ pub struct DeployInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
+        signer // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -40,9 +34,9 @@ pub struct DeployInterchainToken<'info> {
         payer = payer,
         space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
-            TokenManager::SEED_PREFIX,
+            TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &salt)
+            &token_id
         ],
         bump
     )]
@@ -58,7 +52,7 @@ pub struct DeployInterchainToken<'info> {
         seeds = [
             INTERCHAIN_TOKEN_SEED,
             its_root_pda.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &salt)
+            &token_id
         ],
         bump,
     )]
@@ -73,7 +67,7 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token2022>,
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
@@ -83,7 +77,6 @@ pub struct DeployInterchainToken<'info> {
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
 
-    /// CHECK: delegated to mpl_token_metadata_program
     #[account(
         mut,
         seeds = [
@@ -94,7 +87,7 @@ pub struct DeployInterchainToken<'info> {
         bump,
         seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
     )]
-    pub mpl_token_metadata_account: AccountInfo<'info>,
+    pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
     #[account(
         init,
@@ -115,29 +108,21 @@ pub struct DeployInterchainToken<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref()
+            minter.as_ref().unwrap().key().as_ref()
         ],
         bump
     )]
     pub minter_roles_pda: Option<Account<'info, UserRoles>>,
 }
 
-pub fn deploy_interchain_token_handler(
-    ctx: Context<DeployInterchainToken>,
-    salt: [u8; 32],
+pub fn deploy_interchain_token_internal_handler(
+    ctx: Context<DeployInterchainTokenInternal>,
+    token_id: [u8; 32],
     name: String,
     symbol: String,
     decimals: u8,
-    initial_supply: u64,
-) -> Result<[u8; 32]> {
-    let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
-    let token_id = interchain_token_id_internal(&deploy_salt);
-
-    if initial_supply == 0
-        && (ctx.accounts.minter.is_none() || ctx.accounts.minter_roles_pda.is_none())
-    {
-        return err!(ItsError::ZeroSupplyToken);
-    }
+) -> Result<()> {
+    msg!("deploy_interchain_token_internal_handler");
 
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
@@ -146,41 +131,16 @@ pub fn deploy_interchain_token_handler(
         return err!(ItsError::InvalidArgument);
     }
 
-    emit_cpi!(InterchainTokenIdClaimed {
-        token_id,
-        deployer: *ctx.accounts.deployer.key,
-        salt: deploy_salt,
-    });
-
-    // process_inbound_deploy
-
-    // setup_mint
-    if initial_supply > 0 {
-        mint_initial_supply(
-            ctx.accounts,
-            token_id,
-            initial_supply,
-            ctx.bumps.token_manager_pda,
-        )?;
-    }
-
-    // setup_metadata
-    create_token_metadata(
+    // Call process_inbound_deploy directly with the context accounts
+    process_inbound_deploy(
         ctx.accounts,
-        name.clone(),
-        symbol.clone(),
         token_id,
+        &name,
+        &symbol,
+        0,
         ctx.bumps.token_manager_pda,
+        ctx.bumps.minter_roles_pda,
     )?;
-
-    TokenManager::init_account(
-        &mut ctx.accounts.token_manager_pda,
-        Type::NativeInterchainToken,
-        token_id,
-        ctx.accounts.token_mint.key(),
-        ctx.accounts.token_manager_ata.key(),
-        ctx.bumps.token_manager_pda,
-    );
 
     emit_cpi!(TokenManagerDeployed {
         token_id,
@@ -194,15 +154,6 @@ pub fn deploy_interchain_token_handler(
             .unwrap_or_default(),
     });
 
-    // Initialize UserRoles
-    if let (Some(minter_roles_pda), Some(bump)) = (
-        ctx.accounts.minter_roles_pda.as_mut(),
-        ctx.bumps.minter_roles_pda,
-    ) {
-        minter_roles_pda.bump = bump;
-        minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
-    }
-
     emit_cpi!(InterchainTokenDeployed {
         token_id,
         token_address: ctx.accounts.token_mint.key(),
@@ -210,18 +161,60 @@ pub fn deploy_interchain_token_handler(
             .accounts
             .minter
             .as_ref()
-            .map(|account| *account.key)
+            .map(anchor_lang::Key::key)
             .unwrap_or_default(),
-        name,
-        symbol,
+        name: name.clone(),
+        symbol: symbol.clone(),
         decimals,
     });
 
-    Ok(token_id)
+    Ok(())
+}
+
+pub fn process_inbound_deploy(
+    ctx: &mut DeployInterchainTokenInternal,
+    token_id: [u8; 32],
+    name: &str,
+    symbol: &str,
+    initial_supply: u64,
+    token_manager_pda_bump: u8,
+    minter_roles_pda_bump: Option<u8>,
+) -> Result<()> {
+    // setup_mint
+    if initial_supply > 0 {
+        mint_initial_supply(ctx, token_id, initial_supply, token_manager_pda_bump)?;
+    }
+
+    // setup_metadata
+    create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
+
+    // super::token_manager::deploy(...)
+    validate_mint_extensions(
+        Type::NativeInterchainToken,
+        &ctx.token_mint.to_account_info(),
+    )?;
+
+    TokenManager::init_account(
+        &mut ctx.token_manager_pda,
+        Type::NativeInterchainToken,
+        token_id,
+        ctx.token_mint.key(),
+        ctx.token_manager_ata.key(),
+        token_manager_pda_bump,
+    );
+
+    // Initialize UserRoles
+    if ctx.minter.is_some() && ctx.minter_roles_pda.is_some() {
+        let minter_roles_pda = ctx.minter_roles_pda.as_mut().unwrap();
+        minter_roles_pda.bump = minter_roles_pda_bump.unwrap();
+        minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
+    }
+
+    Ok(())
 }
 
 fn mint_initial_supply<'info>(
-    accounts: &DeployInterchainToken<'info>,
+    accounts: &DeployInterchainTokenInternal<'info>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
@@ -256,18 +249,14 @@ fn mint_initial_supply<'info>(
 }
 
 fn create_token_metadata<'info>(
-    accounts: &DeployInterchainToken<'info>,
-    name: String,
-    symbol: String,
+    accounts: &DeployInterchainTokenInternal<'info>,
+    name: &str,
+    symbol: &str,
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
-    // NOTE: truncate panics if MAX_LENTH
-    // does not lie on a char boundary.
-    // TODO should we handle it gracefully?
-
-    let mut truncated_name = name;
-    let mut truncated_symbol = symbol;
+    let mut truncated_name = name.to_owned();
+    let mut truncated_symbol = symbol.to_owned();
     truncated_name.truncate(mpl_token_metadata::MAX_NAME_LENGTH);
     truncated_symbol.truncate(mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
@@ -292,29 +281,6 @@ fn create_token_metadata<'info>(
             token_id.as_ref(),
             &[token_manager_bump],
         ]])?;
-
-    Ok(())
-}
-
-// TODO: deprecate this, replace with Type::assert_supports_mint_extensions
-pub fn validate_mint_extensions(
-    ty: token_manager::Type,
-    token_mint: &AccountInfo<'_>,
-) -> Result<()> {
-    let mint_data = token_mint.try_borrow_data()?;
-    let mint = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
-
-    if matches!(
-        (
-            ty,
-            mint.get_extension_types()?
-                .contains(&ExtensionType::TransferFeeConfig)
-        ),
-        (token_manager::Type::LockUnlock, true) | (token_manager::Type::LockUnlockFee, false)
-    ) {
-        msg!("The mint extension is not compatible with the TokenManager type");
-        return err!(ItsError::InvalidInstructionData);
-    }
 
     Ok(())
 }
