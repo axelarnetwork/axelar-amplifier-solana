@@ -357,4 +357,8 @@ pub mod axelar_solana_its_v2 {
     pub fn accept_operatorship(ctx: Context<AcceptOperatorship>) -> Result<()> {
         instructions::accept_operatorship_handler(ctx)
     }
+
+    pub fn add_token_manager_flow_limiter(ctx: Context<AddTokenManagerFlowLimiter>) -> Result<()> {
+        instructions::add_token_manager_flow_limiter_handler(ctx)
+    }
 }
