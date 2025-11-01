@@ -1,6 +1,5 @@
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_its_v2::{
-    seed_prefixes::TOKEN_MANAGER_SEED,
     state::{TokenManager, UserRoles},
     utils::interchain_token_id,
 };
@@ -34,8 +33,8 @@ fn test_set_flow_limit_success() {
     let (
         its_root_pda,
         its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
+        user_roles_pda,
+        user_roles_account,
         _program_data,
         _program_data_account,
     ) = init_its_service(
@@ -59,19 +58,8 @@ fn test_set_flow_limit_success() {
     let minter = Pubkey::new_unique();
 
     let token_id = interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
-        &[TOKEN_MANAGER_SEED, its_root_pda.as_ref(), &token_id],
-        &program_id,
-    );
-
-    let (minter_roles_pda, _minter_roles_pda_bump) = Pubkey::find_program_address(
-        &[
-            UserRoles::SEED_PREFIX,
-            token_manager_pda.as_ref(),
-            minter.as_ref(),
-        ],
-        &program_id,
-    );
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
+    let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
@@ -103,33 +91,17 @@ fn test_set_flow_limit_success() {
         ctx,
     );
 
-    assert!(
-        result.program_result.is_ok(),
-        "Deploy interchain token instruction should succeed: {:?}",
-        result.program_result
-    );
+    assert!(result.program_result.is_ok());
 
     // Verify the token manager was created with no flow limit initially
     let token_manager_account = result.get_account(&token_manager_pda).unwrap();
     let token_manager =
         TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
 
-    assert_eq!(
-        token_manager.flow_slot.flow_limit, None,
-        "Initial flow limit should be None"
-    );
+    assert_eq!(token_manager.flow_slot.flow_limit, None);
 
     // Now set the flow limit
     let flow_limit: Option<u64> = Some(1_000_000_000); // 1 billion tokens
-
-    let (operator_roles_pda, _operator_roles_bump) = Pubkey::find_program_address(
-        &[
-            UserRoles::SEED_PREFIX,
-            token_manager_pda.as_ref(),
-            minter.as_ref(), // Using minter as operator since they have all roles
-        ],
-        &program_id,
-    );
 
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&program_id);
@@ -138,9 +110,9 @@ fn test_set_flow_limit_success() {
         program_id,
         accounts: axelar_solana_its_v2::accounts::SetFlowLimit {
             payer,
-            operator: minter, // Using minter as operator
+            operator: operator,
             its_root_pda,
-            its_roles_pda: operator_roles_pda,
+            its_roles_pda: user_roles_pda,
             token_manager_pda,
             system_program: solana_sdk::system_program::ID,
             // for emit cpi
@@ -153,14 +125,13 @@ fn test_set_flow_limit_success() {
 
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
-    let operator_roles_account = result.get_account(&operator_roles_pda).unwrap();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let accounts = vec![
         (payer, payer_account),
-        (minter, operator_account),
+        (operator, operator_account),
         (its_root_pda, updated_its_root_account.clone()),
-        (operator_roles_pda, operator_roles_account.clone()),
+        (user_roles_pda, user_roles_account.clone()),
         (token_manager_pda, updated_token_manager_account.clone()),
         keyed_account_for_system_program(),
         // for event cpi
@@ -174,10 +145,7 @@ fn test_set_flow_limit_success() {
     let updated_token_manager =
         TokenManager::try_deserialize(&mut updated_token_manager_account.data.as_ref()).unwrap();
 
-    assert_eq!(
-        updated_token_manager.flow_slot.flow_limit, flow_limit,
-        "Flow limit should be set to the specified value"
-    );
+    assert_eq!(updated_token_manager.flow_slot.flow_limit, flow_limit);
 
     assert_eq!(updated_token_manager.token_id, token_manager.token_id);
     assert_eq!(
