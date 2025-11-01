@@ -158,10 +158,25 @@ fn interchain_transfer_self_invoke(
         program_id: crate::id(),
         accounts: crate::accounts::InterchainTransferInternal {
             payer: ctx.accounts.payer.key(),
-            authority: ctx.accounts.authority.clone().unwrap().key(),
+            authority: ctx
+                .accounts
+                .authority
+                .as_ref()
+                .ok_or(ItsError::AccountNotProvided)?
+                .key(),
             its_root_pda: ctx.accounts.its_root_pda.key(),
-            destination: ctx.accounts.destination.clone().unwrap().key(),
-            destination_ata: ctx.accounts.destination_ata.clone().unwrap().key(),
+            destination: ctx
+                .accounts
+                .destination
+                .as_ref()
+                .ok_or(ItsError::AccountNotProvided)?
+                .key(),
+            destination_ata: ctx
+                .accounts
+                .destination_ata
+                .as_ref()
+                .ok_or(ItsError::AccountNotProvided)?
+                .key(),
             token_mint: ctx.accounts.token_mint.key(),
             token_manager_pda: ctx.accounts.token_manager_pda.key(),
             token_manager_ata: ctx.accounts.token_manager_ata.key(),
@@ -177,9 +192,19 @@ fn interchain_transfer_self_invoke(
     let account_infos =
         crate::__cpi_client_accounts_interchain_transfer_internal::InterchainTransferInternal {
             payer: ctx.accounts.payer.to_account_info(),
-            authority: ctx.accounts.authority.clone().unwrap().to_account_info(),
+            authority: ctx
+                .accounts
+                .authority
+                .as_ref()
+                .ok_or(ItsError::AccountNotProvided)?
+                .to_account_info(),
             its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
-            destination: ctx.accounts.destination.clone().unwrap().to_account_info(),
+            destination: ctx
+                .accounts
+                .destination
+                .as_ref()
+                .ok_or(ItsError::AccountNotProvided)?
+                .to_account_info(),
             destination_ata: ctx
                 .accounts
                 .destination_ata
@@ -233,7 +258,12 @@ fn link_token_self_invoke(
 
     let accounts = crate::accounts::LinkTokenInternal {
         payer: ctx.accounts.payer.key(),
-        deployer: ctx.accounts.deployer.clone().unwrap().key(),
+        deployer: ctx
+            .accounts
+            .deployer
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
+            .key(),
         system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -257,7 +287,12 @@ fn link_token_self_invoke(
 
     let account_infos = crate::__cpi_client_accounts_link_token_internal::LinkTokenInternal {
         payer: ctx.accounts.payer.to_account_info(),
-        deployer: ctx.accounts.deployer.clone().unwrap().to_account_info(),
+        deployer: ctx
+            .accounts
+            .deployer
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
+            .to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
         token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -309,7 +344,12 @@ fn deploy_interchain_token_self_invoke(
     // Build the accounts using Anchor's generated accounts struct
     let accounts = crate::accounts::DeployInterchainTokenInternal {
         payer: ctx.accounts.payer.key(),
-        deployer: ctx.accounts.deployer.clone().unwrap().key(),
+        deployer: ctx
+            .accounts
+            .deployer
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
+            .key(),
         system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -317,20 +357,30 @@ fn deploy_interchain_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.key(),
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
-        sysvar_instructions: ctx.accounts.sysvar_instructions.clone().unwrap().key(),
+        sysvar_instructions: ctx
+            .accounts
+            .sysvar_instructions
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
+            .key(),
         mpl_token_metadata_program: ctx
             .accounts
             .mpl_token_metadata_program
-            .clone()
-            .unwrap()
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
             .key(),
         mpl_token_metadata_account: ctx
             .accounts
             .mpl_token_metadata_account
-            .clone()
-            .unwrap()
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
             .key(),
-        deployer_ata: ctx.accounts.deployer_ata.clone().unwrap().key(),
+        deployer_ata: ctx
+            .accounts
+            .deployer_ata
+            .as_ref()
+            .ok_or(ItsError::AccountNotProvided)?
+            .key(),
         minter: ctx.accounts.minter.as_ref().map(Key::key),
         minter_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(Key::key),
         // for event cpi
@@ -347,7 +397,7 @@ fn deploy_interchain_token_self_invoke(
 
     let account_infos = crate::__cpi_client_accounts_deploy_interchain_token_internal::DeployInterchainTokenInternal {
 		payer: ctx.accounts.payer.to_account_info(),
-		deployer: ctx.accounts.deployer.clone().unwrap().to_account_info(),
+		deployer: ctx.accounts.deployer.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		system_program: ctx.accounts.system_program.to_account_info(),
 		its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
 		token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -355,7 +405,7 @@ fn deploy_interchain_token_self_invoke(
 		token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
 		token_program: ctx.accounts.token_program.to_account_info(),
 		associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-		sysvar_instructions: ctx.accounts.sysvar_instructions.clone().unwrap().to_account_info(),
+		sysvar_instructions: ctx.accounts.sysvar_instructions.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		mpl_token_metadata_program: ctx
 			.accounts
 			.mpl_token_metadata_program
@@ -368,7 +418,7 @@ fn deploy_interchain_token_self_invoke(
 			.clone()
 			.unwrap()
 			.to_account_info(),
-		deployer_ata: ctx.accounts.deployer_ata.clone().unwrap().to_account_info(),
+		deployer_ata: ctx.accounts.deployer_ata.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		minter: ctx
 			.accounts
 			.minter
