@@ -23,7 +23,7 @@ pub struct SetFlowLimit<'info> {
     #[account(
         seeds = [
             UserRoles::SEED_PREFIX,
-            token_manager_pda.key().as_ref(),
+            its_root_pda.key().as_ref(),
             operator.key().as_ref(),
         ],
         bump = its_roles_pda.bump,
