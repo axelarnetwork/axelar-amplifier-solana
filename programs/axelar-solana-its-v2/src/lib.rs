@@ -361,4 +361,10 @@ pub mod axelar_solana_its_v2 {
     pub fn add_token_manager_flow_limiter(ctx: Context<AddTokenManagerFlowLimiter>) -> Result<()> {
         instructions::add_token_manager_flow_limiter_handler(ctx)
     }
+
+    pub fn remove_token_manager_flow_limiter(
+        ctx: Context<RemoveTokenManagerFlowLimiter>,
+    ) -> Result<()> {
+        instructions::remove_token_manager_flow_limiter_handler(ctx)
+    }
 }
