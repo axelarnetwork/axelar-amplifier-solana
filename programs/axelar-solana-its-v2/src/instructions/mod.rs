@@ -60,3 +60,7 @@ pub use add_token_manager_flow_limiter::*;
 
 pub mod remove_token_manager_flow_limiter;
 pub use remove_token_manager_flow_limiter::*;
+
+pub mod set_token_manager_flow_limit;
+pub use set_token_manager_flow_limit::*;
+
