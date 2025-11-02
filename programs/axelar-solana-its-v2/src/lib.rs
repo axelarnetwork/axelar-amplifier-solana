@@ -374,4 +374,11 @@ pub mod axelar_solana_its_v2 {
     ) -> Result<()> {
         instructions::set_token_manager_flow_limit_handler(ctx, flow_limit)
     }
+
+    pub fn transfer_token_manager_operatorship(
+        ctx: Context<TransferTokenManagerOperatorship>,
+        token_id: [u8; 32],
+    ) -> Result<()> {
+        instructions::transfer_token_manager_operatorship_handler(ctx, token_id)
+    }
 }
