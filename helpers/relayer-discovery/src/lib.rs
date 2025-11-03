@@ -3,7 +3,7 @@
 //! Program utility functions
 
 use solana_program::pubkey::Pubkey;
-use axelar_solana_gateway_v2::Message;
+use axelar_solana_gateway_v2::{GatewayConfig, IncomingMessage, Message, ID as GATEWAY_PROGRAM_ID};
 use solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::{AnchorSerialize, prelude::thiserror};
 
@@ -173,5 +173,20 @@ impl RelayerDiscovery {
 pub fn find_transaction_pda(program_id: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TRANSACTION_PDA_SEED], program_id)
 }
+
+/// Helper function to get all the executable accounts required.
+pub fn executable_relayer_accounts(command_id: &[u8;32], destination_address: &Pubkey) -> Vec<RelayerAccount> {
+    let incoming_message = IncomingMessage::find_pda(&command_id).0;
+    let signing_pda = IncomingMessage::find_signing_pda(&command_id, destination_address).0;
+    let gateway_root_pda = GatewayConfig::find_pda().0;
+    let event_authority = Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID).0;
+    vec![
+        RelayerAccount::Account { pubkey: incoming_message, is_writable: true },
+        RelayerAccount::Account { pubkey: signing_pda, is_writable: false },
+        RelayerAccount::Account { pubkey: gateway_root_pda, is_writable: false },
+        RelayerAccount::Account { pubkey: event_authority, is_writable: false },
+        RelayerAccount::Account { pubkey: GATEWAY_PROGRAM_ID, is_writable: false },
+    ]
+} 
 
 

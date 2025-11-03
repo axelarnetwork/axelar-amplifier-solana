@@ -8,6 +8,7 @@ use crate::Counter;
 
 #[derive(Accounts)]
 #[instruction(payload: Payload)]
+/// The execute entrypoint.
 pub struct Execute<'info> {
     // GMP Accounts
     pub executable: AxelarExecuteAccounts<'info>,
@@ -28,15 +29,20 @@ pub struct Execute<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// This function keeps track of how many times a message has been received for a given `payload.storage_id`, and logs the `payload.memo`.
 pub fn execute_handler(
     ctx: Context<Execute>,
     payload: Payload,
     message: Message,
 ) -> Result<()> {
+    // serialize the payload into a `Vec<u8>`. Haven't found a single function that does this which is surprising, must be missing something.
     let mut payload_bytes = Vec::new();
     payload.serialize(&mut payload_bytes).unwrap();
+
+    // Validate the message with the gateway.
     validate_message_raw(&ctx.accounts.axelar_executable(), message, payload_bytes.as_slice())?;
 
+    // Log the payload size.
     msg!("Payload size: {}", payload_bytes.len());
 
     // Log memo
@@ -44,7 +50,6 @@ pub fn execute_handler(
 
     // Increase counter
     ctx.accounts.counter.counter += 1;
-    
 
     Ok(())
 }

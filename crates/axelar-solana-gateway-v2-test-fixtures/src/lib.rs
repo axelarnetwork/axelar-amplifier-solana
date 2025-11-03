@@ -1053,7 +1053,7 @@ pub fn approve_message_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: GATEWAY_PROGRAM_ID,
+                owner: SYSTEM_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },
