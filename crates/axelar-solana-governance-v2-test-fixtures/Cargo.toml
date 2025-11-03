@@ -11,7 +11,7 @@ edition.workspace = true
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint"], default-features = false }
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
 solana-axelar-governance-legacy = { workspace = true, features = ["no-entrypoint"], default-features = false }
-solana-axelar-governance.workspace = true
+solana-axelar-governance = { workspace = true, features = ["devnet-amplifier"] }
 mollusk-svm.workspace = true
 anchor-lang.workspace = true
 solana-sdk.workspace = true
