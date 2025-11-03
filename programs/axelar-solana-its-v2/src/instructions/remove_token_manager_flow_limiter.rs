@@ -49,7 +49,6 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
     pub target_user_account: AccountInfo<'info>,
 
     /// Target user roles account (must exist and have FLOW_LIMITER role)
-    // todo: should we close this if no roles remain?
     #[account(
         mut,
         seeds = [
@@ -72,6 +71,16 @@ pub fn remove_token_manager_flow_limiter_handler(
 
     // Remove the FLOW_LIMITER role
     target_roles.roles.remove(Roles::FLOW_LIMITER);
+
+    // Close if no remaining roles
+    if !target_roles.has_roles() {
+        anchor_lang::AccountsClose::close(
+            &ctx.accounts.target_roles_account,
+            ctx.accounts.payer.to_account_info(),
+        )
+        .map_err(|e| e.with_account_name("proposal_pda"))?;
+        msg!("Account closed");
+    }
 
     msg!(
         "Removed FLOW_LIMITER role for token_id: {:?}, user: {}",

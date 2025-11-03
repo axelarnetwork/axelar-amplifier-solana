@@ -32,6 +32,10 @@ impl UserRoles {
         self.roles.contains(Roles::FLOW_LIMITER)
     }
 
+    pub fn has_roles(&self) -> bool {
+        self.roles.bits() != 0u8
+    }
+
     pub fn find_pda(resource: &Pubkey, user: &Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(
             &[UserRoles::SEED_PREFIX, resource.as_ref(), user.as_ref()],

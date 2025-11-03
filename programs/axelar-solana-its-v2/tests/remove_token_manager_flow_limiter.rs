@@ -185,22 +185,6 @@ fn test_add_token_manager_flow_limiter() {
         .get_account(&flow_limiter_roles_pda)
         .expect("Flow limiter roles account should exist after removing flow limiter");
 
-    let updated_flow_limiter_roles =
-        UserRoles::try_deserialize(&mut updated_flow_limiter_roles_account.data.as_ref())
-            .expect("Failed to deserialize updated flow limiter roles");
-
-    assert!(
-        !updated_flow_limiter_roles.has_flow_limiter_role(),
-        "User should not have FLOW_LIMITER role after removal"
-    );
-
-    // Verify that no other roles were affected
-    assert!(
-        !updated_flow_limiter_roles.has_operator_role(),
-        "User should not have OPERATOR role"
-    );
-    assert!(
-        !updated_flow_limiter_roles.has_minter_role(),
-        "User should not have MINTER role"
-    );
+    // Check that account was closed
+    assert!(updated_flow_limiter_roles_account.data.len() == 0);
 }
