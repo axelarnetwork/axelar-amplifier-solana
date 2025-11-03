@@ -6,8 +6,8 @@ pub use instructions::*;
 pub mod state;
 pub use state::*;
 
-use solana_axelar_gateway::executable::Message;
 use relayer_discovery::structs::RelayerTransaction;
+use solana_axelar_gateway::executable::Message;
 
 declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
 
@@ -20,15 +20,15 @@ pub mod executable {
         instructions::init_handler(ctx)
     }
 
-    pub fn get_transaction(ctx: Context<GetTransaction>, payload: Payload, command_id: [u8;32]) -> Result<RelayerTransaction> {
+    pub fn get_transaction(
+        ctx: Context<GetTransaction>,
+        payload: Payload,
+        command_id: [u8; 32],
+    ) -> Result<RelayerTransaction> {
         instructions::get_transaction_handler(ctx, payload, command_id)
     }
 
-    pub fn execute(
-        ctx: Context<Execute>,
-        payload: Payload,
-        message: Message,
-    ) -> Result<()> {
+    pub fn execute(ctx: Context<Execute>, payload: Payload, message: Message) -> Result<()> {
         instructions::execute_handler(ctx, payload, message)
     }
 }

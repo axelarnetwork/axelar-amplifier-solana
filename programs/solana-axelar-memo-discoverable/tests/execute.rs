@@ -3,16 +3,14 @@
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_axelar_gateway::{CrossChainId, Message};
 
+use anchor_lang::AnchorSerialize;
+use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 use solana_axelar_memo_discoverable::Payload;
 use solana_axelar_memo_discoverable::ID as EXECUTABLE_ID;
 use solana_sdk::{
-    account::Account,
-    instruction::Instruction,
-    native_token::LAMPORTS_PER_SOL,
+    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
     system_program::ID as SYSTEM_PROGRAM_ID,
 };
-use anchor_lang::AnchorSerialize;
-use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -28,7 +26,8 @@ fn test_execute() {
     );
 
     // Step 7.1: Init Transaction PDA
-    let transaction_pda = relayer_discovery::find_transaction_pda(&solana_axelar_memo_discoverable::id()).0;
+    let transaction_pda =
+        relayer_discovery::find_transaction_pda(&solana_axelar_memo_discoverable::id()).0;
     let init_ix = solana_axelar_memo_discoverable::instruction::Init {};
     let init_accounts = solana_axelar_memo_discoverable::accounts::Init {
         relayer_transaction: transaction_pda,
@@ -73,10 +72,11 @@ fn test_execute() {
         ),
     ];
 
-    let init_result = fixture.setup
+    let init_result = fixture
+        .setup
         .mollusk
         .process_instruction(&init_instruction, &init_accounts);
-    
+
     assert!(init_result.program_result.is_ok());
 
     // Step 0: Example payload
@@ -87,7 +87,7 @@ fn test_execute() {
         memo: memo_string,
     };
     let payload_bytes: Vec<u8> = {
-        let mut bytes= Vec::with_capacity(size_of::<Payload>());
+        let mut bytes = Vec::with_capacity(size_of::<Payload>());
         payload.serialize(&mut bytes).unwrap();
         bytes
     };
@@ -105,7 +105,11 @@ fn test_execute() {
         payload_hash: payload_hash,
     };
 
-    let result = fixture.approve_and_execute(&message, payload_bytes, init_result.resulting_accounts.clone());
+    let result = fixture.approve_and_execute(
+        &message,
+        payload_bytes,
+        init_result.resulting_accounts.clone(),
+    );
 
     assert!(result.is_ok());
 }

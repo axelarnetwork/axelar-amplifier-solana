@@ -1,6 +1,6 @@
+use crate::Payload;
 use anchor_lang::prelude::*;
 use solana_axelar_gateway::{executable::*, executable_accounts};
-use crate::Payload;
 
 executable_accounts!(Execute);
 
@@ -21,8 +21,8 @@ pub struct Execute<'info> {
         init_if_needed,
         space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
         payer = payer,
-        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()], 
-        bump
+        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()],
+        bump,
     )]
     pub counter: Account<'info, Counter>,
 
@@ -30,17 +30,17 @@ pub struct Execute<'info> {
 }
 
 /// This function keeps track of how many times a message has been received for a given `payload.storage_id`, and logs the `payload.memo`.
-pub fn execute_handler(
-    ctx: Context<Execute>,
-    payload: Payload,
-    message: Message,
-) -> Result<()> {
+pub fn execute_handler(ctx: Context<Execute>, payload: Payload, message: Message) -> Result<()> {
     // serialize the payload into a `Vec<u8>`. Haven't found a single function that does this which is surprising, must be missing something.
     let mut payload_bytes = Vec::new();
     payload.serialize(&mut payload_bytes).unwrap();
 
     // Validate the message with the gateway.
-    validate_message_raw(&ctx.accounts.axelar_executable(), message, payload_bytes.as_slice())?;
+    validate_message_raw(
+        &ctx.accounts.axelar_executable(),
+        message,
+        payload_bytes.as_slice(),
+    )?;
 
     // Log the payload size.
     msg!("Payload size: {}", payload_bytes.len());
