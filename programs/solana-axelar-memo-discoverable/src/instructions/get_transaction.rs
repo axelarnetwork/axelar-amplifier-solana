@@ -18,7 +18,7 @@ pub fn get_transaction_handler(
     let counter_pda = Counter::get_pda(payload.storage_id).0;
     Ok(RelayerTransaction::Final(
         // A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
-        // And only if it is not initialized prepend a transaction that initializes it. Then we could ommit the `payer` and `system_program` accounts from the actual execute instruction.
+        // And only if it is not initialized prepend a transaction that initializes it. Then we could omit the `payer` and `system_program` accounts from the actual execute instruction.
         vec![RelayerInstruction {
             // We want this program to be the entrypoint.
             program_id: crate::id(),

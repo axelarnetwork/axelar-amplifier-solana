@@ -12,7 +12,6 @@ solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 anchor-lang = { workspace = true, features = ["init-if-needed"] }
 borsh.workspace = true
 relayer-discovery.workspace=true
-anchor-discriminators.workspace = true
 
 [dev-dependencies]
 axelar-solana-gateway-v2-test-fixtures.workspace = true
