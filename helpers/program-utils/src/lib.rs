@@ -204,7 +204,7 @@ pub fn transfer_lamports(
 /// transfer_lamports_anchor!(
 ///  ctx.accounts.from_account,
 ///  ctx.accounts.to_account,
-///  amount
+///  amount,
 /// );
 /// ```
 #[macro_export]
