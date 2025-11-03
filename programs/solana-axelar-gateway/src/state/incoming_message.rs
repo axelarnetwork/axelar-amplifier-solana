@@ -27,6 +27,13 @@ impl IncomingMessage {
     pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
         Pubkey::find_program_address(&Self::pda_seeds(command_id), &crate::ID)
     }
+
+    pub fn find_signing_pda(command_id: &[u8; 32], destination_address: &Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[VALIDATE_MESSAGE_SIGNING_SEED, command_id],
+            &destination_address,
+        )
+    }
 }
 
 #[repr(C)]

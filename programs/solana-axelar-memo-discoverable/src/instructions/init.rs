@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
-use relayer_discovery::structs::{RelayerData, RelayerInstruction, RelayerTransaction};
 use anchor_lang::Discriminator;
+use relayer_discovery::structs::{RelayerData, RelayerInstruction, RelayerTransaction};
 
 use crate::instruction::GetTransaction;
 
@@ -32,8 +32,7 @@ pub fn init_handler(ctx: Context<Init>) -> Result<()> {
         // We want the relayer to call this program.
         program_id: crate::ID,
         // No accounts are required for this.
-        accounts: vec![
-        ],
+        accounts: vec![],
         // The data we need to find the final transaction.
         data: vec![
             // We can easily get the discriminaator thankfully. Note that we need `instruction::GetTransaction` and not `instructions::GetTransaction`.
@@ -43,7 +42,8 @@ pub fn init_handler(ctx: Context<Init>) -> Result<()> {
             // The command id, which is the only thing required (alongside this crate's id) to derive all the accounts required by the gateway.
             RelayerData::CommandId,
         ],
-    }).init(
+    })
+    .init(
         &crate::id(),
         &ctx.accounts.system_program.to_account_info(),
         &ctx.accounts.payer.to_account_info(),
