@@ -377,8 +377,13 @@ pub mod axelar_solana_its_v2 {
 
     pub fn transfer_token_manager_operatorship(
         ctx: Context<TransferTokenManagerOperatorship>,
-        token_id: [u8; 32],
     ) -> Result<()> {
-        instructions::transfer_token_manager_operatorship_handler(ctx, token_id)
+        instructions::transfer_token_manager_operatorship_handler(ctx)
+    }
+
+    pub fn propose_token_manager_operatorship(
+        ctx: Context<ProposeTokenManagerOperatorship>,
+    ) -> Result<()> {
+        instructions::propose_token_manager_operatorship_handler(ctx)
     }
 }

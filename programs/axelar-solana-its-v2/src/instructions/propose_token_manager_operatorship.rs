@@ -1,8 +1,10 @@
-use crate::state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles};
+use crate::state::{
+    InterchainTokenService, RoleProposal, Roles, RolesError, TokenManager, UserRoles,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct TransferTokenManagerOperatorship<'info> {
+pub struct ProposeTokenManagerOperatorship<'info> {
     pub system_program: Program<'info, System>,
 
     /// Payer for transaction fees and account creation
@@ -49,38 +51,34 @@ pub struct TransferTokenManagerOperatorship<'info> {
     )]
     pub destination_user_account: AccountInfo<'info>,
 
-    /// Destination user roles account for this token manager
+    /// Role proposal PDA for the destination user for this token manager
     #[account(
-        init, // todo: switch to init_if_needed
+        init,
         payer = payer,
-        space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
+        space = RoleProposal::DISCRIMINATOR.len() + RoleProposal::INIT_SPACE,
         seeds = [
-            UserRoles::SEED_PREFIX,
+            RoleProposal::SEED_PREFIX,
             token_manager_account.key().as_ref(),
             destination_user_account.key().as_ref(),
         ],
         bump,
     )]
-    pub destination_roles_account: Account<'info, UserRoles>,
+    pub proposal_account: Account<'info, RoleProposal>,
 }
 
-pub fn transfer_token_manager_operatorship_handler(
-    ctx: Context<TransferTokenManagerOperatorship>,
+pub fn propose_token_manager_operatorship_handler(
+    ctx: Context<ProposeTokenManagerOperatorship>,
 ) -> Result<()> {
-    msg!("Instruction: TransferTokenManagerOperatorship");
+    msg!("Instruction: ProposeTokenManagerOperatorship");
 
-    let origin_roles = &mut ctx.accounts.origin_roles_account;
-    let destination_roles = &mut ctx.accounts.destination_roles_account;
+    let proposal = &mut ctx.accounts.proposal_account;
 
-    // Remove OPERATOR role from origin user
-    origin_roles.roles.remove(Roles::OPERATOR);
-
-    // Add OPERATOR role to destination user
-    destination_roles.roles.insert(Roles::OPERATOR);
-    destination_roles.bump = ctx.bumps.destination_roles_account;
+    // Initialize the proposal with OPERATOR role
+    proposal.roles = Roles::OPERATOR;
+    proposal.bump = ctx.bumps.proposal_account;
 
     msg!(
-        "Transferred token manager operatorship for token_id {:?} from {} to {}",
+        "Proposed token manager operatorship transfer for token_id {:?} from {} to {}",
         ctx.accounts.token_manager_account.token_id,
         ctx.accounts.origin_user_account.key(),
         ctx.accounts.destination_user_account.key()
