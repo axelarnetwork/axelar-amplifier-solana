@@ -15,6 +15,7 @@ no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
+test-sbf = []
 
 devnet-amplifier = [
 	"solana-axelar-gateway/devnet-amplifier",
@@ -36,10 +37,8 @@ mainnet = [
 [dependencies]
 alloy-sol-types.workspace = true
 governance-gmp.workspace = true
-axelar-solana-encoding.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 anchor-lang.workspace = true
-bytemuck.workspace = true
 program-utils.workspace = true
 
 [dev-dependencies]

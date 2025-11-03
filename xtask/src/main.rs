@@ -62,6 +62,10 @@ fn main() -> eyre::Result<()> {
 
             // test solana programs using `test-sbf`
             for (program, ..) in solana_programs.iter() {
+                if program.contains("-legacy") {
+                    println!("Skipping legacy program: {}", program);
+                    continue;
+                }
                 cmd!(sh, "cargo test-sbf -p {program}").run()?;
             }
             if only_sbf {

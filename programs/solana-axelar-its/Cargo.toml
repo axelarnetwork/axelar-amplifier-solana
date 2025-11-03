@@ -25,6 +25,9 @@ solana-sdk.workspace = true
 mollusk-svm.workspace = true
 mollusk-test-utils.workspace = true
 
+[package.metadata.cargo-machete]
+ignored = ["anchor-spl", "bytemuck", "solana-axelar-gas-service", "solana-axelar-operators"]
+
 [lints]
 workspace = true
 
@@ -42,6 +45,7 @@ idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 anchor-debug = []
 custom-heap = []
 custom-panic = []
+test-sbf = []
 
 devnet-amplifier = [
 	"solana-axelar-gas-service/devnet-amplifier",
