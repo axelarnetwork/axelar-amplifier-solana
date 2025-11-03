@@ -2,10 +2,6 @@ use alloy_sol_types::SolValue;
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::AnchorSerialize;
 use anchor_lang::{solana_program, AccountDeserialize, ToAccountMetas};
-use axelar_solana_gateway_v2_test_fixtures::{
-    approve_messages_on_gateway, create_test_message, initialize_gateway,
-    setup_test_with_real_signers,
-};
 use axelar_solana_governance_v2_test_fixtures::{
     create_execute_operator_proposal_instruction_data, create_gateway_event_authority_pda,
     create_governance_config_pda, create_governance_event_authority_pda,
@@ -15,6 +11,10 @@ use axelar_solana_governance_v2_test_fixtures::{
 };
 use governance_gmp::alloy_primitives::U256;
 use solana_axelar_gateway::IncomingMessage;
+use solana_axelar_gateway_test_fixtures::{
+    approve_messages_on_gateway, create_test_message, initialize_gateway,
+    setup_test_with_real_signers,
+};
 use solana_axelar_governance::state::GovernanceConfigInit;
 use solana_axelar_governance::SolanaAccountMetadata;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;

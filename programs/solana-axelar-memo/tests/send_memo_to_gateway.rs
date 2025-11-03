@@ -1,8 +1,8 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{InstructionData, ToAccountMetas};
-use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
+use solana_axelar_gateway_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,

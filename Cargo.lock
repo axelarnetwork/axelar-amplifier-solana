@@ -1077,20 +1077,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-gateway-v2-test-fixtures"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "axelar-solana-encoding",
- "bincode",
- "libsecp256k1",
- "mollusk-svm",
- "rand 0.8.5",
- "solana-axelar-gateway",
- "solana-sdk",
-]
-
-[[package]]
 name = "axelar-solana-governance-v2-test-fixtures"
 version = "0.1.0"
 dependencies = [
@@ -7826,7 +7812,6 @@ dependencies = [
  "alloy-sol-types",
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2-test-fixtures",
  "bitvec",
  "bnum",
  "bytemuck",
@@ -7840,7 +7825,7 @@ dependencies = [
  "program-utils",
  "rand 0.8.5",
  "rstest",
- "solana-axelar-gateway-legacy",
+ "solana-axelar-gateway-test-fixtures",
  "solana-sdk",
  "test-log",
  "tokio",
@@ -7893,12 +7878,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-axelar-gateway-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "bincode",
+ "libsecp256k1",
+ "mollusk-svm",
+ "rand 0.8.5",
+ "solana-axelar-gateway",
+ "solana-sdk",
+]
+
+[[package]]
 name = "solana-axelar-governance"
 version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
- "axelar-solana-gateway-v2-test-fixtures",
  "axelar-solana-governance-v2-test-fixtures",
  "bincode",
  "governance-gmp",
@@ -7907,6 +7905,7 @@ dependencies = [
  "mollusk-svm",
  "program-utils",
  "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
  "solana-axelar-governance-legacy",
  "solana-axelar-memo",
  "solana-sdk",
@@ -8005,11 +8004,11 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "hex",
  "mollusk-svm",
  "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
  "solana-sdk",
 ]
 

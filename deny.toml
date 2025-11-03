@@ -196,7 +196,7 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "axelar-solana-gateway-v2-test-fixtures"
+crate = "solana-axelar-gateway-test-fixtures"
 expression = "MIT"
 license-files = []
 

@@ -2,12 +2,6 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use axelar_solana_gateway_v2_test_fixtures::{
-    approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
-    initialize_payload_verification_session, initialize_payload_verification_session_with_root,
-    mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
-    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
-};
 use solana_axelar_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
 use solana_axelar_gateway::U256;
 use solana_axelar_gateway::{
@@ -15,6 +9,12 @@ use solana_axelar_gateway::{
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
+use solana_axelar_gateway_test_fixtures::{
+    approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
+    initialize_payload_verification_session, initialize_payload_verification_session_with_root,
+    mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
+    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
+};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
