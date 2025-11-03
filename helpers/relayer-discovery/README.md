@@ -28,27 +28,53 @@ Relayer discovery does not need to be a specific program on Solana. This is beca
 Each `program_id` will be assigned a `transaction_pda` which is owned by the executable program and stores the transaction to be executed by the program. The `transaction_pda` should be derived by only a single seed: `keccak256('relayer-discovery-transaction') = 0xa57128349132c58c5700674195df81ef5ee89bc36f0e9676bae7e1479b7fcede`. This contents of this pda should strictly be the Borsh serialised data of the `RelayerTransaction` struct:
 
 ```rust
-enum RelayerData {
+/// A single piece of data to be passed by the relayer. Each of these can be converted to Vec<u8>.
+pub enum RelayerData {
+	/// Some raw bytes.
 	Bytes(Vec<u8>),
-	Message(),
-}
-enum RelayerAccount {
-	Account(AccountMeta),
-	IncomingMessage(),
-	MessagePayload(),
-	Payer(Uint64)
-}
-struct RelayerInstruction {
-	program: Pubkey,
-	accounts: Vec<AccountMeta>,
-	data: Vec<RelayerData>,
+	/// The message.
+	Message,
+	/// The payload, length prefixed.
+	Payload,
+	/// The payload, length ommitted.
+	PayloadRaw,
+	/// The command id. Can also be abtained by using the `Message`, but it is added as an option for convenience.
+	CommandId,
 }
 
-struct RelayerTransaction {
-	is_final: bool,
-	// solana supports a series of instructions in a single transaction,
-	// do we want to support that or just use a single instruction?
-	instructions: Vec<RelayerInstruction>,
+/// This can be used to specify an account that the relayer will pass to the executable. This can be converted to an `AccountMeta` by the relayer.
+pub enum RelayerAccount {
+	/// This variant specifies a specific account. This account cannot be a signer (see `Payer` below).
+	Account{
+		/// The pubkey of the account.
+		pubkey: Pubkey,
+		/// Whether or not this account is writable.
+		is_writable: bool,
+	},
+	/// An account that has the payload as its data. This account if and only if it is requested by the executable. This should only be specified once per instruction.
+	MessagePayload,
+	/// A signer account that has the amount of lamports specified. These lamports will be subtracted from the gas for the execution of the program. 
+	/// This can be specified multiple times per instruction, and multiple payer accounts, funded differently will be provided. (Do we want this?)
+	Payer(u64)
+}
+
+/// A relayer instruction, that the relayer can convert to an `Instruction`.
+pub struct RelayerInstruction {
+	/// The program_id. Note that this means that an executable can request the entrypoint be a different program (which would have to call the executable to validate the message).
+	pub program_id: Pubkey,
+	/// The instruction accounts. These need to be oredered properly.
+	pub accounts: Vec<RelayerAccount>,
+	/// The instruction data. These will be concatenated.
+	pub data: Vec<RelayerData>,
+}
+
+
+/// A relayer transaction, that the relayer can convert to regular transaction.
+pub enum RelayerTransaction {
+	/// This series of instructions should be executed.
+	Final(Vec<RelayerInstruction>),
+	/// This instruction should be simulated to eventually get a `Final` transaction.
+	Discovery(RelayerInstruction),
 }
 ```
 
@@ -65,165 +91,109 @@ while(!relayer_transaction_is_final) {
 relayer_transaction.execute()
 ``` 
 
-### An Example: Interchain Token Service receive Interchain Transfer without data
-For an incoming message to the Interchain Token Service that needs to execute an inbound `InterchainTransfer` the executable needs to have prepared a PDA (once for all the messages, not every time) and the relayer needs to execute properly.
-#### Executable
-A one time call would have to be made to the InterchainTokenService that runs
+### An Example: Memo Discoverable
+Look at [this](../../programs/solana-axelar-memo-discoverable/) for a working example.
+#### Init
+A one time call has to be made to the `Init` instruction to setup the `transaction_pda`.
 ```rust
-let (transaction_pda, bump) = Pubkey::find_program_address(
-	&[
-		TRANSACTION_PDA_SEED, // 0xa57128349132c58c5700674195df81ef5ee89bc36f0e9676bae7e1479b7fcede
+// The relayer transaction to be stored. This should point to the `GetTransaction` entrypoint.
+RelayerTransaction::Discovery(RelayerInstruction {
+	// We want the relayer to call this program.
+	program_id: crate::ID,
+	// No accounts are required for this.
+	accounts: vec![
 	],
+	// The data we need to find the final transaction.
+	data: vec![
+		// We can easily get the discriminaator thankfully. Note that we need `instruction::GetTransaction` and not `instructions::GetTransaction`.
+		RelayerData::Bytes(Vec::from(GetTransaction::DISCRIMINATOR)),
+		// We do not want to prefix the payload with the length as it is decoded into a struct as opposed to a `Vec<u8>`.
+		RelayerData::PayloadRaw,
+		// The command id, which is the only thing required (alongside this crate's id) to derive all the accounts required by the gateway.
+		RelayerData::CommandId,
+	],
+}).init(
 	&crate::id(),
-);
-let transaction = RelayerTransaction {
-	is_final: false,
-	instructions: [ RelayerInstruction {
-		program: crate::id(),
-		accounts: [
-			RelayerAccount::MessagePayload(),
-		],
-		data: [
-			RelayerData::Bytes([
-				// This should be a single byte that points to the build_transaction_1 function
-				RELAYER_DISCOVERY_BUILD_TRANSACTION_1 
-			]),
-		],
-	} ],
-}
-
-init_pda_raw_bytes(
-	payer,
-	transaction_pda,
-	crate::id(),
-	system_account,
-	&to_vec(transaction),
-	[
-		TRANSACTION_PDA_SEED,
-		bump,
-	],
-);
+	&ctx.accounts.system_program.to_account_info(),
+	&ctx.accounts.payer.to_account_info(),
+	&ctx.accounts.relayer_transaction,
+)?;
+Ok(())
 ```
-Then two functions need to be available to be called.
+The stored relayer transaction points to the `GetTransaction` instruction which returns the executable function.
 ```rust
+let counter_pda = Counter::get_pda(payload.storage_id).0;
+Ok(RelayerTransaction::Final(
+	// A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
+	// And only if it is not initialized prepend a transaction that initializes it. Then we could ommit the `payer` and `system_program` accounts from the actual execute instruction.
+	vec![
+	RelayerInstruction {
+		// We want this program to be the entrypoint.
+		program_id: crate::id(),
+		// The accounts needed.
+		accounts: [
+		// First we need the executable accounts.
+		relayer_discovery::executable_relayer_accounts(&command_id, &crate::id()), 
+		// Followed by the accounts needed to modify storage of the executable.
+		vec![
+			RelayerAccount::Payer(1000000000),
+			RelayerAccount::Account { pubkey: counter_pda, is_writable: true },
+			RelayerAccount::Account { pubkey: system_program::ID, is_writable: false },
+		]
+		].concat(),
+		// The data needed.
+		data: vec! [
+			// We can easily get the discriminaator thankfully. Note that we need `instruction::Execute` and not `instructions::Execute`.
+			RelayerData::Bytes(Vec::from(Execute::DISCRIMINATOR)),
+			// We do not want to prefix the payload with the length as it is decoded into a struct as opposed to a `Vec<u8>`.
+			RelayerData::PayloadRaw,
+			// The message, which is needed for the gateway.
+			RelayerData::Message,
+		],
+	}  
+	]
+))
+```
+This points to the `Execute` instruction which is to be called by the relayer.
+```rust
+#[derive(Accounts)]
+#[instruction(payload: Payload)]
+/// The execute entrypoint.
+pub struct Execute<'info> {
+    // GMP Accounts
+    pub executable: AxelarExecuteAccounts<'info>,
 
-pub fun relayer_discovery_build_transaction_1( 
-	accounts:  &'a [AccountInfo<'b>],
-) {
-	let payload: GMPPayload = get_incoming_payload_from_account(accounts[0]);
-	
-	match payload {
-		GMPPayload::InterchainTransfer(transfer) => {
-			let its_root_pda = crate::find_its_root_pda();
-			let (token_manager_pda, _) = find_token_manager_pda(its_root_pda, transfer.token_id);
-			RelayerTransaction {
-				is_final: false,
-				instructions: [ RelayerInstruction {
-					program: crate::id(),
-					accounts: [
-						RelayerAccount::MessagePayload,
-						RelayerAccount::Account(AccountMeta::new(token_manager_pda, false),
-					],
-					data: [
-						RelayerData::Bytes([
-							// This should be a single byte that points to the build_transaction_2 function
-							RELAYER_DISCOVERY_BUILD_TRANSACTION_2
-						]),
-						RelayerData::Message(),
-					],
-				} ],
-			}
-		}
-		// handle the rest of the cases here
-	}
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    // The counter account
+    #[account(
+        init_if_needed,
+        space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
+        payer = payer,
+        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()], 
+        bump
+    )]
+    pub counter: Account<'info, Counter>,
+
+    pub system_program: Program<'info, System>,
 }
 
-pub fun relayer_discovery_build_transaction_2( 
-	accounts:  &'a [AccountInfo<'b>],
-	message:  Message,
-) {
-	let payload: GMPPayload = get_incoming_payload_from_account(accounts[1]);
-	
-	let  command_id  =  command_id(&message.cc_id.chain, &message.cc_id.id);
-	let (gateway_approved_message_signing_pda, _) = axelar_solana_gateway::get_validate_message_signing_pda(crate::ID, command_id);
-	let  (gateway_root_pda, _)  =  axelar_solana_gateway::get_gateway_root_config_pda();
-
-	let mut accounts = vec![
-		RelayerAccount::Payer(INTERCHAIN_TRANSFER_COST),
-		RelayerAccount::IncomingMessage(),
-		RelayerAccount::MessagePayload(),
-		RelayerAccount::Account(AccountMeta::new_readonly(gateway_approved_message_signing_pda, false)),
-		RelayerAccount::Account(AccountMeta::new_readonly(gateway_root_pda, false)),
-		RelayerAccount::Account(AccountMeta::new_readonly(axelar_solana_gateway::ID, false)),
-	];
-	
-	let its_root_pda = crate::find_its_root_pda();
-	let token_manager = TokenManager::load(accounts[1]);
-	let token_mint = token_manager.token_address;
-	let token_manager_ata = get_associated_token_address_with_program_id(
-		&token_manager_pda,
-		&token_mint,
-		&spl_token_2022::ID,
-	);
-	let token_program = spl_associated_token_account::ID;
-	
-	accounts.append(vec![
-		RelayerAccount::Account(AccountMeta::new_readonly(system_program::ID, false),
-		RelayerAccount::Account(AccountMeta::new_readonly(its_root_pda, false),
-		RelayerAccount::Account(AccountMeta::new(token_manager_pda, false),
-		RelayerAccount::Account(AccountMeta::new(token_manager_ata, false),
-		RelayerAccount::Account(AccountMeta::new(token_mint, false),
-		RelayerAccount::Account(AccountMeta::new_readonly(spl_token_2022::ID, false),
-		RelayerAccount::Account(AccountMeta::new_readonly(token_program, false),
-		RelayerAccount::Account(AccountMeta::new_readonly(sysvar::rent::ID, false),	
-	]);
-
-	match payload {
-		GMPPayload::InterchainTransfer(transfer) => {
-			let  destination  =  Pubkey::new_from_array(
-				transfer.destination_address.into(),
-			);
-			let  destination_ata  =  get_associated_token_address_with_program_id(
-				&destination,
-				&token_mint,
-				&token_program,
-			);
-			
-			accounts.append(vec![
-				RelayerAccount::Account(AccountMeta::new(destination, false),
-				RelayerAccount::Account(AccountMeta::new(destination_ata, false),
-			] ); 
-			
-			if transfer.data.is_empty() {
-				RelayerTransaction {
-					is_final: true,
-					instructions: [ RelayerInstruction {
-						program: crate::id(),
-						accounts,
-						data: [
-							RelayerData::Bytes([
-								// This should be a single byte that points to the proccess_execute function
-								EXECUTE
-							]),
-							RelayerData::Message()
-						],
-					} ],
-				}
-			} else {
-				// Handle the case of having to execute as well, which is even more complicated, requiring a different entry point in the destination program so that it can tell us what the accounts it needs are.
-			}
-		}
-		// match the rest of the cases here
-	}
+/// This function keeps track of how many times a message has been received for a given `payload.storage_id`, and logs the `payload.memo`.
+pub fn execute_handler(
+    ctx: Context<Execute>,
+    payload: Payload,
+    message: Message,
+) -> Result<()> {
+	...
 }
 ```
 #### Relayer
 The relayer needs to make a few different calls to an node:
-1. Call `getAccountInfo` for the  `transaction_pda` initiated by the `InterchainTokenService` 
-2.  Parse the response into a `RelayerTransaction` object. Convert this into a regular transaction (`relayer_discovery_build_transction_1`). Call `simulateTransaction` with this information since the `RelayerTransaction` was not marked as `final`.
-3. Parse the response into another `RelayerTransaction` object, which can be used to call `simulateTransaction` once more (`relayer_discovery_build_transaction_2`), since the result was not `final` once more.
-4. The response now can be converted to a `final` `RelayerTransaction`. It requires that they `payer` is passed as a signer and some funds are requested. If the gas covers the amount requested alongside what would be needed for the execution (another `simulateTransaction` is needed to determine this, but it is not instrumental for this example) then make sure the `payer` has exactly the funds requested (to ensure loss of additional funds).
-5. Finally execute the transaction, passing the properly funded `payer`.
+1. Call `getAccountInfo` for the  `transaction_pda` initiated by the `solana_axelar_memo_executable` 
+2. Parse the response into a `RelayerTransaction` object. Convert this into a regular instruction (`get_transaction`). Call `simulateTransaction` with this information since the `RelayerTransaction` was `Discovery` instead of `Final`.
+4. The result data now can be converted to a `RelayerTransaction::Final`. It requires that a `payer` is passed as a signer and some funds are requested. If the gas covers the amount requested alongside what would be needed for the execution (another `simulateTransaction` is needed to determine this, but it is not instrumental for this example) then make sure the `payer` has exactly the funds requested (to ensure loss of additional funds).
+5. Finally execute the `Final` transaction, passing the properly funded `payer`.
 
 ### Explanation
-The reason why we need two calls instead of one is because to find the `token_mint` account from the payload we need to first calculate the `token_manager_pda`, then load its contents to find the `token_mint`. The first call asks the relayer to call once more providing the `token_manager` account.
+The reason why we need an intermediate call (`GetTransaction`) is because depending on the `storage_id` a different pda is required for execution, which is calculated there. Also the executable accounts required depend on the `command_id` which is different for every call.
