@@ -58,7 +58,18 @@ pub enum RelayerTransaction {
 }
 
 impl RelayerTransaction {
-	/// Helper function that serializes the enum. There must be a better way of doing this that escapes me, but variable length PDAs seem difficult with anchor.
+	/// Helper function that serializes the enum. There must be a better way of doing this that escapes me, but variable length PDAs seem difficult with anchor. 
+    ///
+    /// # Arguments
+    ///
+    /// * `program_id` - The program id that is initializing their `transactionn_pda`.
+    /// * `system_account` - The system account.
+    /// * `payer` - The payer account, which needs to have enough lamports to pay for the initialization.
+    /// * `into` - The `transaction_pda` for this `program_id`, which have the right key for the given `program_id`.
+    ///
+    /// # Returns
+    /// 
+    /// Returns the `ProgramResult` for the initialization.
 	pub fn init<'a>(
         &self,
         program_id: &Pubkey,

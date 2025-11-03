@@ -169,12 +169,28 @@ impl RelayerDiscovery {
     }
 }
 
-/// find the transaction pda for a given program id
+/// Find the expected `transaction_pda` and its `bump` for a given `program_id`.
+///
+/// # Arguments
+///
+/// * `program_id` - The program id for which the `transactionn_pda` derivred.
+///
+/// # Returns
+/// 
+/// Returns the `Pubkey` of the calculated `transaction_pda` and the canonical `bump` for it.
 pub fn find_transaction_pda(program_id: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(&[TRANSACTION_PDA_SEED], program_id)
 }
 
 /// Helper function to get all the executable accounts required.
+///
+/// # Arguments
+///
+/// * `command_id` - The command id of the incoming `Message`.
+///
+/// # Returns
+/// 
+/// Returns a vector of all the accounts needed by the executable to `validate_message`.
 pub fn executable_relayer_accounts(command_id: &[u8;32], destination_address: &Pubkey) -> Vec<RelayerAccount> {
     let incoming_message = IncomingMessage::find_pda(&command_id).0;
     let signing_pda = IncomingMessage::find_signing_pda(&command_id, destination_address).0;
