@@ -252,7 +252,7 @@ impl RelayerDiscoveryTestFixture {    /// Approve a certain message
                                         Account {
                                             lamports: 0,
                                             data: relayer_discovery.payload.clone(),
-                                            owner: self.setup.payer.key(),
+                                            owner: SYSTEM_PROGRAM_ID,
                                             executable: false,
                                             rent_epoch: 0,
                                         }
