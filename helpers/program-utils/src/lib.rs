@@ -200,7 +200,7 @@ pub fn transfer_lamports(
 /// 4. `lamports` field of both account infos should not currently be borrowed.
 ///
 /// # Examples
-/// ```
+/// ```ignore
 /// transfer_lamports_anchor!(
 ///  ctx.accounts.from_account,
 ///  ctx.accounts.to_account,

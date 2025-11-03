@@ -5,8 +5,8 @@ edition = "2021"
 
 [dependencies]
 axelar-solana-encoding.workspace = true
-solana-axelar-gas-service-legacy = { workspace = true, default-features = false, features = ["no-entrypoint"] }
-solana-axelar-gateway-legacy = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-gas-service-legacy = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
+solana-axelar-gateway-legacy = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
 bincode.workspace = true
 ed25519-dalek = { workspace = true, features = ["rand_core", "digest"] }
 event-cpi.workspace = true

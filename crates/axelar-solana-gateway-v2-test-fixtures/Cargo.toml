@@ -6,7 +6,7 @@ description = "Test fixtures and utilities for axelar-solana-gateway-v2"
 
 [dependencies]
 anchor-lang.workspace = true
-solana-axelar-gateway.workspace = true
+solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
 axelar-solana-encoding.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
