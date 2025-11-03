@@ -7738,7 +7738,6 @@ dependencies = [
  "mollusk-svm",
  "mollusk-test-utils",
  "program-utils",
- "solana-axelar-gas-service-legacy",
  "solana-axelar-operators",
  "solana-sdk",
  "solana-sdk-ids",
