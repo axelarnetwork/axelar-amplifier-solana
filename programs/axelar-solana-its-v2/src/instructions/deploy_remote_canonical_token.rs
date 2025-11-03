@@ -14,7 +14,7 @@ use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::Mint;
 use axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2;
-use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
+use axelar_solana_gateway_v2::GatewayConfig;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 
 /// Accounts required for deploying a remote canonical interchain token

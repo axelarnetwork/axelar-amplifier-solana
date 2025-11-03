@@ -1,5 +1,4 @@
 use crate::gmp::*;
-use crate::program::AxelarSolanaItsV2;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
 use crate::{

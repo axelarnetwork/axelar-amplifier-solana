@@ -113,13 +113,6 @@ fn test_deploy_remote_canonical_token() {
     // Deploy remote canonical token
     let destination_chain = "ethereum".to_string();
     let gas_value = 0;
-    let signing_pda_bump = {
-        let (_, bump) = Pubkey::find_program_address(
-            &[axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-            &program_id,
-        );
-        bump
-    };
 
     // Calculate required PDAs for deploy remote canonical token
     let token_id = axelar_solana_its_v2::utils::canonical_interchain_token_id(&mint_pubkey);
@@ -206,14 +199,12 @@ fn test_deploy_remote_canonical_token() {
             system_program: solana_sdk::system_program::ID,
             its_root_pda,
             call_contract_signing_pda,
-            its_program: program_id,
             gateway_event_authority,
             gas_service_accounts: axelar_solana_its_v2::accounts::GasServiceAccounts {
                 gas_treasury: gas_treasury_pda,
                 gas_service: axelar_solana_gas_service_v2::id(),
                 gas_event_authority,
             },
-            //
             event_authority,
             program: program_id,
         }
@@ -221,7 +212,6 @@ fn test_deploy_remote_canonical_token() {
         data: axelar_solana_its_v2::instruction::DeployRemoteCanonicalInterchainToken {
             destination_chain: destination_chain.clone(),
             gas_value,
-            signing_pda_bump,
         }
         .data(),
     };

@@ -251,7 +251,7 @@ fn test_link_token() {
         &axelar_solana_gas_service_v2::ID,
     );
 
-    let (call_contract_signing_pda, signing_pda_bump) = Pubkey::find_program_address(
+    let (call_contract_signing_pda, _signing_pda_bump) = Pubkey::find_program_address(
         &[axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
         &program_id,
     );
@@ -270,14 +270,12 @@ fn test_link_token() {
         token_manager_type,
         link_params: link_params.clone(),
         gas_value,
-        signing_pda_bump,
     };
 
     // Build accounts
     let link_accounts = axelar_solana_its_v2::accounts::LinkToken {
         payer,
         deployer,
-        its_program: program_id,
         its_root_pda,
         token_manager_pda,
         gateway_root_pda,

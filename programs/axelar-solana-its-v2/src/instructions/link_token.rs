@@ -11,9 +11,7 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
-use axelar_solana_gateway_v2::{
-    program::AxelarSolanaGatewayV2, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
-};
+use axelar_solana_gateway_v2::{program::AxelarSolanaGatewayV2, GatewayConfig};
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
 
 #[derive(Accounts)]

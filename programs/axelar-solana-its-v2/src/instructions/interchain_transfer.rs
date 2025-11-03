@@ -35,8 +35,7 @@ pub struct InterchainTransfer<'info> {
     //
     // Sender of the tokens
     //
-    /// Could be source_id PDA or regular user account
-    /// Checked at runtime
+    /// The account that wants to transfer - can be a direct signer or program
     pub authority: Signer<'info>,
 
     //
@@ -141,6 +140,7 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn interchain_transfer_handler(
     ctx: Context<InterchainTransfer>,
     token_id: [u8; 32],
@@ -241,6 +241,7 @@ fn validate_wallet_authority(ctx: &Context<InterchainTransfer>) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn process_outbound_transfer(
     mut ctx: Context<InterchainTransfer>,
     token_id: [u8; 32],
@@ -251,10 +252,6 @@ fn process_outbound_transfer(
     data: Option<Vec<u8>>,
     source_address: Pubkey,
 ) -> Result<()> {
-    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
-        return err!(ItsError::TokenMintMismatch);
-    }
-
     let token_manager_account_info = ctx.accounts.token_manager_pda.clone();
     let amount_minus_fees = take_token(&mut ctx, &token_manager_account_info, amount)?;
     amount = amount_minus_fees;
@@ -266,15 +263,10 @@ fn process_outbound_transfer(
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         amount,
-        data_hash: if let Some(data) = &data {
-            if data.is_empty() {
-                [0; 32]
-            } else {
-                solana_program::keccak::hash(data.as_ref()).0
-            }
-        } else {
-            [0; 32]
-        },
+        data_hash: data
+            .as_ref()
+            .filter(|d| !d.is_empty())
+            .map_or([0; 32], |d| solana_program::keccak::hash(d).0),
     });
 
     let inner_payload =
@@ -314,19 +306,19 @@ fn take_token(
 
     let transferred = match token_manager.ty {
         NativeInterchainToken | MintBurn | MintBurnFrom => {
-            burn_from_source(&ctx, amount)?;
+            burn_from_source(ctx, amount)?;
             amount
         }
         LockUnlock => {
             let decimals = get_mint_decimals(&ctx.accounts.token_mint.to_account_info())?;
-            transfer_to(&ctx, amount, decimals)?;
+            transfer_to(ctx, amount, decimals)?;
             amount
         }
         LockUnlockFee => {
             let (fee, decimals) =
                 get_fee_and_decimals(&ctx.accounts.token_mint.to_account_info(), amount)?;
 
-            transfer_with_fee_to(&ctx, amount, decimals, fee)?;
+            transfer_with_fee_to(ctx, amount, decimals, fee)?;
 
             amount
                 .checked_sub(fee)
