@@ -40,4 +40,22 @@ pub mod memo {
     pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {
         instructions::emit_memo_handler(ctx, message)
     }
+
+    pub fn send_interchain_transfer(
+        ctx: Context<SendInterchainTransfer>,
+        token_id: [u8; 32],
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        amount: u64,
+        gas_value: u64,
+    ) -> Result<()> {
+        instructions::send_interchain_transfer_handler(
+            ctx,
+            token_id,
+            destination_chain,
+            destination_address,
+            amount,
+            gas_value,
+        )
+    }
 }

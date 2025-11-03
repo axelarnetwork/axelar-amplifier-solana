@@ -11,41 +11,74 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
-use anchor_spl::associated_token::spl_associated_token_account;
 use anchor_spl::token_interface::TokenInterface;
 use anchor_spl::token_interface::{Mint, TokenAccount};
-use axelar_solana_gateway_v2::{
-    program::AxelarSolanaGatewayV2, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
-};
+use axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2;
 use interchain_token_transfer_gmp::GMPPayload;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], destination_chain: String, destination_address: Vec<u8>, amount: u64, gas_value: u64, signing_pda_bump: u8, source_id: Option<Pubkey>, pda_seeds: Option<Vec<Vec<u8>>>, data: Option<Vec<u8>>)]
-pub struct InterchainTransfer {
+#[instruction(
+	token_id: [u8; 32],
+	destination_chain: String,
+	destination_address: Vec<u8>,
+	amount: u64,
+	gas_value: u64,
+	caller_program_id: Option<Pubkey>,
+	caller_pda_seeds: Option<Vec<Vec<u8>>>,
+	data: Option<Vec<u8>>,
+)]
+pub struct InterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// Could be source_id PDA or reguilar user account
+    //
+    // Sender of the tokens
+    //
+    /// Could be source_id PDA or regular user account
     /// Checked at runtime
     pub authority: Signer<'info>,
 
+    //
+    // Gateway
+    //
+    /// CHECK: checked by the gateway program
+    pub gateway_root_pda: UncheckedAccount<'info>,
+
+    /// CHECK: signing PDA checked by gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
+
+    /// Reference to the axelar gateway program
+    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+
+    /// CHECK: signing PDA checked by gateway program
+    pub signing_pda: UncheckedAccount<'info>,
+
+    //
+    // Gas Service
+    //
+
+    // todo: replace with GasServiceAccounts
+    /// CHECK: checked by the gas service program
+    #[account(mut)]
+    pub gas_treasury: UncheckedAccount<'info>,
+
+    /// The GMP gas service program account
+    pub gas_service:
+        Program<'info, axelar_solana_gas_service_v2::program::AxelarSolanaGasServiceV2>,
+
+    /// CHECK: checked by the gas service program
+    pub gas_event_authority: UncheckedAccount<'info>,
+
+    //
+    // ITS
+    //
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused @ ItsError::Paused,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
-
-    #[account(
-        mut,
-        constraint = source_ata.owner == authority.key()
-    )]
-    pub source_ata: InterfaceAccount<'info, TokenAccount>,
-
-    #[account(mut)]
-    /// CHECK: We can't do futher checks here since it could be a canonical or a custom token
-    pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
         mut,
@@ -59,71 +92,35 @@ pub struct InterchainTransfer {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
+    //
+    // Token Info
+    //
+    pub token_program: Interface<'info, TokenInterface>,
+
+    #[account(mint::token_program = token_program)]
+    /// CHECK: We can't do futher checks here since it could be a canonical or a custom token
+    pub token_mint: InterfaceAccount<'info, Mint>,
+
     #[account(
         mut,
-        constraint = token_manager_ata.mint == token_mint.key(),
-        constraint = token_manager_ata.owner == token_manager_pda.key(),
-        constraint = token_manager_ata.key() == spl_associated_token_account::get_associated_token_address_with_program_id(
-               &token_manager_pda.key(),
-               &token_mint.key(),
-               &token_program.key()
-           ) @ ItsError::InvalidTokenManagerAta
+        token::mint = token_mint,
+        token::token_program = token_program,
+        token::authority = authority,
+    )]
+    pub authority_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        associated_token::mint = token_mint,
+        associated_token::token_program = token_program,
+        associated_token::authority = token_manager_pda,
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    pub token_program: Interface<'info, TokenInterface>,
-
-    /// The gateway configuration PDA
-    #[account(
-        seeds = [GatewayConfig::SEED_PREFIX],
-        bump = gateway_root_pda.load()?.bump,
-        seeds::program = gateway_program.key()
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
-
-    /// Event authority - derived from gateway program
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = axelar_solana_gateway_v2::ID,
-    )]
-    pub gateway_event_authority: SystemAccount<'info>,
-
-    /// Reference to the axelar gateway program
-    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
-
-    // todo: replace with GasServiceAccounts
-    /// The GMP gas treasury account
-    #[account(
-        mut,
-        seeds = [axelar_solana_gas_service_v2::state::Treasury::SEED_PREFIX],
-        seeds::program = axelar_solana_gas_service_v2::ID,
-        bump = gas_treasury.load()?.bump,
-    )]
-    pub gas_treasury: AccountLoader<'info, axelar_solana_gas_service_v2::state::Treasury>,
-
-    /// The GMP gas service program account
-    pub gas_service:
-        Program<'info, axelar_solana_gas_service_v2::program::AxelarSolanaGasServiceV2>,
-
-    /// Event authority for gas service
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = gas_service.key()
-    )]
-    pub gas_event_authority: AccountInfo<'info>,
-
+    //
+    // Misc
+    //
     pub system_program: Program<'info, System>,
-
-    #[account(
-        seeds = [CALL_CONTRACT_SIGNING_SEED],
-        bump = signing_pda_bump,
-        seeds::program = crate::ID
-    )]
-    pub signing_pda: AccountInfo<'info>,
-
-    pub its_program: Program<'info, AxelarSolanaItsV2>,
 }
 
 impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
@@ -137,7 +134,7 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.signing_pda.to_account_info(),
-            its_program: self.its_program.to_account_info(),
+            its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self.gas_event_authority.to_account_info(),
         }
@@ -151,21 +148,45 @@ pub fn interchain_transfer_handler(
     destination_address: Vec<u8>,
     amount: u64,
     gas_value: u64,
-    signing_pda_bump: u8,
-    source_id: Option<Pubkey>,
-    pda_seeds: Option<Vec<Vec<u8>>>,
+    caller_program_id: Option<Pubkey>,
+    caller_pda_seeds: Option<Vec<Vec<u8>>>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
-    match (source_id, pda_seeds) {
-        // CPI case: when called by a program
-        (Some(source_id), Some(pda_seeds)) => {
-            validate_cpi_authority(&ctx, source_id, &pda_seeds)?;
+    let is_cpi = caller_program_id.is_some() && caller_pda_seeds.is_some();
+
+    // TODO check security implications of the checks here
+    if is_cpi {
+        let caller_program_id = caller_program_id.unwrap();
+        let caller_pda_seeds = caller_pda_seeds.unwrap();
+
+        // The sender should be a PDA owned by the source program
+        if ctx.accounts.authority.owner != &caller_program_id {
+            msg!(
+                "Sender account must be owned by the source program. Expected: {}, Got: {}",
+                caller_program_id,
+                ctx.accounts.authority.owner
+            );
+            return err!(ItsError::InvalidAccountData);
         }
-        // Regular wallet case: when called by a user
-        (None, None) => {
-            validate_wallet_authority(&ctx)?;
+
+        // Validate that the PDA can be derived using the provided seeds
+        let seeds_refs: Vec<&[u8]> = caller_pda_seeds
+            .iter()
+            .map(std::vec::Vec::as_slice)
+            .collect();
+        let (expected_pda, _bump) =
+            solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &caller_program_id);
+
+        if expected_pda != *ctx.accounts.authority.key {
+            msg!(
+                "PDA derivation mismatch. Expected: {}, Got: {}",
+                expected_pda,
+                ctx.accounts.authority.key
+            );
+            return err!(ItsError::InvalidAccountData);
         }
-        (_, _) => return err!(ItsError::InconsistentSourceIdAndPdaSeeds),
+    } else if ctx.accounts.authority.owner != &system_program::ID {
+        return err!(ItsError::InvalidAccountOwner);
     }
 
     let source_address = *ctx.accounts.authority.key;
@@ -176,7 +197,6 @@ pub fn interchain_transfer_handler(
         destination_address,
         amount,
         gas_value,
-        signing_pda_bump,
         data,
         source_address,
     )
@@ -228,7 +248,6 @@ fn process_outbound_transfer(
     destination_address: Vec<u8>,
     mut amount: u64,
     gas_value: u64,
-    signing_pda_bump: u8,
     data: Option<Vec<u8>>,
     source_address: Pubkey,
 ) -> Result<()> {
@@ -243,7 +262,7 @@ fn process_outbound_transfer(
     emit_cpi!(crate::events::InterchainTransfer {
         token_id,
         source_address,
-        source_token_account: ctx.accounts.source_ata.key(),
+        source_token_account: ctx.accounts.authority_token_account.key(),
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         amount,
@@ -271,13 +290,7 @@ fn process_outbound_transfer(
         });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
-    process_outbound(
-        gmp_accounts,
-        destination_chain,
-        gas_value,
-        signing_pda_bump,
-        inner_payload,
-    )?;
+    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
 
     Ok(())
 }
@@ -334,7 +347,7 @@ fn transfer_with_fee_to(
 
     let cpi_accounts = token_interface::TransferCheckedWithFee {
         token_program_id: ctx.accounts.token_program.to_account_info(),
-        source: ctx.accounts.source_ata.to_account_info(),
+        source: ctx.accounts.authority_token_account.to_account_info(),
         mint: ctx.accounts.token_mint.to_account_info(),
         destination: ctx.accounts.token_manager_ata.to_account_info(),
         authority: ctx.accounts.authority.to_account_info(),
@@ -355,7 +368,7 @@ fn transfer_to(ctx: &Context<InterchainTransfer>, amount: u64, decimals: u8) -> 
     use anchor_spl::token_interface;
 
     let cpi_accounts = token_interface::TransferChecked {
-        from: ctx.accounts.source_ata.to_account_info(),
+        from: ctx.accounts.authority_token_account.to_account_info(),
         mint: ctx.accounts.token_mint.to_account_info(),
         to: ctx.accounts.token_manager_ata.to_account_info(),
         authority: ctx.accounts.authority.to_account_info(),
@@ -377,7 +390,7 @@ fn burn_from_source(ctx: &Context<InterchainTransfer>, amount: u64) -> Result<()
 
     let cpi_accounts = token_interface::Burn {
         mint: ctx.accounts.token_mint.to_account_info(),
-        from: ctx.accounts.source_ata.to_account_info(),
+        from: ctx.accounts.authority_token_account.to_account_info(),
         authority: ctx.accounts.authority.to_account_info(),
     };
 

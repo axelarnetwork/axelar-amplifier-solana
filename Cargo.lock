@@ -1420,9 +1420,12 @@ name = "axelar-solana-memo-v2"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "anchor-spl",
  "axelar-solana-encoding",
+ "axelar-solana-gas-service-v2",
  "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
+ "axelar-solana-its-v2",
  "bincode",
  "hex",
  "mollusk-svm 0.5.1",

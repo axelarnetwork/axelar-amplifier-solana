@@ -11,14 +11,14 @@ use anchor_spl::token_2022::spl_token_2022::{
 };
 use anchor_spl::token_interface::Mint;
 use axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2;
-use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
+use axelar_solana_gateway_v2::GatewayConfig;
 use interchain_token_transfer_gmp::{
     GMPPayload, RegisterTokenMetadata as RegisterTokenMetadataPayload,
 };
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(gas_value: u64, signing_pda_bump: u8)]
+#[instruction(gas_value: u64)]
 pub struct RegisterTokenMetadata<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -47,14 +47,8 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    #[account(
-        seeds = [CALL_CONTRACT_SIGNING_SEED],
-        bump = signing_pda_bump,
-        seeds::program = crate::ID
-    )]
-    pub call_contract_signing_pda: AccountInfo<'info>,
-
-    pub its_program: Program<'info, AxelarSolanaItsV2>,
+    /// CHECK: validated in gateway
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     // Event authority accounts
     #[account(
@@ -78,7 +72,7 @@ impl<'info> ToGMPAccounts<'info> for RegisterTokenMetadata<'info> {
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.to_account_info(),
+            its_program: self.program.clone(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self
                 .gas_service_accounts
@@ -91,7 +85,6 @@ impl<'info> ToGMPAccounts<'info> for RegisterTokenMetadata<'info> {
 pub fn register_token_metadata_handler(
     ctx: Context<RegisterTokenMetadata>,
     gas_value: u64,
-    signing_pda_bump: u8,
 ) -> Result<()> {
     msg!("Instruction: RegisterTokenMetadata");
 
@@ -119,7 +112,6 @@ pub fn register_token_metadata_handler(
         gmp_accounts,
         ITS_HUB_CHAIN_NAME.to_owned(),
         gas_value,
-        signing_pda_bump,
         inner_payload,
     )?;
 

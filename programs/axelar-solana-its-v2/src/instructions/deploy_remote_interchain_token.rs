@@ -26,7 +26,7 @@ use spl_token_metadata_interface::state::TokenMetadata;
 /// Accounts required for deploying a remote interchain token
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(salt: [u8; 32], destination_chain: String, gas_value: u64, signing_pda_bump: u8)]
+#[instruction(salt: [u8; 32], destination_chain: String, gas_value: u64)]
 pub struct DeployRemoteInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -114,14 +114,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    #[account(
-        seeds = [CALL_CONTRACT_SIGNING_SEED],
-        bump = signing_pda_bump,
-        seeds::program = crate::ID
-    )]
-    pub call_contract_signing_pda: AccountInfo<'info>,
-
-    pub its_program: Program<'info, AxelarSolanaItsV2>,
+    /// CHECK: validated in gateway
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     // Event authority accounts
     #[account(
@@ -145,7 +139,7 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.to_account_info(),
+            its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self
                 .gas_service_accounts
@@ -160,7 +154,6 @@ pub fn deploy_remote_interchain_token_handler(
     salt: [u8; 32],
     destination_chain: String,
     gas_value: u64,
-    signing_pda_bump: u8,
     maybe_destination_minter: Option<Vec<u8>>,
 ) -> Result<()> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
@@ -225,13 +218,7 @@ pub fn deploy_remote_interchain_token_handler(
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
-    process_outbound(
-        gmp_accounts,
-        destination_chain,
-        gas_value,
-        signing_pda_bump,
-        inner_payload,
-    )?;
+    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
 
     Ok(())
 }
@@ -240,7 +227,6 @@ pub fn process_outbound(
     gmp_accounts: GMPAccounts,
     destination_chain: String,
     gas_value: u64,
-    signing_pda_bump: u8,
     inner_payload: GMPPayload,
 ) -> Result<()> {
     // Wrap the inner payload
@@ -268,6 +254,10 @@ pub fn process_outbound(
     // Call contract instruction
 
     let destination_address = gmp_accounts.its_root_pda.its_hub_address.clone();
+
+    // NOTE: this could be calculated at compile time
+    let (_, signing_pda_bump) =
+        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &crate::ID);
 
     let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
 

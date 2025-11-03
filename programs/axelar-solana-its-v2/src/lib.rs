@@ -7,6 +7,7 @@ pub mod instructions;
 pub mod state;
 pub mod utils;
 
+pub use errors::*;
 use instructions::*;
 
 use anchor_lang::prelude::*;
@@ -141,14 +142,12 @@ pub mod axelar_solana_its_v2 {
         salt: [u8; 32],
         destination_chain: String,
         gas_value: u64,
-        signing_pda_bump: u8,
     ) -> Result<()> {
         instructions::deploy_remote_interchain_token_handler(
             ctx,
             salt,
             destination_chain,
             gas_value,
-            signing_pda_bump,
             None,
         )
     }
@@ -158,7 +157,6 @@ pub mod axelar_solana_its_v2 {
         salt: [u8; 32],
         destination_chain: String,
         gas_value: u64,
-        signing_pda_bump: u8,
         destination_minter: Vec<u8>,
     ) -> Result<()> {
         instructions::deploy_remote_interchain_token_handler(
@@ -166,7 +164,6 @@ pub mod axelar_solana_its_v2 {
             salt,
             destination_chain,
             gas_value,
-            signing_pda_bump,
             Some(destination_minter),
         )
     }
@@ -199,9 +196,8 @@ pub mod axelar_solana_its_v2 {
     pub fn register_token_metadata(
         ctx: Context<RegisterTokenMetadata>,
         gas_value: u64,
-        signing_pda_bump: u8,
     ) -> Result<()> {
-        instructions::register_token_metadata_handler(ctx, gas_value, signing_pda_bump)
+        instructions::register_token_metadata_handler(ctx, gas_value)
     }
 
     pub fn register_canonical_interchain_token(
@@ -214,13 +210,11 @@ pub mod axelar_solana_its_v2 {
         ctx: Context<DeployRemoteCanonicalInterchainToken>,
         destination_chain: String,
         gas_value: u64,
-        signing_pda_bump: u8,
     ) -> Result<()> {
         instructions::deploy_remote_canonical_interchain_token_handler(
             ctx,
             destination_chain,
             gas_value,
-            signing_pda_bump,
         )
     }
 
@@ -242,7 +236,6 @@ pub mod axelar_solana_its_v2 {
         token_manager_type: crate::state::Type,
         link_params: Vec<u8>,
         gas_value: u64,
-        signing_pda_bump: u8,
     ) -> Result<[u8; 32]> {
         instructions::link_token_handler(
             ctx,
@@ -252,7 +245,6 @@ pub mod axelar_solana_its_v2 {
             token_manager_type,
             link_params,
             gas_value,
-            signing_pda_bump,
         )
     }
 
@@ -327,7 +319,6 @@ pub mod axelar_solana_its_v2 {
         destination_address: Vec<u8>,
         amount: u64,
         gas_value: u64,
-        signing_pda_bump: u8,
         source_id: Option<Pubkey>,
         pda_seeds: Option<Vec<Vec<u8>>>,
         data: Option<Vec<u8>>,
@@ -339,7 +330,6 @@ pub mod axelar_solana_its_v2 {
             destination_address,
             amount,
             gas_value,
-            signing_pda_bump,
             source_id,
             pda_seeds,
             data,

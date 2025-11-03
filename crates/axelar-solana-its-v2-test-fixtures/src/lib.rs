@@ -365,7 +365,7 @@ pub fn deploy_remote_interchain_token_helper(
     let (gas_treasury, _) =
         Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &axelar_solana_gas_service_v2::ID);
 
-    let (call_contract_signing_pda, signing_pda_bump) =
+    let (call_contract_signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &ctx.program_id);
 
     let (gateway_event_authority, _) =
@@ -382,7 +382,6 @@ pub fn deploy_remote_interchain_token_helper(
             salt,
             destination_chain: destination_chain.clone(),
             gas_value,
-            signing_pda_bump,
             destination_minter: minter.to_bytes().into(),
         }
         .data(),
@@ -390,7 +389,6 @@ pub fn deploy_remote_interchain_token_helper(
             salt,
             destination_chain: destination_chain.clone(),
             gas_value,
-            signing_pda_bump,
         }
         .data(),
     };
@@ -418,7 +416,6 @@ pub fn deploy_remote_interchain_token_helper(
             system_program: solana_sdk::system_program::ID,
             its_root_pda: ctx.its_root_pda,
             call_contract_signing_pda,
-            its_program: ctx.program_id,
             gateway_event_authority,
             event_authority: its_event_authority,
             program: ctx.program_id,

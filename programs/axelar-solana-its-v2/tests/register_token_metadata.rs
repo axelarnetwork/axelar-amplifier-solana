@@ -136,11 +136,7 @@ fn test_register_token_metadata() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::RegisterTokenMetadata {
-            gas_value,
-            signing_pda_bump,
-        }
-        .data(),
+        data: axelar_solana_its_v2::instruction::RegisterTokenMetadata { gas_value }.data(),
     };
 
     let accounts = vec![
