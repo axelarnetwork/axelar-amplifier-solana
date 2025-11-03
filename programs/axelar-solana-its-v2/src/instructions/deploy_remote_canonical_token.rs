@@ -1,5 +1,6 @@
 use crate::gmp::*;
 use crate::instructions::deploy_remote_interchain_token::{get_token_metadata, process_outbound};
+use crate::program::AxelarSolanaItsV2;
 use crate::{
     errors::ItsError,
     events::InterchainTokenDeploymentStarted,
@@ -12,6 +13,7 @@ use crate::{
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::Mint;
+use axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2;
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 
@@ -23,6 +25,9 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    /// CHECK: we can't check this mint since we didn't deploy it
+    /// The check happens in the token_manager, where we know that its a valid
+    /// token manager deployed for this token_mint
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     /// CHECK: decoded using get_token_metadata
@@ -43,9 +48,8 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
             its_root_pda.key().as_ref(),
             &canonical_interchain_token_id(&token_mint.key())
         ],
-        seeds::program = crate::ID,
         bump = token_manager_pda.bump,
-        constraint = token_manager_pda.token_address == token_mint.key() @ ItsError::InvalidArgument
+        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -59,7 +63,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
 
     pub system_program: Program<'info, System>,
 
@@ -77,10 +81,9 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
         bump = signing_pda_bump,
         seeds::program = crate::ID
     )]
-    pub call_contract_signing_pda: Signer<'info>,
+    pub call_contract_signing_pda: AccountInfo<'info>,
 
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
+    pub its_program: Program<'info, AxelarSolanaItsV2>,
 
     #[account(
         seeds = [b"__event_authority"],
@@ -103,7 +106,7 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteCanonicalInterchainToken<'info>
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.clone(),
+            its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self
                 .gas_service_accounts

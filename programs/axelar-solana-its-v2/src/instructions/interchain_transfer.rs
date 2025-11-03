@@ -2,6 +2,7 @@ use crate::get_fee_and_decimals;
 use crate::get_mint_decimals;
 use crate::gmp::{GMPAccounts, ToGMPAccounts};
 use crate::instructions::process_outbound;
+use crate::program::AxelarSolanaItsV2;
 use crate::state::{token_manager, FlowDirection};
 use crate::{
     errors::ItsError,
@@ -43,6 +44,7 @@ pub struct InterchainTransfer {
     pub source_ata: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut)]
+    /// CHECK: We can't do futher checks here since it could be a canonical or a custom token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
@@ -121,8 +123,7 @@ pub struct InterchainTransfer {
     )]
     pub signing_pda: AccountInfo<'info>,
 
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
+    pub its_program: Program<'info, AxelarSolanaItsV2>,
 }
 
 impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {

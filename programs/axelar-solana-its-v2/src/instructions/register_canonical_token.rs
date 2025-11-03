@@ -60,6 +60,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
+    /// CHECK: We can't do futher checks here since its a canonical token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(

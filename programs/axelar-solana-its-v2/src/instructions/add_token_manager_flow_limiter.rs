@@ -38,7 +38,6 @@ pub struct AddTokenManagerFlowLimiter<'info> {
             its_root_pda.key().as_ref(),
             &token_manager_pda.token_id
         ],
-        seeds::program = crate::ID,
         bump = token_manager_pda.bump,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,

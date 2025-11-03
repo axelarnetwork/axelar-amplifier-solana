@@ -17,6 +17,7 @@ use anchor_spl::token_2022::spl_token_2022::{
 };
 use anchor_spl::token_interface::Mint;
 use axelar_solana_gas_service_v2::cpi::{accounts::PayGas, pay_gas};
+use axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2;
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, SendToHub};
 use mpl_token_metadata::accounts::Metadata;
@@ -60,7 +61,6 @@ pub struct DeployRemoteInterchainToken<'info> {
             its_root_pda.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt)
         ],
-        seeds::program = crate::ID,
         bump = token_manager_pda.bump,
         constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
     )]
@@ -101,7 +101,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
 
     pub system_program: Program<'info, System>,
 
@@ -119,7 +119,7 @@ pub struct DeployRemoteInterchainToken<'info> {
         bump = signing_pda_bump,
         seeds::program = crate::ID
     )]
-    pub call_contract_signing_pda: Signer<'info>,
+    pub call_contract_signing_pda: AccountInfo<'info>,
 
     pub its_program: Program<'info, AxelarSolanaItsV2>,
 

@@ -3,6 +3,7 @@ use crate::{
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
     gmp::*,
     instructions::process_outbound,
+    program::AxelarSolanaItsV2,
     state::{
         token_manager::{TokenManager, Type},
         InterchainTokenService,
@@ -10,7 +11,9 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
-use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
+use axelar_solana_gateway_v2::{
+    program::AxelarSolanaGatewayV2, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
+};
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
 
 #[derive(Accounts)]
@@ -30,7 +33,7 @@ pub struct LinkToken<'info> {
 
     pub deployer: Signer<'info>,
 
-    pub its_program: Program<'info, crate::program::AxelarSolanaItsV2>,
+    pub its_program: Program<'info, AxelarSolanaItsV2>,
 
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
@@ -47,7 +50,6 @@ pub struct LinkToken<'info> {
             its_root_pda.key().as_ref(),
             &interchain_token_id_internal(&linked_token_deployer_salt(&deployer.key(), &salt))
         ],
-        seeds::program = crate::ID,
         bump = token_manager_pda.bump,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
@@ -62,7 +64,7 @@ pub struct LinkToken<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
 
     pub system_program: Program<'info, System>,
 
@@ -71,7 +73,7 @@ pub struct LinkToken<'info> {
         bump = signing_pda_bump,
         seeds::program = crate::ID
     )]
-    pub call_contract_signing_pda: Signer<'info>,
+    pub call_contract_signing_pda: AccountInfo<'info>,
 
     // Event authority accounts
     #[account(

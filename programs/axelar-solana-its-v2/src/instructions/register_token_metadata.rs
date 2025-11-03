@@ -1,5 +1,6 @@
 use crate::gmp::*;
 use crate::instructions::process_outbound;
+use crate::program::AxelarSolanaItsV2;
 use crate::{
     errors::ItsError, events::TokenMetadataRegistered, state::InterchainTokenService,
     ITS_HUB_CHAIN_NAME,
@@ -9,6 +10,7 @@ use anchor_spl::token_2022::spl_token_2022::{
     extension::StateWithExtensions, state::Mint as SplMint,
 };
 use anchor_spl::token_interface::Mint;
+use axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2;
 use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
 use interchain_token_transfer_gmp::{
     GMPPayload, RegisterTokenMetadata as RegisterTokenMetadataPayload,
@@ -21,6 +23,7 @@ pub struct RegisterTokenMetadata<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    // todo: are we missing checks?
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     // GMP accounts
@@ -33,7 +36,7 @@ pub struct RegisterTokenMetadata<'info> {
     )]
     pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
 
-    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
+    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
 
     pub system_program: Program<'info, System>,
 
@@ -49,10 +52,9 @@ pub struct RegisterTokenMetadata<'info> {
         bump = signing_pda_bump,
         seeds::program = crate::ID
     )]
-    pub call_contract_signing_pda: Signer<'info>,
+    pub call_contract_signing_pda: AccountInfo<'info>,
 
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
+    pub its_program: Program<'info, AxelarSolanaItsV2>,
 
     // Event authority accounts
     #[account(
@@ -76,9 +78,12 @@ impl<'info> ToGMPAccounts<'info> for RegisterTokenMetadata<'info> {
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.clone(),
+            its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
-            gas_event_authority: self.gas_service_accounts.gas_event_authority.to_account_info(),
+            gas_event_authority: self
+                .gas_service_accounts
+                .gas_event_authority
+                .to_account_info(),
         }
     }
 }

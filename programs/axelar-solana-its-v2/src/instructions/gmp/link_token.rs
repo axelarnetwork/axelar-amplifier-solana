@@ -47,6 +47,7 @@ pub struct LinkTokenInternal<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
+    // todo: are we missing checks here?
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(

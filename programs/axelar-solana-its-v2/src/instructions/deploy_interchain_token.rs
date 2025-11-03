@@ -96,6 +96,7 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub mpl_token_metadata_account: AccountInfo<'info>,
 
+    // todo: should this be optional? we deploy it even though its not always needed
     #[account(
         init,
         payer = payer,

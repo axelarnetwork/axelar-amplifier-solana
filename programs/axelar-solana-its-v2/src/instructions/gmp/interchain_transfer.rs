@@ -40,11 +40,14 @@ pub struct InterchainTransferInternal<'info> {
 
     #[account(
         mut,
-        constraint = destination_ata.owner == destination.key()
+        associated_token::mint = token_mint,
+        associated_token::authority = destination,
+        associated_token::token_program = token_program
     )]
     pub destination_ata: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut)]
+    /// CHECK: We can't do futher checks here since it could be a canonical or a custom token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
@@ -61,8 +64,9 @@ pub struct InterchainTransferInternal<'info> {
 
     #[account(
         mut,
-        constraint = token_manager_ata.mint == token_mint.key(),
-        constraint = token_manager_ata.owner == token_manager_pda.key(),
+        associated_token::mint = token_mint,
+        associated_token::authority = token_manager_pda,
+        associated_token::token_program = token_program
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
