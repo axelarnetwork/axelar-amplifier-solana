@@ -1,4 +1,7 @@
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::indexing_slicing)]
 
 use anchor_lang::{
     prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
@@ -179,8 +182,10 @@ pub fn setup_test_with_real_signers() -> (
     ];
 
     // Step 3: Calculate the REAL verifier set hash
-    let verifier_leaf_hashes: Vec<[u8; 32]> =
-        verifier_leaves.iter().map(|leaf| leaf.hash()).collect();
+    let verifier_leaf_hashes: Vec<[u8; 32]> = verifier_leaves
+        .iter()
+        .map(solana_axelar_gateway::VerifierSetLeaf::hash)
+        .collect();
     let verifier_merkle_tree =
         MerkleTree::<SolanaSyscallHasher>::from_leaves(&verifier_leaf_hashes);
     let verifier_set_hash = verifier_merkle_tree.root().unwrap();
@@ -440,12 +445,12 @@ pub fn create_test_message(
 ) -> Message {
     Message {
         cc_id: CrossChainId {
-            chain: source_chain.to_string(),
-            id: message_id.to_string(),
+            chain: source_chain.to_owned(),
+            id: message_id.to_owned(),
         },
-        source_address: "0xSourceAddress".to_string(),
-        destination_chain: "solana".to_string(),
-        destination_address: destination_address.to_string(),
+        source_address: "0xSourceAddress".to_owned(),
+        destination_chain: "solana".to_owned(),
+        destination_address: destination_address.to_owned(),
         payload_hash,
     }
 }
@@ -623,8 +628,8 @@ pub fn call_contract_helper(
     let gateway_root = init_result.get_account(&setup.gateway_root_pda).unwrap();
     accounts.push((setup.gateway_root_pda, gateway_root.clone()));
 
-    let destination_chain = "ethereum".to_string();
-    let destination_contract_address = "0xdeadbeef".to_string();
+    let destination_chain = "ethereum".to_owned();
+    let destination_contract_address = "0xdeadbeef".to_owned();
     let payload = b"memo test".to_vec();
 
     let signing_pda_bump = setup.gateway_caller_bump.unwrap();
@@ -946,8 +951,10 @@ pub fn setup_message_merkle_tree(
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> =
-        message_leaves.iter().map(|leaf| leaf.hash()).collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
+        .iter()
+        .map(solana_axelar_gateway::MessageLeaf::hash)
+        .collect();
 
     let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
 
@@ -1104,7 +1111,10 @@ pub fn approve_messages_on_gateway(
 
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
-    assert!(!session_result.program_result.is_err());
+    assert!(
+        !session_result.program_result.is_err(),
+        "Failed to initialize verification session"
+    );
 
     let gateway_account = init_result
         .resulting_accounts
@@ -1235,8 +1245,10 @@ pub fn setup_message_merkle_tree_from_messages(
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> =
-        message_leaves.iter().map(|leaf| leaf.hash()).collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
+        .iter()
+        .map(solana_axelar_gateway::MessageLeaf::hash)
+        .collect();
 
     let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
 
