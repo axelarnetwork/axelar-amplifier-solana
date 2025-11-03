@@ -2,12 +2,6 @@ use alloy_sol_types::SolValue;
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas};
 use anchor_lang::solana_program;
 use anchor_lang::AnchorSerialize;
-use axelar_solana_governance_v2_test_fixtures::{
-    create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
-    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
-    create_signing_pda_from_message, extract_proposal_hash_unchecked, get_memo_instruction_data,
-    initialize_governance, process_gmp_helper, GmpContext, TestSetup,
-};
 use governance_gmp::alloy_primitives::U256;
 use hex::FromHex;
 use solana_axelar_gateway_test_fixtures::{
@@ -18,6 +12,12 @@ use solana_axelar_governance::seed_prefixes::GOVERNANCE_CONFIG;
 use solana_axelar_governance::state::GovernanceConfigInit;
 use solana_axelar_governance::SolanaAccountMetadata;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
+use solana_axelar_governance_test_fixtures::{
+    create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
+    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
+    create_signing_pda_from_message, extract_proposal_hash_unchecked, get_memo_instruction_data,
+    initialize_governance, process_gmp_helper, GmpContext, TestSetup,
+};
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::clock::Clock;

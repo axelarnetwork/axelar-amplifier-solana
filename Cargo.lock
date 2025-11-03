@@ -1051,20 +1051,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "axelar-solana-governance-v2-test-fixtures"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "bincode",
- "mollusk-svm",
- "solana-axelar-gateway",
- "solana-axelar-governance",
- "solana-axelar-governance-legacy",
- "solana-axelar-memo",
- "solana-sdk",
-]
-
-[[package]]
 name = "axum"
 version = "0.6.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7897,7 +7883,6 @@ version = "0.1.0"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
- "axelar-solana-governance-v2-test-fixtures",
  "bincode",
  "governance-gmp",
  "hex",
@@ -7907,6 +7892,7 @@ dependencies = [
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-governance-legacy",
+ "solana-axelar-governance-test-fixtures",
  "solana-axelar-memo",
  "solana-sdk",
 ]
@@ -7940,6 +7926,20 @@ dependencies = [
  "solana-sdk",
  "solana-sdk-ids",
  "uuid 1.16.0",
+]
+
+[[package]]
+name = "solana-axelar-governance-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "mollusk-svm",
+ "solana-axelar-gateway",
+ "solana-axelar-governance",
+ "solana-axelar-governance-legacy",
+ "solana-axelar-memo",
+ "solana-sdk",
 ]
 
 [[package]]

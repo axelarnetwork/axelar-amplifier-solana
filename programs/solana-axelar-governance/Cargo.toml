@@ -52,6 +52,6 @@ bincode.workspace = true
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 solana-sdk.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
-axelar-solana-governance-v2-test-fixtures.workspace = true
+solana-axelar-governance-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 hex.workspace = true
