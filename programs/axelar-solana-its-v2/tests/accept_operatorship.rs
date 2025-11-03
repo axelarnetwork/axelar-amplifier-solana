@@ -50,10 +50,12 @@ fn test_accept_operatorship() {
     assert!(current_roles_data.roles.contains(Roles::OPERATOR));
 
     // First create a proposal
-    let (proposal_pda, _bump) = Pubkey::find_program_address(
-        &RoleProposal::pda_seeds(&its_root_pda, &new_operator)[..],
-        &program_id,
-    );
+    // let (proposal_pda, _bump) = Pubkey::find_program_address(
+    //     &RoleProposal::pda_seeds(&its_root_pda, &current_operator, &new_operator)[..],
+    //     &program_id,
+    // );
+    let (proposal_pda, _bump) =
+        RoleProposal::find_pda(&its_root_pda, &current_operator, &new_operator, &program_id);
 
     let propose_ix = Instruction {
         program_id,

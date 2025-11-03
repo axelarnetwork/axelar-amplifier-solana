@@ -59,6 +59,7 @@ pub struct ProposeTokenManagerOperatorship<'info> {
         seeds = [
             RoleProposal::SEED_PREFIX,
             token_manager_account.key().as_ref(),
+            origin_user_account.key().as_ref(),
             destination_user_account.key().as_ref(),
         ],
         bump,

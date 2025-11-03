@@ -386,4 +386,10 @@ pub mod axelar_solana_its_v2 {
     ) -> Result<()> {
         instructions::propose_token_manager_operatorship_handler(ctx)
     }
+
+    pub fn accept_token_manager_operatorship(
+        ctx: Context<AcceptTokenManagerOperatorship>,
+    ) -> Result<()> {
+        instructions::accept_token_manager_operatorship_handler(ctx)
+    }
 }

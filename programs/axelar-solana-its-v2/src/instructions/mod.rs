@@ -69,3 +69,6 @@ pub use transfer_token_manager_operatorship::*;
 
 pub mod propose_token_manager_operatorship;
 pub use propose_token_manager_operatorship::*;
+
+pub mod accept_token_manager_operatorship;
+pub use accept_token_manager_operatorship::*;

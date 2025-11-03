@@ -14,7 +14,24 @@ pub struct RoleProposal {
 impl RoleProposal {
     pub const SEED_PREFIX: &'static [u8] = b"role-proposal";
 
-    pub fn pda_seeds<'a>(resource: &'a Pubkey, user: &'a Pubkey) -> [&'a [u8]; 3] {
-        [Self::SEED_PREFIX, resource.as_ref(), user.as_ref()]
+    fn pda_seeds<'a>(resource: &'a Pubkey, origin: &'a Pubkey, user: &'a Pubkey) -> [&'a [u8]; 4] {
+        [
+            Self::SEED_PREFIX,
+            resource.as_ref(),
+            origin.as_ref(),
+            user.as_ref(),
+        ]
+    }
+
+    pub fn find_pda(
+        resource: &Pubkey,
+        origin: &Pubkey,
+        new_operator: &Pubkey,
+        program_id: &Pubkey,
+    ) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &RoleProposal::pda_seeds(resource, origin, &new_operator)[..],
+            program_id,
+        )
     }
 }

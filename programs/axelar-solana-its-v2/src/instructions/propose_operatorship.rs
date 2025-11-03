@@ -46,6 +46,7 @@ pub struct ProposeOperatorship<'info> {
         seeds = [
             RoleProposal::SEED_PREFIX,
             resource_account.key().as_ref(),
+            origin_user_account.key().as_ref(),
             destination_user_account.key().as_ref(),
         ],
         bump,

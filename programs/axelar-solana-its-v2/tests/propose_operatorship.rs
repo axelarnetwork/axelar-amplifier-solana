@@ -49,8 +49,10 @@ fn test_propose_operatorship() {
             .expect("Failed to deserialize current operator roles");
     assert!(current_roles_data.roles.contains(Roles::OPERATOR));
 
-    let (proposal_pda, _bump) = Pubkey::find_program_address(
-        &RoleProposal::pda_seeds(&its_root_pda, &proposed_operator)[..],
+    let (proposal_pda, _bump) = RoleProposal::find_pda(
+        &its_root_pda,
+        &current_operator,
+        &proposed_operator,
         &program_id,
     );
 
