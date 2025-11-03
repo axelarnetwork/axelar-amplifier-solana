@@ -56,3 +56,6 @@ mainnet = [
 	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]
+
+[package.metadata.cargo-machete]
+ignored = ["bytemuck"]
