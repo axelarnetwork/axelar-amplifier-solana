@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-executable"
+name = "solana-axelar-memo-discoverable"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -28,7 +28,7 @@ solana-program.workspace = true
 workspace = true
 
 [lib]
-name = "axelar_solana_executable"
+name = "solana_axelar_memo_discoverable"
 crate-type = ["cdylib", "lib"]
 
 [features]
