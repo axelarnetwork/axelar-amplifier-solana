@@ -15,7 +15,7 @@ pub use events::*;
 
 pub mod payload_conversions;
 
-declare_id!("go2HuaNdyr7S1mbq9Z7aD4su1vgZRyPkdLAFxNBDSNm");
+declare_id!("govKw1XM67EFoyLoJ7x6A8qtyJqEw5ZREGfwYxJtYt8");
 
 /// Seed prefixes for different PDAs initialized by the Governance program.
 pub mod seed_prefixes {

@@ -8,7 +8,7 @@ pub use state::*;
 
 use solana_axelar_gateway::executable::{ExecutablePayloadEncodingScheme, Message};
 
-declare_id!("me2G9aTaYPvYjuSxjsMKmbBiYXs4ydUvDwP1SwkUV7F");
+declare_id!("mem5NJXuxU7b4UJqq6ib8XUjk1Hnp4z2B1szyRZ8bLv");
 
 #[program]
 pub mod memo {
