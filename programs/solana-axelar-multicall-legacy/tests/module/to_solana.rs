@@ -1,6 +1,6 @@
-use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use borsh::BorshDeserialize as _;
 use solana_axelar_gateway_legacy::{events::MessageExecutedEvent, executable::EncodingScheme};
+use solana_axelar_gateway_legacy_test_fixtures::gateway::random_message;
 use solana_axelar_memo_legacy::instruction::AxelarMemoInstruction;
 use solana_axelar_memo_legacy::state::Counter;
 use solana_axelar_multicall_legacy::instructions::MultiCallPayloadBuilder;

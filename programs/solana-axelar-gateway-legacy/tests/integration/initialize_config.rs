@@ -1,9 +1,9 @@
-use axelar_solana_gateway_test_fixtures::{
-    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
-};
 use solana_axelar_gateway_legacy::get_gateway_root_config_pda;
 use solana_axelar_gateway_legacy::state::GatewayConfig;
 use solana_axelar_gateway_legacy::types::U256;
+use solana_axelar_gateway_legacy_test_fixtures::{
+    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
+};
 use solana_program_test::tokio;
 use solana_sdk::clock::Clock;
 use solana_sdk::pubkey::Pubkey;

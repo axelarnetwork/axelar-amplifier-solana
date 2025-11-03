@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-gateway-test-fixtures"
+name = "solana-axelar-gateway-legacy-test-fixtures"
 version = "0.1.0"
 edition = "2021"
 

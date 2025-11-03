@@ -1,4 +1,3 @@
-use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use borsh::BorshDeserialize as _;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::{
     AxelarAmplifierGateway, ContractCallFilter,
@@ -9,6 +8,7 @@ use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_solana_multica
 use evm_contracts_test_suite::ContractMiddleware;
 use solana_axelar_gateway_legacy::events::MessageExecutedEvent;
 use solana_axelar_gateway_legacy::executable::AxelarMessagePayload;
+use solana_axelar_gateway_legacy_test_fixtures::gateway::random_message;
 use solana_axelar_memo_legacy::instruction::AxelarMemoInstruction;
 use solana_axelar_memo_legacy::state::Counter;
 use solana_program_test::tokio;

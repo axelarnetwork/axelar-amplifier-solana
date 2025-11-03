@@ -11,8 +11,8 @@ use spl_associated_token_account::{
 };
 use test_context::test_context;
 
-use axelar_solana_gateway_test_fixtures::{assert_msg_present_in_logs, base::FindLog};
 use role_management::state::UserRoles;
+use solana_axelar_gateway_legacy_test_fixtures::{assert_msg_present_in_logs, base::FindLog};
 use solana_axelar_its_legacy::{
     instruction::InterchainTokenServiceInstruction, state::token_manager::TokenManager, Roles,
 };

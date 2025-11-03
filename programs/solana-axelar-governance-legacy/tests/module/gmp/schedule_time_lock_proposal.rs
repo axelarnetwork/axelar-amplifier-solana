@@ -1,5 +1,5 @@
-use axelar_solana_gateway_test_fixtures::base::FindLog;
 use borsh::to_vec;
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
 use solana_axelar_governance_legacy::events;
 use solana_axelar_governance_legacy::instructions::builder::{IxBuilder, ProposalRelated};
 use solana_axelar_governance_legacy::state::operator;

@@ -52,12 +52,6 @@ use solana_sdk::system_instruction;
 use test_context::AsyncTestContext;
 
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway_test_fixtures::base::workspace_root_dir;
-use axelar_solana_gateway_test_fixtures::gas_service::GasServiceUtils;
-use axelar_solana_gateway_test_fixtures::gateway::random_message;
-use axelar_solana_gateway_test_fixtures::{
-    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
-};
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use evm_contracts_test_suite::chain::TestBlockchain;
 use evm_contracts_test_suite::ethers::abi::Detokenize;
@@ -76,6 +70,12 @@ use interchain_token_transfer_gmp::{GMPPayload, ReceiveFromHub};
 use program_utils::pda::BorshPda;
 use solana_axelar_gateway_legacy::events::CallContractEvent;
 use solana_axelar_gateway_legacy::state::incoming_message::command_id;
+use solana_axelar_gateway_legacy_test_fixtures::base::workspace_root_dir;
+use solana_axelar_gateway_legacy_test_fixtures::gas_service::GasServiceUtils;
+use solana_axelar_gateway_legacy_test_fixtures::gateway::random_message;
+use solana_axelar_gateway_legacy_test_fixtures::{
+    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
+};
 use solana_axelar_its_legacy::instruction::ExecuteInstructionInputs;
 
 const SOLANA_CHAIN_NAME: &str = "solana-localnet";

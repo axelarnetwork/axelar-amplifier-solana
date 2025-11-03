@@ -7,10 +7,6 @@ use axelar_solana_encoding::types::messages::Messages;
 use axelar_solana_encoding::types::payload::Payload;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
 use axelar_solana_encoding::LeafHash;
-use axelar_solana_gateway_test_fixtures::gateway::{
-    make_messages, make_verifier_set, random_message, GetGatewayError,
-};
-use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use event_cpi_test_utils::{assert_event_cpi, contains_event_cpi};
 use itertools::Itertools;
 use pretty_assertions::assert_eq;
@@ -21,6 +17,10 @@ use solana_axelar_gateway_legacy::state::incoming_message::{
     command_id, IncomingMessage, MessageStatus,
 };
 use solana_axelar_gateway_legacy::{get_incoming_message_pda, get_validate_message_signing_pda};
+use solana_axelar_gateway_legacy_test_fixtures::gateway::{
+    make_messages, make_verifier_set, random_message, GetGatewayError,
+};
+use solana_axelar_gateway_legacy_test_fixtures::SolanaAxelarIntegration;
 use solana_program_test::tokio;
 use solana_sdk::pubkey::Pubkey;
 

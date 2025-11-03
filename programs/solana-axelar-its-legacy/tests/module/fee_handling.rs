@@ -1,10 +1,10 @@
 use anyhow::anyhow;
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use borsh::BorshDeserialize;
 use evm_contracts_test_suite::ethers::signers::Signer;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::instructions::CreateV1Builder;
 use mpl_token_metadata::types::TokenStandard;
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
 use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use solana_program_test::tokio;
 use solana_sdk::clock::Clock;

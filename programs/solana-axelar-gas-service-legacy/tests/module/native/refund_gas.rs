@@ -1,6 +1,6 @@
-use axelar_solana_gateway_test_fixtures::{assert_msg_present_in_logs, base::TestFixture};
 use event_cpi_test_utils::assert_event_cpi;
 use solana_axelar_gas_service_legacy::events::GasRefundedEvent;
+use solana_axelar_gateway_legacy_test_fixtures::{assert_msg_present_in_logs, base::TestFixture};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{signature::Keypair, signer::Signer};
 

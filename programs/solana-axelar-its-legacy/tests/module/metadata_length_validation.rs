@@ -1,6 +1,6 @@
 use anyhow::anyhow;
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use evm_contracts_test_suite::ethers::signers::Signer;
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
 use solana_program_test::tokio;
 use test_context::test_context;
 

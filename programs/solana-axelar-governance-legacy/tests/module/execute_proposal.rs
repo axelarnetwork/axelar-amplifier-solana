@@ -1,6 +1,6 @@
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_gateway_test_fixtures::base::FindLog;
 use borsh::to_vec;
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
 use solana_axelar_governance_legacy::{
     events,
     instructions::builder::{IxBuilder, ProposalRelated},

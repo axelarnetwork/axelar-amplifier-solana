@@ -1,7 +1,4 @@
 use axelar_solana_encoding::types::messages::Message;
-use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_gateway_test_fixtures::gateway::{make_messages, GetGatewayError};
-use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use program_utils::pda::BytemuckedPda;
 use solana_axelar_gateway_legacy::error::GatewayError;
 use solana_axelar_gateway_legacy::instructions::validate_message;
@@ -9,6 +6,9 @@ use solana_axelar_gateway_legacy::state::incoming_message::{
     command_id, IncomingMessage, MessageStatus,
 };
 use solana_axelar_gateway_legacy::{get_incoming_message_pda, get_validate_message_signing_pda};
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
+use solana_axelar_gateway_legacy_test_fixtures::gateway::{make_messages, GetGatewayError};
+use solana_axelar_gateway_legacy_test_fixtures::SolanaAxelarIntegration;
 use solana_program_test::tokio;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::program_error::ProgramError;
@@ -183,7 +183,7 @@ async fn fail_if_invalid_signing_pda_seeds() {
 }
 
 async fn set_existing_incoming_message_state(
-    metadata: &mut axelar_solana_gateway_test_fixtures::SolanaAxelarIntegrationMetadata,
+    metadata: &mut solana_axelar_gateway_legacy_test_fixtures::SolanaAxelarIntegrationMetadata,
     incoming_message_pda: Pubkey,
     incoming_message: IncomingMessage,
 ) {

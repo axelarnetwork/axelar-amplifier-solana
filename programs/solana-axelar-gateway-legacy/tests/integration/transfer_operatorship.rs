@@ -1,7 +1,3 @@
-use axelar_solana_gateway_test_fixtures::base::TestFixture;
-use axelar_solana_gateway_test_fixtures::{
-    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
-};
 use event_cpi_test_utils::assert_event_cpi;
 use num_traits::ToPrimitive as _;
 use program_utils::pda::BytemuckedPda;
@@ -9,6 +5,10 @@ use solana_axelar_gateway_legacy::error::GatewayError;
 use solana_axelar_gateway_legacy::events::OperatorshipTransferredEvent;
 use solana_axelar_gateway_legacy::instructions::GatewayInstruction;
 use solana_axelar_gateway_legacy::state::GatewayConfig;
+use solana_axelar_gateway_legacy_test_fixtures::base::TestFixture;
+use solana_axelar_gateway_legacy_test_fixtures::{
+    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
+};
 use solana_program_test::tokio::fs;
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::account::ReadableAccount;

@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
-use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_gateway_test_fixtures::gateway::random_message;
 use borsh::BorshDeserialize;
 use solana_axelar_gateway_legacy::events::MessageExecutedEvent;
 use solana_axelar_gateway_legacy::executable::EncodingScheme;
 use solana_axelar_gateway_legacy::get_incoming_message_pda;
 use solana_axelar_gateway_legacy::state::incoming_message;
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
+use solana_axelar_gateway_legacy_test_fixtures::gateway::random_message;
 use solana_axelar_memo_legacy::instruction::from_axelar_to_solana::build_memo;
 use solana_axelar_memo_legacy::state::Counter;
 use solana_program_test::tokio;
