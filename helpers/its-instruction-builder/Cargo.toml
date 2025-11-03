@@ -10,10 +10,10 @@ crate-type = ["cdylib", "lib"]
 workspace = true
 
 [dependencies]
-axelar-solana-gateway.workspace = true
+solana-axelar-gateway-legacy.workspace = true
 async-recursion.workspace = true
 axelar-solana-encoding.workspace = true
-axelar-solana-its = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-its-legacy = { workspace = true, features = ["no-entrypoint"] }
 borsh.workspace = true
 interchain-token-transfer-gmp.workspace = true
 solana-client.workspace = true
@@ -22,19 +22,19 @@ spl-token-2022 = { workspace = true, features = ["no-entrypoint", "serde-traits"
 
 [features]
 devnet-amplifier = [
-    "axelar-solana-gateway/devnet-amplifier",
-    "axelar-solana-its/devnet-amplifier"
+    "solana-axelar-gateway-legacy/devnet-amplifier",
+    "solana-axelar-its-legacy/devnet-amplifier"
 ]
 stagenet = [
-    "axelar-solana-gateway/stagenet",
-    "axelar-solana-its/stagenet"
+    "solana-axelar-gateway-legacy/stagenet",
+    "solana-axelar-its-legacy/stagenet"
 ]
 testnet = [
-    "axelar-solana-gateway/testnet",
-    "axelar-solana-its/testnet"
+    "solana-axelar-gateway-legacy/testnet",
+    "solana-axelar-its-legacy/testnet"
 ]
 mainnet = [
-    "axelar-solana-gateway/mainnet",
-    "axelar-solana-its/mainnet"
+    "solana-axelar-gateway-legacy/mainnet",
+    "solana-axelar-its-legacy/mainnet"
 ]
 default = ["devnet-amplifier"]

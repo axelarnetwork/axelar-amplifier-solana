@@ -1,19 +1,19 @@
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
-use axelar_solana_gateway_v2::Message;
-use axelar_solana_gateway_v2::{
+use mollusk_svm::{result::InstructionResult, Mollusk};
+use solana_axelar_gateway::Message;
+use solana_axelar_gateway::{
     seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
 };
-use axelar_solana_governance::seed_prefixes;
-use axelar_solana_governance::{
-    processor::gmp::payload_conversions,
-    state::proposal::ExecutableProposal as ExecutableProposalV1,
-};
-use axelar_solana_governance_v2::{
+use solana_axelar_governance::{
     ExecuteProposalCallData, ExecuteProposalData, GovernanceConfigInit, GovernanceConfigUpdate,
     SolanaAccountMetadata, ID as GOVERNANCE_PROGRAM_ID,
 };
-use mollusk_svm::{result::InstructionResult, Mollusk};
+use solana_axelar_governance_legacy::seed_prefixes;
+use solana_axelar_governance_legacy::{
+    processor::gmp::payload_conversions,
+    state::proposal::ExecutableProposal as ExecutableProposalV1,
+};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -37,7 +37,7 @@ pub struct TestSetup {
 pub fn mock_setup_test() -> TestSetup {
     let mollusk = Mollusk::new(
         &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/axelar_solana_governance_v2",
+        "../../target/deploy/solana_axelar_governance",
     );
 
     let payer = Pubkey::new_unique();
@@ -71,7 +71,7 @@ pub fn mock_setup_test() -> TestSetup {
 
 pub fn initialize_governance(setup: &TestSetup, params: GovernanceConfigInit) -> InstructionResult {
     let instruction_data =
-        axelar_solana_governance_v2::instruction::InitializeConfig { params }.data();
+        solana_axelar_governance::instruction::InitializeConfig { params }.data();
 
     let program_data_state = UpgradeableLoaderState::ProgramData {
         slot: 0,
@@ -153,7 +153,7 @@ pub fn update_config(
     params: GovernanceConfigUpdate,
     governance_config_data: Vec<u8>,
 ) -> InstructionResult {
-    let instruction_data = axelar_solana_governance_v2::instruction::UpdateConfig { params }.data();
+    let instruction_data = solana_axelar_governance::instruction::UpdateConfig { params }.data();
 
     let accounts = vec![
         (
@@ -197,7 +197,7 @@ pub fn process_gmp_helper(
     payload: Vec<u8>,
     context: GmpContext,
 ) -> InstructionResult {
-    let instruction_data = axelar_solana_governance_v2::instruction::ProcessGmp {
+    let instruction_data = solana_axelar_governance::instruction::ProcessGmp {
         message: message.clone(),
         payload: payload.clone(),
     }
@@ -330,8 +330,8 @@ pub fn process_gmp_helper(
     // Updated instruction accounts:
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: axelar_solana_governance_v2::accounts::ProcessGmp {
-            executable: axelar_solana_governance_v2::accounts::AxelarExecuteAccounts {
+        accounts: solana_axelar_governance::accounts::ProcessGmp {
+            executable: solana_axelar_governance::accounts::AxelarExecuteAccounts {
                 incoming_message_pda: context.incoming_message.pubkey,
                 signing_pda: context.signing_pda.pubkey,
                 gateway_root_pda: context.gateway_root_pda.pubkey,
@@ -357,8 +357,7 @@ pub fn get_memo_instruction_data(
     memo: String,
     value_receiver: SolanaAccountMetadata,
 ) -> ExecuteProposalCallData {
-    let memo_instruction_data =
-        axelar_solana_memo_v2::instruction::EmitMemo { message: memo }.data();
+    let memo_instruction_data = solana_axelar_memo::instruction::EmitMemo { message: memo }.data();
 
     let (governance_config_pda, _) =
         Pubkey::find_program_address(&[seed_prefixes::GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
@@ -371,7 +370,7 @@ pub fn get_memo_instruction_data(
 
     let solana_accounts = vec![value_receiver.clone(), governance_config_pda_metadata];
 
-    axelar_solana_governance_v2::state::proposal::ExecuteProposalCallData {
+    solana_axelar_governance::state::proposal::ExecuteProposalCallData {
         solana_accounts,
         solana_native_value_receiver_account: Some(value_receiver),
         call_data: memo_instruction_data,
@@ -383,7 +382,7 @@ pub fn get_withdraw_tokens_instruction_data(
     receiver: Pubkey,
     governance_config_pda: [u8; 32],
 ) -> ExecuteProposalCallData {
-    let withdraw_instruction_data = axelar_solana_governance_v2::instruction::WithdrawTokens {
+    let withdraw_instruction_data = solana_axelar_governance::instruction::WithdrawTokens {
         amount: withdraw_amount,
     }
     .data();
@@ -495,7 +494,7 @@ pub fn create_execute_proposal_instruction_data(
         native_value,
     };
 
-    axelar_solana_governance_v2::instruction::ExecuteTimelockProposal {
+    solana_axelar_governance::instruction::ExecuteTimelockProposal {
         execute_proposal_data,
     }
     .data()
@@ -512,14 +511,14 @@ pub fn create_execute_operator_proposal_instruction_data(
         native_value,
     };
 
-    axelar_solana_governance_v2::instruction::ExecuteOperatorProposal {
+    solana_axelar_governance::instruction::ExecuteOperatorProposal {
         execute_proposal_data,
     }
     .data()
 }
 
 pub fn create_transfer_operatorship_instruction_data(new_operator: Pubkey) -> Vec<u8> {
-    axelar_solana_governance_v2::instruction::TransferOperatorship {
+    solana_axelar_governance::instruction::TransferOperatorship {
         new_operator: new_operator.to_bytes(),
     }
     .data()

@@ -8,7 +8,7 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
-  
+
 defaults:
   run:
     shell: bash
@@ -16,7 +16,7 @@ defaults:
 name: deny
 jobs:
   check:
-    runs-on: self-hosted
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     name: deny
     steps:
       - uses: actions/checkout@v4

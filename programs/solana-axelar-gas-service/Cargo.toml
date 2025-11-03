@@ -1,0 +1,63 @@
+[package]
+name = "solana-axelar-gas-service"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+anchor-lang.workspace = true
+solana-axelar-operators = { workspace = true, features = ["no-entrypoint"] }
+program-utils.workspace = true
+bytemuck.workspace = true
+
+[dev-dependencies]
+solana-axelar-gas-service-legacy = { workspace = true, features = ["no-entrypoint"] }
+solana-sdk-ids.workspace = true
+mollusk-svm.workspace = true
+mollusk-test-utils.workspace = true
+solana-sdk.workspace = true
+borsh.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+name = "solana_axelar_gas_service"
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+
+cpi = ["no-entrypoint"]
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+test-sbf = []
+
+devnet-amplifier = [
+	"solana-axelar-operators/devnet-amplifier",
+	"solana-axelar-gas-service-legacy/devnet-amplifier",
+	"program-utils/devnet-amplifier",
+]
+stagenet = [
+	"solana-axelar-operators/stagenet",
+	"solana-axelar-gas-service-legacy/stagenet",
+	"program-utils/stagenet",
+]
+testnet = [
+	"solana-axelar-operators/testnet",
+	"solana-axelar-gas-service-legacy/testnet",
+	"program-utils/testnet",
+]
+mainnet = [
+	"solana-axelar-operators/mainnet",
+	"solana-axelar-gas-service-legacy/mainnet",
+	"program-utils/mainnet",
+]
+default = ["devnet-amplifier"]
