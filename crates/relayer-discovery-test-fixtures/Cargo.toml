@@ -1,12 +1,15 @@
 [package]
 name = "relayer-discovery-test-fixtures"
-version = "0.1.0"
-edition = "2021"
-description = "Test fixtures and utilities for relayer discovery"
+version.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+license.workspace = true
+edition.workspace = true
 
 [dependencies]
 anchor-lang.workspace = true
-solana-axelar-gateway.workspace = true
+solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"] }
 axelar-solana-encoding.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
@@ -15,5 +18,5 @@ axelar-solana-gateway-v2-test-fixtures.workspace = true
 relayer-discovery.workspace = true
 thiserror.workspace = true
 
-[features]
-default = []
+[lints]
+workspace = true

@@ -247,7 +247,7 @@ fn execute() {
         (
             signing_pda,
             Account {
-                lamports: 0,
+                lamports: LAMPORTS_PER_SOL,
                 data: vec![],
                 owner: GATEWAY_PROGRAM_ID,
                 executable: false,
@@ -257,7 +257,7 @@ fn execute() {
         (
             GATEWAY_PROGRAM_ID,
             Account {
-                lamports: 0,
+                lamports: 1,
                 data: vec![],
                 owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
@@ -275,19 +275,16 @@ fn execute() {
             },
         ),
         (setup.gateway_root_pda, gateway_root_account.clone()),
-<<<<<<< HEAD:programs/solana-axelar-memo/tests/execute.rs
         (
             MEMO_PROGRAM_ID,
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
         ),
-=======
->>>>>>> 99813262 (works, now formatting):programs/axelar-solana-memo-v2/tests/execute.rs
         (counter_pda, counter_pda_account.clone()),
     ];
 
