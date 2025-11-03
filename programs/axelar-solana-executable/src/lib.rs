@@ -6,7 +6,7 @@ pub use instructions::*;
 pub mod state;
 pub use state::*;
 
-use axelar_solana_gateway_v2::executable::Message;
+use solana_axelar_gateway::executable::Message;
 use relayer_discovery::structs::RelayerTransaction;
 
 declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");

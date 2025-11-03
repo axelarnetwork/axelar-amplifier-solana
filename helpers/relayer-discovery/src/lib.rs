@@ -3,7 +3,7 @@
 //! Program utility functions
 
 use solana_program::pubkey::Pubkey;
-use axelar_solana_gateway_v2::{GatewayConfig, IncomingMessage, Message, ID as GATEWAY_PROGRAM_ID};
+use solana_axelar_gateway::{GatewayConfig, IncomingMessage, Message, ID as GATEWAY_PROGRAM_ID};
 use solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::{AnchorSerialize, prelude::thiserror};
 

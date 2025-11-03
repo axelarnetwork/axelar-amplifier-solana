@@ -1051,6 +1051,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "axelar-solana-executable"
+version = "0.1.0"
+dependencies = [
+ "anchor-discriminators",
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "axelar-solana-gateway-v2-test-fixtures",
+ "bincode",
+ "borsh 1.5.7",
+ "hex",
+ "mollusk-svm",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-axelar-gateway",
+ "solana-program",
+ "solana-sdk",
+]
+
+[[package]]
 name = "axelar-solana-gateway-test-fixtures"
 version = "0.1.0"
 dependencies = [
@@ -6581,12 +6600,12 @@ version = "0.0.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
  "bytemuck",
  "dummy-axelar-solana-gateway",
  "mpl-token-metadata",
  "program-utils",
+ "solana-axelar-gateway",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -6599,13 +6618,13 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "libsecp256k1",
  "mollusk-svm",
  "rand 0.8.5",
  "relayer-discovery",
+ "solana-axelar-gateway",
  "solana-sdk",
  "thiserror 1.0.69",
 ]

@@ -16,7 +16,7 @@ solana-program.workspace = true
 spl-associated-token-account = { workspace = true, features = ["no-entrypoint"] }
 program-utils.workspace = true
 axelar-solana-encoding.workspace = true
-axelar-solana-gateway-v2.workspace = true
+solana-axelar-gateway.workspace = true
 anchor-lang.workspace = true
 
 [dev-dependencies]

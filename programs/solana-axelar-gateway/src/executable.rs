@@ -143,7 +143,7 @@ macro_rules! executable_accounts {
             bump,
             seeds::program = axelar_gateway_program.key()
         )]
-        pub event_authority: AccountInfo<'info>,
+        pub event_authority: SystemAccount<'info>,
 
         pub axelar_gateway_program:
             Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,
