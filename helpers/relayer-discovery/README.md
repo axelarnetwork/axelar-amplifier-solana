@@ -36,7 +36,7 @@ pub enum RelayerData {
 	Message,
 	/// The payload, length prefixed.
 	Payload,
-	/// The payload, length ommitted.
+	/// The payload, length omitted.
 	PayloadRaw,
 	/// The command id. Can also be abtained by using the `Message`, but it is added as an option for convenience.
 	CommandId,
@@ -62,7 +62,7 @@ pub enum RelayerAccount {
 pub struct RelayerInstruction {
 	/// The program_id. Note that this means that an executable can request the entrypoint be a different program (which would have to call the executable to validate the message).
 	pub program_id: Pubkey,
-	/// The instruction accounts. These need to be oredered properly.
+	/// The instruction accounts. These need to be ordered properly.
 	pub accounts: Vec<RelayerAccount>,
 	/// The instruction data. These will be concatenated.
 	pub data: Vec<RelayerData>,
@@ -125,7 +125,7 @@ The stored relayer transaction points to the `GetTransaction` instruction which 
 let counter_pda = Counter::get_pda(payload.storage_id).0;
 Ok(RelayerTransaction::Final(
 	// A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
-	// And only if it is not initialized prepend a transaction that initializes it. Then we could ommit the `payer` and `system_program` accounts from the actual execute instruction.
+	// And only if it is not initialized prepend a transaction that initializes it. Then we could omit the `payer` and `system_program` accounts from the actual execute instruction.
 	vec![
 	RelayerInstruction {
 		// We want this program to be the entrypoint.

@@ -206,7 +206,7 @@ impl RelayerDiscoveryTestFixture {
         approve_result
     }
 
-    /// Execure a certain message.
+    /// Execute a certain message.
     /// Will add all the necesairy requested payers and a payload account if needed.
     ///
     /// # Arguments
@@ -387,7 +387,7 @@ impl RelayerDiscoveryTestFixture {
         }
     }
 
-    /// Approve and execure a certain message. Basically a chained `approve` and `execute`.
+    /// Approve and execute a certain message. Basically a chained `approve` and `execute`.
     /// Will add all the necesairy requested payers and a payload account if needed.
     ///
     /// # Arguments

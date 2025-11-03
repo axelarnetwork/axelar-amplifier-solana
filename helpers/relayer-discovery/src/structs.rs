@@ -16,7 +16,7 @@ pub enum RelayerData {
     Message,
     /// The payload, length prefixed.
     Payload,
-    /// The payload, length ommitted.
+    /// The payload, length omitted.
     PayloadRaw,
     /// The command id. Can also be abtained by using the `Message`, but it is added as an option for convenience.
     CommandId,
@@ -42,7 +42,7 @@ pub enum RelayerAccount {
 pub struct RelayerInstruction {
     /// The program_id. Note that this means that an executable can request the entrypoint be a different program (which would have to call the executable to validate the message).
     pub program_id: Pubkey,
-    /// The instruction accounts. These need to be oredered properly.
+    /// The instruction accounts. These need to be ordered properly.
     pub accounts: Vec<RelayerAccount>,
     /// The instruction data. These will be concatenated.
     pub data: Vec<RelayerData>,

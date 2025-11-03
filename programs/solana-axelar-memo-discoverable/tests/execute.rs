@@ -21,7 +21,7 @@ fn test_execute() {
     // Add the memo program to the Mollusk instance
     fixture.setup.mollusk.add_program(
         &solana_axelar_memo_discoverable::id(),
-        "../../target/deploy/axelar_solana_executable",
+        "../../target/deploy/solana_axelar_memo_discoverable",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
