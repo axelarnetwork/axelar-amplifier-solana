@@ -25,8 +25,11 @@ use axelar_solana_gateway_v2_test_fixtures::{
 use relayer_discovery::{ConvertError, RelayerDiscovery, find_transaction_pda};
 use std::str::FromStr;
 
+/// A complete setup for testing executables
 pub struct RelayerDiscoveryTestFixture {
+    /// This has the mollusk aslongside a lot of information about the gateway
     pub setup: TestSetup,
+    /// The rest of the information is required to approve massages to the gateway
     verifier_leaves: Vec<VerifierSetLeaf>, 
     verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>, 
     secret_key_1: SecretKey, 
@@ -38,15 +41,15 @@ pub struct RelayerDiscoveryTestFixture {
 pub enum RelayerDiscoveryFixtureError {
     #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
     NoInitialRelayerTransaction,
-    #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
+    #[error("the destination address could not be parsed into a Solana address")]
     InvalidMessageDestinationAddress(ParsePubkeyError),
-    #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
+    #[error("desiralization error")]
     DesirializationError(std::io::Error),
-    #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
+    #[error("a discovery instruction failed when run")]
     DiscoveryInstructionFailed(Instruction, ProgramResult),
-    #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
+    #[error("relayer discovery failed to parse a transaction")]
     ConvertError(ConvertError),
-    #[error("the pda that was expected to have the initial `RelayerTransaction` was not provided")]
+    #[error("execution of final transaction failed")]
     ExecuteFailed(Vec<Instruction>, ProgramResult),
 }
 
@@ -68,7 +71,11 @@ impl From<std::io::Error> for RelayerDiscoveryFixtureError {
     }
 }
 
-impl RelayerDiscoveryTestFixture {
+impl RelayerDiscoveryTestFixture {    /// Approve a certain message
+    ///
+    /// # Returns
+    /// 
+    /// Returns the `RelayerDiscoveryTestFixture` generated. 
     pub fn new() -> RelayerDiscoveryTestFixture {
         let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -80,6 +87,15 @@ impl RelayerDiscoveryTestFixture {
         RelayerDiscoveryTestFixture { setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2, init_result }
     }
 
+    /// Approve a certain message
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to be approved
+    ///
+    /// # Returns
+    /// 
+    /// Returns the `InstructionResult` of the approval, which can be used to find the `incoming_message` Account. 
     pub fn approve(&mut self, message: &Message) -> InstructionResult {
         let messages = vec![message.clone()];
 
@@ -182,6 +198,18 @@ impl RelayerDiscoveryTestFixture {
         approve_result
     }
 
+    /// Execure a certain message.
+    /// Will add all the necesairy requested payers and a payload account if needed.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to be executed
+    /// * `payload` - The incoming payload (its hash has to match `message.payload_hash`)
+    /// * `accounts` - The accounts needed for execution, including the `incoming_message` as well as all the accouns that the executable should have initialized by this point.
+    ///
+    /// # Returns
+    /// 
+    /// Returns `Ok(InstructionResult)` if the execution was successful, if any error was encountered then `Err(RelayerDiscoveryFixtureError)` is returned.
     pub fn execute(&mut self, message: &Message, payload: Vec<u8>, mut accounts: Vec<(Pubkey, Account)>) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
         let mut relayer_discovery = RelayerDiscovery {
             message: message.clone(),
@@ -325,6 +353,18 @@ impl RelayerDiscoveryTestFixture {
 
     }
 
+    /// Approve and execure a certain message. Basically a chained `approve` and `execute`.
+    /// Will add all the necesairy requested payers and a payload account if needed.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to be executed
+    /// * `payload` - The incoming payload (its hash has to match `message.payload_hash`)
+    /// * `accounts` - The accounts needed for execution, which should be the accouns that the executable should have initialized by this point.
+    ///
+    /// # Returns
+    /// 
+    /// Returns `Ok(InstructionResult)` if the execution was successful, if any error was encountered then `Err(RelayerDiscoveryFixtureError)` is returned.
     pub fn approve_and_execute(&mut self, message: &Message, payload: Vec<u8>, mut accounts: Vec<(Pubkey, Account)>) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
         let mut approval_result = self.approve(message);
         accounts.append(&mut approval_result.resulting_accounts);

@@ -1,5 +1,4 @@
 use anchor_lang::{prelude::*, system_program};
-use axelar_solana_gateway_v2::{GatewayConfig, IncomingMessage, ID as GATEWAY_PROGRAM_ID};
 use relayer_discovery::structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTransaction};
 use crate::{Counter, Payload, instruction::Execute};
 
@@ -8,30 +7,38 @@ use crate::{Counter, Payload, instruction::Execute};
 pub struct GetTransaction {
 }
 
+/// This should return a `RelayerTransaction` that will convert to an `Execute` instruction properly, for a given `payload` and `command_id`. No accounts are needed to find this information.
+/// 
 pub fn get_transaction_handler(_: Context<GetTransaction>, payload: Payload, command_id: [u8; 32]) -> Result<RelayerTransaction> {
-    let incoming_message = IncomingMessage::find_pda(&command_id).0;
-    let signing_pda = IncomingMessage::find_signing_pda(&command_id, &crate::id()).0;
-    let gateway_root_pda = GatewayConfig::find_pda().0;
-    let event_authority = Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID).0;
     let counter_pda = Counter::get_pda(payload.storage_id).0;
-    Ok(RelayerTransaction::Final(vec![
-      RelayerInstruction {
-        program_id: crate::id(),
-        accounts: vec![
-            RelayerAccount::Account { pubkey: incoming_message, is_writable: true },
-            RelayerAccount::Account { pubkey: signing_pda, is_writable: false },
-            RelayerAccount::Account { pubkey: gateway_root_pda, is_writable: false },
-            RelayerAccount::Account { pubkey: event_authority, is_writable: false },
-            RelayerAccount::Account { pubkey: GATEWAY_PROGRAM_ID, is_writable: false },
-            RelayerAccount::Payer(1000000000),
-            RelayerAccount::Account { pubkey: counter_pda, is_writable: true },
-            RelayerAccount::Account { pubkey: system_program::ID, is_writable: false },
-        ],
-        data: vec! [
-            RelayerData::Bytes(Vec::from(Execute::DISCRIMINATOR)),
-            RelayerData::PayloadRaw,
-            RelayerData::Message,
-        ]
-      }  
-    ]))
+    Ok(RelayerTransaction::Final(
+      // A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
+      // And only if it is not initialized prepend a transaction that initializes it. Then we could ommit the `payer` and `system_program` accounts from the actual execute instruction.
+      vec![
+        RelayerInstruction {
+          // We want this program to be the entrypoint.
+          program_id: crate::id(),
+          // The accounts needed.
+          accounts: [
+            // First we need the executable accounts.
+            relayer_discovery::executable_relayer_accounts(&command_id, &crate::id()), 
+            // Followed by the accounts needed to modify storage of the executable.
+            vec![
+              RelayerAccount::Payer(1000000000),
+              RelayerAccount::Account { pubkey: counter_pda, is_writable: true },
+              RelayerAccount::Account { pubkey: system_program::ID, is_writable: false },
+            ]
+          ].concat(),
+          // The data needed.
+          data: vec! [
+              // We can easily get the discriminaator thankfully. Note that we need `instruction::Execute` and not `instructions::Execute`.
+              RelayerData::Bytes(Vec::from(Execute::DISCRIMINATOR)),
+              // We do not want to prefix the payload with the length as it is decoded into a struct as opposed to a `Vec<u8>`.
+              RelayerData::PayloadRaw,
+              // The message, which is needed for the gateway.
+              RelayerData::Message,
+          ],
+        }  
+      ]
+    ))
 }

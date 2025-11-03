@@ -18,13 +18,13 @@ pub enum RelayerData {
 	Payload,
 	/// The payload, length ommitted.
 	PayloadRaw,
-	/// The command id
+	/// The command id. Can also be abtained by using the `Message`, but it is added as an option for convenience.
 	CommandId,
 }
 #[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
 /// This can be used to specify an account that the relayer will pass to the executable. This can be converted to an `AccountMeta` by the relayer.
 pub enum RelayerAccount {
-	/// This variant specifies a specific account. This account cannot be a signer (see `Payer`` below).
+	/// This variant specifies a specific account. This account cannot be a signer (see `Payer` below).
 	Account{
 		/// The pubkey of the account.
 		pubkey: Pubkey,
@@ -40,11 +40,11 @@ pub enum RelayerAccount {
 #[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
 /// A relayer instruction, that the relayer can convert to an `Instruction`.
 pub struct RelayerInstruction {
-	/// The program_id
+	/// The program_id. Note that this means that an executable can request the entrypoint be a different program (which would have to call the executable to validate the message).
 	pub program_id: Pubkey,
-	/// The instruction accounts.
+	/// The instruction accounts. These need to be oredered properly.
 	pub accounts: Vec<RelayerAccount>,
-	/// The instruction data.
+	/// The instruction data. These will be concatenated.
 	pub data: Vec<RelayerData>,
 }
 
@@ -57,10 +57,8 @@ pub enum RelayerTransaction {
 	Discovery(RelayerInstruction),
 }
 
-
-
 impl RelayerTransaction {
-	/// Helper function that serializes the enum. There must be a better way of doing this that escapes me.
+	/// Helper function that serializes the enum. There must be a better way of doing this that escapes me, but variable length PDAs seem difficult with anchor.
 	pub fn init<'a>(
         &self,
         program_id: &Pubkey,
