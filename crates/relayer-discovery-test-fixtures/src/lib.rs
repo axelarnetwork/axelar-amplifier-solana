@@ -5,7 +5,7 @@ use anchor_lang::prelude::thiserror;
 
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 
-use axelar_solana_gateway_v2::{
+use solana_axelar_gateway::{
     Message, MessageLeaf, VerifierSetLeaf,
 };
 use libsecp256k1::SecretKey;
@@ -112,7 +112,7 @@ impl RelayerDiscoveryTestFixture {    /// Approve a certain message
 
         let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
             .iter()
-            .map(axelar_solana_gateway_v2::MessageLeaf::hash)
+            .map(MessageLeaf::hash)
             .collect();
 
         let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);

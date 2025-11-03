@@ -1,7 +1,7 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{InstructionData, ToAccountMetas};
-use axelar_solana_gateway_v2::{CrossChainId, Message};
+use solana_axelar_gateway::{CrossChainId, Message};
 
 use axelar_solana_executable::Payload;
 use axelar_solana_executable::ID as EXECUTABLE_ID;

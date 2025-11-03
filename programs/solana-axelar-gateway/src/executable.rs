@@ -151,8 +151,12 @@ macro_rules! executable_accounts {
             bump,
             seeds::program = axelar_gateway_program.key()
         )]
+<<<<<<< HEAD
         pub event_authority: AccountInfo<'info>,
 >>>>>>> 99813262 (works, now formatting):programs/axelar-solana-gateway-v2/src/executable.rs
+=======
+        pub event_authority: SystemAccount<'info>,
+>>>>>>> 6ec5f436 (fix merge)
 
         pub axelar_gateway_program:
             Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,

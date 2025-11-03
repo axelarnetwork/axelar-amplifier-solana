@@ -888,7 +888,10 @@ dependencies = [
  "anchor-discriminators",
  "anchor-lang",
  "axelar-solana-encoding",
+<<<<<<< HEAD
  "axelar-solana-gateway-v2",
+=======
+>>>>>>> 6ec5f436 (fix merge)
  "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "borsh 1.5.7",
@@ -896,11 +899,16 @@ dependencies = [
  "mollusk-svm",
  "relayer-discovery",
  "relayer-discovery-test-fixtures",
+<<<<<<< HEAD
+=======
+ "solana-axelar-gateway",
+>>>>>>> 6ec5f436 (fix merge)
  "solana-program",
  "solana-sdk",
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "axelar-solana-gas-service"
 version = "0.1.0"
 dependencies = [
@@ -985,6 +993,8 @@ dependencies = [
 ]
 
 [[package]]
+=======
+>>>>>>> 6ec5f436 (fix merge)
 name = "axelar-solana-gateway-test-fixtures"
 version = "0.1.0"
 dependencies = [
@@ -3486,12 +3496,12 @@ version = "0.0.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
  "bytemuck",
  "dummy-axelar-solana-gateway",
  "mpl-token-metadata",
  "program-utils",
+ "solana-axelar-gateway",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -3504,13 +3514,13 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2",
  "axelar-solana-gateway-v2-test-fixtures",
  "bincode",
  "libsecp256k1",
  "mollusk-svm",
  "rand 0.8.5",
  "relayer-discovery",
+ "solana-axelar-gateway",
  "solana-sdk",
  "thiserror 1.0.69",
 ]

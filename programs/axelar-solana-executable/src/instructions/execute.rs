@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use axelar_solana_gateway_v2::{executable::*, executable_accounts};
+use solana_axelar_gateway::{executable::*, executable_accounts};
 use crate::Payload;
 
 executable_accounts!(Execute);
