@@ -7,16 +7,13 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token_2022::{
-        spl_token_2022::{
-            extension::{
-                transfer_fee::TransferFeeConfig, BaseStateWithExtensions, StateWithExtensions,
-            },
-            state::Mint as SplMint,
+    token_2022::spl_token_2022::{
+        extension::{
+            transfer_fee::TransferFeeConfig, BaseStateWithExtensions, StateWithExtensions,
         },
-        Token2022,
+        state::Mint as SplMint,
     },
-    token_interface::{Mint, TokenAccount},
+    token_interface::{Mint, TokenAccount, TokenInterface},
 };
 use axelar_solana_gateway_v2::Message;
 use solana_program::{entrypoint::ProgramResult, program_option::COption, program_pack::Pack};
@@ -69,7 +66,7 @@ pub struct InterchainTransferInternal<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    pub token_program: Program<'info, Token2022>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[allow(clippy::too_many_arguments)]

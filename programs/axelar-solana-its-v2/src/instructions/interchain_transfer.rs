@@ -11,10 +11,8 @@ use crate::{
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
 use anchor_spl::associated_token::spl_associated_token_account;
-use anchor_spl::{
-    token_2022::Token2022,
-    token_interface::{Mint, TokenAccount},
-};
+use anchor_spl::token_interface::TokenInterface;
+use anchor_spl::token_interface::{Mint, TokenAccount};
 use axelar_solana_gateway_v2::{
     program::AxelarSolanaGatewayV2, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
 };
@@ -71,7 +69,7 @@ pub struct InterchainTransfer {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    pub token_program: Program<'info, Token2022>,
+    pub token_program: Interface<'info, TokenInterface>,
 
     /// The gateway configuration PDA
     #[account(

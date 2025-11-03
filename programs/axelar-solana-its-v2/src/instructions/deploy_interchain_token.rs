@@ -6,14 +6,14 @@ use crate::{
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token_2022::spl_token_2022::extension::BaseStateWithExtensions;
+use anchor_spl::token_2022::{spl_token_2022::extension::BaseStateWithExtensions, Token2022};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
 };
 use anchor_spl::{
     token_2022::spl_token_2022::extension::ExtensionType,
-    token_interface::{Mint, TokenAccount, TokenInterface},
+    token_interface::{Mint, TokenAccount},
 };
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 
@@ -73,7 +73,7 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token2022>,
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 

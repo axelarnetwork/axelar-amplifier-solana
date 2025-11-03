@@ -1,6 +1,6 @@
 use crate::{errors::ItsError, state::InterchainTokenService};
 use anchor_lang::{prelude::*, InstructionData, Key};
-use anchor_spl::{associated_token::AssociatedToken, token_2022::Token2022};
+use anchor_spl::{associated_token::AssociatedToken, token_interface::TokenInterface};
 use axelar_solana_gateway_v2::{
     executable::{validate_message_raw, HasAxelarExecutable},
     executable_accounts, Message,
@@ -36,7 +36,7 @@ pub struct Execute<'info> {
     #[account(mut)]
     pub token_manager_ata: UncheckedAccount<'info>,
 
-    pub token_program: Program<'info, Token2022>,
+    pub token_program: Interface<'info, TokenInterface>,
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
