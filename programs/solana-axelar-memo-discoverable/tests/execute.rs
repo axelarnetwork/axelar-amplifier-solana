@@ -3,8 +3,8 @@
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_axelar_gateway::{CrossChainId, Message};
 
-use axelar_solana_executable::Payload;
-use axelar_solana_executable::ID as EXECUTABLE_ID;
+use solana_axelar_memo_discoverable::Payload;
+use solana_axelar_memo_discoverable::ID as EXECUTABLE_ID;
 use solana_sdk::{
     account::Account,
     instruction::Instruction,
@@ -22,15 +22,15 @@ fn test_execute() {
 
     // Add the memo program to the Mollusk instance
     fixture.setup.mollusk.add_program(
-        &axelar_solana_executable::id(),
+        &solana_axelar_memo_discoverable::id(),
         "../../target/deploy/axelar_solana_executable",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     // Step 7.1: Init Transaction PDA
-    let transaction_pda = relayer_discovery::find_transaction_pda(&axelar_solana_executable::id()).0;
-    let init_ix = axelar_solana_executable::instruction::Init {};
-    let init_accounts = axelar_solana_executable::accounts::Init {
+    let transaction_pda = relayer_discovery::find_transaction_pda(&solana_axelar_memo_discoverable::id()).0;
+    let init_ix = solana_axelar_memo_discoverable::instruction::Init {};
+    let init_accounts = solana_axelar_memo_discoverable::accounts::Init {
         relayer_transaction: transaction_pda,
         payer: fixture.setup.payer,
         system_program: SYSTEM_PROGRAM_ID,
@@ -101,7 +101,7 @@ fn test_execute() {
         },
         source_address: "0x1234567890123456789012345678901234567890".to_string(),
         destination_chain: "solana".to_string(),
-        destination_address: axelar_solana_executable::id().to_string(), // This is crucial!
+        destination_address: solana_axelar_memo_discoverable::id().to_string(), // This is crucial!
         payload_hash: payload_hash,
     };
 
