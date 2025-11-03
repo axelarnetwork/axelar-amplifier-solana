@@ -17,7 +17,6 @@ bytemuck.workspace = true
 bitflags.workspace = true
 
 [dev-dependencies]
-solana-axelar-gateway-legacy-test-fixtures.workspace = true
 solana-axelar-gas-service.workspace = true
 bincode.workspace = true
 solana-sdk-ids.workspace = true
@@ -49,26 +48,18 @@ test-sbf = []
 
 devnet-amplifier = [
 	"solana-axelar-gas-service/devnet-amplifier",
-	"solana-axelar-gateway-legacy-test-fixtures/devnet-amplifier",
 	"solana-axelar-operators/devnet-amplifier",
-	"program-utils/devnet-amplifier",
 ]
 stagenet = [
 	"solana-axelar-gas-service/stagenet",
-	"solana-axelar-gateway-legacy-test-fixtures/stagenet",
 	"solana-axelar-operators/stagenet",
-	"program-utils/stagenet",
 ]
 testnet = [
 	"solana-axelar-gas-service/testnet",
-	"solana-axelar-gateway-legacy-test-fixtures/testnet",
 	"solana-axelar-operators/testnet",
-	"program-utils/testnet",
 ]
 mainnet = [
 	"solana-axelar-gas-service/mainnet",
-	"solana-axelar-gateway-legacy-test-fixtures/mainnet",
 	"solana-axelar-operators/mainnet",
-	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]

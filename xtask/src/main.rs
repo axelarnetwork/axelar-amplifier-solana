@@ -39,9 +39,7 @@ enum Commands {
         #[clap(last = true)]
         args: Vec<String>,
     },
-    UpdateIds {
-        legacy: Option<bool>,
-    },
+    UpdateIds,
 }
 
 fn main() -> eyre::Result<()> {
@@ -62,10 +60,6 @@ fn main() -> eyre::Result<()> {
 
             // test solana programs using `test-sbf`
             for (program, ..) in solana_programs.iter() {
-                if program.contains("-legacy") {
-                    println!("Skipping legacy program: {}", program);
-                    continue;
-                }
                 cmd!(sh, "cargo test-sbf -p {program}").run()?;
             }
             if only_sbf {
@@ -163,10 +157,10 @@ fn main() -> eyre::Result<()> {
             cmd!(sh, "cargo +nightly install cargo-deny").run()?;
             cmd!(sh, "cargo deny check {args...}").run()?;
         }
-        Commands::UpdateIds { legacy } => {
+        Commands::UpdateIds => {
             println!("Updating program IDs");
 
-            let mut program_prefixes = vec![
+            let program_prefixes = [
                 ("solana-axelar-gas-service", "gas"),
                 ("solana-axelar-gateway", "gtw"),
                 ("solana-axelar-governance", "gov"),
@@ -174,19 +168,6 @@ fn main() -> eyre::Result<()> {
                 ("solana-axelar-memo", "mem"),
                 ("solana-axelar-operators", "opr"),
             ];
-
-            if legacy.is_some_and(|l| l) {
-                println!("Updating program IDs for legacy programs");
-
-                program_prefixes.extend_from_slice(&[
-                    ("solana-axelar-gas-service-legacy", "lgas"),
-                    ("solana-axelar-gateway-legacy", "lgtw"),
-                    ("solana-axelar-governance-legacy", "lgov"),
-                    ("solana-axelar-its-legacy", "lits"),
-                    ("solana-axelar-memo-legacy", "lmem"),
-                    ("solana-axelar-multicall-legacy", "lmc"),
-                ]);
-            }
 
             let (solana_programs, _) = workspace_crates_by_category(&sh)?;
 

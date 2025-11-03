@@ -5,14 +5,11 @@ use solana_axelar_gateway::Message;
 use solana_axelar_gateway::{
     seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
 };
+use solana_axelar_governance::seed_prefixes;
+use solana_axelar_governance::{payload_conversions, state::proposal::ExecutableProposal};
 use solana_axelar_governance::{
     ExecuteProposalCallData, ExecuteProposalData, GovernanceConfigInit, GovernanceConfigUpdate,
     SolanaAccountMetadata, ID as GOVERNANCE_PROGRAM_ID,
-};
-use solana_axelar_governance_legacy::seed_prefixes;
-use solana_axelar_governance_legacy::{
-    processor::gmp::payload_conversions,
-    state::proposal::ExecutableProposal as ExecutableProposalV1,
 };
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -423,7 +420,7 @@ pub fn extract_proposal_hash_unchecked(payload: &[u8]) -> [u8; 32] {
     let execute_proposal_call_data =
         payload_conversions::decode_payload_call_data(&cmd_payload.call_data).unwrap();
 
-    ExecutableProposalV1::calculate_hash(
+    ExecutableProposal::calculate_hash(
         &target,
         &execute_proposal_call_data,
         &cmd_payload.native_value.to_le_bytes(),

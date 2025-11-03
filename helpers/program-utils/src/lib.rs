@@ -11,7 +11,6 @@ use solana_program::sysvar::Sysvar;
 use solana_program::{msg, sysvar};
 use solana_sdk_ids::system_program;
 
-pub mod pda;
 /// mini helper to log from native Rust or to the program log
 /// Very useful for debugging when you have to run some code on Solana and via
 /// native Rust
