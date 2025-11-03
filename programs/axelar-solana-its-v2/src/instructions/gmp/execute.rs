@@ -208,8 +208,8 @@ fn interchain_transfer_self_invoke(
             destination_ata: ctx
                 .accounts
                 .destination_ata
-                .clone()
-                .unwrap()
+                .as_ref()
+                .ok_or(ItsError::AccountNotProvided)?
                 .to_account_info(),
             token_mint: ctx.accounts.token_mint.to_account_info(),
             token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),

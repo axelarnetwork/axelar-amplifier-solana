@@ -9,6 +9,10 @@ pub enum ItsError {
     InvalidAccountOwner,
     DeployApprovalPDANotProvided,
     MinterNotProvided,
+    MinterRolesNotProvided,
+    MinterRolesPdaBumpNotProvided,
+    OperatorNotProvided,
+    OperatorRolesPdaNotProvided,
     InvalidAccountData,
     MissingRemainingAccount,
     #[msg("The role provided is invalid")]
@@ -29,4 +33,8 @@ pub enum ItsError {
     InvalidTokenManagerAta,
     InvalidTokenManagerPda,
     AccountNotProvided,
+    SourceIdNotProvided,
+    PdaSeedsNotProvided,
+    #[msg("source_id and pda_seeds must both be provided together or both be None")]
+    InconsistentSourceIdAndPdaSeeds,
 }

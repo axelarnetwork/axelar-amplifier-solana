@@ -108,7 +108,7 @@ pub struct DeployInterchainTokenInternal<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.as_ref().unwrap().key().as_ref()
+            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref()
         ],
         bump
     )]
@@ -205,8 +205,12 @@ pub fn process_inbound_deploy(
 
     // Initialize UserRoles
     if ctx.minter.is_some() && ctx.minter_roles_pda.is_some() {
-        let minter_roles_pda = ctx.minter_roles_pda.as_mut().unwrap();
-        minter_roles_pda.bump = minter_roles_pda_bump.unwrap();
+        let minter_roles_pda = ctx
+            .minter_roles_pda
+            .as_mut()
+            .ok_or(ItsError::MinterRolesNotProvided)?;
+        minter_roles_pda.bump =
+            minter_roles_pda_bump.ok_or(ItsError::MinterRolesPdaBumpNotProvided)?;
         minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
     }
 

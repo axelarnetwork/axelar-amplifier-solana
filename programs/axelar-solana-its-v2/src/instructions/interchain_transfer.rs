@@ -155,39 +155,16 @@ pub fn interchain_transfer_handler(
     pda_seeds: Option<Vec<Vec<u8>>>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
-    let is_cpi = source_id.is_some() && pda_seeds.is_some();
-
-    if is_cpi {
-        let source_id = source_id.unwrap();
-        let pda_seeds = pda_seeds.unwrap();
-
-        // The sender should be a PDA owned by the source program
-        if ctx.accounts.authority.owner != &source_id {
-            msg!(
-                "Sender account must be owned by the source program. Expected: {}, Got: {}",
-                source_id,
-                ctx.accounts.authority.owner
-            );
-            return err!(ItsError::InvalidAccountData);
+    match (source_id, pda_seeds) {
+        // CPI case: when called by a program
+        (Some(source_id), Some(pda_seeds)) => {
+            validate_cpi_authority(&ctx, source_id, &pda_seeds)?;
         }
-
-        // Validate that the PDA can be derived using the provided seeds
-        let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
-        let (expected_pda, _bump) =
-            solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
-
-        if expected_pda != *ctx.accounts.authority.key {
-            msg!(
-                "PDA derivation mismatch. Expected: {}, Got: {}",
-                expected_pda,
-                ctx.accounts.authority.key
-            );
-            return err!(ItsError::InvalidAccountData);
+        // Regular wallet case: when called by a user
+        (None, None) => {
+            validate_wallet_authority(&ctx)?;
         }
-    } else {
-        if ctx.accounts.authority.owner != &system_program::ID {
-            return err!(ItsError::InvalidAccountOwner);
-        }
+        (_, _) => return err!(ItsError::InconsistentSourceIdAndPdaSeeds),
     }
 
     let source_address = *ctx.accounts.authority.key;
@@ -201,8 +178,45 @@ pub fn interchain_transfer_handler(
         signing_pda_bump,
         data,
         source_address,
-    )?;
+    )
+}
 
+fn validate_cpi_authority(
+    ctx: &Context<InterchainTransfer>,
+    source_id: Pubkey,
+    pda_seeds: &[Vec<u8>],
+) -> Result<()> {
+    // The sender should be a PDA owned by the source program
+    if ctx.accounts.authority.owner != &source_id {
+        msg!(
+            "Sender account must be owned by the source program. Expected: {}, Got: {}",
+            source_id,
+            ctx.accounts.authority.owner
+        );
+        return err!(ItsError::InvalidAccountData);
+    }
+
+    // Validate that the PDA can be derived using the provided seeds
+    let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
+    let (expected_pda, _bump) =
+        solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
+
+    if expected_pda != *ctx.accounts.authority.key {
+        msg!(
+            "PDA derivation mismatch. Expected: {}, Got: {}",
+            expected_pda,
+            ctx.accounts.authority.key
+        );
+        return err!(ItsError::InvalidAccountData);
+    }
+
+    Ok(())
+}
+
+fn validate_wallet_authority(ctx: &Context<InterchainTransfer>) -> Result<()> {
+    if ctx.accounts.authority.owner != &system_program::ID {
+        return err!(ItsError::InvalidAccountOwner);
+    }
     Ok(())
 }
 

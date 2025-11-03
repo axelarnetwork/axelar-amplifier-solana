@@ -71,7 +71,7 @@ pub struct LinkTokenInternal<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            operator.as_ref().unwrap().key().as_ref()
+            operator.as_ref().ok_or(ItsError::OperatorNotProvided)?.key().as_ref()
         ],
         bump
     )]
@@ -129,7 +129,10 @@ pub fn link_token_internal_handler(
     );
 
     if let Some(operator_roles_pda) = &mut ctx.accounts.operator_roles_pda {
-        operator_roles_pda.bump = ctx.bumps.operator_roles_pda.unwrap();
+        operator_roles_pda.bump = ctx
+            .bumps
+            .operator_roles_pda
+            .ok_or(ItsError::OperatorRolesPdaNotProvided)?;
         operator_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
     }
 
