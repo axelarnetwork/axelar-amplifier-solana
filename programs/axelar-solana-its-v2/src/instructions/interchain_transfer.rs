@@ -119,7 +119,7 @@ pub struct InterchainTransfer {
         bump = signing_pda_bump,
         seeds::program = crate::ID
     )]
-    pub signing_pda: Signer<'info>,
+    pub signing_pda: AccountInfo<'info>,
 
     #[account(address = crate::ID)]
     pub its_program: AccountInfo<'info>,
