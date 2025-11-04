@@ -4,6 +4,7 @@ use crate::{
     instructions::validate_mint_extensions,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    utils::truncate_utf8,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
@@ -261,8 +262,8 @@ fn create_token_metadata<'info>(
 ) -> Result<()> {
     let mut truncated_name = name.to_owned();
     let mut truncated_symbol = symbol.to_owned();
-    truncated_name.truncate(mpl_token_metadata::MAX_NAME_LENGTH);
-    truncated_symbol.truncate(mpl_token_metadata::MAX_SYMBOL_LENGTH);
+    truncate_utf8(&mut truncated_name, mpl_token_metadata::MAX_NAME_LENGTH);
+    truncate_utf8(&mut truncated_symbol, mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
     // Create the token metadata using Metaplex CPI
     CreateV1CpiBuilder::new(&accounts.mpl_token_metadata_program.to_account_info())

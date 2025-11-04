@@ -1,4 +1,4 @@
-//! Axelar Gas Service program for the Solana blockchain
+//! Axelar Interchain Token Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
 #![allow(clippy::missing_asserts_for_indexing)]
 #![allow(clippy::too_many_arguments)]

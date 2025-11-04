@@ -3,7 +3,10 @@ use crate::{
     events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
-    utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
+    utils::{
+        interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal,
+        truncate_utf8,
+    },
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token_2022::{spl_token_2022::extension::BaseStateWithExtensions, Token2022};
@@ -262,14 +265,10 @@ fn create_token_metadata<'info>(
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
-    // NOTE: truncate panics if MAX_LENGTH
-    // does not lie on a char boundary.
-    // TODO should we handle it gracefully?
-
     let mut truncated_name = name;
     let mut truncated_symbol = symbol;
-    truncated_name.truncate(mpl_token_metadata::MAX_NAME_LENGTH);
-    truncated_symbol.truncate(mpl_token_metadata::MAX_SYMBOL_LENGTH);
+    truncate_utf8(&mut truncated_name, mpl_token_metadata::MAX_NAME_LENGTH);
+    truncate_utf8(&mut truncated_symbol, mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
     // Create the token metadata using Metaplex CPI
     CreateV1CpiBuilder::new(&accounts.mpl_token_metadata_program.to_account_info())
