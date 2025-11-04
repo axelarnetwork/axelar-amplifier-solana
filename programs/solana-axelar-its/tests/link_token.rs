@@ -1,23 +1,24 @@
 use anchor_lang::AccountDeserialize;
 use anchor_spl::token_2022::spl_token_2022;
-use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
-use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
-use axelar_solana_gateway_v2_test_fixtures::initialize_gateway;
-use axelar_solana_gateway_v2_test_fixtures::setup_test_with_real_signers;
 use axelar_solana_its_v2::utils::linked_token_deployer_salt;
 use axelar_solana_its_v2::{
     state::{token_manager::Type, TokenManager},
     utils::interchain_token_id_internal,
 };
+use axelar_solana_its_v2_test_fixtures::init_gas_service;
+use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
+use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
+use axelar_solana_its_v2_test_fixtures::setup_operator;
+use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::setup_mollusk;
+use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
+use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
+use solana_axelar_gateway_test_fixtures::initialize_gateway;
+use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program,
 };
-
-#[path = "initialize.rs"]
-mod initialize;
 
 fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
     let mint = Pubkey::new_unique();
@@ -47,32 +48,26 @@ fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
 
 #[test]
 fn test_link_token() {
-    // ============================================================================
-    // STEP 1: Initialize Gateway
-    // ============================================================================
     let (setup, _, _, _, _) = setup_test_with_real_signers();
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
 
-    // ============================================================================
-    // STEP 2: Initialize Gas Service (keep gas service mollusk separate!)
-    // ============================================================================
-    let gas_service_program_id = axelar_solana_gas_service_v2::id();
+    let gas_service_program_id = solana_axelar_gas_service::id();
     let mut gas_service_mollusk =
-        setup_mollusk(&gas_service_program_id, "axelar_solana_gas_service_v2");
+        setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
     let gas_operator = Pubkey::new_unique();
-    let gas_operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let gas_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let (gas_operator_pda, gas_operator_pda_account) = initialize::setup_operator(
+    let (gas_operator_pda, gas_operator_pda_account) = setup_operator(
         &mut gas_service_mollusk,
         gas_operator,
         &gas_operator_account,
     );
 
     // Use the GAS SERVICE mollusk for gas service initialization
-    let (treasury_pubkey, treasury_account) = initialize::init_gas_service(
-        &gas_service_mollusk, // ✅ Use gas service mollusk here
+    let (_, treasury_account) = init_gas_service(
+        &gas_service_mollusk,
         gas_operator,
         &gas_operator_account,
         gas_operator_pda,
@@ -82,25 +77,22 @@ fn test_link_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    // ============================================================================
-    // STEP 3: Initialize ITS Service (separate mollusk for ITS)
-    // ============================================================================
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk(); // ✅ Now create ITS mollusk
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let its_operator = Pubkey::new_unique();
-    let its_operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let its_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
 
-    let (its_root_pda, its_root_account) = initialize::init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -125,7 +117,15 @@ fn test_link_token() {
         interchain_token_id_internal(&deploy_salt)
     };
 
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+
     let token_manager_ata =
         anchor_spl::associated_token::get_associated_token_address_with_program_id(
             &token_manager_pda,
@@ -148,7 +148,7 @@ fn test_link_token() {
     let register_accounts = axelar_solana_its_v2::accounts::RegisterCustomToken {
         payer,
         deployer,
-        system_program: system_program::ID,
+        system_program: solana_sdk::system_program::ID,
         its_root_pda,
         token_manager_pda,
         token_mint,
@@ -172,20 +172,17 @@ fn test_link_token() {
     let register_mollusk_accounts = vec![
         (payer, payer_account.clone()),
         (deployer, deployer_account.clone()),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        keyed_account_for_system_program(),
         (its_root_pda, its_root_account.clone()),
-        (token_manager_pda, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_pda,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         (token_mint, token_mint_account),
-        (token_manager_ata, Account::new(0, 0, &system_program::ID)),
+        (
+            token_manager_ata,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -212,8 +209,14 @@ fn test_link_token() {
             },
         ),
         // For event CPI
-        (event_authority, Account::new(0, 0, &system_program::ID)),
-        (program_id, Account::new(0, 0, &system_program::ID)),
+        (
+            event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            program_id,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
     ];
 
     let register_result = mollusk.process_and_validate_instruction(
@@ -244,20 +247,20 @@ fn test_link_token() {
 
     // Derive required PDAs
     let (gas_treasury, _) = Pubkey::find_program_address(
-        &[axelar_solana_gas_service_v2::state::Treasury::SEED_PREFIX],
-        &axelar_solana_gas_service_v2::ID,
+        &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
+        &solana_axelar_gas_service::ID,
     );
 
     let (call_contract_signing_pda, signing_pda_bump) = Pubkey::find_program_address(
-        &[axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
+        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
         &program_id,
     );
 
     let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &axelar_solana_gateway_v2::ID);
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
 
     let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &axelar_solana_gas_service_v2::ID);
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
 
     // Create link token instruction
     let link_instruction_data = axelar_solana_its_v2::instruction::LinkToken {
@@ -274,17 +277,19 @@ fn test_link_token() {
     let link_accounts = axelar_solana_its_v2::accounts::LinkToken {
         payer,
         deployer,
+        its_program: program_id,
+        its_root_pda,
         token_manager_pda,
         gateway_root_pda,
-        gateway_program: axelar_solana_gateway_v2::ID,
-        gas_treasury,
-        gas_service: axelar_solana_gas_service_v2::ID,
-        system_program: system_program::ID,
-        its_root_pda,
+        gateway_program: solana_axelar_gateway::ID,
+        system_program: solana_sdk::system_program::ID,
         call_contract_signing_pda,
-        its_program: program_id,
         gateway_event_authority,
-        gas_event_authority,
+        gas_service_accounts: axelar_solana_its_v2::accounts::GasServiceAccounts {
+            gas_treasury,
+            gas_service: solana_axelar_gas_service::ID,
+            gas_event_authority,
+        },
         // for event cpi
         event_authority,
         program: program_id,
@@ -303,7 +308,7 @@ fn test_link_token() {
         (token_manager_pda, token_manager_account.clone()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
         (
-            axelar_solana_gateway_v2::ID,
+            solana_axelar_gateway::ID,
             Account {
                 lamports: 1,
                 data: vec![],
@@ -314,7 +319,7 @@ fn test_link_token() {
         ),
         (gas_treasury, treasury_account),
         (
-            axelar_solana_gas_service_v2::ID,
+            solana_axelar_gas_service::ID,
             Account {
                 lamports: 1,
                 data: vec![],
@@ -323,30 +328,33 @@ fn test_link_token() {
                 rent_epoch: 0,
             },
         ),
-        (
-            system_program::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        keyed_account_for_system_program(),
         (its_root_pda, its_root_account),
         (
             call_contract_signing_pda,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (program_id, Account::new(0, 0, &system_program::ID)),
+        (
+            program_id,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         (
             gateway_event_authority,
-            Account::new(0, 0, &system_program::ID),
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (gas_event_authority, Account::new(0, 0, &system_program::ID)),
+        (
+            gas_event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
         // For event CPI
-        (event_authority, Account::new(0, 0, &system_program::ID)),
-        (program_id, Account::new(0, 0, &system_program::ID)),
+        (
+            event_authority,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
+        (
+            program_id,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
+        ),
     ];
 
     let link_result = mollusk.process_and_validate_instruction(

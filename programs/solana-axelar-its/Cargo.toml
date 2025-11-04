@@ -9,7 +9,7 @@ edition.workspace = true
 
 [dependencies]
 alloy-primitives.workspace = true
-anchor-lang.workspace = true
+anchor-lang = { workspace = true, features = ["allow-missing-optionals", "init-if-needed"] }
 anchor-spl.workspace = true
 solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-operators = { workspace = true, features = ["no-entrypoint"] }

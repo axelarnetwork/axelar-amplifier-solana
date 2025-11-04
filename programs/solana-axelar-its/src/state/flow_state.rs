@@ -1,6 +1,9 @@
 use anchor_lang::prelude::*;
+use std::time::Duration;
 
 use crate::errors::ItsError;
+
+const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60);
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum FlowDirection {
@@ -74,4 +77,23 @@ impl FlowState {
 
         Ok(())
     }
+}
+
+pub fn current_flow_epoch() -> std::result::Result<u64, ProgramError> {
+    flow_epoch_with_timestamp(Clock::get()?.unix_timestamp)
+}
+
+/// Returns the current flow epoch based on the provided clock.
+///
+/// # Errors
+///
+/// Returns an error if conversion from clock to internal flow epoch fails.
+pub fn flow_epoch_with_timestamp(timestamp: i64) -> std::result::Result<u64, ProgramError> {
+    let unix_timestamp: u64 = timestamp
+        .try_into()
+        .map_err(|_err| ProgramError::ArithmeticOverflow)?;
+
+    unix_timestamp
+        .checked_div(EPOCH_TIME.as_secs())
+        .ok_or(ProgramError::ArithmeticOverflow)
 }

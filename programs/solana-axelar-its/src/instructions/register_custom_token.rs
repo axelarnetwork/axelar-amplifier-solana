@@ -16,17 +16,13 @@ use anchor_spl::{
 #[event_cpi]
 #[instruction(salt: [u8; 32], token_manager_type: Type, operator: Option<Pubkey>)]
 pub struct RegisterCustomToken<'info> {
-    /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The deployer of the custom token (must sign the transaction)
     pub deployer: Signer<'info>,
 
-    /// System program
     pub system_program: Program<'info, System>,
 
-    /// ITS root configuration PDA
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -34,7 +30,6 @@ pub struct RegisterCustomToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// Token Manager PDA for this token
     #[account(
         init,
         payer = payer,
@@ -48,12 +43,11 @@ pub struct RegisterCustomToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// The existing token mint to register as a custom token
+    /// CHECK: We can't do futher checks here since its a custom token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// Token Manager's associated token account (ATA)
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = token_manager_pda,
@@ -61,16 +55,12 @@ pub struct RegisterCustomToken<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    /// Token program (can be SPL Token or Token-2022)
     pub token_program: Interface<'info, TokenInterface>,
 
-    /// Associated token program
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    /// Optional operator account
     pub operator: Option<UncheckedAccount<'info>>,
 
-    /// Optional operator roles PDA
     #[account(
         init,
         payer = payer,

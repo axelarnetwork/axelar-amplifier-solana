@@ -135,6 +135,44 @@ impl Type {
     }
 }
 
+impl TryFrom<u8> for Type {
+    type Error = ProgramError;
+
+    fn try_from(value: u8) -> std::result::Result<Self, Self::Error> {
+        let converted = match value {
+            0 => Self::NativeInterchainToken,
+            1 => Self::MintBurnFrom,
+            2 => Self::LockUnlock,
+            3 => Self::LockUnlockFee,
+            4 => Self::MintBurn,
+            _ => return Err(ProgramError::InvalidInstructionData),
+        };
+
+        Ok(converted)
+    }
+}
+
+impl TryFrom<U256> for Type {
+    type Error = ProgramError;
+
+    fn try_from(value: U256) -> std::result::Result<Self, Self::Error> {
+        let value: u64 = value
+            .try_into()
+            .map_err(|_err| ProgramError::InvalidInstructionData)?;
+
+        let converted = match value {
+            0 => Self::NativeInterchainToken,
+            1 => Self::MintBurnFrom,
+            2 => Self::LockUnlock,
+            3 => Self::LockUnlockFee,
+            4 => Self::MintBurn,
+            _ => return Err(ProgramError::InvalidInstructionData),
+        };
+
+        Ok(converted)
+    }
+}
+
 impl From<Type> for U256 {
     fn from(value: Type) -> Self {
         match value {

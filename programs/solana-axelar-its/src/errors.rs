@@ -9,11 +9,18 @@ pub enum ItsError {
     InvalidAccountOwner,
     DeployApprovalPDANotProvided,
     MinterNotProvided,
+    MinterRolesNotProvided,
+    MinterRolesPdaBumpNotProvided,
+    OperatorNotProvided,
+    OperatorRolesPdaNotProvided,
     InvalidAccountData,
+    MissingRemainingAccount,
     #[msg("The role provided is invalid")]
     InvalidRole,
     #[msg("The token manager type is invalid")]
     InvalidTokenManagerType,
+    #[msg("The source chain name is untrusted")]
+    UntrustedSourceChain,
     #[msg("The destination chain name is untrusted")]
     UntrustedDestinationChain,
     #[msg("The destination chain name is invalid")]
@@ -22,4 +29,12 @@ pub enum ItsError {
     ZeroSupplyToken,
     #[msg("The mint extension is not compatible with the TokenManager type")]
     TokenManagerMintExtensionMismatch,
+    TokenMintMismatch,
+    InvalidTokenManagerAta,
+    InvalidTokenManagerPda,
+    AccountNotProvided,
+    SourceIdNotProvided,
+    PdaSeedsNotProvided,
+    #[msg("source_id and pda_seeds must both be provided together or both be None")]
+    InconsistentSourceIdAndPdaSeeds,
 }

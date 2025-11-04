@@ -15,7 +15,6 @@ pub struct RevokeDeployRemoteInterchainToken<'info> {
     /// The minter who is revoking the deployment approval (must be a signer with minter role)
     pub minter: Signer<'info>,
 
-    /// Deploy approval PDA to be revoked (closed)
     #[account(
         mut,
         close = payer,
@@ -29,7 +28,6 @@ pub struct RevokeDeployRemoteInterchainToken<'info> {
     )]
     pub deploy_approval_pda: Account<'info, DeployApproval>,
 
-    /// System program
     pub system_program: Program<'info, System>,
 }
 

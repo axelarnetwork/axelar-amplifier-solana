@@ -20,3 +20,26 @@ pub struct GMPAccounts<'info> {
 pub trait ToGMPAccounts<'info> {
     fn to_gmp_accounts(&self) -> GMPAccounts<'info>;
 }
+
+#[derive(Accounts)]
+pub struct GasServiceAccounts<'info> {
+    /// The GMP gas treasury account
+    #[account(
+        mut,
+        seeds = [solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
+        seeds::program = solana_axelar_gas_service::ID,
+        bump = gas_treasury.load()?.bump,
+    )]
+    pub gas_treasury: AccountLoader<'info, solana_axelar_gas_service::state::Treasury>,
+
+    /// The GMP gas service program account
+    pub gas_service: Program<'info, solana_axelar_gas_service::program::SolanaAxelarGasService>,
+
+    /// Event authority for gas service
+    #[account(
+        seeds = [b"__event_authority"],
+        bump,
+        seeds::program = gas_service.key()
+    )]
+    pub gas_event_authority: AccountInfo<'info>,
+}

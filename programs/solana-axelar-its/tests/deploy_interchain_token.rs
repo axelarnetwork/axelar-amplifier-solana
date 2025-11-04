@@ -5,30 +5,26 @@ use axelar_solana_its_v2::{
     utils::{interchain_token_deployer_salt, interchain_token_id_internal},
 };
 use axelar_solana_its_v2_test_fixtures::{
-    deploy_interchain_token_helper, DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
+    DeployInterchainTokenContext,
 };
 use solana_program::program_pack::Pack;
-use solana_sdk::{
-    account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
-};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use spl_token_2022::state::Account as Token2022Account;
-
-#[path = "initialize.rs"]
-mod initialize;
 
 #[test]
 fn test_deploy_interchain_token() {
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -41,7 +37,7 @@ fn test_deploy_interchain_token() {
         _user_roles_account,
         _program_data,
         _program_data_account,
-    ) = initialize::init_its_service(
+    ) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -62,9 +58,22 @@ fn test_deploy_interchain_token() {
     let minter = Pubkey::new_unique();
 
     let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
-    let (minter_roles_pda, minter_roles_pda_bump) =
-        UserRoles::find_pda(&token_manager_pda, &minter);
+    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+    let (minter_roles_pda, minter_roles_pda_bump) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(),
+        ],
+        &program_id,
+    );
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
