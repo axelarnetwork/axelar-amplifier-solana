@@ -1,6 +1,5 @@
 use crate::gmp::*;
-use crate::instructions::deploy_remote_interchain_token::{get_token_metadata, process_outbound};
-use crate::program::AxelarSolanaItsV2;
+use crate::instructions::deploy_remote_interchain_token::get_token_metadata;
 use crate::{
     errors::ItsError,
     events::InterchainTokenDeploymentStarted,
@@ -98,7 +97,7 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteCanonicalInterchainToken<'info>
             gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
             gas_service: self.gas_service_accounts.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.clone(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
             its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),

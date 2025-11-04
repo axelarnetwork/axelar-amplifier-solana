@@ -29,6 +29,8 @@ pub enum ItsError {
     ZeroSupplyToken,
     #[msg("The mint extension is not compatible with the TokenManager type")]
     TokenManagerMintExtensionMismatch,
+    #[msg("The signer is not a user account")]
+    CallerNotUserAccount,
     TokenMintMismatch,
     InvalidTokenManagerAta,
     InvalidTokenManagerPda,

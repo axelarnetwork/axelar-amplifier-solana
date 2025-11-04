@@ -1,6 +1,4 @@
 use crate::gmp::*;
-use crate::instructions::process_outbound;
-use crate::program::AxelarSolanaItsV2;
 use crate::{
     errors::ItsError, events::TokenMetadataRegistered, state::InterchainTokenService,
     ITS_HUB_CHAIN_NAME,
@@ -70,7 +68,7 @@ impl<'info> ToGMPAccounts<'info> for RegisterTokenMetadata<'info> {
             gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
             gas_service: self.gas_service_accounts.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.clone(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
             its_program: self.program.clone(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),

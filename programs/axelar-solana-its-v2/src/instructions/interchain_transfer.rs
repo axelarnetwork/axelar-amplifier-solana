@@ -1,8 +1,6 @@
 use crate::get_fee_and_decimals;
 use crate::get_mint_decimals;
-use crate::gmp::{GMPAccounts, ToGMPAccounts};
-use crate::instructions::process_outbound;
-use crate::program::AxelarSolanaItsV2;
+use crate::gmp::*;
 use crate::state::{token_manager, FlowDirection};
 use crate::{
     errors::ItsError,
@@ -35,7 +33,7 @@ pub struct InterchainTransfer<'info> {
     //
     // Sender of the tokens
     //
-    /// The account that wants to transfer - can be a direct signer or program
+    /// The account that wants to transfer - can be a direct signer or program PDA
     pub authority: Signer<'info>,
 
     //
@@ -131,7 +129,7 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
             gas_treasury: self.gas_treasury.to_account_info(),
             gas_service: self.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.clone(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.signing_pda.to_account_info(),
             its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
@@ -155,14 +153,17 @@ pub fn interchain_transfer_handler(
     let is_cpi = caller_program_id.is_some() && caller_pda_seeds.is_some();
 
     // TODO check security implications of the checks here
-    if is_cpi {
+    // Determine the source address based on whether this is a CPI or direct call
+    // If it is a CPI, use the caller program id as the source address
+    // otherwise use the user's address
+    let source_address = if is_cpi {
         let caller_program_id = caller_program_id.unwrap();
         let caller_pda_seeds = caller_pda_seeds.unwrap();
 
         // The sender should be a PDA owned by the source program
         if ctx.accounts.authority.owner != &caller_program_id {
             msg!(
-                "Sender account must be owned by the source program. Expected: {}, Got: {}",
+                "Authority account must be owned by the source program. Expected: {}, Got: {}",
                 caller_program_id,
                 ctx.accounts.authority.owner
             );
@@ -185,11 +186,18 @@ pub fn interchain_transfer_handler(
             );
             return err!(ItsError::InvalidAccountData);
         }
-    } else if ctx.accounts.authority.owner != &system_program::ID {
-        return err!(ItsError::InvalidAccountOwner);
-    }
 
-    let source_address = *ctx.accounts.authority.key;
+        caller_program_id
+    } else {
+        let authority = ctx.accounts.authority.key();
+
+        if ctx.accounts.authority.owner != &system_program::ID || !authority.is_on_curve() {
+            return err!(ItsError::CallerNotUserAccount);
+        }
+
+        authority
+    };
+
     process_outbound_transfer(
         ctx,
         token_id,
@@ -256,6 +264,11 @@ fn process_outbound_transfer(
     let amount_minus_fees = take_token(&mut ctx, &token_manager_account_info, amount)?;
     amount = amount_minus_fees;
 
+    let data_hash = data
+        .as_ref()
+        .filter(|d| !d.is_empty())
+        .map_or([0; 32], |d| solana_program::keccak::hash(d).0);
+
     emit_cpi!(crate::events::InterchainTransfer {
         token_id,
         source_address,
@@ -263,10 +276,7 @@ fn process_outbound_transfer(
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         amount,
-        data_hash: data
-            .as_ref()
-            .filter(|d| !d.is_empty())
-            .map_or([0; 32], |d| solana_program::keccak::hash(d).0),
+        data_hash,
     });
 
     let inner_payload =

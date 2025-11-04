@@ -2,8 +2,6 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
     gmp::*,
-    instructions::process_outbound,
-    program::AxelarSolanaItsV2,
     state::{
         token_manager::{TokenManager, Type},
         InterchainTokenService,
@@ -84,7 +82,7 @@ impl<'info> LinkToken<'info> {
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_program: self.gateway_program.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.clone(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
             its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
