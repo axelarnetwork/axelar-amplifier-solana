@@ -35,8 +35,10 @@ pub struct InterchainTransferInternal<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
+    /// CHECK: we check this matches the destination address
+    /// if the data is not empty
     #[account(mut)]
-    pub destination: AccountInfo<'info>,
+    pub destination: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -95,6 +97,12 @@ pub fn interchain_transfer_internal_handler(
     let transferred_amount =
         handle_give_token_transfer(&mut ctx, &token_manager_account_info, amount)?;
 
+    let data_hash = if data.is_empty() {
+        [0; 32]
+    } else {
+        solana_program::keccak::hash(data.as_ref()).0
+    };
+
     emit_cpi!(InterchainTransferReceived {
         command_id: message.command_id(),
         token_id,
@@ -103,12 +111,17 @@ pub fn interchain_transfer_internal_handler(
         destination_address,
         destination_token_account,
         amount: transferred_amount,
-        data_hash: if data.is_empty() {
-            [0; 32]
-        } else {
-            solana_program::keccak::hash(data.as_ref()).0
-        },
+        data_hash,
     });
+
+    if !data.is_empty() {
+        let destination_program_account = &ctx.accounts.destination;
+        if destination_address != destination_program_account.key() {
+            return err!(ItsError::InvalidDestinationAddressAccount);
+        }
+        // TODO invoke signed for execute with token
+        msg!("ExecuteWithInterchainToken is not yet implemented");
+    }
 
     Ok(())
 }
