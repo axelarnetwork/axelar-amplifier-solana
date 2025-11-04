@@ -119,14 +119,13 @@ fn test_interchain_transfer_mint_burn() {
     assert!(result.program_result.is_ok());
 
     let source = deployer;
-    let source_ata = deployer_ata;
     let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
     let destination_chain = "ethereum".to_string();
     let destination_address = b"0x1234567890123456789012345678901234567890".to_vec();
     let transfer_amount = 1_000_000u64;
     let gas_value = 0u64;
 
-    let (signing_pda, signing_pda_bump) =
+    let (signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &axelar_solana_its_v2::ID);
 
     let (gas_event_authority, _) =
@@ -142,7 +141,7 @@ fn test_interchain_transfer_mint_burn() {
         payer,
         authority: source,
         its_root_pda,
-        source_ata,
+        authority_token_account: deployer_ata,
         token_mint: token_mint_pda,
         token_manager_pda,
         token_manager_ata,
@@ -155,7 +154,6 @@ fn test_interchain_transfer_mint_burn() {
         gas_event_authority,
         system_program: solana_sdk::system_program::ID,
         signing_pda,
-        its_program: program_id,
         event_authority: its_event_authority,
         program: program_id,
     };
@@ -166,7 +164,6 @@ fn test_interchain_transfer_mint_burn() {
         destination_address: destination_address.clone(),
         amount: transfer_amount,
         gas_value,
-        signing_pda_bump,
         source_id: None,
         pda_seeds: None,
         data: None,
@@ -185,7 +182,10 @@ fn test_interchain_transfer_mint_burn() {
             its_root_pda,
             result.get_account(&its_root_pda).unwrap().clone(),
         ),
-        (source_ata, result.get_account(&source_ata).unwrap().clone()),
+        (
+            deployer_ata,
+            result.get_account(&deployer_ata).unwrap().clone(),
+        ),
         (
             token_mint_pda,
             result.get_account(&token_mint_pda).unwrap().clone(),
@@ -247,10 +247,10 @@ fn test_interchain_transfer_mint_burn() {
         transfer_result.program_result
     );
 
-    let source_ata_account = transfer_result.get_account(&source_ata).unwrap();
+    let deployer_ata_account = transfer_result.get_account(&deployer_ata).unwrap();
 
     // Parse the Token2022 account data to get the current balance
-    let token_account = StateWithExtensions::<TokenAccount>::unpack(&source_ata_account.data)
+    let token_account = StateWithExtensions::<TokenAccount>::unpack(&deployer_ata_account.data)
         .expect("Failed to unpack source ATA data");
 
     let expected_balance = initial_supply - transfer_amount;
@@ -389,13 +389,12 @@ fn test_interchain_transfer_lock_unlock() {
     };
 
     let source = deployer;
-    let source_ata = deployer_ata;
     let destination_chain = "ethereum".to_string();
     let destination_address = b"0x1234567890123456789012345678901234567890".to_vec();
     let transfer_amount = 1_000_000u64;
     let gas_value = 0u64;
 
-    let (signing_pda, signing_pda_bump) =
+    let (signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &axelar_solana_its_v2::ID);
 
     let (gas_event_authority, _) =
@@ -411,7 +410,7 @@ fn test_interchain_transfer_lock_unlock() {
         payer,
         authority: source,
         its_root_pda,
-        source_ata,
+        authority_token_account: deployer_ata,
         token_mint: mint_pubkey,
         token_manager_pda,
         token_manager_ata,
@@ -424,7 +423,6 @@ fn test_interchain_transfer_lock_unlock() {
         gas_event_authority,
         system_program: solana_sdk::system_program::ID,
         signing_pda,
-        its_program: program_id,
         event_authority: its_event_authority,
         program: program_id,
     };
@@ -435,7 +433,6 @@ fn test_interchain_transfer_lock_unlock() {
         destination_address: destination_address.clone(),
         amount: transfer_amount,
         gas_value,
-        signing_pda_bump,
         source_id: None,
         pda_seeds: None,
         data: None,
@@ -454,7 +451,7 @@ fn test_interchain_transfer_lock_unlock() {
             its_root_pda,
             result.get_account(&its_root_pda).unwrap().clone(),
         ),
-        (source_ata, deployer_ata_account), // Add the deployer's ATA
+        (deployer_ata, deployer_ata_account), // Add the deployer's ATA
         (
             mint_pubkey, // Use the canonical mint
             result.get_account(&mint_pubkey).unwrap().clone(),
@@ -516,10 +513,10 @@ fn test_interchain_transfer_lock_unlock() {
         transfer_result.program_result
     );
 
-    let source_ata_account = transfer_result.get_account(&source_ata).unwrap();
+    let deployer_ata_account = transfer_result.get_account(&deployer_ata).unwrap();
 
     // Parse the Token2022 account data to get the current balance
-    let token_account = StateWithExtensions::<TokenAccount>::unpack(&source_ata_account.data)
+    let token_account = StateWithExtensions::<TokenAccount>::unpack(&deployer_ata_account.data)
         .expect("Failed to unpack source ATA data");
 
     let expected_balance = initial_supply - transfer_amount;

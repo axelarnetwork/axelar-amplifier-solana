@@ -2,8 +2,6 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
     gmp::*,
-    instructions::process_outbound,
-    program::SolanaAxelarIts,
     state::{
         token_manager::{TokenManager, Type},
         InterchainTokenService,
@@ -12,10 +10,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
-use solana_axelar_gas_service::state::Treasury;
-use solana_axelar_gateway::{
-    program::SolanaAxelarGateway, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
-};
+use solana_axelar_gateway::{program::SolanaAxelarGateway, GatewayConfig};
 
 #[derive(Accounts)]
 #[instruction(
@@ -25,7 +20,6 @@ use solana_axelar_gateway::{
     token_manager_type: Type,
     link_params: Vec<u8>,
     gas_value: u64,
-    signing_pda_bump: u8,
 )]
 #[event_cpi]
 pub struct LinkToken<'info> {
@@ -33,8 +27,6 @@ pub struct LinkToken<'info> {
     pub payer: Signer<'info>,
 
     pub deployer: Signer<'info>,
-
-    pub its_program: Program<'info, SolanaAxelarIts>,
 
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
@@ -69,12 +61,8 @@ pub struct LinkToken<'info> {
 
     pub system_program: Program<'info, System>,
 
-    #[account(
-        seeds = [CALL_CONTRACT_SIGNING_SEED],
-        bump = signing_pda_bump,
-        seeds::program = crate::ID
-    )]
-    pub call_contract_signing_pda: AccountInfo<'info>,
+    /// CHECK: validated in gateway
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     // Event authority accounts
     #[account(
@@ -94,9 +82,9 @@ impl<'info> LinkToken<'info> {
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_program: self.gateway_program.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.clone(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.to_account_info(),
+            its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             // Gas Service
             gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
@@ -118,7 +106,6 @@ pub fn link_token_handler(
     token_manager_type: Type,
     link_params: Vec<u8>,
     gas_value: u64,
-    signing_pda_bump: u8,
 ) -> Result<[u8; 32]> {
     msg!("Instruction: LinkToken");
 
@@ -167,13 +154,7 @@ pub fn link_token_handler(
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
 
     // Process the outbound GMP message
-    process_outbound(
-        gmp_accounts,
-        destination_chain,
-        gas_value,
-        signing_pda_bump,
-        message,
-    )?;
+    process_outbound(gmp_accounts, destination_chain, gas_value, message)?;
 
     Ok(token_id)
 }

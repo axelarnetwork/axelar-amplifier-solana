@@ -9,3 +9,6 @@ pub use execute::*;
 
 pub mod emit_memo;
 pub use emit_memo::*;
+
+pub mod send_interchain_transfer;
+pub use send_interchain_transfer::*;

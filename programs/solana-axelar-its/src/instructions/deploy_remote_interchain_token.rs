@@ -1,5 +1,4 @@
 use crate::gmp::*;
-use crate::program::SolanaAxelarIts;
 use crate::state::deploy_approval::DeployApproval;
 use crate::state::UserRoles;
 use crate::{
@@ -10,23 +9,22 @@ use crate::{
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use alloy_primitives::Bytes;
-use anchor_lang::{prelude::*, solana_program};
+use anchor_lang::prelude::*;
 use anchor_spl::token_2022::spl_token_2022::{
     extension::{metadata_pointer::MetadataPointer, BaseStateWithExtensions, StateWithExtensions},
     state::Mint as SplMint,
 };
 use anchor_spl::token_interface::Mint;
-use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, SendToHub};
+use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use mpl_token_metadata::accounts::Metadata;
-use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
 use solana_axelar_gateway::program::SolanaAxelarGateway;
-use solana_axelar_gateway::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
+use solana_axelar_gateway::GatewayConfig;
 use spl_token_metadata_interface::state::TokenMetadata;
 
 /// Accounts required for deploying a remote interchain token
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(salt: [u8; 32], destination_chain: String, gas_value: u64, signing_pda_bump: u8)]
+#[instruction(salt: [u8; 32], destination_chain: String, gas_value: u64)]
 pub struct DeployRemoteInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -115,15 +113,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    #[account(
-        seeds = [CALL_CONTRACT_SIGNING_SEED],
-        bump = signing_pda_bump,
-        seeds::program = crate::ID
-    )]
-    pub call_contract_signing_pda: AccountInfo<'info>,
-
-    /// The ITS program account
-    pub its_program: Program<'info, SolanaAxelarIts>,
+    /// CHECK: validated in gateway
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     // Event authority accounts
     #[account(
@@ -145,9 +136,9 @@ impl<'info> ToGMPAccounts<'info> for DeployRemoteInterchainToken<'info> {
             gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
             gas_service: self.gas_service_accounts.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_root_pda: self.its_root_pda.clone(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.to_account_info(),
+            its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self
                 .gas_service_accounts
@@ -162,7 +153,6 @@ pub fn deploy_remote_interchain_token_handler(
     salt: [u8; 32],
     destination_chain: String,
     gas_value: u64,
-    signing_pda_bump: u8,
     maybe_destination_minter: Option<Vec<u8>>,
 ) -> Result<()> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
@@ -227,103 +217,9 @@ pub fn deploy_remote_interchain_token_handler(
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
-    process_outbound(
-        gmp_accounts,
-        destination_chain,
-        gas_value,
-        signing_pda_bump,
-        inner_payload,
-    )?;
+    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
 
     Ok(())
-}
-
-pub fn process_outbound(
-    gmp_accounts: GMPAccounts,
-    destination_chain: String,
-    gas_value: u64,
-    signing_pda_bump: u8,
-    inner_payload: GMPPayload,
-) -> Result<()> {
-    // Wrap the inner payload
-    let payload = GMPPayload::SendToHub(SendToHub {
-        selector: SendToHub::MESSAGE_TYPE_ID
-            .try_into()
-            .map_err(|_err| ProgramError::ArithmeticOverflow)?,
-        destination_chain: destination_chain.clone(),
-        payload: inner_payload.encode().into(),
-    })
-    .encode();
-
-    let payload_hash = solana_program::keccak::hash(&payload).to_bytes();
-
-    if gas_value > 0 {
-        pay_gas_v2(
-            gmp_accounts.clone(),
-            payload_hash,
-            destination_chain.clone(),
-            gmp_accounts.its_root_pda.its_hub_address.clone(),
-            gas_value,
-        )?;
-    }
-
-    // Call contract instruction
-
-    let destination_address = gmp_accounts.its_root_pda.its_hub_address.clone();
-
-    let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
-
-    let cpi_accounts = solana_axelar_gateway::cpi::accounts::CallContract {
-        caller: gmp_accounts.its_program.to_account_info(),
-        signing_pda: Some(gmp_accounts.call_contract_signing_pda.to_account_info()),
-        gateway_root_pda: gmp_accounts.gateway_root_pda.to_account_info(),
-        // For event_cpi
-        event_authority: gmp_accounts.gateway_event_authority.to_account_info(),
-        program: gmp_accounts.gateway_program.to_account_info(),
-    };
-
-    let cpi_ctx = CpiContext::new_with_signer(
-        gmp_accounts.gateway_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
-
-    solana_axelar_gateway::cpi::call_contract(
-        cpi_ctx,
-        destination_chain,
-        destination_address,
-        payload,
-        signing_pda_bump,
-    )?;
-
-    Ok(())
-}
-
-fn pay_gas_v2(
-    gmp_accounts: GMPAccounts,
-    payload_hash: [u8; 32],
-    destination_chain: String,
-    destination_address: String,
-    gas_value: u64,
-) -> Result<()> {
-    let cpi_accounts = PayGas {
-        sender: gmp_accounts.payer.clone(),
-        treasury: gmp_accounts.gas_treasury,
-        system_program: gmp_accounts.system_program,
-        event_authority: gmp_accounts.gas_event_authority,
-        program: gmp_accounts.gas_service.clone(),
-    };
-
-    let cpi_ctx = CpiContext::new(gmp_accounts.gas_service, cpi_accounts);
-
-    pay_gas(
-        cpi_ctx,
-        destination_chain,
-        destination_address,
-        payload_hash,
-        gas_value,
-        gmp_accounts.payer.key(), // refund_address
-    )
 }
 
 /// Retrieves token metadata with fallback logic:

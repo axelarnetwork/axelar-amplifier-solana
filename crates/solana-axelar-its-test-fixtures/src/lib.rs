@@ -1,3 +1,8 @@
+// temporary disabling of clippy for the test crate
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::pedantic)]
+#![allow(clippy::or_fun_call)]
 use anchor_lang::prelude::Rent;
 use anchor_lang::{AccountDeserialize, AnchorSerialize};
 use anchor_lang::{Discriminator, InstructionData, Space, ToAccountMetas};
@@ -8,23 +13,22 @@ use anchor_spl::{
     },
     token_2022::spl_token_2022::{self},
 };
-use axelar_solana_gas_service_v2::state::Treasury;
-use axelar_solana_gateway_v2::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
-use axelar_solana_its_v2::accounts::GasServiceAccounts;
-use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
-use axelar_solana_its_v2::{
-    seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    utils::{canonical_interchain_token_id, interchain_token_id},
-};
-use axelar_solana_operators::{OperatorAccount, OperatorRegistry};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_svm::{result::InstructionResult, Mollusk};
-use mollusk_svm_programs_token;
 use mollusk_test_utils::{
     create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
 };
 use mpl_token_metadata::accounts::Metadata;
+use solana_axelar_gas_service::state::Treasury;
+use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
+use solana_axelar_its::accounts::GasServiceAccounts;
+use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
+use solana_axelar_its::{
+    seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
+    utils::{canonical_interchain_token_id, interchain_token_id},
+};
+use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
 use solana_program::program_pack::Pack;
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
@@ -140,7 +144,7 @@ pub fn deploy_interchain_token_helper(
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&ctx.program_id);
 
-    let ix_data = axelar_solana_its_v2::instruction::DeployInterchainToken {
+    let ix_data = solana_axelar_its::instruction::DeployInterchainToken {
         salt,
         name: name.clone(),
         symbol: symbol.clone(),
@@ -151,7 +155,7 @@ pub fn deploy_interchain_token_helper(
 
     let ix = Instruction {
         program_id: ctx.program_id,
-        accounts: axelar_solana_its_v2::accounts::DeployInterchainToken {
+        accounts: solana_axelar_its::accounts::DeployInterchainToken {
             payer: ctx.payer,
             deployer: ctx.deployer,
             system_program: solana_sdk::system_program::ID,
@@ -358,46 +362,44 @@ pub fn deploy_remote_interchain_token_helper(
     ctx: DeployRemoteInterchainTokenContext,
 ) -> InstructionResult {
     let (gateway_root_pda, _) = Pubkey::find_program_address(
-        &[axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED],
-        &axelar_solana_gateway_v2::ID,
+        &[solana_axelar_gateway::seed_prefixes::GATEWAY_SEED],
+        &solana_axelar_gateway::ID,
     );
 
     let (gas_treasury, _) =
-        Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &axelar_solana_gas_service_v2::ID);
+        Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &solana_axelar_gas_service::ID);
 
-    let (call_contract_signing_pda, signing_pda_bump) =
+    let (call_contract_signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &ctx.program_id);
 
     let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &axelar_solana_gateway_v2::ID);
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
 
     let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &axelar_solana_gas_service_v2::ID);
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
 
     let (its_event_authority, its_event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&ctx.program_id);
 
     let data = match ctx.minter {
-        Some(minter) => axelar_solana_its_v2::instruction::DeployRemoteInterchainTokenWithMinter {
+        Some(minter) => solana_axelar_its::instruction::DeployRemoteInterchainTokenWithMinter {
             salt,
             destination_chain: destination_chain.clone(),
             gas_value,
-            signing_pda_bump,
             destination_minter: minter.to_bytes().into(),
         }
         .data(),
-        None => axelar_solana_its_v2::instruction::DeployRemoteInterchainToken {
+        None => solana_axelar_its::instruction::DeployRemoteInterchainToken {
             salt,
             destination_chain: destination_chain.clone(),
             gas_value,
-            signing_pda_bump,
         }
         .data(),
     };
 
     let ix = Instruction {
         program_id: ctx.program_id,
-        accounts: axelar_solana_its_v2::accounts::DeployRemoteInterchainToken {
+        accounts: solana_axelar_its::accounts::DeployRemoteInterchainToken {
             payer: ctx.payer,
             deployer: ctx.deployer,
             token_mint: ctx.token_mint_pda,
@@ -409,16 +411,15 @@ pub fn deploy_remote_interchain_token_helper(
             minter_roles: ctx.minter_roles,
             //
             gateway_root_pda,
-            gateway_program: axelar_solana_gateway_v2::ID,
+            gateway_program: solana_axelar_gateway::ID,
             gas_service_accounts: GasServiceAccounts {
-                gas_service: axelar_solana_gas_service_v2::ID,
+                gas_service: solana_axelar_gas_service::ID,
                 gas_treasury,
                 gas_event_authority,
             },
             system_program: solana_sdk::system_program::ID,
             its_root_pda: ctx.its_root_pda,
             call_contract_signing_pda,
-            its_program: ctx.program_id,
             gateway_event_authority,
             event_authority: its_event_authority,
             program: ctx.program_id,
@@ -487,7 +488,7 @@ pub fn deploy_remote_interchain_token_helper(
         //
         (gateway_root_pda, ctx.gateway_root_pda_account.clone()),
         (
-            axelar_solana_gateway_v2::ID,
+            solana_axelar_gateway::ID,
             Account {
                 lamports: 1,
                 data: vec![],
@@ -498,7 +499,7 @@ pub fn deploy_remote_interchain_token_helper(
         ),
         (gas_treasury, ctx.treasury_pda.clone()),
         (
-            axelar_solana_gas_service_v2::ID,
+            solana_axelar_gas_service::ID,
             Account {
                 lamports: 1,
                 data: vec![],
@@ -584,7 +585,7 @@ pub fn approve_deploy_remote_interchain_token_helper(
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&ctx.program_id);
 
-    let approve_ix_data = axelar_solana_its_v2::instruction::ApproveDeployRemoteInterchainToken {
+    let approve_ix_data = solana_axelar_its::instruction::ApproveDeployRemoteInterchainToken {
         deployer,
         salt,
         destination_chain: destination_chain.clone(),
@@ -594,7 +595,7 @@ pub fn approve_deploy_remote_interchain_token_helper(
 
     let approve_ix = Instruction {
         program_id: ctx.program_id,
-        accounts: axelar_solana_its_v2::accounts::ApproveDeployRemoteInterchainToken {
+        accounts: solana_axelar_its::accounts::ApproveDeployRemoteInterchainToken {
             payer: ctx.payer,
             minter: ctx.minter,
             token_manager_pda: ctx.token_manager_pda,
@@ -721,7 +722,7 @@ pub fn register_canonical_interchain_token_helper(
     let token_id = canonical_interchain_token_id(&mint_pubkey);
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -738,7 +739,7 @@ pub fn register_canonical_interchain_token_helper(
     // Create the instruction
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::RegisterCanonicalInterchainToken {
+        accounts: solana_axelar_its::accounts::RegisterCanonicalInterchainToken {
             payer,
             metadata_account: metadata_account_pda,
             system_program: solana_sdk::system_program::ID,
@@ -753,7 +754,7 @@ pub fn register_canonical_interchain_token_helper(
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::RegisterCanonicalInterchainToken {}.data(),
+        data: solana_axelar_its::instruction::RegisterCanonicalInterchainToken {}.data(),
     };
 
     // Set up accounts
@@ -792,8 +793,8 @@ pub fn register_canonical_interchain_token_helper(
 }
 
 pub fn initialize_mollusk() -> Mollusk {
-    let program_id = axelar_solana_its_v2::id();
-    let mut mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mut mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     mollusk.add_program(
         &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
@@ -823,14 +824,14 @@ pub fn initialize_mollusk() -> Mollusk {
     );
 
     mollusk.add_program(
-        &axelar_solana_gas_service_v2::ID,
-        "../../target/deploy/axelar_solana_gas_service_v2",
+        &solana_axelar_gas_service::ID,
+        "../../target/deploy/solana_axelar_gas_service",
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     mollusk.add_program(
-        &axelar_solana_gateway_v2::ID,
-        "../../target/deploy/axelar_solana_gateway_v2",
+        &solana_axelar_gateway::ID,
+        "../../target/deploy/solana_axelar_gateway",
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
@@ -842,24 +843,24 @@ pub fn setup_operator(
     operator: Pubkey,
     operator_account: &Account,
 ) -> (Pubkey, Account) {
-    let program_id = axelar_solana_operators::id();
+    let program_id = solana_axelar_operators::id();
 
     // Load the operators program into mollusk
     mollusk.add_program(
         &program_id,
-        "axelar_solana_operators",
+        "solana_axelar_operators",
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     // Derive the registry PDA
     let (registry, _bump) = Pubkey::find_program_address(
-        &[axelar_solana_operators::OperatorRegistry::SEED_PREFIX],
+        &[solana_axelar_operators::OperatorRegistry::SEED_PREFIX],
         &program_id,
     );
     // Derive the operator PDA
     let (operator_pda, _bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_operators::OperatorAccount::SEED_PREFIX,
+            solana_axelar_operators::OperatorAccount::SEED_PREFIX,
             operator.as_ref(),
         ],
         &program_id,
@@ -868,14 +869,14 @@ pub fn setup_operator(
     // Initialize the registry instruction
     let ix1 = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::Initialize {
+        accounts: solana_axelar_operators::accounts::Initialize {
             payer: operator,
             owner: operator,
             registry,
             system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::Initialize {}.data(),
+        data: solana_axelar_operators::instruction::Initialize {}.data(),
     };
 
     let checks1 = vec![
@@ -889,7 +890,7 @@ pub fn setup_operator(
     // Add operator instruction
     let ix2 = Instruction {
         program_id,
-        accounts: axelar_solana_operators::accounts::AddOperator {
+        accounts: solana_axelar_operators::accounts::AddOperator {
             owner: operator,
             operator_to_add: operator,
             registry,
@@ -897,7 +898,7 @@ pub fn setup_operator(
             system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_operators::instruction::AddOperator {}.data(),
+        data: solana_axelar_operators::instruction::AddOperator {}.data(),
     };
 
     let checks2 = vec![
@@ -946,14 +947,14 @@ pub fn init_gas_service(
     operator_pda: Pubkey,
     operator_pda_account: &Account,
 ) -> (Pubkey, Account) {
-    let program_id = axelar_solana_gas_service_v2::id();
+    let program_id = solana_axelar_gas_service::id();
 
     // Derive the treasury PDA
     let (treasury, _bump) = Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &program_id);
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_gas_service_v2::accounts::Initialize {
+        accounts: solana_axelar_gas_service::accounts::Initialize {
             payer: operator,
             operator,
             operator_pda,
@@ -961,7 +962,7 @@ pub fn init_gas_service(
             system_program: solana_sdk::system_program::ID,
         }
         .to_account_metas(None),
-        data: axelar_solana_gas_service_v2::instruction::Initialize {}.data(),
+        data: solana_axelar_gas_service::instruction::Initialize {}.data(),
     };
 
     let accounts = vec![
@@ -1001,14 +1002,14 @@ pub fn init_its_service(
     chain_name: String,
     its_hub_address: String,
 ) -> (Pubkey, Account, Pubkey, Account, Pubkey, Account) {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
 
     // Derive the program data PDA for the upgradeable program
     let (program_data, _bump) = Pubkey::find_program_address(
         &[program_id.as_ref()],
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
-    let its_elf = mollusk_svm::file::load_program_elf("axelar_solana_its_v2");
+    let its_elf = mollusk_svm::file::load_program_elf("solana_axelar_its");
     let program_data_account = create_program_data_account(&its_elf, upgrade_authority);
 
     if payer != upgrade_authority {
@@ -1027,7 +1028,7 @@ pub fn init_its_service(
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::Initialize {
+        accounts: solana_axelar_its::accounts::Initialize {
             payer,
             program_data,
             its_root_pda,
@@ -1036,7 +1037,7 @@ pub fn init_its_service(
             user_roles_account: user_roles_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::Initialize {
+        data: solana_axelar_its::instruction::Initialize {
             chain_name,
             its_hub_address,
         }
@@ -1103,7 +1104,7 @@ pub fn init_its_service_with_ethereum_trusted(
     chain_name: String,
     its_hub_address: String,
 ) -> (Pubkey, Account) {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
 
     // First initialize the ITS service
     let (
@@ -1132,17 +1133,17 @@ pub fn init_its_service_with_ethereum_trusted(
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTrustedChain {
+        accounts: solana_axelar_its::accounts::SetTrustedChain {
             payer,
             user_roles: None,
             program_data: Some(program_data),
             its_root_pda,
             system_program: solana_sdk::system_program::ID,
-            event_authority: event_authority,
+            event_authority,
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTrustedChain {
+        data: solana_axelar_its::instruction::SetTrustedChain {
             chain_name: trusted_chain_name.clone(),
         }
         .data(),

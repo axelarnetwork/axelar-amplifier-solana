@@ -6659,8 +6659,10 @@ dependencies = [
  "hex",
  "mollusk-svm 0.5.1",
  "program-utils",
+ "solana-axelar-gas-service",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-its",
  "solana-sdk",
 ]
 

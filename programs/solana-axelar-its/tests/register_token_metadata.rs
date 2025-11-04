@@ -98,7 +98,7 @@ fn test_register_token_metadata() {
     };
 
     // Derive signing PDA for call contract
-    let (call_contract_signing_pda, signing_pda_bump) =
+    let (call_contract_signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &program_id);
 
     // Get event authority accounts
@@ -124,23 +124,17 @@ fn test_register_token_metadata() {
             system_program: system_program::ID,
             its_root_pda,
             call_contract_signing_pda,
-            its_program: program_id,
             gateway_event_authority,
             gas_service_accounts: axelar_solana_its_v2::accounts::GasServiceAccounts {
                 gas_treasury: treasury_pda,
                 gas_service: solana_axelar_gas_service::ID,
                 gas_event_authority,
             },
-            // event CPI
             event_authority,
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::RegisterTokenMetadata {
-            gas_value,
-            signing_pda_bump,
-        }
-        .data(),
+        data: axelar_solana_its_v2::instruction::RegisterTokenMetadata { gas_value }.data(),
     };
 
     let accounts = vec![

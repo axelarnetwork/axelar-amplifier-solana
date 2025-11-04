@@ -409,15 +409,11 @@ fn deploy_interchain_token_self_invoke(
 		mpl_token_metadata_program: ctx
 			.accounts
 			.mpl_token_metadata_program
-			.clone()
-			.unwrap()
-			.to_account_info(),
+			.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		mpl_token_metadata_account: ctx
 			.accounts
 			.mpl_token_metadata_account
-			.clone()
-			.unwrap()
-			.to_account_info(),
+			.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		deployer_ata: ctx.accounts.deployer_ata.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		minter: ctx
 			.accounts

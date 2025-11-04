@@ -68,7 +68,7 @@ pub struct RegisterCustomToken<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            operator.as_ref().unwrap().key().as_ref()
+            operator.as_ref().ok_or(ItsError::OperatorNotProvided)?.key().as_ref()
         ],
         bump
     )]
