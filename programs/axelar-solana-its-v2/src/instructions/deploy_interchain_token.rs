@@ -6,14 +6,14 @@ use crate::{
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token_2022::spl_token_2022::extension::BaseStateWithExtensions;
+use anchor_spl::token_2022::{spl_token_2022::extension::BaseStateWithExtensions, Token2022};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
 };
 use anchor_spl::{
     token_2022::spl_token_2022::extension::ExtensionType,
-    token_interface::{Mint, TokenAccount, TokenInterface},
+    token_interface::{Mint, TokenAccount},
 };
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 
@@ -21,17 +21,13 @@ use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard}
 #[event_cpi]
 #[instruction(salt: [u8; 32], name: String, symbol: String, decimals: u8, initial_supply: u64)]
 pub struct DeployInterchainToken<'info> {
-    /// Payer for the transaction and account initialization
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The deployer of the token (must sign the transaction)
     pub deployer: Signer<'info>,
 
-    /// System program
     pub system_program: Program<'info, System>,
 
-    /// ITS root configuration PDA
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -39,13 +35,12 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// Token Manager PDA for this token
     #[account(
         init,
         payer = payer,
         space = TokenManager::DISCRIMINATOR.len() + TokenManager::INIT_SPACE,
         seeds = [
-            TOKEN_MANAGER_SEED,
+            TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt)
         ],
@@ -53,7 +48,6 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// The mint account for the new token (Token-2022 compatible)
     #[account(
         init,
         payer = payer,
@@ -70,9 +64,8 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
-    /// Token Manager’s associated token account (ATA)
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = token_manager_pda,
@@ -80,17 +73,13 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
-    /// Token program (can be SPL Token or Token-2022)
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: Program<'info, Token2022>,
 
-    /// Associated token program
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    /// Sysvar for instructions (used by Metaplex)
     #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
-    /// Metaplex Token Metadata program
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
 
@@ -107,9 +96,8 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub mpl_token_metadata_account: AccountInfo<'info>,
 
-    /// Deployer’s associated token account
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = deployer,
@@ -117,7 +105,7 @@ pub struct DeployInterchainToken<'info> {
     )]
     pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
 
-    // Minter accounts
+    // Optional accounts
     pub minter: Option<UncheckedAccount<'info>>,
 
     #[account(
@@ -294,7 +282,7 @@ fn create_token_metadata<'info>(
         .is_mutable(false)
         .name(truncated_name)
         .symbol(truncated_symbol)
-        .uri(String::new())
+        .uri(String::with_capacity(0))
         .seller_fee_basis_points(0)
         .system_program(&accounts.system_program.to_account_info())
         .sysvar_instructions(&accounts.sysvar_instructions.to_account_info())

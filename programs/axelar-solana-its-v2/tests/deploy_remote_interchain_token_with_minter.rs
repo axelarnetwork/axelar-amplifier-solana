@@ -2,23 +2,16 @@ use axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED;
 use axelar_solana_gateway_v2::ID as GATEWAY_PROGRAM_ID;
 use axelar_solana_gateway_v2_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
 use axelar_solana_its_v2::seed_prefixes::DEPLOYMENT_APPROVAL_SEED;
-use axelar_solana_its_v2::state::{TokenManager, UserRoles};
 use axelar_solana_its_v2_test_fixtures::{
     approve_deploy_remote_interchain_token_helper, deploy_remote_interchain_token_helper,
+    init_gas_service, init_its_service_with_ethereum_trusted, initialize_mollusk, setup_operator,
     ApproveDeployRemoteInterchainTokenContext, DeployRemoteInterchainTokenContext,
 };
 use axelar_solana_its_v2_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
 use mollusk_test_utils::setup_mollusk;
-use solana_sdk::{
-    account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, system_program,
-};
-
-use crate::initialize::{init_gas_service, init_its_service_with_ethereum_trusted, setup_operator};
-
-#[path = "initialize.rs"]
-mod initialize;
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_deploy_remote_interchain_token_with_minter() {
@@ -33,7 +26,7 @@ fn test_deploy_remote_interchain_token_with_minter() {
     let mut mollusk = setup_mollusk(&gas_service_program_id, "axelar_solana_gas_service_v2");
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -49,10 +42,10 @@ fn test_deploy_remote_interchain_token_with_minter() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize::initialize_mollusk();
+    let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -69,10 +62,9 @@ fn test_deploy_remote_interchain_token_with_minter() {
     );
 
     let program_id = axelar_solana_its_v2::id();
-    let mollusk = initialize::initialize_mollusk();
 
     let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &system_program::ID);
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
     // Create simple token deployment parameters
     let salt = [1u8; 32];
@@ -84,8 +76,22 @@ fn test_deploy_remote_interchain_token_with_minter() {
     let minter = Pubkey::new_unique();
 
     let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = TokenManager::find_pda(token_id, its_root_pda);
-    let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &minter);
+    let (token_manager_pda, _) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    );
+    let (minter_roles_pda, _) = Pubkey::find_program_address(
+        &[
+            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            token_manager_pda.as_ref(),
+            minter.as_ref(),
+        ],
+        &program_id,
+    );
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,

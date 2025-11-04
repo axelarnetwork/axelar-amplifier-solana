@@ -1,8 +1,9 @@
 use crate::{
     errors::ItsError,
     events::{InterchainTokenIdClaimed, LinkTokenStarted},
-    gmp::GMPAccounts,
+    gmp::*,
     instructions::process_outbound,
+    program::AxelarSolanaItsV2,
     state::{
         token_manager::{TokenManager, Type},
         InterchainTokenService,
@@ -10,8 +11,9 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
-use axelar_solana_gas_service_v2::state::Treasury;
-use axelar_solana_gateway_v2::{seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig};
+use axelar_solana_gateway_v2::{
+    program::AxelarSolanaGatewayV2, seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
+};
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
 
 #[derive(Accounts)]
@@ -22,60 +24,17 @@ use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
     token_manager_type: Type,
     link_params: Vec<u8>,
     gas_value: u64,
-    signing_pda_bump: u8
+    signing_pda_bump: u8,
 )]
 #[event_cpi]
 pub struct LinkToken<'info> {
-    /// Payer for the transaction fees (must be signer and writable)
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// The deployer who originally deployed the token (must be signer)
     pub deployer: Signer<'info>,
 
-    /// The token manager account associated with the canonical interchain token
-    #[account(
-        seeds = [
-            crate::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.key().as_ref(),
-            &interchain_token_id_internal(&linked_token_deployer_salt(&deployer.key(), &salt))
-        ],
-        seeds::program = crate::ID,
-        bump = token_manager_pda.bump,
-    )]
-    pub token_manager_pda: Account<'info, TokenManager>,
+    pub its_program: Program<'info, AxelarSolanaItsV2>,
 
-    // GMP Accounts
-    /// The GMP gateway root account
-    #[account(
-        seeds = [
-            axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
-        ],
-        seeds::program = axelar_solana_gateway_v2::ID,
-        bump = gateway_root_pda.load()?.bump,
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
-
-    /// The GMP gateway program account
-    pub gateway_program: Program<'info, axelar_solana_gateway_v2::program::AxelarSolanaGatewayV2>,
-
-    /// The GMP gas treasury account
-    #[account(
-        mut,
-        seeds = [Treasury::SEED_PREFIX],
-        seeds::program = axelar_solana_gas_service_v2::ID,
-        bump = gas_treasury.load()?.bump,
-    )]
-    pub gas_treasury: AccountLoader<'info, Treasury>,
-
-    /// The GMP gas service program account
-    #[account(address = axelar_solana_gas_service_v2::ID)]
-    pub gas_service: AccountInfo<'info>,
-
-    /// The system program account
-    pub system_program: Program<'info, System>,
-
-    /// The ITS root account
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
@@ -85,19 +44,38 @@ pub struct LinkToken<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    /// The GMP call contract signing account
+    #[account(
+        seeds = [
+            TokenManager::SEED_PREFIX,
+            its_root_pda.key().as_ref(),
+            &interchain_token_id_internal(&linked_token_deployer_salt(&deployer.key(), &salt))
+        ],
+        bump = token_manager_pda.bump,
+    )]
+    pub token_manager_pda: Account<'info, TokenManager>,
+
+    // GMP Accounts
+    #[account(
+        seeds = [
+            axelar_solana_gateway_v2::seed_prefixes::GATEWAY_SEED
+        ],
+        seeds::program = axelar_solana_gateway_v2::ID,
+        bump = gateway_root_pda.load()?.bump,
+    )]
+    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+
+    pub gateway_program: Program<'info, AxelarSolanaGatewayV2>,
+
+    pub system_program: Program<'info, System>,
+
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump = signing_pda_bump,
         seeds::program = crate::ID
     )]
-    pub call_contract_signing_pda: Signer<'info>,
+    pub call_contract_signing_pda: AccountInfo<'info>,
 
-    /// The ITS program account (this program)
-    #[account(address = crate::ID)]
-    pub its_program: AccountInfo<'info>,
-
-    /// Event authority - derived from gateway program
+    // Event authority accounts
     #[account(
         seeds = [b"__event_authority"],
         bump,
@@ -105,30 +83,27 @@ pub struct LinkToken<'info> {
     )]
     pub gateway_event_authority: SystemAccount<'info>,
 
-    /// Event authority for gas service - derived from gas service program
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = gas_service.key()
-    )]
-    pub gas_event_authority: SystemAccount<'info>,
+    pub gas_service_accounts: GasServiceAccounts<'info>,
 }
 
 impl<'info> LinkToken<'info> {
-    /// Convert the accounts to GmpAccounts format expected by the GMP processor
     pub fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_program: self.gateway_program.to_account_info(),
-            gas_treasury: self.gas_treasury.to_account_info(),
-            gas_service: self.gas_service.clone(),
             system_program: self.system_program.to_account_info(),
             its_root_pda: self.its_root_pda.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.its_program.clone(),
+            its_program: self.its_program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
-            gas_event_authority: self.gas_event_authority.to_account_info(),
+            // Gas Service
+            gas_treasury: self.gas_service_accounts.gas_treasury.to_account_info(),
+            gas_service: self.gas_service_accounts.gas_service.to_account_info(),
+            gas_event_authority: self
+                .gas_service_accounts
+                .gas_event_authority
+                .to_account_info(),
         }
     }
 }

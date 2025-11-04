@@ -1,17 +1,12 @@
 use anchor_lang::{prelude::ProgramError, AccountDeserialize};
 use axelar_solana_its_v2::state::InterchainTokenService;
+use axelar_solana_its_v2_test_fixtures::init_its_service;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
 use {
-    anchor_lang::{
-        solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
-    },
+    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
     solana_sdk::{account::Account, pubkey::Pubkey},
 };
-
-// Import helper functions from initialize.rs
-mod initialize;
-use initialize::init_its_service;
 
 #[test]
 fn test_set_pause_status_success() {
@@ -20,10 +15,10 @@ fn test_set_pause_status_success() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority; // Must be upgrade authority
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -125,10 +120,10 @@ fn test_set_pause_status_already_paused() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -208,14 +203,15 @@ fn test_set_pause_status_unauthorized() {
 
     let upgrade_authority = Pubkey::new_unique();
     let authorized_payer = upgrade_authority;
-    let authorized_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let authorized_payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     // Unauthorized user
     let unauthorized_payer = Pubkey::new_unique();
-    let unauthorized_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let unauthorized_payer_account =
+        Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -276,10 +272,10 @@ fn test_set_pause_status_already_unpaused() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();

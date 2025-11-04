@@ -1,3 +1,4 @@
+//! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
 pub mod errors;
 pub mod events;
@@ -257,5 +258,138 @@ pub mod axelar_solana_its_v2 {
 
     pub fn set_flow_limit(ctx: Context<SetFlowLimit>, flow_limit: Option<u64>) -> Result<()> {
         instructions::set_flow_limit_handler(ctx, flow_limit)
+    }
+
+    pub fn execute(
+        ctx: Context<Execute>,
+        message: axelar_solana_gateway_v2::Message,
+        payload: Vec<u8>,
+    ) -> Result<()> {
+        instructions::execute_handler(ctx, message, payload)
+    }
+
+    pub fn deploy_interchain_token_internal(
+        ctx: Context<DeployInterchainTokenInternal>,
+        token_id: [u8; 32],
+        name: String,
+        symbol: String,
+        decimals: u8,
+    ) -> Result<()> {
+        instructions::deploy_interchain_token_internal_handler(
+            ctx, token_id, name, symbol, decimals,
+        )
+    }
+
+    pub fn link_token_internal(
+        ctx: Context<LinkTokenInternal>,
+        token_id: [u8; 32],
+        destination_token_address: [u8; 32],
+        token_manager_type: u8,
+        link_params: Vec<u8>,
+    ) -> Result<()> {
+        instructions::link_token_internal_handler(
+            ctx,
+            token_id,
+            destination_token_address,
+            token_manager_type,
+            link_params,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn interchain_transfer_internal(
+        ctx: Context<InterchainTransferInternal>,
+        token_id: [u8; 32],
+        source_address: String,
+        destination_address: Pubkey,
+        amount: u64,
+        data: Vec<u8>,
+        message: axelar_solana_gateway_v2::Message,
+        source_chain: String,
+    ) -> Result<()> {
+        instructions::interchain_transfer_internal_handler(
+            ctx,
+            token_id,
+            source_address,
+            destination_address,
+            amount,
+            data,
+            message,
+            source_chain,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn interchain_transfer(
+        ctx: Context<InterchainTransfer>,
+        token_id: [u8; 32],
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        amount: u64,
+        gas_value: u64,
+        signing_pda_bump: u8,
+        source_id: Option<Pubkey>,
+        pda_seeds: Option<Vec<Vec<u8>>>,
+        data: Option<Vec<u8>>,
+    ) -> Result<()> {
+        instructions::interchain_transfer_handler(
+            ctx,
+            token_id,
+            destination_chain,
+            destination_address,
+            amount,
+            gas_value,
+            signing_pda_bump,
+            source_id,
+            pda_seeds,
+            data,
+        )
+    }
+
+    pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {
+        instructions::transfer_operatorship_handler(ctx)
+    }
+
+    pub fn propose_operatorship(ctx: Context<ProposeOperatorship>) -> Result<()> {
+        instructions::propose_operatorship_handler(ctx)
+    }
+
+    pub fn accept_operatorship(ctx: Context<AcceptOperatorship>) -> Result<()> {
+        instructions::accept_operatorship_handler(ctx)
+    }
+
+    pub fn add_token_manager_flow_limiter(ctx: Context<AddTokenManagerFlowLimiter>) -> Result<()> {
+        instructions::add_token_manager_flow_limiter_handler(ctx)
+    }
+
+    pub fn remove_token_manager_flow_limiter(
+        ctx: Context<RemoveTokenManagerFlowLimiter>,
+    ) -> Result<()> {
+        instructions::remove_token_manager_flow_limiter_handler(ctx)
+    }
+
+    pub fn set_token_manager_flow_limit(
+        ctx: Context<SetTokenManagerFlowLimit>,
+        flow_limit: Option<u64>,
+    ) -> Result<()> {
+        instructions::set_token_manager_flow_limit_handler(ctx, flow_limit)
+    }
+
+    pub fn transfer_token_manager_operatorship(
+        ctx: Context<TransferTokenManagerOperatorship>,
+    ) -> Result<()> {
+        instructions::transfer_token_manager_operatorship_handler(ctx)
+    }
+
+    pub fn propose_token_manager_operatorship(
+        ctx: Context<ProposeTokenManagerOperatorship>,
+    ) -> Result<()> {
+        instructions::propose_token_manager_operatorship_handler(ctx)
+    }
+
+    pub fn accept_token_manager_operatorship(
+        ctx: Context<AcceptTokenManagerOperatorship>,
+    ) -> Result<()> {
+        instructions::accept_token_manager_operatorship_handler(ctx)
     }
 }
