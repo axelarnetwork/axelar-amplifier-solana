@@ -37,6 +37,10 @@ pub mod memo {
         instructions::execute_handler(ctx, message, payload, encoding_scheme)
     }
 
+    pub fn execute_with_interchain_token(ctx: Context<Execute>) -> Result<()> {
+        Ok(())
+    }
+
     pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {
         instructions::emit_memo_handler(ctx, message)
     }

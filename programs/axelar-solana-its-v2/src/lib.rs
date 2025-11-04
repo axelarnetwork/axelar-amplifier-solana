@@ -2,6 +2,7 @@
 #![allow(clippy::little_endian_bytes)]
 pub mod errors;
 pub mod events;
+pub mod executable;
 pub mod gmp;
 pub mod instructions;
 pub mod state;
