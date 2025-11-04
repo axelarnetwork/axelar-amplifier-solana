@@ -8,7 +8,21 @@ pub use state::*;
 
 use solana_axelar_gateway::executable::{ExecutablePayloadEncodingScheme, Message};
 
+use program_utils::ensure_single_feature;
+
+ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+
+#[cfg(feature = "devnet-amplifier")]
 declare_id!("mem5NJXuxU7b4UJqq6ib8XUjk1Hnp4z2B1szyRZ8bLv");
+
+#[cfg(feature = "stagenet")]
+declare_id!("mempfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
+
+#[cfg(feature = "testnet")]
+declare_id!("mempFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
+
+#[cfg(feature = "mainnet")]
+declare_id!("mem1111111111111111111111111111111111111111");
 
 #[program]
 pub mod memo {

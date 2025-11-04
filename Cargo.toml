@@ -189,38 +189,21 @@ mollusk-svm = "0.5.1"
 solana-axelar-operators = { path = "programs/solana-axelar-operators", default-features = false }
 solana-axelar-gas-service = { path = "programs/solana-axelar-gas-service", default-features = false }
 solana-axelar-memo = { path = "programs/solana-axelar-memo", default-features = false }
-solana-axelar-multicall-legacy= { path = "programs/solana-axelar-multicall-legacy", default-features = false }
 solana-axelar-gateway = { path = "programs/solana-axelar-gateway", default-features = false }
 solana-axelar-governance = { path = "programs/solana-axelar-governance", default-features = false }
 solana-axelar-its = { path = "programs/solana-axelar-its", default-features = false }
 
-# legacy solana programs
-solana-axelar-its-legacy = { path = "programs/solana-axelar-its-legacy", default-features = false }
-solana-axelar-governance-legacy = { path = "programs/solana-axelar-governance-legacy", default-features = false }
-solana-axelar-gas-service-legacy = { path = "programs/solana-axelar-gas-service-legacy", default-features = false }
-solana-axelar-gateway-legacy = { path = "programs/solana-axelar-gateway-legacy", default-features = false }
-solana-axelar-memo-legacy = { path = "programs/solana-axelar-memo-legacy", default-features = false }
-dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", default-features = false }
-
 # helper crates
 axelar-message-primitives = { path = "helpers/axelar-message-primitives" }
 axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
-axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
-axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
-axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
-event-cpi = { path = "helpers/event-cpi" }
-event-cpi-macros = { path = "helpers/event-cpi-macros" }
-anchor-discriminators = { path = "helpers/anchor-discriminators" }
-anchor-discriminators-macros = { path = "helpers/anchor-discriminators-macros" }
-event-cpi-test-utils = { path = "helpers/event-cpi-test-utils" }
+solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
+solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
 evm-contracts-rs = { path = "helpers/evm-contracts-rs" }
 evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 governance-gmp = { path = "helpers/governance-gmp" }
 interchain-token-transfer-gmp = { path = "helpers/interchain-token-transfer-gmp" }
-its-instruction-builder = { path = "helpers/its-instruction-builder", default-features = false }
 program-utils = { path = "helpers/program-utils", default-features = false }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
-role-management = { path = "helpers/role-management" }
 
 [workspace.metadata.cargo-machete]
 ignored = ["num-traits"]

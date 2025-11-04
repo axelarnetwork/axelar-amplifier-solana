@@ -1,11 +1,11 @@
 use anchor_lang::prelude::ToAccountMetas;
 use anchor_lang::AccountDeserialize;
-use axelar_solana_governance_v2_test_fixtures::{
-    create_transfer_operatorship_instruction_data, initialize_governance, mock_setup_test,
-};
 use solana_axelar_governance::state::GovernanceConfig;
 use solana_axelar_governance::state::GovernanceConfigInit;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
+use solana_axelar_governance_test_fixtures::{
+    create_transfer_operatorship_instruction_data, initialize_governance, mock_setup_test,
+};
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
