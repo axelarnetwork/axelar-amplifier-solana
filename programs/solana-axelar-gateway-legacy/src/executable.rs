@@ -320,7 +320,7 @@ impl TryFrom<&[u8]> for AxelarExecuteInstruction {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axelar_solana_gateway_test_fixtures::gateway::random_message;
+    use solana_axelar_gateway_legacy_test_fixtures::gateway::random_message;
 
     #[test]
     fn test_instruction_serialization() {

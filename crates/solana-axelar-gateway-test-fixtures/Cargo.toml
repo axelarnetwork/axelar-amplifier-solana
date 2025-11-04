@@ -1,0 +1,33 @@
+[package]
+name = "solana-axelar-gateway-test-fixtures"
+version = "0.1.0"
+edition = "2021"
+description = "Test fixtures and utilities for solana-axelar-gateway"
+
+[dependencies]
+anchor-lang.workspace = true
+solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
+axelar-solana-encoding.workspace = true
+mollusk-svm.workspace = true
+solana-sdk.workspace = true
+libsecp256k1.workspace = true
+bincode.workspace = true
+rand.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+devnet-amplifier = [
+    "solana-axelar-gateway/devnet-amplifier",
+]
+stagenet = [
+    "solana-axelar-gateway/stagenet",
+]
+testnet = [
+    "solana-axelar-gateway/testnet",
+]
+mainnet = [
+    "solana-axelar-gateway/mainnet",
+]
+default = ["devnet-amplifier"]

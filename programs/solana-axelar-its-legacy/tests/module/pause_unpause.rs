@@ -6,9 +6,9 @@ use spl_associated_token_account::{
 };
 use test_context::test_context;
 
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use evm_contracts_test_suite::ethers::signers::Signer as _;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, SendToHub};
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
 use solana_axelar_its_legacy::state::token_manager::TokenManager;
 
 use crate::ItsTestContext;

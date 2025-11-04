@@ -54,7 +54,7 @@ solana-sdk-ids.workspace = true
 
 [dev-dependencies]
 anyhow.workspace = true
-axelar-solana-gateway-test-fixtures.workspace = true
+solana-axelar-gateway-legacy-test-fixtures.workspace = true
 ethers-core.workspace = true
 event-cpi-test-utils.workspace = true
 evm-contracts-test-suite.workspace = true

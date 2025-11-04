@@ -1,10 +1,10 @@
 use axelar_solana_encoding::hasher::NativeHasher;
 use axelar_solana_encoding::types::verifier_set::verifier_set_hash;
-use axelar_solana_gateway_test_fixtures::gateway::{make_verifier_set, random_bytes};
-use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use bytemuck::Zeroable;
 use solana_axelar_gateway_legacy::get_gateway_root_config_pda;
 use solana_axelar_gateway_legacy::state::signature_verification::SignatureVerification;
+use solana_axelar_gateway_legacy_test_fixtures::gateway::{make_verifier_set, random_bytes};
+use solana_axelar_gateway_legacy_test_fixtures::SolanaAxelarIntegration;
 use solana_program_test::tokio;
 use solana_sdk::instruction::InstructionError;
 use solana_sdk::signer::Signer;

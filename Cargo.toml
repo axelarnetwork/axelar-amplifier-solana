@@ -205,9 +205,9 @@ dummy-axelar-solana-gateway = { path = "programs/dummy-axelar-solana-gateway", d
 # helper crates
 axelar-message-primitives = { path = "helpers/axelar-message-primitives" }
 axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
-axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
-axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
-axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
+solana-axelar-gateway-legacy-test-fixtures = { path = "crates/solana-axelar-gateway-legacy-test-fixtures", default-features = false }
+solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
+solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
 event-cpi = { path = "helpers/event-cpi" }
 event-cpi-macros = { path = "helpers/event-cpi-macros" }
 anchor-discriminators = { path = "helpers/anchor-discriminators" }

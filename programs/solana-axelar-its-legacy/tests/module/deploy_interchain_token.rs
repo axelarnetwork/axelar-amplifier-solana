@@ -14,7 +14,7 @@ use solana_sdk::system_instruction;
 use spl_associated_token_account::get_associated_token_address_with_program_id;
 use test_context::test_context;
 
-use axelar_solana_gateway_test_fixtures::base::FindLog;
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
 
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 

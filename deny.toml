@@ -191,12 +191,12 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "axelar-solana-gateway-test-fixtures"
+crate = "solana-axelar-gateway-legacy-test-fixtures"
 expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "axelar-solana-gateway-v2-test-fixtures"
+crate = "solana-axelar-gateway-test-fixtures"
 expression = "MIT"
 license-files = []
 

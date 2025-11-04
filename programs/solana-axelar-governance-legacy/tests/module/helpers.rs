@@ -2,14 +2,14 @@
 use std::time::SystemTime;
 
 use axelar_solana_encoding::types::messages::{CrossChainId, Message};
-use axelar_solana_gateway_test_fixtures::base::{workspace_root_dir, TestFixture};
-use axelar_solana_gateway_test_fixtures::{
-    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
-};
 use borsh::to_vec;
 use event_cpi::CpiEvent;
 use event_cpi_test_utils::get_first_event_cpi_occurrence;
 use solana_axelar_gateway_legacy::state::incoming_message::command_id;
+use solana_axelar_gateway_legacy_test_fixtures::base::{workspace_root_dir, TestFixture};
+use solana_axelar_gateway_legacy_test_fixtures::{
+    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
+};
 use solana_axelar_governance_legacy::instructions::builder::{
     prepend_gateway_accounts_to_ix, GmpCallData, IxBuilder,
 };

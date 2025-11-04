@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-governance-v2-test-fixtures"
+name = "solana-axelar-governance-test-fixtures"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true

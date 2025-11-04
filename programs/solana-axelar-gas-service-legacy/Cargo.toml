@@ -22,7 +22,7 @@ event-cpi-macros.workspace = true
 event-cpi-test-utils.workspace = true
 solana-sdk.workspace = true
 solana-program-test.workspace = true
-axelar-solana-gateway-test-fixtures.workspace = true
+solana-axelar-gateway-legacy-test-fixtures.workspace = true
 rstest.workspace = true
 
 
@@ -36,19 +36,19 @@ crate-type = ["cdylib", "lib"]
 [features]
 no-entrypoint = []
 devnet-amplifier = [
-    "axelar-solana-gateway-test-fixtures/devnet-amplifier",
+    "solana-axelar-gateway-legacy-test-fixtures/devnet-amplifier",
     "program-utils/devnet-amplifier",
 ]
 stagenet = [
-    "axelar-solana-gateway-test-fixtures/stagenet",
+    "solana-axelar-gateway-legacy-test-fixtures/stagenet",
     "program-utils/stagenet",
 ]
 testnet = [
-    "axelar-solana-gateway-test-fixtures/testnet",
+    "solana-axelar-gateway-legacy-test-fixtures/testnet",
     "program-utils/testnet",
 ]
 mainnet = [
-    "axelar-solana-gateway-test-fixtures/mainnet",
+    "solana-axelar-gateway-legacy-test-fixtures/mainnet",
     "program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]

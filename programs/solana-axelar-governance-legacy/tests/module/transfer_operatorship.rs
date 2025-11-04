@@ -1,5 +1,5 @@
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
-use axelar_solana_gateway_test_fixtures::base::TestFixture;
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
+use solana_axelar_gateway_legacy_test_fixtures::base::TestFixture;
 use solana_axelar_governance_legacy::events;
 use solana_axelar_governance_legacy::instructions::builder::IxBuilder;
 use solana_axelar_governance_legacy::state::GovernanceConfig;

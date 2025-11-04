@@ -3,14 +3,16 @@ use std::sync::Arc;
 use axelar_solana_encoding::types::messages::Messages;
 use axelar_solana_encoding::types::payload::Payload;
 use axelar_solana_encoding::types::pubkey::{PublicKey, Signature};
-use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_gateway_test_fixtures::gateway::{
-    make_verifier_set, random_bytes, random_message, GetGatewayError,
-};
-use axelar_solana_gateway_test_fixtures::test_signer::{random_ecdsa_keypair, SigningVerifierSet};
-use axelar_solana_gateway_test_fixtures::SolanaAxelarIntegration;
 use solana_axelar_gateway_legacy::error::GatewayError;
 use solana_axelar_gateway_legacy::state::signature_verification::verify_ecdsa_signature_with_prefix;
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
+use solana_axelar_gateway_legacy_test_fixtures::gateway::{
+    make_verifier_set, random_bytes, random_message, GetGatewayError,
+};
+use solana_axelar_gateway_legacy_test_fixtures::test_signer::{
+    random_ecdsa_keypair, SigningVerifierSet,
+};
+use solana_axelar_gateway_legacy_test_fixtures::SolanaAxelarIntegration;
 use solana_program_test::tokio;
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use solana_sdk::signer::Signer;

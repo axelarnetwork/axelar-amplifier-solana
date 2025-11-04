@@ -1,4 +1,4 @@
-use axelar_solana_gateway_test_fixtures::base::FindLog;
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
 use solana_program_test::tokio;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer as _;

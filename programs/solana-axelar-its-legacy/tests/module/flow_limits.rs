@@ -1,8 +1,8 @@
 use alloy_primitives::Bytes;
 use anyhow::anyhow;
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use borsh::BorshDeserialize;
 use interchain_token_transfer_gmp::SendToHub;
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
 use solana_axelar_its_legacy::state::token_manager::TokenManager;
 use solana_program_test::tokio;
 use solana_sdk::clock::Clock;

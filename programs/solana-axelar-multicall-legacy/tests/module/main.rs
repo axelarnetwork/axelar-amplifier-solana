@@ -6,13 +6,13 @@
     clippy::str_to_string
 )]
 
-use axelar_solana_gateway_test_fixtures::{
-    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
-};
 use evm_contracts_test_suite::chain::TestBlockchain;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway;
 use evm_contracts_test_suite::evm_weighted_signers::WeightedSigners;
 use evm_contracts_test_suite::{get_domain_separator, ContractMiddleware};
+use solana_axelar_gateway_legacy_test_fixtures::{
+    SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
+};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signer::Signer;
 

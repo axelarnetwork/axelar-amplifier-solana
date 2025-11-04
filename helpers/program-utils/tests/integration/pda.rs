@@ -1,5 +1,5 @@
-use axelar_solana_gateway_test_fixtures::base::FindLog;
-use axelar_solana_gateway_test_fixtures::{
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
+use solana_axelar_gateway_legacy_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
 use solana_program_test::tokio;

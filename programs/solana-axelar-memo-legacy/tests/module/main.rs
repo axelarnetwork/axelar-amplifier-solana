@@ -1,4 +1,4 @@
-use axelar_solana_gateway_test_fixtures::{
+use solana_axelar_gateway_legacy_test_fixtures::{
     SolanaAxelarIntegration, SolanaAxelarIntegrationMetadata,
 };
 

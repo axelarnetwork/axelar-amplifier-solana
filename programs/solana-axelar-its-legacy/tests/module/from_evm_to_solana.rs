@@ -1,7 +1,7 @@
 use alloy_primitives::{hex, U256};
 use anyhow::anyhow;
-use axelar_solana_gateway_test_fixtures::assert_msg_present_in_logs;
 use borsh::BorshDeserialize;
+use solana_axelar_gateway_legacy_test_fixtures::assert_msg_present_in_logs;
 use solana_program_test::tokio;
 use solana_sdk::compute_budget::ComputeBudgetInstruction;
 use solana_sdk::program_pack::Pack as _;
@@ -11,7 +11,6 @@ use spl_associated_token_account::get_associated_token_address_with_program_id;
 use spl_associated_token_account::instruction::create_associated_token_account;
 use test_context::test_context;
 
-use axelar_solana_gateway_test_fixtures::base::FindLog;
 use evm_contracts_test_suite::ethers::{signers::Signer, types::Bytes};
 use evm_contracts_test_suite::evm_contracts_rs::contracts::axelar_amplifier_gateway::ContractCallFilter;
 use evm_contracts_test_suite::evm_contracts_rs::contracts::custom_test_token::CustomTestToken;
@@ -21,6 +20,7 @@ use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway_legacy::executable::{
     AxelarMessagePayload, EncodingScheme, SolanaAccountRepr,
 };
+use solana_axelar_gateway_legacy_test_fixtures::base::FindLog;
 use solana_axelar_its_legacy::state::token_manager::{TokenManager, Type as TokenManagerType};
 use solana_axelar_memo_legacy::state::Counter;
 
