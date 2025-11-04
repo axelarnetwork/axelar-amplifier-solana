@@ -262,7 +262,7 @@ fn create_token_metadata<'info>(
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
-    // NOTE: truncate panics if MAX_LENTH
+    // NOTE: truncate panics if MAX_LENGTH
     // does not lie on a char boundary.
     // TODO should we handle it gracefully?
 
