@@ -6537,6 +6537,7 @@ dependencies = [
  "bincode",
  "hex",
  "mollusk-svm",
+ "program-utils",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-sdk",
