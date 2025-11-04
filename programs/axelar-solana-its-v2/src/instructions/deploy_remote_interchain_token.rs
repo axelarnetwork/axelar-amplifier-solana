@@ -15,7 +15,7 @@ use anchor_spl::token_2022::spl_token_2022::{
     state::Mint as SplMint,
 };
 use anchor_spl::token_interface::Mint;
-use axelar_solana_gateway_v2::{AxelarSolanaGatewayV2, GatewayConfig};
+use axelar_solana_gateway_v2::{program::AxelarSolanaGatewayV2, GatewayConfig};
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use mpl_token_metadata::accounts::Metadata;
 use spl_token_metadata_interface::state::TokenMetadata;
