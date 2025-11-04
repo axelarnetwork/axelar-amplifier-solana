@@ -14,7 +14,7 @@ pub struct AcceptOperatorship<'info> {
 
     /// Destination user roles account (will receive OPERATOR role)
     #[account(
-        init, // todo: swicth to init_if_needed
+        init_if_needed,
         payer = payer,
         space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
         seeds = [

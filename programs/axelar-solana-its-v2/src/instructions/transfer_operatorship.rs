@@ -40,7 +40,7 @@ pub struct TransferOperatorship<'info> {
 
     /// Destination user roles account
     #[account(
-        init, // todo: switch to init_if_needed
+        init_if_needed,
         payer = payer,
         space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
         seeds = [

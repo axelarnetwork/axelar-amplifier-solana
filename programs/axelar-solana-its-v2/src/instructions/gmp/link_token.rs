@@ -51,7 +51,7 @@ pub struct LinkTokenInternal<'info> {
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = token_manager_pda,

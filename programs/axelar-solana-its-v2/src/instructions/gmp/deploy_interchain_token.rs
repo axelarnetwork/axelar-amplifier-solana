@@ -59,7 +59,7 @@ pub struct DeployInterchainTokenInternal<'info> {
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = token_manager_pda,
@@ -90,7 +90,7 @@ pub struct DeployInterchainTokenInternal<'info> {
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = deployer,
