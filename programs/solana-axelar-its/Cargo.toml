@@ -8,13 +8,18 @@ license.workspace = true
 edition.workspace = true
 
 [dependencies]
+alloy-primitives.workspace = true
 anchor-lang.workspace = true
 anchor-spl.workspace = true
-solana-axelar-gas-service = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-operators = { workspace = true, features = ["no-entrypoint"] }
+solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint"] }
 program-utils.workspace = true
 bytemuck.workspace = true
 bitflags.workspace = true
+mpl-token-metadata.workspace = true
+spl-token-metadata-interface.workspace = true
+interchain-token-transfer-gmp.workspace = true
 
 [dev-dependencies]
 solana-axelar-gas-service.workspace = true
@@ -23,6 +28,9 @@ solana-sdk-ids.workspace = true
 solana-sdk.workspace = true
 mollusk-svm.workspace = true
 mollusk-test-utils.workspace = true
+mollusk-svm-programs-token.workspace = true
+hex.workspace = true
+solana-axelar-its-test-fixtures.workspace = true
 
 [package.metadata.cargo-machete]
 ignored = ["anchor-spl", "bytemuck", "solana-axelar-gas-service", "solana-axelar-operators"]

@@ -49,7 +49,7 @@ pub struct SetTrustedChain<'info> {
      	seeds = [InterchainTokenService::SEED_PREFIX],
      	bump = its_root_pda.bump,
       	// Ensure the chain is not already added.
-      	constraint = !its_root_pda.is_trusted_chain(chain_name) @ ProgramError::InvalidArgument,
+      	constraint = !its_root_pda.is_trusted_chain(&chain_name) @ ProgramError::InvalidArgument,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
