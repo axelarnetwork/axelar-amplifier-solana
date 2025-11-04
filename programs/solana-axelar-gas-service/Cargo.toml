@@ -41,19 +41,15 @@ test-sbf = []
 
 devnet-amplifier = [
 	"solana-axelar-operators/devnet-amplifier",
-	"program-utils/devnet-amplifier",
 ]
 stagenet = [
 	"solana-axelar-operators/stagenet",
-	"program-utils/stagenet",
 ]
 testnet = [
 	"solana-axelar-operators/testnet",
-	"program-utils/testnet",
 ]
 mainnet = [
 	"solana-axelar-operators/mainnet",
-	"program-utils/mainnet",
 ]
 default = ["devnet-amplifier"]
 
