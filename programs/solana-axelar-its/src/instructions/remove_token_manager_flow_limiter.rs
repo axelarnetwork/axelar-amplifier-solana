@@ -78,7 +78,7 @@ pub fn remove_token_manager_flow_limiter_handler(
             &ctx.accounts.target_roles_account,
             ctx.accounts.payer.to_account_info(),
         )
-        .map_err(|e| e.with_account_name("proposal_pda"))?;
+        .map_err(|e| e.with_account_name("target_roles_account"))?;
         msg!("Account closed");
     }
 

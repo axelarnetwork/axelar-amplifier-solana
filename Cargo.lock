@@ -6635,20 +6635,16 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bincode",
- "hex",
  "mollusk-svm 0.5.1",
  "mollusk-svm-programs-token",
  "mollusk-test-utils",
  "mpl-token-metadata",
  "solana-axelar-gas-service",
  "solana-axelar-gateway",
- "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
  "solana-axelar-operators",
  "solana-program",
  "solana-sdk",
- "solana-sdk-ids",
- "spl-token-metadata-interface 0.6.0",
 ]
 
 [[package]]
@@ -6661,7 +6657,6 @@ dependencies = [
  "hex",
  "mollusk-svm 0.5.1",
  "program-utils",
- "solana-axelar-gas-service",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
