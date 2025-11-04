@@ -1,20 +1,25 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
+use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
+use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022::spl_token_2022;
-use axelar_solana_its_v2::utils::linked_token_deployer_salt;
-use axelar_solana_its_v2::{
-    state::{token_manager::Type, TokenManager},
-    utils::interchain_token_id_internal,
-};
-use axelar_solana_its_v2_test_fixtures::init_gas_service;
-use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
-use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
-use axelar_solana_its_v2_test_fixtures::setup_operator;
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
+use solana_axelar_its::utils::linked_token_deployer_salt;
+use solana_axelar_its::{
+    state::{token_manager::Type, TokenManager},
+    utils::interchain_token_id_internal,
+};
+use solana_axelar_its_test_fixtures::init_gas_service;
+use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
+use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::setup_operator;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -77,7 +82,7 @@ fn test_link_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -89,8 +94,8 @@ fn test_link_token() {
     let its_operator = Pubkey::new_unique();
     let its_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
@@ -119,7 +124,7 @@ fn test_link_token() {
 
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -134,8 +139,7 @@ fn test_link_token() {
         );
 
     // Create the register custom token instruction first
-    use anchor_lang::{InstructionData, ToAccountMetas};
-    let register_instruction_data = axelar_solana_its_v2::instruction::RegisterCustomToken {
+    let register_instruction_data = solana_axelar_its::instruction::RegisterCustomToken {
         salt,
         token_manager_type,
         operator: operator_param,
@@ -145,7 +149,7 @@ fn test_link_token() {
         Pubkey::find_program_address(&[b"__event_authority"], &program_id);
 
     // Build account metas for register custom token
-    let register_accounts = axelar_solana_its_v2::accounts::RegisterCustomToken {
+    let register_accounts = solana_axelar_its::accounts::RegisterCustomToken {
         payer,
         deployer,
         system_program: solana_sdk::system_program::ID,
@@ -240,7 +244,7 @@ fn test_link_token() {
     assert_eq!(token_manager.ty, Type::LockUnlock);
 
     // Link token test parameters
-    let destination_chain = "ethereum".to_string();
+    let destination_chain = "ethereum".to_owned();
     let destination_token_address = vec![0x12, 0x34, 0x56, 0x78]; // Mock Ethereum address
     let link_params = vec![]; // No additional params
     let gas_value = 0u64; // No gas payment for this test
@@ -263,7 +267,7 @@ fn test_link_token() {
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
 
     // Create link token instruction
-    let link_instruction_data = axelar_solana_its_v2::instruction::LinkToken {
+    let link_instruction_data = solana_axelar_its::instruction::LinkToken {
         salt,
         destination_chain: destination_chain.clone(),
         destination_token_address: destination_token_address.clone(),
@@ -273,7 +277,7 @@ fn test_link_token() {
     };
 
     // Build accounts
-    let link_accounts = axelar_solana_its_v2::accounts::LinkToken {
+    let link_accounts = solana_axelar_its::accounts::LinkToken {
         payer,
         deployer,
         its_root_pda,
@@ -283,7 +287,7 @@ fn test_link_token() {
         system_program: solana_sdk::system_program::ID,
         call_contract_signing_pda,
         gateway_event_authority,
-        gas_service_accounts: axelar_solana_its_v2::accounts::GasServiceAccounts {
+        gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
             gas_treasury,
             gas_service: solana_axelar_gas_service::ID,
             gas_event_authority,

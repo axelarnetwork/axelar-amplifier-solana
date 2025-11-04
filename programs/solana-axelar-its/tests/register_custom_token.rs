@@ -1,11 +1,16 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
+use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
+use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022::spl_token_2022;
-use axelar_solana_its_v2::{
+use mollusk_svm::program::keyed_account_for_system_program;
+use solana_axelar_its::{
     state::{token_manager::Type, TokenManager},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
-use axelar_solana_its_v2_test_fixtures::{init_its_service, initialize_mollusk};
-use mollusk_svm::program::keyed_account_for_system_program;
+use solana_axelar_its_test_fixtures::{init_its_service, initialize_mollusk};
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -39,7 +44,7 @@ fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
 
 #[test]
 fn test_register_custom_token_without_operator() {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -51,8 +56,8 @@ fn test_register_custom_token_without_operator() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
     let (
@@ -89,7 +94,7 @@ fn test_register_custom_token_without_operator() {
 
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -104,8 +109,7 @@ fn test_register_custom_token_without_operator() {
         );
 
     // Create the instruction data
-    use anchor_lang::{InstructionData, ToAccountMetas};
-    let instruction_data = axelar_solana_its_v2::instruction::RegisterCustomToken {
+    let instruction_data = solana_axelar_its::instruction::RegisterCustomToken {
         salt,
         token_manager_type,
         operator: operator_param,
@@ -115,7 +119,7 @@ fn test_register_custom_token_without_operator() {
         Pubkey::find_program_address(&[b"__event_authority"], &program_id);
 
     // Build account metas
-    let accounts = axelar_solana_its_v2::accounts::RegisterCustomToken {
+    let accounts = solana_axelar_its::accounts::RegisterCustomToken {
         payer,
         deployer,
         system_program: solana_sdk::system_program::ID,

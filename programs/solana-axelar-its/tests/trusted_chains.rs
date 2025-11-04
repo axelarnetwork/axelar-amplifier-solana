@@ -3,11 +3,10 @@
 #![allow(clippy::print_stdout)]
 
 use anchor_lang::{prelude::ProgramError, AccountDeserialize, Discriminator};
-use axelar_solana_its_v2::state::{InterchainTokenService, Roles, RolesError, UserRoles};
-use axelar_solana_its_v2_test_fixtures::init_its_service;
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_axelar_its::state::{InterchainTokenService, Roles, RolesError, UserRoles};
+use solana_axelar_its_test_fixtures::init_its_service;
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,

@@ -1,20 +1,24 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
+use anchor_lang::solana_program;
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use axelar_solana_its_v2::{
+use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_test_utils::get_event_authority_and_program_accounts;
+use solana_axelar_its::{
     state::{TokenManager, UserRoles},
     utils::interchain_token_id,
 };
-use axelar_solana_its_v2_test_fixtures::{
+use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk,
     DeployInterchainTokenContext,
 };
-use mollusk_svm::program::keyed_account_for_system_program;
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_program::instruction::Instruction;
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_set_token_manager_flow_limit_success() {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -26,8 +30,8 @@ fn test_set_token_manager_flow_limit_success() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
     let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
@@ -43,8 +47,8 @@ fn test_set_token_manager_flow_limit_success() {
 
     // Deploy an interchain token first
     let salt = [1u8; 32];
-    let name = "Test Token".to_string();
-    let symbol = "TEST".to_string();
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
 
@@ -92,7 +96,7 @@ fn test_set_token_manager_flow_limit_success() {
 
     let add_flow_limiter_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::AddTokenManagerFlowLimiter {
+        accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
             system_program: solana_sdk::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
@@ -103,7 +107,7 @@ fn test_set_token_manager_flow_limit_success() {
             target_roles_account: flow_limiter_roles_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::AddTokenManagerFlowLimiter {}.data(),
+        data: solana_axelar_its::instruction::AddTokenManagerFlowLimiter {}.data(),
     };
 
     let minter_roles_account = result
@@ -153,7 +157,7 @@ fn test_set_token_manager_flow_limit_success() {
 
     let set_token_manager_flow_limit_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::SetTokenManagerFlowLimit {
+        accounts: solana_axelar_its::accounts::SetTokenManagerFlowLimit {
             payer,
             flow_limiter: flow_limiter_user,
             its_root_pda,
@@ -165,7 +169,7 @@ fn test_set_token_manager_flow_limit_success() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::SetTokenManagerFlowLimit { flow_limit }.data(),
+        data: solana_axelar_its::instruction::SetTokenManagerFlowLimit { flow_limit }.data(),
     };
 
     let updated_token_manager_account = add_flow_limiter_result

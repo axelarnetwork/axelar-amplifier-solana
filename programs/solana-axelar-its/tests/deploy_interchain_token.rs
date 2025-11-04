@@ -1,20 +1,24 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::cognitive_complexity)]
+
+use anchor_lang::solana_program::program_pack::Pack;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
-use axelar_solana_its_v2::{
+use solana_axelar_its::{
     state::{TokenManager, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id_internal},
 };
-use axelar_solana_its_v2_test_fixtures::{
+use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk,
     DeployInterchainTokenContext,
 };
-use solana_program::program_pack::Pack;
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_deploy_interchain_token() {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -26,8 +30,8 @@ fn test_deploy_interchain_token() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
     let (
@@ -50,17 +54,17 @@ fn test_deploy_interchain_token() {
 
     // Create simple token deployment parameters
     let salt = [1u8; 32];
-    let name = "Test Token".to_string();
-    let symbol = "TEST".to_string();
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
 
     let minter = Pubkey::new_unique();
 
-    let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
+    let token_id = solana_axelar_its::utils::interchain_token_id(&deployer, &salt);
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -68,7 +72,7 @@ fn test_deploy_interchain_token() {
     );
     let (minter_roles_pda, minter_roles_pda_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            solana_axelar_its::state::UserRoles::SEED_PREFIX,
             token_manager_pda.as_ref(),
             minter.as_ref(),
         ],

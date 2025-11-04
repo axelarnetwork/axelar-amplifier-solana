@@ -1,12 +1,11 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::indexing_slicing)]
+
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::spl_associated_token_account,
     token_2022::spl_token_2022::{self},
-};
-use axelar_solana_its_v2::{state::TokenManager, utils::interchain_token_id};
-use axelar_solana_its_v2_test_fixtures::{
-    create_rent_sysvar_data, create_sysvar_instructions_data,
-    init_its_service_with_ethereum_trusted, initialize_mollusk,
 };
 use interchain_token_transfer_gmp::{
     DeployInterchainToken, GMPPayload, InterchainTransfer, ReceiveFromHub,
@@ -17,6 +16,11 @@ use solana_axelar_gateway::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
+};
+use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
+use solana_axelar_its_test_fixtures::{
+    create_rent_sysvar_data, create_sysvar_instructions_data,
+    init_its_service_with_ethereum_trusted, initialize_mollusk,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
 use solana_sdk::{
@@ -39,7 +43,7 @@ fn test_execute_interchain_transfer_success() {
     assert!(init_result.program_result.is_ok());
 
     // Step 3: Add ITS program to mollusk
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mut mollusk = initialize_mollusk();
     mollusk.add_program(
         &GATEWAY_PROGRAM_ID,
@@ -55,8 +59,8 @@ fn test_execute_interchain_transfer_success() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &setup.mollusk,
@@ -72,8 +76,8 @@ fn test_execute_interchain_transfer_success() {
     // Step 5: First deploy a token so we have a token manager with mint authority
     let salt = [1u8; 32];
     let token_id = interchain_token_id(&payer, &salt);
-    let name = "Test Token".to_string();
-    let symbol = "TEST".to_string();
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
     let decimals = 9u8;
 
     // Create the deploy token GMP payload
@@ -89,7 +93,7 @@ fn test_execute_interchain_transfer_success() {
     // Wrap in ReceiveFromHub payload
     let deploy_receive_from_hub_payload = ReceiveFromHub {
         selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
-        source_chain: "ethereum".to_string(),
+        source_chain: "ethereum".to_owned(),
         payload: GMPPayload::DeployInterchainToken(deploy_payload)
             .encode()
             .into(),
@@ -100,7 +104,7 @@ fn test_execute_interchain_transfer_success() {
     let deploy_payload_hash = keccak::hashv(&[&deploy_encoded_payload]).to_bytes();
 
     // Create test message for deploy
-    let deploy_message = create_test_message(
+    let mut deploy_message = create_test_message(
         "ethereum",
         "deploy_token_123",
         &program_id.to_string(),
@@ -108,7 +112,6 @@ fn test_execute_interchain_transfer_success() {
     );
 
     // Override the source_address to match its_hub_address
-    let mut deploy_message = deploy_message;
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
@@ -128,7 +131,7 @@ fn test_execute_interchain_transfer_success() {
     // Find required PDAs
     let (token_manager_pda, _) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -137,7 +140,7 @@ fn test_execute_interchain_transfer_success() {
 
     let (token_mint_pda, _) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::INTERCHAIN_TOKEN_SEED,
+            solana_axelar_its::seed_prefixes::INTERCHAIN_TOKEN_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -182,16 +185,16 @@ fn test_execute_interchain_transfer_success() {
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
-    let (its_event_authority, _event_authority_account, its_program_account) =
+    let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);
 
     // Execute deploy instruction first
-    let deploy_instruction_data = axelar_solana_its_v2::instruction::Execute {
+    let deploy_instruction_data = solana_axelar_its::instruction::Execute {
         message: deploy_message.clone(),
         payload: deploy_encoded_payload,
     };
 
-    let deploy_executable_accounts = axelar_solana_its_v2::accounts::AxelarExecuteAccounts {
+    let deploy_executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
         incoming_message_pda: *deploy_incoming_message_pda,
         signing_pda: deploy_signing_pda,
         gateway_root_pda,
@@ -199,7 +202,7 @@ fn test_execute_interchain_transfer_success() {
         axelar_gateway_program: GATEWAY_PROGRAM_ID,
     };
 
-    let deploy_accounts = axelar_solana_its_v2::accounts::Execute {
+    let deploy_accounts = solana_axelar_its::accounts::Execute {
         // GMP accounts
         executable: deploy_executable_accounts,
 
@@ -337,7 +340,7 @@ fn test_execute_interchain_transfer_success() {
         (program_id, its_program_account.clone()),
         (program_id, its_program_account.clone()),
         // Event CPI accounts
-        (its_event_authority, _event_authority_account.clone()),
+        (its_event_authority, event_authority_account.clone()),
         (program_id, its_program_account.clone()),
     ];
 
@@ -357,7 +360,7 @@ fn test_execute_interchain_transfer_success() {
     let transfer_amount = 1_000_000u64;
     let destination_pubkey = payer; // Transfer to same user for simplicity
     let destination_address = destination_pubkey.to_bytes().to_vec(); // 32 bytes for Solana Pubkey
-    let source_address = "ethereum_address_123".to_string(); // Valid UTF-8 string
+    let source_address = "ethereum_address_123".to_owned(); // Valid UTF-8 string
 
     let source_address_bytes = source_address.as_bytes().to_vec();
 
@@ -372,7 +375,7 @@ fn test_execute_interchain_transfer_success() {
 
     let transfer_receive_from_hub_payload = ReceiveFromHub {
         selector: alloy_primitives::U256::from(4),
-        source_chain: "ethereum".to_string(),
+        source_chain: "ethereum".to_owned(),
         payload: GMPPayload::InterchainTransfer(transfer_payload)
             .encode()
             .into(),
@@ -422,12 +425,12 @@ fn test_execute_interchain_transfer_success() {
     );
 
     // Execute transfer instruction
-    let transfer_instruction_data = axelar_solana_its_v2::instruction::Execute {
+    let transfer_instruction_data = solana_axelar_its::instruction::Execute {
         message: transfer_message.clone(),
         payload: transfer_encoded_payload,
     };
 
-    let transfer_executable_accounts = axelar_solana_its_v2::accounts::AxelarExecuteAccounts {
+    let transfer_executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
         incoming_message_pda: *transfer_incoming_message_pda,
         signing_pda: transfer_signing_pda,
         gateway_root_pda,
@@ -435,7 +438,7 @@ fn test_execute_interchain_transfer_success() {
         axelar_gateway_program: GATEWAY_PROGRAM_ID,
     };
 
-    let transfer_accounts = axelar_solana_its_v2::accounts::Execute {
+    let transfer_accounts = solana_axelar_its::accounts::Execute {
         executable: transfer_executable_accounts,
         payer,
         its_root_pda,
@@ -539,7 +542,7 @@ fn test_execute_interchain_transfer_success() {
         (program_id, its_program_account.clone()),
         (payer, payer_account), // authority: Some(payer)
         (destination_ata, deployer_ata_account_after_deploy.clone()), // Use deployer ATA as destination ATA
-        (its_event_authority, _event_authority_account),
+        (its_event_authority, event_authority_account),
         (program_id, its_program_account),
     ];
 

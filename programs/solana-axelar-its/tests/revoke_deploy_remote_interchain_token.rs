@@ -1,26 +1,29 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
 use anchor_lang::AccountDeserialize;
 use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
-use axelar_solana_its_v2::{
-    seed_prefixes::DEPLOYMENT_APPROVAL_SEED, state::deploy_approval::DeployApproval,
-};
-use axelar_solana_its_v2_test_fixtures::init_its_service;
-use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
-use axelar_solana_its_v2_test_fixtures::{
-    approve_deploy_remote_interchain_token_helper, ApproveDeployRemoteInterchainTokenContext,
-};
-use axelar_solana_its_v2_test_fixtures::{
-    deploy_interchain_token_helper, DeployInterchainTokenContext,
-};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
+use solana_axelar_its::{
+    seed_prefixes::DEPLOYMENT_APPROVAL_SEED, state::deploy_approval::DeployApproval,
+};
+use solana_axelar_its_test_fixtures::init_its_service;
+use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::{
+    approve_deploy_remote_interchain_token_helper, ApproveDeployRemoteInterchainTokenContext,
+};
+use solana_axelar_its_test_fixtures::{
+    deploy_interchain_token_helper, DeployInterchainTokenContext,
+};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
 
 #[test]
 fn test_revoke_deploy_remote_interchain_token() {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -32,8 +35,8 @@ fn test_revoke_deploy_remote_interchain_token() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
     let (
@@ -56,17 +59,17 @@ fn test_revoke_deploy_remote_interchain_token() {
 
     // Create simple token deployment parameters
     let salt = [1u8; 32];
-    let name = "Test Token".to_string();
-    let symbol = "TEST".to_string();
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
 
     let minter = Pubkey::new_unique();
 
-    let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
+    let token_id = solana_axelar_its::utils::interchain_token_id(&deployer, &salt);
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -74,7 +77,7 @@ fn test_revoke_deploy_remote_interchain_token() {
     );
     let (minter_roles_pda, _) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::state::UserRoles::SEED_PREFIX,
+            solana_axelar_its::state::UserRoles::SEED_PREFIX,
             token_manager_pda.as_ref(),
             minter.as_ref(),
         ],
@@ -110,7 +113,7 @@ fn test_revoke_deploy_remote_interchain_token() {
     );
 
     // Now test approve deploy remote interchain token
-    let destination_chain = "ethereum".to_string();
+    let destination_chain = "ethereum".to_owned();
     let destination_minter = b"0x1234567890abcdef1234567890abcdef12345678".to_vec();
 
     let destination_chain_hash =
@@ -167,7 +170,7 @@ fn test_revoke_deploy_remote_interchain_token() {
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&program_id);
 
-    let revoke_ix_data = axelar_solana_its_v2::instruction::RevokeDeployRemoteInterchainToken {
+    let revoke_ix_data = solana_axelar_its::instruction::RevokeDeployRemoteInterchainToken {
         deployer,
         salt,
         destination_chain: destination_chain.clone(),
@@ -176,7 +179,7 @@ fn test_revoke_deploy_remote_interchain_token() {
 
     let revoke_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::RevokeDeployRemoteInterchainToken {
+        accounts: solana_axelar_its::accounts::RevokeDeployRemoteInterchainToken {
             payer,
             minter,
             deploy_approval_pda,
@@ -194,8 +197,10 @@ fn test_revoke_deploy_remote_interchain_token() {
         .resulting_accounts
         .iter()
         .find(|(pubkey, _)| *pubkey == payer)
-        .map(|(_, account)| account.clone())
-        .unwrap_or_else(|| Account::new(9 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID));
+        .map_or_else(
+            || Account::new(9 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID),
+            |(_, account)| account.clone(),
+        );
 
     let revoke_accounts = vec![
         (payer, updated_payer_account),

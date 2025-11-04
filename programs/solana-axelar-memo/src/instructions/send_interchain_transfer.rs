@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use axelar_solana_its_v2::program::AxelarSolanaItsV2;
+use solana_axelar_its::program::SolanaAxelarIts;
 
 use crate::Counter;
 
@@ -34,7 +34,7 @@ pub struct SendInterchainTransfer<'info> {
     // ITS
     //
     pub its_root_pda: UncheckedAccount<'info>,
-    pub its_program: Program<'info, AxelarSolanaItsV2>,
+    pub its_program: Program<'info, SolanaAxelarIts>,
     pub its_event_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
@@ -73,7 +73,7 @@ pub fn send_interchain_transfer_handler(
         destination_chain
     );
 
-    let cpi_accounts = axelar_solana_its_v2::cpi::accounts::InterchainTransfer {
+    let cpi_accounts = solana_axelar_its::cpi::accounts::InterchainTransfer {
         payer: ctx.accounts.payer.to_account_info(),
         authority: ctx.accounts.counter.to_account_info(),
         gateway_root_pda: ctx.accounts.gateway_root_pda.to_account_info(),
@@ -104,7 +104,7 @@ pub fn send_interchain_transfer_handler(
         signer_seeds,
     );
 
-    axelar_solana_its_v2::cpi::interchain_transfer(
+    solana_axelar_its::cpi::interchain_transfer(
         cpi_ctx,
         token_id,
         destination_chain,

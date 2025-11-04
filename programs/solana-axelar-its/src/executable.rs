@@ -5,7 +5,7 @@ use solana_axelar_gateway::executable::*;
 pub use mpl_token_metadata::accounts::Metadata as TokenMetadata;
 
 #[allow(unused_imports)]
-use crate as axelar_solana_its_v2;
+use crate as solana_axelar_its;
 
 /// Anchor discriminator for the `execute_with_interchain_token` instruction.
 /// sha256("global:execute_with_interchain_token")[..8]

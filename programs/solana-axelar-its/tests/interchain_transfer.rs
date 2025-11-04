@@ -1,24 +1,27 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022;
 use anchor_spl::token_2022::spl_token_2022::extension::StateWithExtensions;
 use anchor_spl::token_2022::spl_token_2022::state::Account as TokenAccount;
-use axelar_solana_its_v2::utils::canonical_interchain_token_id;
-use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
-use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
-use axelar_solana_its_v2_test_fixtures::setup_operator;
-use axelar_solana_its_v2_test_fixtures::{
-    deploy_interchain_token_helper, DeployInterchainTokenContext,
-};
-use axelar_solana_its_v2_test_fixtures::{
-    init_gas_service, register_canonical_interchain_token_helper,
-};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_axelar_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
+use solana_axelar_its::utils::canonical_interchain_token_id;
+use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
+use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::setup_operator;
+use solana_axelar_its_test_fixtures::{
+    deploy_interchain_token_helper, DeployInterchainTokenContext,
+};
+use solana_axelar_its_test_fixtures::{
+    init_gas_service, register_canonical_interchain_token_helper,
+};
 use solana_sdk::program_pack::Pack;
 use solana_sdk::rent::Rent;
 use solana_sdk::signature::Keypair;
@@ -54,7 +57,7 @@ fn test_interchain_transfer_mint_burn() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -66,8 +69,8 @@ fn test_interchain_transfer_mint_burn() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
@@ -81,8 +84,8 @@ fn test_interchain_transfer_mint_burn() {
     );
 
     let salt = [1u8; 32];
-    let name = "Test Token".to_string();
-    let symbol = "TEST".to_string();
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64;
 
@@ -119,14 +122,14 @@ fn test_interchain_transfer_mint_burn() {
     assert!(result.program_result.is_ok());
 
     let source = deployer;
-    let token_id = axelar_solana_its_v2::utils::interchain_token_id(&deployer, &salt);
-    let destination_chain = "ethereum".to_string();
+    let token_id = solana_axelar_its::utils::interchain_token_id(&deployer, &salt);
+    let destination_chain = "ethereum".to_owned();
     let destination_address = b"0x1234567890123456789012345678901234567890".to_vec();
     let transfer_amount = 1_000_000u64;
     let gas_value = 0u64;
 
     let (signing_pda, _signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &axelar_solana_its_v2::ID);
+        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &solana_axelar_its::ID);
 
     let (gas_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
@@ -134,10 +137,10 @@ fn test_interchain_transfer_mint_burn() {
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
 
-    let (its_event_authority, _event_authority_account, its_program_account) =
+    let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);
 
-    let accounts = axelar_solana_its_v2::accounts::InterchainTransfer {
+    let accounts = solana_axelar_its::accounts::InterchainTransfer {
         payer,
         authority: source,
         its_root_pda,
@@ -158,7 +161,7 @@ fn test_interchain_transfer_mint_burn() {
         program: program_id,
     };
 
-    let instruction_data = axelar_solana_its_v2::instruction::InterchainTransfer {
+    let instruction_data = solana_axelar_its::instruction::InterchainTransfer {
         token_id,
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
@@ -235,7 +238,7 @@ fn test_interchain_transfer_mint_burn() {
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         (program_id, its_program_account.clone()),
-        (its_event_authority, _event_authority_account),
+        (its_event_authority, event_authority_account),
         (program_id, its_program_account),
     ];
 
@@ -284,7 +287,7 @@ fn test_interchain_transfer_lock_unlock() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -296,8 +299,8 @@ fn test_interchain_transfer_lock_unlock() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
@@ -346,7 +349,7 @@ fn test_interchain_transfer_lock_unlock() {
     let token_id = canonical_interchain_token_id(&mint_pubkey);
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -389,13 +392,13 @@ fn test_interchain_transfer_lock_unlock() {
     };
 
     let source = deployer;
-    let destination_chain = "ethereum".to_string();
+    let destination_chain = "ethereum".to_owned();
     let destination_address = b"0x1234567890123456789012345678901234567890".to_vec();
     let transfer_amount = 1_000_000u64;
     let gas_value = 0u64;
 
     let (signing_pda, _signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &axelar_solana_its_v2::ID);
+        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &solana_axelar_its::ID);
 
     let (gas_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
@@ -403,10 +406,10 @@ fn test_interchain_transfer_lock_unlock() {
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
 
-    let (its_event_authority, _event_authority_account, its_program_account) =
+    let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);
 
-    let accounts = axelar_solana_its_v2::accounts::InterchainTransfer {
+    let accounts = solana_axelar_its::accounts::InterchainTransfer {
         payer,
         authority: source,
         its_root_pda,
@@ -427,7 +430,7 @@ fn test_interchain_transfer_lock_unlock() {
         program: program_id,
     };
 
-    let instruction_data = axelar_solana_its_v2::instruction::InterchainTransfer {
+    let instruction_data = solana_axelar_its::instruction::InterchainTransfer {
         token_id,
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
@@ -501,7 +504,7 @@ fn test_interchain_transfer_lock_unlock() {
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         (program_id, its_program_account.clone()),
-        (its_event_authority, _event_authority_account),
+        (its_event_authority, event_authority_account),
         (program_id, its_program_account),
     ];
 

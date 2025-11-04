@@ -1,17 +1,21 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
+use anchor_lang::solana_program;
 use anchor_lang::system_program;
 use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
 use anchor_spl::token_2022::spl_token_2022;
-use axelar_solana_its_v2_test_fixtures::init_gas_service;
-use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
-use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
-use axelar_solana_its_v2_test_fixtures::setup_operator;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_axelar_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
+use solana_axelar_its_test_fixtures::init_gas_service;
+use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
+use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::setup_operator;
 use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -47,7 +51,7 @@ fn test_register_token_metadata() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -56,8 +60,8 @@ fn test_register_token_metadata() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
@@ -116,7 +120,7 @@ fn test_register_token_metadata() {
 
     let ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::RegisterTokenMetadata {
+        accounts: solana_axelar_its::accounts::RegisterTokenMetadata {
             payer,
             token_mint,
             gateway_root_pda,
@@ -125,7 +129,7 @@ fn test_register_token_metadata() {
             its_root_pda,
             call_contract_signing_pda,
             gateway_event_authority,
-            gas_service_accounts: axelar_solana_its_v2::accounts::GasServiceAccounts {
+            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
                 gas_treasury: treasury_pda,
                 gas_service: solana_axelar_gas_service::ID,
                 gas_event_authority,
@@ -134,7 +138,7 @@ fn test_register_token_metadata() {
             program: program_id,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::RegisterTokenMetadata { gas_value }.data(),
+        data: solana_axelar_its::instruction::RegisterTokenMetadata { gas_value }.data(),
     };
 
     let accounts = vec![

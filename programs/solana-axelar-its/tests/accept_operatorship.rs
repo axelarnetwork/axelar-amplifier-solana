@@ -1,8 +1,11 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
 use anchor_lang::AccountDeserialize;
-use axelar_solana_its_v2::state::{RoleProposal, Roles, UserRoles};
-use axelar_solana_its_v2_test_fixtures::init_its_service;
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::setup_mollusk;
+use solana_axelar_its::state::{RoleProposal, Roles, UserRoles};
+use solana_axelar_its_test_fixtures::init_its_service;
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
     solana_sdk::{account::Account, pubkey::Pubkey},
@@ -10,8 +13,8 @@ use {
 
 #[test]
 fn test_accept_operatorship() {
-    let program_id = axelar_solana_its_v2::id();
-    let mollusk = setup_mollusk(&program_id, "axelar_solana_its_v2");
+    let program_id = solana_axelar_its::id();
+    let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
@@ -23,8 +26,8 @@ fn test_accept_operatorship() {
     let new_operator = Pubkey::new_unique();
     let new_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (
         its_root_pda,
@@ -59,7 +62,7 @@ fn test_accept_operatorship() {
 
     let propose_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::ProposeOperatorship {
+        accounts: solana_axelar_its::accounts::ProposeOperatorship {
             system_program: solana_sdk::system_program::ID,
             payer,
             origin_user_account: current_operator,
@@ -69,7 +72,7 @@ fn test_accept_operatorship() {
             proposal_account: proposal_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::ProposeOperatorship {}.data(),
+        data: solana_axelar_its::instruction::ProposeOperatorship {}.data(),
     };
 
     let propose_accounts = vec![
@@ -103,7 +106,7 @@ fn test_accept_operatorship() {
 
     let accept_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::AcceptOperatorship {
+        accounts: solana_axelar_its::accounts::AcceptOperatorship {
             system_program: solana_sdk::system_program::ID,
             payer,
             destination_user_account: new_operator,
@@ -114,7 +117,7 @@ fn test_accept_operatorship() {
             proposal_account: proposal_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::AcceptOperatorship {}.data(),
+        data: solana_axelar_its::instruction::AcceptOperatorship {}.data(),
     };
 
     let accept_accounts = vec![
@@ -160,5 +163,5 @@ fn test_accept_operatorship() {
 
     // Check that proposal was closed
     let proposal_account = accept_result.get_account(&proposal_pda).unwrap();
-    assert!(proposal_account.data.len() == 0);
+    assert!(proposal_account.data.is_empty());
 }

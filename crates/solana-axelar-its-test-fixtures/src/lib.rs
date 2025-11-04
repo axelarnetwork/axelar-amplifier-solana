@@ -694,9 +694,9 @@ pub fn register_canonical_interchain_token_helper(
         key: mpl_token_metadata::types::Key::MetadataV1,
         update_authority: mint_authority.pubkey(),
         mint: mint_pubkey,
-        name: "Test Canonical Token".to_string(),
-        symbol: "TCT".to_string(),
-        uri: "https://example.com".to_string(),
+        name: "Test Canonical Token".to_owned(),
+        symbol: "TCT".to_owned(),
+        uri: "https://example.com".to_owned(),
         seller_fee_basis_points: 0,
         creators: None,
         primary_sale_happened: false,
@@ -805,21 +805,21 @@ pub fn initialize_mollusk() -> Mollusk {
     let spl_token_elf = mollusk_svm_programs_token::token::ELF;
     mollusk.add_program_with_elf_and_loader(
         &spl_token::ID,
-        &spl_token_elf,
+        spl_token_elf,
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     let token_2022_elf = mollusk_svm_programs_token::token2022::ELF;
     mollusk.add_program_with_elf_and_loader(
         &spl_token_2022::ID,
-        &token_2022_elf,
+        token_2022_elf,
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     let associated_token_elf = mollusk_svm_programs_token::associated_token::ELF;
     mollusk.add_program_with_elf_and_loader(
         &anchor_spl::associated_token::ID,
-        &associated_token_elf,
+        associated_token_elf,
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
@@ -992,6 +992,7 @@ pub fn init_gas_service(
     (treasury, treasury_pda.clone())
 }
 
+#[allow(clippy::print_stdout)]
 pub fn init_its_service(
     mollusk: &Mollusk,
     payer: Pubkey,
@@ -1082,7 +1083,11 @@ pub fn init_its_service(
 
     let user_roles_data = UserRoles::try_deserialize(&mut user_roles_account.data.as_slice())
         .expect("Failed to deserialize roles data");
-    assert_eq!(user_roles_data.roles, Roles::OPERATOR);
+    assert_eq!(
+        user_roles_data.roles,
+        Roles::OPERATOR,
+        "user should be an operator"
+    );
 
     (
         its_root_pda,
@@ -1129,7 +1134,7 @@ pub fn init_its_service_with_ethereum_trusted(
         get_event_authority_and_program_accounts(&program_id);
 
     // Add ethereum as a trusted chain
-    let trusted_chain_name = "ethereum".to_string();
+    let trusted_chain_name = "ethereum".to_owned();
 
     let ix = Instruction {
         program_id,
@@ -1171,7 +1176,10 @@ pub fn init_its_service_with_ethereum_trusted(
         InterchainTokenService::try_deserialize(&mut updated_its_account.data.as_slice())
             .expect("Failed to deserialize updated ITS data");
 
-    assert!(updated_its_data.is_trusted_chain("ethereum"));
+    assert!(
+        updated_its_data.is_trusted_chain("ethereum"),
+        "Ethereum should be a trusted chain"
+    );
 
     (its_root_pda, updated_its_account.clone())
 }

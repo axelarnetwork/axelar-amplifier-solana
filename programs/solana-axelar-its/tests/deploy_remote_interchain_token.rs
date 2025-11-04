@@ -1,17 +1,20 @@
-use axelar_solana_its_v2_test_fixtures::deploy_remote_interchain_token_helper;
-use axelar_solana_its_v2_test_fixtures::init_gas_service;
-use axelar_solana_its_v2_test_fixtures::init_its_service_with_ethereum_trusted;
-use axelar_solana_its_v2_test_fixtures::initialize_mollusk;
-use axelar_solana_its_v2_test_fixtures::setup_operator;
-use axelar_solana_its_v2_test_fixtures::DeployRemoteInterchainTokenContext;
-use axelar_solana_its_v2_test_fixtures::{
-    deploy_interchain_token_helper, DeployInterchainTokenContext,
-};
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
+use solana_axelar_its_test_fixtures::deploy_remote_interchain_token_helper;
+use solana_axelar_its_test_fixtures::init_gas_service;
+use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
+use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::setup_operator;
+use solana_axelar_its_test_fixtures::DeployRemoteInterchainTokenContext;
+use solana_axelar_its_test_fixtures::{
+    deploy_interchain_token_helper, DeployInterchainTokenContext,
+};
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
@@ -43,7 +46,7 @@ fn test_deploy_remote_interchain_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -55,8 +58,8 @@ fn test_deploy_remote_interchain_token() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
         &mollusk,
@@ -71,8 +74,8 @@ fn test_deploy_remote_interchain_token() {
 
     // Create simple token deployment parameters
     let salt = [1u8; 32];
-    let name = "Test Token".to_string();
-    let symbol = "TEST".to_string();
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64; // 1 billion tokens with 9 decimals
 
@@ -112,7 +115,7 @@ fn test_deploy_remote_interchain_token() {
         result.program_result
     );
 
-    let destination_chain = "ethereum".to_string();
+    let destination_chain = "ethereum".to_owned();
     let gas_value = 0u64;
 
     let ctx = DeployRemoteInterchainTokenContext::new(

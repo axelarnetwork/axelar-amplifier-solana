@@ -1,11 +1,14 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
 use anchor_lang::AccountDeserialize;
-use axelar_solana_its_v2::state::{RoleProposal, Roles, TokenManager, UserRoles};
-use axelar_solana_its_v2::utils::interchain_token_id;
-use axelar_solana_its_v2_test_fixtures::{
+use mollusk_svm::program::keyed_account_for_system_program;
+use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
+use solana_axelar_its::utils::interchain_token_id;
+use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk,
     DeployInterchainTokenContext,
 };
-use mollusk_svm::program::keyed_account_for_system_program;
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
     solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
@@ -13,7 +16,7 @@ use {
 
 #[test]
 fn test_accept_token_manager_operatorship() {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let upgrade_authority = Pubkey::new_unique();
@@ -28,8 +31,8 @@ fn test_accept_token_manager_operatorship() {
     let proposed_operator_account =
         Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,
@@ -44,8 +47,8 @@ fn test_accept_token_manager_operatorship() {
 
     // Deploy an interchain token to create a TokenManager PDA
     let salt = [1u8; 32];
-    let token_name = "Test Token".to_string();
-    let token_symbol = "TEST".to_string();
+    let token_name = "Test Token".to_owned();
+    let token_symbol = "TEST".to_owned();
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64;
 
@@ -101,7 +104,7 @@ fn test_accept_token_manager_operatorship() {
 
     let propose_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::ProposeTokenManagerOperatorship {
+        accounts: solana_axelar_its::accounts::ProposeTokenManagerOperatorship {
             system_program: solana_sdk::system_program::ID,
             payer,
             origin_user_account: current_operator,
@@ -112,7 +115,7 @@ fn test_accept_token_manager_operatorship() {
             proposal_account: proposal_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::ProposeTokenManagerOperatorship {}.data(),
+        data: solana_axelar_its::instruction::ProposeTokenManagerOperatorship {}.data(),
     };
 
     let propose_accounts = vec![
@@ -149,7 +152,7 @@ fn test_accept_token_manager_operatorship() {
 
     let accept_ix = Instruction {
         program_id,
-        accounts: axelar_solana_its_v2::accounts::AcceptTokenManagerOperatorship {
+        accounts: solana_axelar_its::accounts::AcceptTokenManagerOperatorship {
             system_program: solana_sdk::system_program::ID,
             payer,
             destination_user_account: proposed_operator,
@@ -161,7 +164,7 @@ fn test_accept_token_manager_operatorship() {
             proposal_account: proposal_pda,
         }
         .to_account_metas(None),
-        data: axelar_solana_its_v2::instruction::AcceptTokenManagerOperatorship {}.data(),
+        data: solana_axelar_its::instruction::AcceptTokenManagerOperatorship {}.data(),
     };
 
     let accept_accounts = vec![
@@ -212,5 +215,5 @@ fn test_accept_token_manager_operatorship() {
 
     // Proposal account should be closed
     let proposal_pda_account = accept_result.get_account(&proposal_pda).unwrap();
-    assert!(proposal_pda_account.data.len() == 0);
+    assert!(proposal_pda_account.data.is_empty());
 }

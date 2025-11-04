@@ -51,7 +51,7 @@ pub mod memo {
         instructions::execute_handler(ctx, message, payload, encoding_scheme)
     }
 
-    pub fn execute_with_interchain_token(ctx: Context<Execute>) -> Result<()> {
+    pub fn execute_with_interchain_token(_ctx: Context<Execute>) -> Result<()> {
         Ok(())
     }
 

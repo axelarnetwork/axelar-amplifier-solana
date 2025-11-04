@@ -1,14 +1,18 @@
+#![cfg(test)]
+#![allow(clippy::too_many_lines)]
+
+use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
-use axelar_solana_its_v2::{
+use solana_axelar_its::{
     state::TokenManager,
     utils::{
         canonical_interchain_token_deploy_salt, canonical_interchain_token_id,
         interchain_token_id_internal,
     },
 };
-use axelar_solana_its_v2_test_fixtures::{
+use solana_axelar_its_test_fixtures::{
     init_its_service, initialize_mollusk, register_canonical_interchain_token_helper,
 };
 use solana_program::program_pack::Pack;
@@ -20,7 +24,7 @@ use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_register_canonical_token() {
-    let program_id = axelar_solana_its_v2::id();
+    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -29,8 +33,8 @@ fn test_register_canonical_token() {
     let operator = Pubkey::new_unique();
     let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let chain_name = "solana".to_string();
-    let its_hub_address = "0x123456789abcdef".to_string();
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
     let (
@@ -91,7 +95,7 @@ fn test_register_canonical_token() {
     let token_id = canonical_interchain_token_id(&mint_pubkey);
     let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
         &[
-            axelar_solana_its_v2::seed_prefixes::TOKEN_MANAGER_SEED,
+            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
             its_root_pda.as_ref(),
             &token_id,
         ],
@@ -119,10 +123,7 @@ fn test_register_canonical_token() {
     assert_eq!(token_manager.flow_slot.flow_in, 0);
     assert_eq!(token_manager.flow_slot.flow_out, 0);
     assert_eq!(token_manager.flow_slot.epoch, 0);
-    assert_eq!(
-        token_manager.ty,
-        axelar_solana_its_v2::state::Type::LockUnlock
-    ); // No fee extension
+    assert_eq!(token_manager.ty, solana_axelar_its::state::Type::LockUnlock); // No fee extension
 
     // Verify token manager ATA was created
     let token_manager_ata_account = result.get_account(&token_manager_ata).unwrap();

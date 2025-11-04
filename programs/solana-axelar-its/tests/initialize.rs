@@ -3,9 +3,9 @@
 #![allow(clippy::print_stdout)]
 
 use anchor_lang::AccountDeserialize;
-use axelar_solana_its_v2::state::{InterchainTokenService, Roles, UserRoles};
-use axelar_solana_its_v2_test_fixtures::init_its_service;
 use mollusk_test_utils::setup_mollusk;
+use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
+use solana_axelar_its_test_fixtures::init_its_service;
 use {
     solana_sdk::{account::Account, pubkey::Pubkey},
     solana_sdk_ids::bpf_loader_upgradeable,

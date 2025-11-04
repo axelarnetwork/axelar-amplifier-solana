@@ -1,6 +1,7 @@
 //! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
 #![allow(clippy::missing_asserts_for_indexing)]
+#![allow(clippy::too_many_arguments)]
 pub mod errors;
 pub mod events;
 pub mod executable;
@@ -229,7 +230,6 @@ pub mod solana_axelar_its {
         instructions::register_custom_token_handler(ctx, salt, token_manager_type, operator)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn link_token(
         ctx: Context<LinkToken>,
         salt: [u8; 32],
@@ -290,7 +290,6 @@ pub mod solana_axelar_its {
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn interchain_transfer_internal(
         ctx: Context<InterchainTransferInternal>,
         token_id: [u8; 32],
@@ -313,7 +312,6 @@ pub mod solana_axelar_its {
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn interchain_transfer(
         ctx: Context<InterchainTransfer>,
         token_id: [u8; 32],
