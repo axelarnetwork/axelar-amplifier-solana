@@ -88,13 +88,20 @@ pub fn register_custom_token_handler(
         return err!(ItsError::InvalidInstructionData);
     }
 
-    // Validate operator consistency
-    if operator.is_some() != ctx.accounts.operator.is_some() {
-        return err!(ItsError::InvalidArgument);
-    }
-
-    if ctx.accounts.operator.is_some() != ctx.accounts.operator_roles_pda.is_some() {
-        return err!(ItsError::InvalidArgument);
+    // check that all operator-related accounts are provided or none at all
+    // and that the provided operator matches the operator account
+    match (
+        operator,
+        ctx.accounts.operator.as_ref(),
+        ctx.accounts.operator_roles_pda.as_ref(),
+    ) {
+        (Some(operator_pubkey), Some(operator_account), Some(_roles_pda)) => {
+            if operator_pubkey != operator_account.key() {
+                return err!(ItsError::InvalidArgument);
+            }
+        }
+        (None, None, None) => {}
+        _ => return err!(ItsError::InvalidArgument),
     }
 
     let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
