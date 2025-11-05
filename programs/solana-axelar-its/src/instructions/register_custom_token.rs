@@ -43,7 +43,7 @@ pub struct RegisterCustomToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// CHECK: We can't do further checks here since its a custom token
+    #[account(mint::token_program = token_program)]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(

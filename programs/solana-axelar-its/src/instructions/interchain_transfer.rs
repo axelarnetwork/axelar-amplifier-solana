@@ -96,7 +96,7 @@ pub struct InterchainTransfer<'info> {
 
     #[account(
         mut, // need this for mint/burn
-        mint::token_program = token_program
+        mint::token_program = token_program,
     )]
     /// CHECK: We can't do further checks here since it could be a canonical or a custom token
     pub token_mint: InterfaceAccount<'info, Mint>,

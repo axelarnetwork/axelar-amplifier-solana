@@ -51,7 +51,7 @@ pub struct InterchainTransferInternal<'info> {
     )]
     pub destination_ata: InterfaceAccount<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(mut, mint::token_program = token_program)]
     /// CHECK: We can't do further checks here since it could be a canonical or a custom token
     pub token_mint: InterfaceAccount<'info, Mint>,
 

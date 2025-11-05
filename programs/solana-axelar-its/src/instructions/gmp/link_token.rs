@@ -47,7 +47,7 @@ pub struct LinkTokenInternal<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    // todo: are we missing checks here?
+    #[account(mint::token_program = token_program)]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
@@ -100,6 +100,13 @@ pub fn link_token_internal_handler(
             .as_ref()
             .try_into()
             .map_err(|_err| ProgramError::InvalidAccountData)?,
+    );
+
+    // verify that the provided token address matches the mint address
+    require_keys_eq!(
+        token_address,
+        ctx.accounts.token_mint.key(),
+        ItsError::TokenMintMismatch,
     );
 
     let operator = match link_params.try_into() {

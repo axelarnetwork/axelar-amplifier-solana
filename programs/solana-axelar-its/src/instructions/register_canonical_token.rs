@@ -60,7 +60,7 @@ pub struct RegisterCanonicalInterchainToken<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// CHECK: We can't do further checks here since its a canonical token
+    #[account(mint::token_program = token_program)]
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     #[account(
@@ -132,7 +132,7 @@ pub fn register_canonical_interchain_token_handler(
         token_id,
         token_manager: *ctx.accounts.token_manager_pda.to_account_info().key,
         token_manager_type: token_manager_type.into(),
-        params: Vec::with_capacity(0), // No additional params for canonical tokens
+        params: vec![], // No additional params for canonical tokens
     });
 
     Ok(token_id)

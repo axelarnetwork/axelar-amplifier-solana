@@ -4,9 +4,6 @@ use crate::{
     ITS_HUB_CHAIN_NAME,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token_2022::spl_token_2022::{
-    extension::StateWithExtensions, state::Mint as SplMint,
-};
 use anchor_spl::token_interface::Mint;
 use interchain_token_transfer_gmp::{
     GMPPayload, RegisterTokenMetadata as RegisterTokenMetadataPayload,
@@ -20,7 +17,6 @@ pub struct RegisterTokenMetadata<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    // todo: are we missing checks?
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     // GMP accounts
@@ -86,10 +82,7 @@ pub fn register_token_metadata_handler(
 ) -> Result<()> {
     msg!("Instruction: RegisterTokenMetadata");
 
-    let token_mint_account = ctx.accounts.token_mint.to_account_info();
-    let mint_data = token_mint_account.try_borrow_data()?;
-    let mint = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
-    let decimals = mint.base.decimals;
+    let decimals = ctx.accounts.token_mint.decimals;
 
     // Create the register token metadata payload
     let inner_payload = GMPPayload::RegisterTokenMetadata(RegisterTokenMetadataPayload {

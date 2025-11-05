@@ -33,6 +33,7 @@ pub enum ItsError {
     TokenManagerMintExtensionMismatch,
     #[msg("The signer is not a user account")]
     CallerNotUserAccount,
+    #[msg("The token mint is invalid")]
     TokenMintMismatch,
     InvalidTokenManagerAta,
     InvalidTokenManagerPda,
