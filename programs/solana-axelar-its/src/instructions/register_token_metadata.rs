@@ -70,7 +70,7 @@ impl<'info> ToGMPAccounts<'info> for RegisterTokenMetadata<'info> {
             system_program: self.system_program.to_account_info(),
             its_hub_address: self.its_root_pda.its_hub_address.clone(),
             call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
-            its_program: self.program.clone(),
+            its_program: self.program.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
             gas_event_authority: self
                 .gas_service_accounts

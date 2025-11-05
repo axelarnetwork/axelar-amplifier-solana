@@ -90,8 +90,8 @@ impl InterchainTokenService {
     }
 
     /// Remove a chain from trusted
-    pub fn remove_trusted_chain(&mut self, chain_name: String) {
-        self.trusted_chains.retain(|chain| *chain != chain_name);
+    pub fn remove_trusted_chain(&mut self, chain_name: &str) {
+        self.trusted_chains.retain(|chain| *chain != *chain_name);
     }
 }
 

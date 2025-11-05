@@ -63,9 +63,7 @@ pub struct RemoveTrustedChain<'info> {
 /// If both accounts are passed, the payer must be the program upgrade authority *and*
 /// have the OPERATOR role.
 pub fn remove_trusted_chain(ctx: Context<RemoveTrustedChain>, chain_name: String) -> Result<()> {
-    ctx.accounts
-        .its_root_pda
-        .remove_trusted_chain(chain_name.clone());
+    ctx.accounts.its_root_pda.remove_trusted_chain(&chain_name);
 
     emit_cpi!(TrustedChainRemoved { chain_name });
 
