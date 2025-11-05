@@ -225,7 +225,6 @@ fn test_execute_interchain_transfer_success() {
         sysvar_instructions: Some(solana_sdk::sysvar::instructions::ID),
         destination: None,
         deployer: Some(payer),
-        authority: None,
         destination_ata: None,
 
         // Event CPI accounts
@@ -456,7 +455,6 @@ fn test_execute_interchain_transfer_success() {
         sysvar_instructions: None,
         destination: Some(destination_pubkey),
         deployer: None,
-        authority: Some(payer), // Authority is required for interchain transfer
         destination_ata: Some(destination_ata),
         event_authority: its_event_authority,
         program: program_id,

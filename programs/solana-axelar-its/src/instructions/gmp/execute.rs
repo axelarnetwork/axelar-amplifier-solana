@@ -47,8 +47,6 @@ pub struct Execute<'info> {
     pub deployer_ata: Option<UncheckedAccount<'info>>,
     #[account(mut)]
     pub deployer: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub authority: Option<UncheckedAccount<'info>>,
 
     #[account(mut)]
     pub minter: Option<UncheckedAccount<'info>>,
@@ -158,12 +156,6 @@ fn interchain_transfer_self_invoke(
         program_id: crate::id(),
         accounts: crate::accounts::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.key(),
-            authority: ctx
-                .accounts
-                .authority
-                .as_ref()
-                .ok_or(ItsError::AccountNotProvided)?
-                .key(),
             its_root_pda: ctx.accounts.its_root_pda.key(),
             destination: ctx
                 .accounts
@@ -192,12 +184,6 @@ fn interchain_transfer_self_invoke(
     let account_infos =
         crate::__cpi_client_accounts_execute_interchain_transfer::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.to_account_info(),
-            authority: ctx
-                .accounts
-                .authority
-                .as_ref()
-                .ok_or(ItsError::AccountNotProvided)?
-                .to_account_info(),
             its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
             destination: ctx
                 .accounts

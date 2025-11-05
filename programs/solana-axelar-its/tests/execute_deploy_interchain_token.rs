@@ -231,7 +231,6 @@ fn test_execute_deploy_interchain_token_success() {
         sysvar_instructions: Some(solana_sdk::sysvar::instructions::ID),
         destination: None,
         deployer: Some(payer),
-        authority: None,
         destination_ata: None,
 
         // Event CPI accounts

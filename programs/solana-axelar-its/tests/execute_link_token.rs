@@ -229,7 +229,6 @@ fn test_execute_link_token() {
         sysvar_instructions: None,
         destination: None,
         deployer: Some(payer),
-        authority: None,
         destination_ata: None,
 
         // Event CPI accounts
