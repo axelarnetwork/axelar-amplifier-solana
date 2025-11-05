@@ -94,7 +94,10 @@ pub struct InterchainTransfer<'info> {
     //
     pub token_program: Interface<'info, TokenInterface>,
 
-    #[account(mint::token_program = token_program)]
+    #[account(
+        mut, // need this for mint/burn
+        mint::token_program = token_program
+    )]
     /// CHECK: We can't do further checks here since it could be a canonical or a custom token
     pub token_mint: InterfaceAccount<'info, Mint>,
 
@@ -162,7 +165,7 @@ pub fn interchain_transfer_handler(
         (None, None) => {
             let authority = ctx.accounts.authority.key();
 
-            if ctx.accounts.authority.owner != &system_program::ID || !authority.is_on_curve() {
+            if ctx.accounts.authority.owner != &system_program::ID {
                 return err!(ItsError::CallerNotUserAccount);
             }
 
