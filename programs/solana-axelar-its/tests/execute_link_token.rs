@@ -109,7 +109,7 @@ fn test_execute_link_token() {
     let token_id = interchain_token_id(&payer, &salt);
     let token_manager_type = 1u8; // LockUnlock type
     let source_token_address = existing_token_mint.to_bytes().to_vec();
-    let destination_token_address = vec![0x12u8; 32]; // Must be 32 bytes, not 20!
+    let destination_token_address = existing_token_mint.to_bytes().to_vec();
     let link_params = vec![]; // No additional params (no operator)
 
     // Step 7: Create the GMP payload
@@ -304,18 +304,9 @@ fn test_execute_link_token() {
         keyed_account_for_system_program(),
         // Remaining accounts
         (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
         (payer, payer_account), // deployer same as payer for simplicity
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
         // Event CPI accounts
         (its_event_authority, event_authority_account),
-        (program_id, its_program_account.clone()),
     ];
 
     let result = setup

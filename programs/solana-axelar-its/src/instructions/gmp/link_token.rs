@@ -18,7 +18,7 @@ use anchor_spl::{
 	token_manager_type: u8,
 	link_params: Vec<u8>,
 )]
-pub struct LinkTokenInternal<'info> {
+pub struct ExecuteLinkToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -79,15 +79,13 @@ pub struct LinkTokenInternal<'info> {
     pub operator_roles_pda: Option<Account<'info, UserRoles>>,
 }
 
-pub fn link_token_internal_handler(
-    ctx: Context<LinkTokenInternal>,
+pub fn execute_link_token_handler(
+    ctx: Context<ExecuteLinkToken>,
     token_id: [u8; 32],
     destination_token_address: [u8; 32],
     token_manager_type: u8,
     link_params: Vec<u8>,
 ) -> Result<()> {
-    msg!("link_token_internal_handler");
-
     let token_manager_type: token_manager::Type = token_manager_type
         .try_into()
         .map_err(|_| ItsError::InvalidInstructionData)?;
@@ -114,6 +112,7 @@ pub fn link_token_internal_handler(
         Err(_err) => None,
     };
 
+    // TODO should we check the operators match?
     if operator.is_some() != ctx.accounts.operator.is_some() {
         return err!(ItsError::InvalidArgument);
     }

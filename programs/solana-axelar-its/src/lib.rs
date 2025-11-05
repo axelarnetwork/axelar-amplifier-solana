@@ -262,26 +262,24 @@ pub mod solana_axelar_its {
         instructions::execute_handler(ctx, message, payload)
     }
 
-    pub fn deploy_interchain_token_internal(
-        ctx: Context<DeployInterchainTokenInternal>,
+    pub fn execute_deploy_interchain_token(
+        ctx: Context<ExecuteDeployInterchainToken>,
         token_id: [u8; 32],
         name: String,
         symbol: String,
         decimals: u8,
     ) -> Result<()> {
-        instructions::deploy_interchain_token_internal_handler(
-            ctx, token_id, name, symbol, decimals,
-        )
+        instructions::execute_deploy_interchain_token_handler(ctx, token_id, name, symbol, decimals)
     }
 
-    pub fn link_token_internal(
-        ctx: Context<LinkTokenInternal>,
+    pub fn execute_link_token(
+        ctx: Context<ExecuteLinkToken>,
         token_id: [u8; 32],
         destination_token_address: [u8; 32],
         token_manager_type: u8,
         link_params: Vec<u8>,
     ) -> Result<()> {
-        instructions::link_token_internal_handler(
+        instructions::execute_link_token_handler(
             ctx,
             token_id,
             destination_token_address,
@@ -290,8 +288,8 @@ pub mod solana_axelar_its {
         )
     }
 
-    pub fn interchain_transfer_internal(
-        ctx: Context<InterchainTransferInternal>,
+    pub fn execute_interchain_transfer(
+        ctx: Context<ExecuteInterchainTransfer>,
         token_id: [u8; 32],
         source_address: String,
         destination_address: Pubkey,
@@ -300,7 +298,7 @@ pub mod solana_axelar_its {
         message: solana_axelar_gateway::Message,
         source_chain: String,
     ) -> Result<()> {
-        instructions::interchain_transfer_internal_handler(
+        instructions::execute_interchain_transfer_handler(
             ctx,
             token_id,
             source_address,

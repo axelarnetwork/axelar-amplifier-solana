@@ -144,7 +144,7 @@ fn interchain_transfer_self_invoke(
 
     let data = transfer.data;
 
-    let instruction_data = crate::instruction::InterchainTransferInternal {
+    let instruction_data = crate::instruction::ExecuteInterchainTransfer {
         token_id,
         source_address,
         destination_address,
@@ -156,7 +156,7 @@ fn interchain_transfer_self_invoke(
 
     let transfer_instruction = Instruction {
         program_id: crate::id(),
-        accounts: crate::accounts::InterchainTransferInternal {
+        accounts: crate::accounts::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.key(),
             authority: ctx
                 .accounts
@@ -190,7 +190,7 @@ fn interchain_transfer_self_invoke(
     };
 
     let account_infos =
-        crate::__cpi_client_accounts_interchain_transfer_internal::InterchainTransferInternal {
+        crate::__cpi_client_accounts_execute_interchain_transfer::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.to_account_info(),
             authority: ctx
                 .accounts
@@ -249,14 +249,14 @@ fn link_token_self_invoke(
     let link_params = payload.link_params.to_vec(); // Vec<u8>
 
     // Create the instruction data using Anchor's InstructionData trait
-    let instruction_data = crate::instruction::LinkTokenInternal {
+    let instruction_data = crate::instruction::ExecuteLinkToken {
         token_id,
         destination_token_address,
         token_manager_type,
         link_params,
     };
 
-    let accounts = crate::accounts::LinkTokenInternal {
+    let accounts = crate::accounts::ExecuteLinkToken {
         payer: ctx.accounts.payer.key(),
         deployer: ctx
             .accounts
@@ -285,7 +285,7 @@ fn link_token_self_invoke(
         data: instruction_data.data(),
     };
 
-    let account_infos = crate::__cpi_client_accounts_link_token_internal::LinkTokenInternal {
+    let account_infos = crate::__cpi_client_accounts_execute_link_token::ExecuteLinkToken {
         payer: ctx.accounts.payer.to_account_info(),
         deployer: ctx
             .accounts
@@ -334,7 +334,7 @@ fn deploy_interchain_token_self_invoke(
     let decimals = deploy.decimals;
 
     // Create the instruction data using Anchor's InstructionData trait
-    let instruction_data = crate::instruction::DeployInterchainTokenInternal {
+    let instruction_data = crate::instruction::ExecuteDeployInterchainToken {
         token_id,
         name,
         symbol,
@@ -342,7 +342,7 @@ fn deploy_interchain_token_self_invoke(
     };
 
     // Build the accounts using Anchor's generated accounts struct
-    let accounts = crate::accounts::DeployInterchainTokenInternal {
+    let accounts = crate::accounts::ExecuteDeployInterchainToken {
         payer: ctx.accounts.payer.key(),
         deployer: ctx
             .accounts
@@ -395,7 +395,7 @@ fn deploy_interchain_token_self_invoke(
         data: instruction_data.data(),
     };
 
-    let account_infos = crate::__cpi_client_accounts_deploy_interchain_token_internal::DeployInterchainTokenInternal {
+    let account_infos = crate::__cpi_client_accounts_execute_deploy_interchain_token::ExecuteDeployInterchainToken {
 		payer: ctx.accounts.payer.to_account_info(),
 		deployer: ctx.accounts.deployer.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
 		system_program: ctx.accounts.system_program.to_account_info(),

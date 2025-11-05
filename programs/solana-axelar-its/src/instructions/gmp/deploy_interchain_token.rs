@@ -14,7 +14,7 @@ use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard}
 #[derive(Accounts)]
 #[event_cpi]
 #[instruction(token_id: [u8; 32], name: String, symbol: String, decimals: u8)]
-pub struct DeployInterchainTokenInternal<'info> {
+pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -116,15 +116,13 @@ pub struct DeployInterchainTokenInternal<'info> {
     pub minter_roles_pda: Option<Account<'info, UserRoles>>,
 }
 
-pub fn deploy_interchain_token_internal_handler(
-    ctx: Context<DeployInterchainTokenInternal>,
+pub fn execute_deploy_interchain_token_handler(
+    ctx: Context<ExecuteDeployInterchainToken>,
     token_id: [u8; 32],
     name: String,
     symbol: String,
     decimals: u8,
 ) -> Result<()> {
-    msg!("deploy_interchain_token_internal_handler");
-
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
@@ -173,7 +171,7 @@ pub fn deploy_interchain_token_internal_handler(
 }
 
 pub fn process_inbound_deploy(
-    ctx: &mut DeployInterchainTokenInternal,
+    ctx: &mut ExecuteDeployInterchainToken,
     token_id: [u8; 32],
     name: &str,
     symbol: &str,
@@ -219,7 +217,7 @@ pub fn process_inbound_deploy(
 }
 
 fn mint_initial_supply<'info>(
-    accounts: &DeployInterchainTokenInternal<'info>,
+    accounts: &ExecuteDeployInterchainToken<'info>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
@@ -254,7 +252,7 @@ fn mint_initial_supply<'info>(
 }
 
 fn create_token_metadata<'info>(
-    accounts: &DeployInterchainTokenInternal<'info>,
+    accounts: &ExecuteDeployInterchainToken<'info>,
     name: &str,
     symbol: &str,
     token_id: [u8; 32],

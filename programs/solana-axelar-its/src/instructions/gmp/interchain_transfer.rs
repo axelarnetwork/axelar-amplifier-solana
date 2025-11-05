@@ -22,7 +22,7 @@ use solana_program::{entrypoint::ProgramResult, program_option::COption, program
 #[derive(Accounts)]
 #[event_cpi]
 #[instruction(token_id: [u8; 32], source_address: String, destination_address: Pubkey, amount: u64, data: Vec<u8>, message: Message, source_chain: String)]
-pub struct InterchainTransferInternal<'info> {
+pub struct ExecuteInterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -80,8 +80,8 @@ pub struct InterchainTransferInternal<'info> {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn interchain_transfer_internal_handler(
-    mut ctx: Context<InterchainTransferInternal>,
+pub fn execute_interchain_transfer_handler(
+    mut ctx: Context<ExecuteInterchainTransfer>,
     token_id: [u8; 32],
     source_address: String,
     destination_address: Pubkey,
@@ -125,7 +125,7 @@ pub fn interchain_transfer_internal_handler(
 }
 
 fn handle_give_token_transfer(
-    ctx: &mut Context<InterchainTransferInternal>,
+    ctx: &mut Context<ExecuteInterchainTransfer>,
     amount: u64,
 ) -> Result<u64> {
     use token_manager::Type::{
@@ -172,7 +172,7 @@ fn handle_give_token_transfer(
 }
 
 fn track_token_flow(
-    ctx: &mut Context<InterchainTransferInternal>,
+    ctx: &mut Context<ExecuteInterchainTransfer>,
     amount: u64,
     direction: FlowDirection,
 ) -> Result<()> {
@@ -219,7 +219,7 @@ pub fn get_fee_and_decimals(
 }
 
 fn transfer_to(
-    ctx: &Context<InterchainTransferInternal>,
+    ctx: &Context<ExecuteInterchainTransfer>,
     amount: u64,
     decimals: u8,
     signer_seeds: &[&[&[u8]]],
@@ -245,7 +245,7 @@ fn transfer_to(
 }
 
 fn transfer_with_fee_to(
-    ctx: &Context<InterchainTransferInternal>,
+    ctx: &Context<ExecuteInterchainTransfer>,
     amount: u64,
     decimals: u8,
     fee: u64,
@@ -279,7 +279,7 @@ pub fn get_mint_decimals(token_mint: &AccountInfo) -> std::result::Result<u8, Pr
 }
 
 fn mint_to_receiver(
-    ctx: &Context<InterchainTransferInternal>,
+    ctx: &Context<ExecuteInterchainTransfer>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
