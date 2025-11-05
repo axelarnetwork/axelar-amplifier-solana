@@ -284,8 +284,6 @@ fn take_token(
         &ctx.accounts.token_manager_pda.to_account_info(),
     )?;
 
-    track_token_flow(ctx, amount, FlowDirection::Out)?;
-
     let transferred = match token_manager.ty {
         NativeInterchainToken | MintBurn | MintBurnFrom => {
             burn_from_source(ctx, amount)?;
@@ -307,6 +305,8 @@ fn take_token(
                 .ok_or(ProgramError::ArithmeticOverflow)?
         }
     };
+
+    track_token_flow(ctx, transferred, FlowDirection::Out)?;
 
     Ok(transferred)
 }
