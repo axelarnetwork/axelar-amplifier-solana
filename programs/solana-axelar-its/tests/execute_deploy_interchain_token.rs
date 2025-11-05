@@ -187,8 +187,8 @@ fn test_execute_deploy_interchain_token_success() {
         &program_id, // The caller program (ITS)
     );
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+    let (gateway_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
     // Fix: get_event_authority_and_program_accounts returns 3 elements
     let (its_event_authority, event_authority_account, its_program_account) =

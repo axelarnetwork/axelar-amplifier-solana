@@ -6,6 +6,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_test_utils::get_event_authority_and_program_accounts;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -145,8 +146,7 @@ fn test_link_token() {
         operator: operator_param,
     };
 
-    let (event_authority, _event_authority_bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let (event_authority, _, _) = get_event_authority_and_program_accounts(&program_id);
 
     // Build account metas for register custom token
     let register_accounts = solana_axelar_its::accounts::RegisterCustomToken {
@@ -260,11 +260,11 @@ fn test_link_token() {
         &program_id,
     );
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
 
     // Create link token instruction
     let link_instruction_data = solana_axelar_its::instruction::LinkToken {

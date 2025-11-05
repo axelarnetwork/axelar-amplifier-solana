@@ -182,8 +182,8 @@ fn test_execute_interchain_transfer_success() {
         &program_id,
     );
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+    let (gateway_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
     let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);

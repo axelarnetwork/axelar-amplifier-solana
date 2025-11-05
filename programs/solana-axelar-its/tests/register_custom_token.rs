@@ -6,6 +6,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_its::{
     state::{token_manager::Type, TokenManager},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
@@ -115,8 +116,7 @@ fn test_register_custom_token_without_operator() {
         operator: operator_param,
     };
 
-    let (event_authority, _event_authority_bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let (event_authority, _, _) = get_event_authority_and_program_accounts(&program_id);
 
     // Build account metas
     let accounts = solana_axelar_its::accounts::RegisterCustomToken {

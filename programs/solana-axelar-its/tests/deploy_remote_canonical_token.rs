@@ -7,6 +7,7 @@ use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_test_utils::get_event_authority_and_program_accounts;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -181,11 +182,11 @@ fn test_deploy_remote_canonical_token() {
     );
 
     // Get event authorities
-    let (gateway_event_authority, _gateway_event_bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
-    let (gas_event_authority, _gas_event_bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::id());
+    let (gas_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
 
     let (event_authority, event_authority_account, program_account) =
         mollusk_test_utils::get_event_authority_and_program_accounts(&program_id);

@@ -131,11 +131,11 @@ fn test_interchain_transfer_mint_burn() {
     let (signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &solana_axelar_its::ID);
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
     let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);
@@ -400,11 +400,11 @@ fn test_interchain_transfer_lock_unlock() {
     let (signing_pda, _signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &solana_axelar_its::ID);
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _, _) =
+        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
     let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);
