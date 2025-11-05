@@ -37,8 +37,10 @@ pub struct InterchainTransferInternal<'info> {
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
     /// CHECK: we check this matches the destination address
-    /// if the data is not empty
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = destination.key() == destination_address
+            @ ItsError::InvalidDestinationAddressAccount)]
     pub destination: UncheckedAccount<'info>,
 
     #[account(
@@ -58,10 +60,11 @@ pub struct InterchainTransferInternal<'info> {
         seeds = [
             TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
-            &token_id
+            &token_id,
         ],
         bump = token_manager_pda.bump,
-        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
+        constraint = token_manager_pda.token_address == token_mint.key()
+            @ ItsError::InvalidTokenManagerPda
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -87,11 +90,6 @@ pub fn interchain_transfer_internal_handler(
     message: Message,
     source_chain: String,
 ) -> Result<()> {
-    let destination_program_account = &ctx.accounts.destination;
-    if destination_address != destination_program_account.key() {
-        return err!(ItsError::InvalidDestinationAddressAccount);
-    }
-
     validate_token_manager_type(
         ctx.accounts.token_manager_pda.ty,
         &ctx.accounts.token_mint.to_account_info(),
@@ -99,9 +97,7 @@ pub fn interchain_transfer_internal_handler(
     )?;
 
     let destination_token_account = ctx.accounts.destination.key();
-    let token_manager_account_info = ctx.accounts.token_manager_pda.clone();
-    let transferred_amount =
-        handle_give_token_transfer(&mut ctx, &token_manager_account_info, amount)?;
+    let transferred_amount = handle_give_token_transfer(&mut ctx, amount)?;
 
     let data_hash = if data.is_empty() {
         [0; 32]
@@ -130,7 +126,6 @@ pub fn interchain_transfer_internal_handler(
 
 fn handle_give_token_transfer(
     ctx: &mut Context<InterchainTransferInternal>,
-    token_manager: &TokenManager,
     amount: u64,
 ) -> Result<u64> {
     use token_manager::Type::{
@@ -138,6 +133,7 @@ fn handle_give_token_transfer(
     };
 
     track_token_flow(ctx, amount, FlowDirection::In)?;
+    let token_manager = &ctx.accounts.token_manager_pda;
     let token_id = token_manager.token_id;
     let token_manager_pda_bump = token_manager.bump;
 

@@ -146,7 +146,7 @@ fn interchain_transfer_self_invoke(
 
     let instruction_data = crate::instruction::InterchainTransferInternal {
         token_id,
-        source_address: source_address.clone(),
+        source_address,
         destination_address,
         amount,
         data: data.to_vec(),
@@ -253,7 +253,7 @@ fn link_token_self_invoke(
         token_id,
         destination_token_address,
         token_manager_type,
-        link_params: link_params.clone(),
+        link_params,
     };
 
     let accounts = crate::accounts::LinkTokenInternal {
@@ -336,8 +336,8 @@ fn deploy_interchain_token_self_invoke(
     // Create the instruction data using Anchor's InstructionData trait
     let instruction_data = crate::instruction::DeployInterchainTokenInternal {
         token_id,
-        name: name.clone(),
-        symbol: symbol.clone(),
+        name,
+        symbol,
         decimals,
     };
 

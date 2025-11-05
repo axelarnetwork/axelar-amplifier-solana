@@ -164,8 +164,8 @@ pub fn deploy_interchain_token_internal_handler(
             .as_ref()
             .map(anchor_lang::Key::key)
             .unwrap_or_default(),
-        name: name.clone(),
-        symbol: symbol.clone(),
+        name,
+        symbol,
         decimals,
     });
 
