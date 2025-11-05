@@ -97,6 +97,7 @@ pub struct FlowLimitSet {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InterchainTransferReceived {
     pub command_id: [u8; 32],
     pub token_id: [u8; 32],
@@ -109,6 +110,7 @@ pub struct InterchainTransferReceived {
 }
 
 #[event]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InterchainTransfer {
     pub token_id: [u8; 32],
     pub source_address: Pubkey,
