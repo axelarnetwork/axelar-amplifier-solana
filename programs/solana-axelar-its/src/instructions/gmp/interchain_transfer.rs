@@ -87,6 +87,11 @@ pub fn interchain_transfer_internal_handler(
     message: Message,
     source_chain: String,
 ) -> Result<()> {
+    let destination_program_account = &ctx.accounts.destination;
+    if destination_address != destination_program_account.key() {
+        return err!(ItsError::InvalidDestinationAddressAccount);
+    }
+
     validate_token_manager_type(
         ctx.accounts.token_manager_pda.ty,
         &ctx.accounts.token_mint.to_account_info(),
@@ -116,10 +121,6 @@ pub fn interchain_transfer_internal_handler(
     });
 
     if !data.is_empty() {
-        let destination_program_account = &ctx.accounts.destination;
-        if destination_address != destination_program_account.key() {
-            return err!(ItsError::InvalidDestinationAddressAccount);
-        }
         // TODO invoke signed for execute with token
         msg!("ExecuteWithInterchainToken is not yet implemented");
     }
