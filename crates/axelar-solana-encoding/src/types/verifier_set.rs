@@ -54,7 +54,7 @@ pub fn verifier_set_hash<T: rs_merkle::Hasher>(
     let tree = crate::merkle_tree::<T, VerifierSetLeaf>(leaves.iter());
 
     tree.root()
-        .ok_or(EncodingError::CannotMerkeliseEmptyVerifierSet)
+        .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)
 }
 
 pub(crate) fn merkle_tree_leaves<'a>(
