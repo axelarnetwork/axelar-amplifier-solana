@@ -1,5 +1,5 @@
 use anchor_lang::{InstructionData, ToAccountMetas};
-use anchor_spl::token_2022::spl_token_2022::{self};
+use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_test_utils::get_event_authority_and_program_accounts;

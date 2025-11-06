@@ -111,7 +111,7 @@ fn test_deploy_and_mint_interchain_token() {
 
     // Create a random destination account and ATA
     let destination = Pubkey::new_unique();
-    let destination_ata = get_associated_token_address_with_program_id(
+    let destination_account = get_associated_token_address_with_program_id(
         &destination,
         &token_mint_pda,
         &spl_token_2022::ID,
@@ -151,7 +151,7 @@ fn test_deploy_and_mint_interchain_token() {
 
     let mint_accounts = solana_axelar_its::accounts::MintInterchainToken {
         mint: token_mint_pda,
-        destination_ata: destination_ata,
+        destination_account,
         its_root_pda,
         token_manager_pda,
         minter,
@@ -182,7 +182,7 @@ fn test_deploy_and_mint_interchain_token() {
 
     let mint_accounts_vec = vec![
         (token_mint_pda, token_mint_account),
-        (destination_ata, destination_ata_account),
+        (destination_account, destination_ata_account),
         (its_root_pda, its_root_account),
         (token_manager_pda, token_manager_account),
         (minter, minter_account),
@@ -194,15 +194,15 @@ fn test_deploy_and_mint_interchain_token() {
 
     assert!(mint_result.program_result.is_ok());
 
-    let destination_ata_account_after = mint_result.get_account(&destination_ata).unwrap();
-    let destination_ata_data_after =
+    let destination_ata_account_after = mint_result.get_account(&destination_account).unwrap();
+    let destination_account_data_after =
         StateWithExtensions::<Token2022Account>::unpack(&destination_ata_account_after.data)
             .unwrap();
 
     // verify user got the amount
-    assert_eq!(destination_ata_data_after.base.amount, mint_amount,);
-    assert_eq!(destination_ata_data_after.base.mint, token_mint_pda,);
-    assert_eq!(destination_ata_data_after.base.owner, destination);
+    assert_eq!(destination_account_data_after.base.amount, mint_amount,);
+    assert_eq!(destination_account_data_after.base.mint, token_mint_pda,);
+    assert_eq!(destination_account_data_after.base.owner, destination);
 
     // Verify the mint supply increased
     let token_mint_account_after = mint_result.get_account(&token_mint_pda).unwrap();

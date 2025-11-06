@@ -1,7 +1,7 @@
 use anchor_lang::AccountDeserialize;
 use anchor_lang::{Discriminator, InstructionData, Space, ToAccountMetas};
 use anchor_spl::token::spl_token;
-use anchor_spl::token_2022::spl_token_2022::{self};
+use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_svm::Mollusk;
