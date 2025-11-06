@@ -20,7 +20,7 @@ jobs:
   prepare-release:
     name: Prepare release metadata
 
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: blacksmith-2vcpu-ubuntu-2204
 
     outputs:
       releases: ${{ steps.prepare-matrix.outputs.releases }}

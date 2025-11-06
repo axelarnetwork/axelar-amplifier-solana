@@ -24,7 +24,7 @@ jobs:
           token: ${{ secrets.PAT_TOKEN }}
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.86.0
 
       - name: Get commit hash
         id: get-commit-hash
