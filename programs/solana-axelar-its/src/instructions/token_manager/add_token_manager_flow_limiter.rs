@@ -70,15 +70,8 @@ pub fn add_token_manager_flow_limiter_handler(
 
     let target_roles = &mut ctx.accounts.target_roles_account;
 
-    // Add the FLOW_LIMITER role
     target_roles.roles.insert(Roles::FLOW_LIMITER);
     target_roles.bump = ctx.bumps.target_roles_account;
-
-    msg!(
-        "Added FLOW_LIMITER role for token_id: {:?}, user: {}",
-        ctx.accounts.token_manager_pda.token_id,
-        ctx.accounts.target_user_account.key()
-    );
 
     Ok(())
 }

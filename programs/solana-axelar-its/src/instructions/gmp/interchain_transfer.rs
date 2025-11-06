@@ -187,7 +187,6 @@ fn track_token_flow(
     // Reset the flow slot upon epoch change.
     let current_epoch = current_flow_epoch()?;
     if ctx.accounts.token_manager_pda.flow_slot.epoch != current_epoch {
-        msg!("Flow slot reset");
         ctx.accounts.token_manager_pda.flow_slot.flow_in = 0;
         ctx.accounts.token_manager_pda.flow_slot.flow_out = 0;
         ctx.accounts.token_manager_pda.flow_slot.epoch = current_epoch;
