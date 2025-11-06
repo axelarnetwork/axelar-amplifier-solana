@@ -46,4 +46,10 @@ pub enum ItsError {
     AccountNotProvided,
     #[msg("source_id and pda_seeds must both be provided together or both be None")]
     InconsistentSourceIdAndPdaSeeds,
+    #[msg("Arithmetic overflow")]
+    ArithmeticOverflow,
+    #[msg("Missing required signature")]
+    MissingRequiredSignature,
+    #[msg("Not enough account keys")]
+    NotEnoughAccountKeys,
 }

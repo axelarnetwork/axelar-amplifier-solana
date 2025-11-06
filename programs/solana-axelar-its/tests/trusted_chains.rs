@@ -2,10 +2,13 @@
 #![allow(clippy::str_to_string)]
 #![allow(clippy::print_stdout)]
 
-use anchor_lang::{prelude::ProgramError, AccountDeserialize, Discriminator};
+use anchor_lang::{AccountDeserialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
-use solana_axelar_its::state::{InterchainTokenService, Roles, RolesError, UserRoles};
+use solana_axelar_its::{
+    state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    ItsError,
+};
 use solana_axelar_its_test_fixtures::init_its_service;
 use {
     anchor_lang::{
@@ -404,7 +407,9 @@ fn test_set_trusted_chain_already_exists() {
         (program_id, program_account),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidArgument)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&duplicate_add_ix, &duplicate_add_accounts, &checks);
 }
@@ -482,7 +487,9 @@ fn test_set_trusted_chain_unauthorized() {
         (program_id, program_account),
     ];
 
-    let checks = vec![Check::err(ProgramError::MissingRequiredSignature)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::MissingRequiredSignature).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 }

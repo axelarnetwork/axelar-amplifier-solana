@@ -1,6 +1,7 @@
 use crate::{
     events::TrustedChainSet,
     state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    ItsError,
 };
 use anchor_lang::prelude::*;
 #[allow(deprecated)]
@@ -15,7 +16,7 @@ pub struct SetTrustedChain<'info> {
     	constraint =
      		user_roles.as_ref().is_some() || program_data.as_ref()
        			.is_some_and(|pd| pd.upgrade_authority_address == Some(payer.key()))
-      	 		@ ProgramError::MissingRequiredSignature,
+      	 		@ ItsError::MissingRequiredSignature,
     )]
     pub payer: Signer<'info>,
 
@@ -37,7 +38,7 @@ pub struct SetTrustedChain<'info> {
         bump,
         seeds::program = bpf_loader_upgradeable::ID,
         constraint = program_data.upgrade_authority_address == Some(payer.key())
-            @ ProgramError::InvalidAccountData,
+            @ ItsError::InvalidAccountData,
     )]
     pub program_data: Option<Account<'info, ProgramData>>,
 
@@ -49,7 +50,7 @@ pub struct SetTrustedChain<'info> {
      	seeds = [InterchainTokenService::SEED_PREFIX],
      	bump = its_root_pda.bump,
       	// Ensure the chain is not already added.
-      	constraint = !its_root_pda.is_trusted_chain(&chain_name) @ ProgramError::InvalidArgument,
+      	constraint = !its_root_pda.is_trusted_chain(&chain_name) @ ItsError::InvalidArgument,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 

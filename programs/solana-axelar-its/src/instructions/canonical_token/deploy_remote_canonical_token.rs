@@ -138,7 +138,7 @@ pub fn deploy_remote_canonical_interchain_token_handler(
     let inner_payload = GMPPayload::DeployInterchainToken(DeployInterchainToken {
         selector: DeployInterchainToken::MESSAGE_TYPE_ID
             .try_into()
-            .map_err(|_err| ProgramError::ArithmeticOverflow)?,
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
         token_id: token_id.into(),
         name,
         symbol,

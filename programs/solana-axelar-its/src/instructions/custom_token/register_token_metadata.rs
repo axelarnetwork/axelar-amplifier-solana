@@ -88,7 +88,7 @@ pub fn register_token_metadata_handler(
     let inner_payload = GMPPayload::RegisterTokenMetadata(RegisterTokenMetadataPayload {
         selector: RegisterTokenMetadataPayload::MESSAGE_TYPE_ID
             .try_into()
-            .map_err(|_err| ProgramError::ArithmeticOverflow)?,
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
         token_address: ctx.accounts.token_mint.key().to_bytes().into(),
         decimals,
     });

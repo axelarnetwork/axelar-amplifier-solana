@@ -16,7 +16,7 @@ pub struct RemoveTrustedChain<'info> {
     	constraint =
      		user_roles.as_ref().is_some() || program_data.as_ref()
        			.is_some_and(|pd| pd.upgrade_authority_address == Some(payer.key()))
-      	 		@ ProgramError::MissingRequiredSignature,
+      	 		@ ItsError::MissingRequiredSignature,
     )]
     pub payer: Signer<'info>,
 
