@@ -110,12 +110,12 @@ fn extract_payload_slice_and_solana_accounts(
         let signer = U256::from_be_bytes(signer.0);
         if signer > U256::from(1) {
             return Err(PayloadError::AbiError)
-        };
+        }
 
         let writable = U256::from_be_bytes(writable.0);
         if writable > U256::from(1) {
             return Err(PayloadError::AbiError)
-        };
+        }
 
         accounts.push(SolanaAccountRepr {
             pubkey: pubkey_token,
