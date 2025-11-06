@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       program-name:
-        description: "Name of the program to release (e.g. axelar-solana-gateway)"
+        description: "Name of the program to release (e.g. solana-axelar-gateway)"
         required: true
         type: string
       version:

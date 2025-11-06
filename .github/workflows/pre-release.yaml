@@ -32,8 +32,7 @@ jobs:
       - name: Prepare JSON output for release
         id: prepare-release
         run: |
-          RELEASES_JSON=$(find programs -maxdepth 1 -mindepth 1 -type d \
-            -not -name "dummy-*" | \
+          RELEASES_JSON=$(find programs -maxdepth 1 -mindepth 1 -type d | \
             sed 's|programs/||' | \
             jq -R . | \
             jq -s --arg commit "${{ steps.get-commit-hash.outputs.short_hash }}" 'map({

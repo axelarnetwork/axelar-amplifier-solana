@@ -46,19 +46,16 @@ jobs:
 
       - name: Build all programs
         run: |
+          echo "Warning: All declare_id!() values should already be set in the programs prior to building, and corresponding keypairs should be available in 1pass."
+
           # Quick install Anchor + all dependencies
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
-
-          # Install solana-verify
-          cargo install solana-verify
 
           # Determine the Solana cluster based on the environment
           ENVIRONMENT="${{ inputs.cf-config-bucket-root-key }}"
 
-          if [[ "$ENVIRONMENT" == *"devnet"* ]]; then
+          if [[ "$ENVIRONMENT" == *"devnet-amplifier"* ]] || [[ "$ENVIRONMENT" == *"stagenet"* ]] || [[ "$ENVIRONMENT" == *"testnet"* ]]; then
             CLUSTER="devnet"
-          elif [[ "$ENVIRONMENT" == *"stagenet"* ]] || [[ "$ENVIRONMENT" == *"testnet"* ]]; then
-            CLUSTER="testnet"
           elif [[ "$ENVIRONMENT" == *"mainnet"* ]]; then
             CLUSTER="mainnet-beta"
           else

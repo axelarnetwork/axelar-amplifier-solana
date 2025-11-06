@@ -75,7 +75,6 @@ git_release_enable = true
 publish = true
 
 [changelog]
-protect_breaking_commits = true
 header = """# Changelog
 
 All notable changes to this project will be documented in this file.
