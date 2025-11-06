@@ -129,7 +129,7 @@ mod tests {
     use crate::payload::{
         encoding::tests::{account_fixture, account_fixture_2},
         EncodingScheme,
-    }
+    };
 
     #[test]
     fn solana_account_repr_round_trip_abi() {

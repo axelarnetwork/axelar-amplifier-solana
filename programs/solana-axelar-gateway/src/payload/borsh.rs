@@ -80,7 +80,7 @@ impl AnchorDeserialize for SolanaAccountRepr {
                 std::io::ErrorKind::InvalidData,
                 "invalid flags",
             ));
-        };
+        }
 
         let is_signer = flags[0] & 1 == 1;
         let is_writable = flags[0] >> 1_u8 == 1;
