@@ -110,7 +110,7 @@ pub fn register_custom_token_handler(
     // Emit InterchainTokenIdClaimed event
     emit_cpi!(InterchainTokenIdClaimed {
         token_id,
-        deployer: ctx.accounts.payer.key(),
+        deployer: ctx.accounts.deployer.key(),
         salt: deploy_salt,
     });
 
