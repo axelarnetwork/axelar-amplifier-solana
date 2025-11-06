@@ -54,7 +54,7 @@ pub fn call_contract_handler(
             expected_signing_pda,
             GatewayError::InvalidSigningPDA
         );
-    };
+    }
 
     // A valid signing PDA was provided and it's a signer, continue
 
