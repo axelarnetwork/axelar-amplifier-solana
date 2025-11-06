@@ -7,7 +7,7 @@ on:
         description: "The commit hash to build from"
         type: string
         required: true
-      cf-config-bucket-root-key:
+      environment:
         description: "The root key to determine the cluster environment (ex: devnet-amplifier, testnet, stagenet, mainnet)"
         type: string
         required: true
@@ -42,15 +42,17 @@ jobs:
           echo "name=solana-programs-${{ inputs.commit-hash }}" >> $GITHUB_OUTPUT
           echo "path=target/deploy" >> $GITHUB_OUTPUT
 
+      - name: Install Solana and Anchor
+        run: |
+          # Quick install Anchor + all dependencies
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+
       - name: Build all programs
         run: |
           echo "Warning: All declare_id!() values should already be set in the programs prior to building, and corresponding keypairs should be available in 1pass."
 
-          # Quick install Anchor + all dependencies
-          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
-
           # Determine the Solana cluster based on the environment
-          ENVIRONMENT="${{ inputs.cf-config-bucket-root-key }}"
+          ENVIRONMENT="${{ inputs.environment }}"
 
           if [[ "$ENVIRONMENT" == *"devnet-amplifier"* ]] || [[ "$ENVIRONMENT" == *"stagenet"* ]] || [[ "$ENVIRONMENT" == *"testnet"* ]]; then
             CLUSTER="devnet"
