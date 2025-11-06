@@ -1,6 +1,5 @@
 use crate::{errors::ItsError, state::InterchainTokenService};
 use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
-use anchor_spl::{associated_token::AssociatedToken, token_interface::TokenInterface};
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::{
     executable::{validate_message_raw, HasAxelarExecutable},
@@ -36,11 +35,11 @@ pub struct Execute<'info> {
     #[account(mut)]
     pub token_manager_ata: UncheckedAccount<'info>,
 
-    pub token_program: Interface<'info, TokenInterface>,
+    pub token_program: UncheckedAccount<'info>,
 
-    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub associated_token_program: UncheckedAccount<'info>,
 
-    pub system_program: Program<'info, System>,
+    pub system_program: UncheckedAccount<'info>,
 }
 
 pub fn execute_handler<'info>(
