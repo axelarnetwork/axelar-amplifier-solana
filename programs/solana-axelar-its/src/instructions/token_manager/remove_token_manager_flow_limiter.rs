@@ -72,6 +72,12 @@ pub fn remove_token_manager_flow_limiter_handler(
     // Remove the FLOW_LIMITER role
     target_roles.roles.remove(Roles::FLOW_LIMITER);
 
+    msg!(
+        "Removed FLOW_LIMITER role for token_id: {:?}, user: {}",
+        ctx.accounts.token_manager_pda.token_id,
+        ctx.accounts.target_user_account.key()
+    );
+
     // Close if no remaining roles
     if !target_roles.has_roles() {
         anchor_lang::AccountsClose::close(
@@ -79,14 +85,7 @@ pub fn remove_token_manager_flow_limiter_handler(
             ctx.accounts.payer.to_account_info(),
         )
         .map_err(|e| e.with_account_name("target_roles_account"))?;
-        msg!("Account closed");
     }
-
-    msg!(
-        "Removed FLOW_LIMITER role for token_id: {:?}, user: {}",
-        ctx.accounts.token_manager_pda.token_id,
-        ctx.accounts.target_user_account.key()
-    );
 
     Ok(())
 }

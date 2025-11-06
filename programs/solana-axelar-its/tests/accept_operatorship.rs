@@ -140,11 +140,7 @@ fn test_accept_operatorship() {
         .get_account(&current_operator_roles_pda)
         .expect("Current operator roles account should exist");
 
-    let updated_current_roles =
-        UserRoles::try_deserialize(&mut updated_current_roles_account.data.as_slice())
-            .expect("Failed to deserialize updated current operator roles");
-
-    assert!(!updated_current_roles.roles.contains(Roles::OPERATOR));
+    assert!(updated_current_roles_account.data.is_empty()); // Account should be closed
 
     let new_operator_roles_account = accept_result
         .get_account(&new_operator_roles_pda)

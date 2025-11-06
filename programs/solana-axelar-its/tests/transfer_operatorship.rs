@@ -12,7 +12,7 @@ use {
 };
 
 #[test]
-fn test_transfer_operatorship_success() {
+fn test_transfer_operatorship_successtest_transfer_operatorship_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -96,15 +96,7 @@ fn test_transfer_operatorship_success() {
         .get_account(&current_operator_roles_pda)
         .expect("Current operator roles account should exist");
 
-    let updated_current_roles =
-        UserRoles::try_deserialize(&mut updated_current_roles_account.data.as_slice())
-            .expect("Failed to deserialize updated current operator roles");
-
-    // Current operator should no longer have OPERATOR role
-    assert!(
-        !updated_current_roles.roles.contains(Roles::OPERATOR),
-        "Current operator should no longer have OPERATOR role"
-    );
+    assert!(updated_current_roles_account.data.is_empty()); // Account is closed
 
     let new_operator_roles_account = result
         .get_account(&new_operator_roles_pda)
