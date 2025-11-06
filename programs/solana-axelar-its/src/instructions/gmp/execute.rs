@@ -144,7 +144,6 @@ fn cpi_execute_interchain_transfer<'info>(
             token_manager_pda: ctx.accounts.token_manager_pda.key(),
             token_manager_ata: ctx.accounts.token_manager_ata.key(),
             token_program: ctx.accounts.token_program.key(),
-            // Event CPI accounts
             event_authority: ctx.accounts.event_authority.key(),
             program: ctx.accounts.program.key(),
         }
@@ -349,4 +348,101 @@ fn invoke_signed_with_its_root_pda(
 
     anchor_lang::solana_program::program::invoke_signed(instruction, account_infos, signer_seeds)?;
     Ok(())
+}
+
+/// Helper function to build the extra accounts needed for execute with InterchainTransfer payload.
+///
+/// Usage:
+/// ```ignore
+/// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
+/// accounts.extend(execute_interchain_transfer_extra_accounts(destination, destination_ata));
+/// ```
+pub fn execute_interchain_transfer_extra_accounts(
+    destination: Pubkey,
+    destination_ata: Pubkey,
+) -> Vec<solana_program::instruction::AccountMeta> {
+    vec![
+        solana_program::instruction::AccountMeta::new(destination, false),
+        solana_program::instruction::AccountMeta::new(destination_ata, false),
+    ]
+}
+
+/// Helper function to build the extra accounts needed for execute with LinkToken payload.
+///
+/// Usage:
+/// ```ignore
+/// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
+/// accounts.extend(execute_link_token_extra_accounts(deployer, minter, minter_roles_pda));
+/// ```
+pub fn execute_link_token_extra_accounts(
+    deployer: Pubkey,
+    minter: Option<Pubkey>,
+    minter_roles_pda: Option<Pubkey>,
+) -> Vec<solana_program::instruction::AccountMeta> {
+    let mut accounts = vec![solana_program::instruction::AccountMeta::new(
+        deployer, false,
+    )];
+
+    if let Some(minter_key) = minter {
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            minter_key, false,
+        ));
+    }
+
+    if let Some(minter_roles_pda_key) = minter_roles_pda {
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            minter_roles_pda_key,
+            false,
+        ));
+    }
+
+    accounts
+}
+
+/// Helper function to build the extra accounts needed for execute with DeployInterchainToken payload.
+///
+/// Usage:
+/// ```ignore
+/// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
+/// accounts.extend(execute_deploy_interchain_token_extra_accounts(
+///     deployer_ata,
+///     deployer,
+///     sysvar_instructions,
+///     mpl_token_metadata_program,
+///     mpl_token_metadata_account,
+///     minter,
+///     minter_roles_pda,
+/// ));
+/// ```
+pub fn execute_deploy_interchain_token_extra_accounts(
+    deployer_ata: Pubkey,
+    deployer: Pubkey,
+    sysvar_instructions: Pubkey,
+    mpl_token_metadata_program: Pubkey,
+    mpl_token_metadata_account: Pubkey,
+    minter: Option<Pubkey>,
+    minter_roles_pda: Option<Pubkey>,
+) -> Vec<solana_program::instruction::AccountMeta> {
+    let mut accounts = vec![
+        solana_program::instruction::AccountMeta::new(deployer_ata, false),
+        solana_program::instruction::AccountMeta::new(deployer, false),
+        solana_program::instruction::AccountMeta::new_readonly(sysvar_instructions, false),
+        solana_program::instruction::AccountMeta::new_readonly(mpl_token_metadata_program, false),
+        solana_program::instruction::AccountMeta::new(mpl_token_metadata_account, false),
+    ];
+
+    if let Some(minter_key) = minter {
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            minter_key, false,
+        ));
+    }
+
+    if let Some(minter_roles_pda_key) = minter_roles_pda {
+        accounts.push(solana_program::instruction::AccountMeta::new(
+            minter_roles_pda_key,
+            false,
+        ));
+    }
+
+    accounts
 }

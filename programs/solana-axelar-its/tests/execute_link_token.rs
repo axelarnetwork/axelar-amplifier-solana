@@ -220,25 +220,21 @@ fn test_execute_link_token() {
         associated_token_program: spl_associated_token_account::id(),
         system_program: solana_sdk::system_program::ID,
 
-        // Remaining accounts
-        deployer_ata: None,
-        minter: None,
-        minter_roles_pda: None,
-        mpl_token_metadata_account: None,
-        mpl_token_metadata_program: None,
-        sysvar_instructions: None,
-        destination: None,
-        deployer: Some(payer),
-        destination_ata: None,
-
         // Event CPI accounts
         event_authority: its_event_authority,
         program: program_id,
     };
 
+    let mut account_metas = accounts.to_account_metas(None);
+    account_metas.extend(
+        solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(
+            payer, None, None,
+        ),
+    );
+
     let execute_instruction = Instruction {
         program_id,
-        accounts: accounts.to_account_metas(None),
+        accounts: account_metas,
         data: instruction_data.data(),
     };
 
@@ -301,11 +297,11 @@ fn test_execute_link_token() {
             },
         ),
         keyed_account_for_system_program(),
-        // Remaining accounts
-        (program_id, its_program_account.clone()),
+        // Extra accounts for LinkToken
         (payer, payer_account), // deployer same as payer for simplicity
         // Event CPI accounts
         (its_event_authority, event_authority_account),
+        (program_id, its_program_account),
     ];
 
     let result = setup

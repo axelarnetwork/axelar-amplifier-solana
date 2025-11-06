@@ -222,25 +222,27 @@ fn test_execute_deploy_interchain_token_success() {
         associated_token_program: spl_associated_token_account::id(),
         system_program: solana_sdk::system_program::ID,
 
-        // Remaining accounts
-        deployer_ata: Some(deployer_ata),
-        minter: None,
-        minter_roles_pda: None,
-        mpl_token_metadata_account: Some(metadata_account),
-        mpl_token_metadata_program: Some(mpl_token_metadata::ID),
-        sysvar_instructions: Some(solana_sdk::sysvar::instructions::ID),
-        destination: None,
-        deployer: Some(payer),
-        destination_ata: None,
-
         // Event CPI accounts
         event_authority: its_event_authority,
         program: program_id,
     };
 
+    let mut account_metas = accounts.to_account_metas(None);
+    account_metas.extend(
+        solana_axelar_its::instructions::gmp::execute::execute_deploy_interchain_token_extra_accounts(
+            deployer_ata,
+            payer,
+            solana_sdk::sysvar::instructions::ID,
+            mpl_token_metadata::ID,
+            metadata_account,
+            None,
+            None,
+        ),
+    );
+
     let execute_instruction = Instruction {
         program_id,
-        accounts: accounts.to_account_metas(None),
+        accounts: account_metas,
         data: instruction_data.data(),
     };
 
@@ -306,16 +308,21 @@ fn test_execute_deploy_interchain_token_success() {
             },
         ),
         keyed_account_for_system_program(),
-        // Remaining accounts
+        // Extra accounts for DeployInterchainToken
         (
             deployer_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (program_id, its_program_account.clone()), // minter: None
-        (program_id, its_program_account.clone()), // minter_roles_pda: None
+        (payer, payer_account), // deployer is also payer
         (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            solana_sdk::sysvar::instructions::ID,
+            Account {
+                lamports: 1_000_000_000,
+                data: create_sysvar_instructions_data(),
+                owner: solana_program::sysvar::id(),
+                executable: false,
+                rent_epoch: 0,
+            },
         ),
         (
             mpl_token_metadata::ID,
@@ -328,19 +335,9 @@ fn test_execute_deploy_interchain_token_success() {
             },
         ),
         (
-            solana_sdk::sysvar::instructions::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_sysvar_instructions_data(),
-                owner: solana_program::sysvar::id(),
-                executable: false,
-                rent_epoch: 0,
-            },
+            metadata_account,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (program_id, its_program_account.clone()), // destination -> None
-        (payer, payer_account),                    // deployer is also payer
-        (program_id, its_program_account.clone()), // authority -> None
-        (program_id, its_program_account.clone()), // destination_ata -> None
         // Event CPI accounts
         (its_event_authority, event_authority_account),
         (program_id, its_program_account.clone()),

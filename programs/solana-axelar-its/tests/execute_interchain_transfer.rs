@@ -216,25 +216,27 @@ fn test_execute_interchain_transfer_success() {
         associated_token_program: spl_associated_token_account::id(),
         system_program: solana_sdk::system_program::ID,
 
-        // Remaining accounts for deploy
-        deployer_ata: Some(deployer_ata),
-        minter: None,
-        minter_roles_pda: None,
-        mpl_token_metadata_account: Some(metadata_account),
-        mpl_token_metadata_program: Some(mpl_token_metadata::ID),
-        sysvar_instructions: Some(solana_sdk::sysvar::instructions::ID),
-        destination: None,
-        deployer: Some(payer),
-        destination_ata: None,
-
         // Event CPI accounts
         event_authority: its_event_authority,
         program: program_id,
     };
 
+    let mut deploy_account_metas = deploy_accounts.to_account_metas(None);
+    deploy_account_metas.extend(
+        solana_axelar_its::instructions::gmp::execute::execute_deploy_interchain_token_extra_accounts(
+            deployer_ata,
+            payer,
+            solana_sdk::sysvar::instructions::ID,
+            mpl_token_metadata::ID,
+            metadata_account,
+            None,
+            None,
+        ),
+    );
+
     let deploy_execute_instruction = Instruction {
         program_id,
-        accounts: deploy_accounts.to_account_metas(None),
+        accounts: deploy_account_metas,
         data: deploy_instruction_data.data(),
     };
 
@@ -303,16 +305,21 @@ fn test_execute_interchain_transfer_success() {
             },
         ),
         keyed_account_for_system_program(),
-        // Remaining accounts
+        // Extra accounts for DeployInterchainToken
         (
             deployer_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
+        (payer, payer_account.clone()),
         (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            solana_sdk::sysvar::instructions::ID,
+            Account {
+                lamports: 1_000_000_000,
+                data: create_sysvar_instructions_data(),
+                owner: solana_program::sysvar::id(),
+                executable: false,
+                rent_epoch: 0,
+            },
         ),
         (
             mpl_token_metadata::ID,
@@ -325,19 +332,9 @@ fn test_execute_interchain_transfer_success() {
             },
         ),
         (
-            solana_sdk::sysvar::instructions::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_sysvar_instructions_data(),
-                owner: solana_program::sysvar::id(),
-                executable: false,
-                rent_epoch: 0,
-            },
+            metadata_account,
+            Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (program_id, its_program_account.clone()),
-        (payer, payer_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
         // Event CPI accounts
         (its_event_authority, event_authority_account.clone()),
         (program_id, its_program_account.clone()),
@@ -447,22 +444,21 @@ fn test_execute_interchain_transfer_success() {
         token_program: spl_token_2022::id(),
         associated_token_program: spl_associated_token_account::id(),
         system_program: solana_sdk::system_program::ID,
-        deployer_ata: None,
-        minter: None,
-        minter_roles_pda: None,
-        mpl_token_metadata_account: None,
-        mpl_token_metadata_program: None,
-        sysvar_instructions: None,
-        destination: Some(destination_pubkey),
-        deployer: None,
-        destination_ata: Some(destination_ata),
         event_authority: its_event_authority,
         program: program_id,
     };
 
+    let mut transfer_account_metas = transfer_accounts.to_account_metas(None);
+    transfer_account_metas.extend(
+        solana_axelar_its::instructions::gmp::execute::execute_interchain_transfer_extra_accounts(
+            destination_pubkey,
+            destination_ata,
+        ),
+    );
+
     let transfer_execute_instruction = Instruction {
         program_id,
-        accounts: transfer_accounts.to_account_metas(None),
+        accounts: transfer_account_metas,
         data: transfer_instruction_data.data(),
     };
 
@@ -529,17 +525,10 @@ fn test_execute_interchain_transfer_success() {
             },
         ),
         keyed_account_for_system_program(),
-        // Remaining accounts for transfer
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
-        (program_id, its_program_account.clone()),
+        // Extra accounts for InterchainTransfer
         (destination_pubkey, payer_account.clone()),
-        (program_id, its_program_account.clone()),
-        (payer, payer_account), // authority: Some(payer)
-        (destination_ata, deployer_ata_account_after_deploy.clone()), // Use deployer ATA as destination ATA
+        (destination_ata, deployer_ata_account_after_deploy.clone()),
+        // Event CPI accounts
         (its_event_authority, event_authority_account),
         (program_id, its_program_account),
     ];
