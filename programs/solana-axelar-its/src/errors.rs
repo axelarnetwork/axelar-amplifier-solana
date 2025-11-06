@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 pub enum ItsError {
     #[msg("The ITS program is paused")]
     Paused,
+    #[msg("Amount is invalid")]
+    InvalidAmount,
     #[msg("Instruction argument is invalid")]
     InvalidArgument,
     #[msg("Invalid instruction data")]
@@ -30,6 +32,8 @@ pub enum ItsError {
     UntrustedDestinationChain,
     #[msg("The destination chain name is invalid")]
     InvalidDestinationChain,
+    #[msg("The destination address is invalid")]
+    InvalidDestinationAddress,
     #[msg("The destination address account is invalid")]
     InvalidDestinationAddressAccount,
     #[msg("The token mint cannot have fixed zero supply")]

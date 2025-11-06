@@ -153,6 +153,13 @@ pub fn interchain_transfer_handler(
     caller_pda_seeds: Option<Vec<Vec<u8>>>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
+    if amount == 0 {
+        return err!(ItsError::InvalidAmount);
+    }
+    if destination_address.is_empty() {
+        return err!(ItsError::InvalidDestinationAddress);
+    }
+
     // TODO check security implications of the checks here
     // Determine the source address based on whether this is a CPI or direct call
     // If it is a CPI, use the caller program id as the source address
