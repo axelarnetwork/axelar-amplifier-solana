@@ -34,7 +34,7 @@ pub struct DeployInterchainToken<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -45,7 +45,7 @@ pub struct DeployInterchainToken<'info> {
         seeds = [
             TokenManager::SEED_PREFIX,
             its_root_pda.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &salt)
+            &interchain_token_id(&deployer.key(), &salt),
         ],
         bump
     )]
@@ -72,7 +72,7 @@ pub struct DeployInterchainToken<'info> {
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = token_manager_pda,
-        associated_token::token_program = token_program
+        associated_token::token_program = token_program,
     )]
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -92,7 +92,7 @@ pub struct DeployInterchainToken<'info> {
         seeds = [
             b"metadata",
             mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint.key().as_ref()
+            token_mint.key().as_ref(),
         ],
         bump,
         seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
@@ -104,7 +104,7 @@ pub struct DeployInterchainToken<'info> {
         payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = deployer,
-        associated_token::token_program = token_program
+        associated_token::token_program = token_program,
     )]
     pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
 
@@ -120,7 +120,7 @@ pub struct DeployInterchainToken<'info> {
             token_manager_pda.key().as_ref(),
             minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref()
         ],
-        bump
+        bump,
     )]
     pub minter_roles_pda: Option<Account<'info, UserRoles>>,
 }
@@ -136,12 +136,6 @@ pub fn deploy_interchain_token_handler(
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
 
-    if initial_supply == 0
-        && (ctx.accounts.minter.is_none() || ctx.accounts.minter_roles_pda.is_none())
-    {
-        return err!(ItsError::ZeroSupplyToken);
-    }
-
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
@@ -155,9 +149,34 @@ pub fn deploy_interchain_token_handler(
         salt: deploy_salt,
     });
 
-    // process_inbound_deploy
+    // Validate minter accounts and initial supply
+    match (
+        &ctx.accounts.minter,
+        &mut ctx.accounts.minter_roles_pda,
+        ctx.bumps.minter_roles_pda,
+        initial_supply,
+    ) {
+        // Both minter accounts provided - initialize roles
+        (Some(_minter), Some(minter_roles_pda), Some(bump), _supply) => {
+            minter_roles_pda.bump = bump;
+            minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
+        }
+        // No minter provided and zero supply
+        (None, None, None, 0) => {
+            msg!("Cannot deploy a zero supply token without a minter");
+            return err!(ItsError::ZeroSupplyToken);
+        }
+        (None, None, None, _supply) => {
+            // Non-zero supply with no minter = fixed supply token (valid)
+        }
+        // Any other case (should not occur)
+        _ => {
+            msg!("Invalid minter account configuration");
+            return err!(ItsError::InvalidAccountData);
+        }
+    }
 
-    // setup_mint
+    // mint initial supply
     if initial_supply > 0 {
         mint_initial_supply(
             ctx.accounts,
@@ -167,7 +186,6 @@ pub fn deploy_interchain_token_handler(
         )?;
     }
 
-    // setup_metadata
     create_token_metadata(
         ctx.accounts,
         name.clone(),
@@ -196,15 +214,6 @@ pub fn deploy_interchain_token_handler(
             .map(|account| account.key().to_bytes().to_vec())
             .unwrap_or_default(),
     });
-
-    // Initialize UserRoles
-    if let (Some(minter_roles_pda), Some(bump)) = (
-        ctx.accounts.minter_roles_pda.as_mut(),
-        ctx.bumps.minter_roles_pda,
-    ) {
-        minter_roles_pda.bump = bump;
-        minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
-    }
 
     emit_cpi!(InterchainTokenDeployed {
         token_id,
