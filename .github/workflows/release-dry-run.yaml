@@ -40,3 +40,13 @@ jobs:
           CARGO_NET_GIT_FETCH_WITH_CLI: true
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Prepare JSON output to be a matrix GHA format
+        id: prepare-matrix
+        run: |
+          if [ "${{ steps.dry-run.outputs.releases }}" == "[]" ]; then
+            echo "release-plz dry-run output contains an empty release list — exiting early."
+            exit 1
+          fi
+
+          echo "releases=$(echo '${{ steps.dry-run.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT
