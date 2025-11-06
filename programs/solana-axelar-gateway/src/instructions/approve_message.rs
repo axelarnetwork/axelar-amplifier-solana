@@ -61,9 +61,8 @@ pub fn approve_message_handler(
 
     let leaf_hash = merklized_message.leaf.hash();
     let message_hash = merklized_message.leaf.message.hash();
-    let proof =
-        rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&merklized_message.proof)
-            .map_err(|_err| GatewayError::InvalidMerkleProof)?;
+    let proof = rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&merklized_message.proof)
+        .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
     // Check: leaf node is part of the payload merkle root
     if !proof.verify(
@@ -78,9 +77,8 @@ pub fn approve_message_handler(
     let command_id = merklized_message.leaf.message.command_id();
 
     // Parse destination address
-    let destination_address =
-        Pubkey::from_str(&merklized_message.leaf.message.destination_address)
-            .map_err(|_| GatewayError::InvalidDestinationAddress)?;
+    let destination_address = Pubkey::from_str(&merklized_message.leaf.message.destination_address)
+        .map_err(|_| GatewayError::InvalidDestinationAddress)?;
 
     // Create a new Signing PDA that is used for validating that a message has
     // reached the destination program
