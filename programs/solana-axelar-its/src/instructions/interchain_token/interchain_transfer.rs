@@ -169,7 +169,25 @@ pub fn interchain_transfer_handler(
     // otherwise use the user's address
     let source_address = match (caller_program_id, caller_pda_seeds) {
         (Some(source_id), Some(pda_seeds)) => {
-            validate_cpi_authority(&ctx, &source_id, &pda_seeds)?;
+            // NOTE: we don't check the owner of the PDA here,
+            // as it could be owned by the system program (uninitialized account)
+            // what's important is that the PDA is derived correctly
+            // and that it's a signer
+
+            // Validate that the PDA can be derived using the provided seeds
+            let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
+            let (expected_pda, _bump) =
+                solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
+
+            if expected_pda != *ctx.accounts.authority.key {
+                msg!(
+                    "PDA derivation mismatch. Expected: {}, Got: {}",
+                    expected_pda,
+                    ctx.accounts.authority.key
+                );
+                return err!(ItsError::InvalidAccountData);
+            }
+
             source_id
         }
         (None, None) => {
@@ -197,38 +215,6 @@ pub fn interchain_transfer_handler(
         data,
         source_address,
     )
-}
-
-fn validate_cpi_authority(
-    ctx: &Context<InterchainTransfer>,
-    source_id: &Pubkey,
-    pda_seeds: &[Vec<u8>],
-) -> Result<()> {
-    // The sender should be a PDA owned by the source program
-    if ctx.accounts.authority.owner != source_id {
-        msg!(
-            "Sender account must be owned by the source program. Expected: {}, Got: {}",
-            *source_id,
-            ctx.accounts.authority.owner
-        );
-        return err!(ItsError::InvalidAccountData);
-    }
-
-    // Validate that the PDA can be derived using the provided seeds
-    let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
-    let (expected_pda, _bump) =
-        solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, source_id);
-
-    if expected_pda != *ctx.accounts.authority.key {
-        msg!(
-            "PDA derivation mismatch. Expected: {}, Got: {}",
-            expected_pda,
-            ctx.accounts.authority.key
-        );
-        return err!(ItsError::InvalidAccountData);
-    }
-
-    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]
