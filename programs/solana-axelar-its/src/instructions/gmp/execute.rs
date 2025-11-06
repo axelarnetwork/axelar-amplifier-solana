@@ -143,6 +143,8 @@ fn cpi_execute_interchain_transfer<'info>(
             token_manager_pda: ctx.accounts.token_manager_pda.key(),
             token_manager_ata: ctx.accounts.token_manager_ata.key(),
             token_program: ctx.accounts.token_program.key(),
+            associated_token_program: ctx.accounts.associated_token_program.key(),
+            system_program: ctx.accounts.system_program.key(),
             event_authority: ctx.accounts.event_authority.key(),
             program: ctx.accounts.program.key(),
         }
@@ -160,6 +162,8 @@ fn cpi_execute_interchain_transfer<'info>(
             token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
             token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
+            associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
             event_authority: ctx.accounts.event_authority.to_account_info(),
             program: ctx.accounts.program.to_account_info(),
         }

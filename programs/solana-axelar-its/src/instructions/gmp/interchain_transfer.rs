@@ -8,6 +8,7 @@ use crate::{
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_spl::{
+    associated_token::AssociatedToken,
     token_2022::spl_token_2022::{
         extension::{
             transfer_fee::TransferFeeConfig, BaseStateWithExtensions, StateWithExtensions,
@@ -42,7 +43,8 @@ pub struct ExecuteInterchainTransfer<'info> {
     pub destination: UncheckedAccount<'info>,
 
     #[account(
-        mut,
+        init_if_needed,
+        payer = payer,
         associated_token::mint = token_mint,
         associated_token::authority = destination,
         associated_token::token_program = token_program
@@ -75,6 +77,8 @@ pub struct ExecuteInterchainTransfer<'info> {
     pub token_manager_ata: InterfaceAccount<'info, TokenAccount>,
 
     pub token_program: Interface<'info, TokenInterface>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
 #[allow(clippy::too_many_arguments)]

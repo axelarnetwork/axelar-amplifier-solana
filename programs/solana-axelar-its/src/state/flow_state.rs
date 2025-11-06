@@ -94,5 +94,5 @@ pub fn flow_epoch_with_timestamp(timestamp: i64) -> Result<u64> {
 
     unix_timestamp
         .checked_div(EPOCH_TIME.as_secs())
-        .ok_or(ItsError::ArithmeticOverflow.into())
+        .ok_or_else(|| ItsError::ArithmeticOverflow.into())
 }
