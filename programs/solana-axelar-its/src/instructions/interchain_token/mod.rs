@@ -9,3 +9,6 @@ pub use approve_deploy_remote_interchain_token::*;
 
 pub mod revoke_deploy_remote_interchain_token;
 pub use revoke_deploy_remote_interchain_token::*;
+
+pub mod mint_interchain_token;
+pub use mint_interchain_token::*;

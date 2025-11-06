@@ -380,4 +380,8 @@ pub mod solana_axelar_its {
     ) -> Result<()> {
         instructions::accept_token_manager_operatorship_handler(ctx)
     }
+
+    pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
+        instructions::mint_interchain_token_handler(ctx, amount)
+    }
 }
