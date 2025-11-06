@@ -4,6 +4,8 @@ use interchain_token_transfer_gmp::{GMPPayload, SendToHub};
 use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
 use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 
+use crate::ItsError;
+
 /// Common GMP accounts needed for outbound operations
 #[derive(Clone)]
 pub struct GMPAccounts<'info> {
@@ -61,7 +63,7 @@ pub fn process_outbound(
     let payload = GMPPayload::SendToHub(SendToHub {
         selector: SendToHub::MESSAGE_TYPE_ID
             .try_into()
-            .map_err(|_err| ProgramError::ArithmeticOverflow)?,
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
         destination_chain: destination_chain.clone(),
         payload: inner_payload.encode().into(),
     })

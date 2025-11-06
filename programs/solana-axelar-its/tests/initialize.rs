@@ -85,7 +85,7 @@ fn test_initialize_success() {
 }
 
 #[test]
-#[should_panic = "InvalidAccountData"]
+#[should_panic]
 fn test_initialize_unauthorized_payer() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");

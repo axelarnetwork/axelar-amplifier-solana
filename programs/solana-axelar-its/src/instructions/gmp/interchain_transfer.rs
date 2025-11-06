@@ -17,7 +17,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 use solana_axelar_gateway::Message;
-use solana_program::{entrypoint::ProgramResult, program_option::COption, program_pack::Pack};
+use solana_program::{program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -162,7 +162,7 @@ fn handle_give_token_transfer(
 
             amount
                 .checked_sub(fee)
-                .ok_or(ProgramError::ArithmeticOverflow)?
+                .ok_or(ItsError::ArithmeticOverflow)?
         }
     };
 
@@ -200,10 +200,7 @@ fn track_token_flow(
     Ok(())
 }
 
-pub fn get_fee_and_decimals(
-    token_mint: &AccountInfo,
-    amount: u64,
-) -> std::result::Result<(u64, u8), ProgramError> {
+pub fn get_fee_and_decimals(token_mint: &AccountInfo, amount: u64) -> Result<(u64, u8)> {
     let mint_data = token_mint.try_borrow_data()?;
     let mint_state = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
     let fee_config = mint_state.get_extension::<TransferFeeConfig>()?;
@@ -211,7 +208,7 @@ pub fn get_fee_and_decimals(
 
     let fee = fee_config
         .calculate_epoch_fee(epoch, amount)
-        .ok_or(ProgramError::ArithmeticOverflow)?;
+        .ok_or(ItsError::ArithmeticOverflow)?;
     Ok((fee, mint_state.base.decimals))
 }
 
@@ -314,7 +311,7 @@ pub fn validate_token_manager_type(
     ty: token_manager::Type,
     token_mint: &AccountInfo,
     token_manager_pda: &AccountInfo,
-) -> ProgramResult {
+) -> Result<()> {
     let mint_data = token_mint.try_borrow_data()?;
     let mint = SplMint::unpack_from_slice(&mint_data)?;
 
@@ -326,7 +323,7 @@ pub fn validate_token_manager_type(
             | token_manager::Type::MintBurnFrom,
         ) => {
             msg!("Mint authority is required for the given token manager type");
-            Err(ProgramError::InvalidInstructionData)
+            err!(ItsError::InvalidInstructionData)
         }
         (
             COption::Some(key),
@@ -335,7 +332,7 @@ pub fn validate_token_manager_type(
             | token_manager::Type::MintBurnFrom,
         ) if &key != token_manager_pda.key => {
             msg!("TokenManager is not the mint authority, which is required for this token manager type");
-            Err(ProgramError::InvalidInstructionData)
+            err!(ItsError::InvalidInstructionData)
         }
         _ => Ok(()),
     }

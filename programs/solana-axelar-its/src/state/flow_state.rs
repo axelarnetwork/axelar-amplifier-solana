@@ -1,7 +1,6 @@
+use crate::errors::ItsError;
 use anchor_lang::prelude::*;
 use std::time::Duration;
-
-use crate::errors::ItsError;
 
 const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60);
 
@@ -56,7 +55,7 @@ impl FlowState {
         // Calculate new flow amount after adding the transfer
         let new_flow = to_add
             .checked_add(amount)
-            .ok_or(ProgramError::ArithmeticOverflow)?;
+            .ok_or(ItsError::ArithmeticOverflow)?;
 
         // Calculate net flow: |new_flow - to_compare|
         // The flow limit is interpreted as a limit over the net amount of tokens
@@ -79,7 +78,7 @@ impl FlowState {
     }
 }
 
-pub fn current_flow_epoch() -> std::result::Result<u64, ProgramError> {
+pub fn current_flow_epoch() -> Result<u64> {
     flow_epoch_with_timestamp(Clock::get()?.unix_timestamp)
 }
 
@@ -88,12 +87,12 @@ pub fn current_flow_epoch() -> std::result::Result<u64, ProgramError> {
 /// # Errors
 ///
 /// Returns an error if conversion from clock to internal flow epoch fails.
-pub fn flow_epoch_with_timestamp(timestamp: i64) -> std::result::Result<u64, ProgramError> {
+pub fn flow_epoch_with_timestamp(timestamp: i64) -> Result<u64> {
     let unix_timestamp: u64 = timestamp
         .try_into()
-        .map_err(|_err| ProgramError::ArithmeticOverflow)?;
+        .map_err(|_err| ItsError::ArithmeticOverflow)?;
 
     unix_timestamp
         .checked_div(EPOCH_TIME.as_secs())
-        .ok_or(ProgramError::ArithmeticOverflow)
+        .ok_or(ItsError::ArithmeticOverflow.into())
 }

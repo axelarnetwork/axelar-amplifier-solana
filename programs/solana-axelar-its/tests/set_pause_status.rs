@@ -2,10 +2,10 @@
 #![allow(clippy::str_to_string)]
 #![allow(clippy::print_stdout)]
 
-use anchor_lang::{prelude::ProgramError, AccountDeserialize};
+use anchor_lang::AccountDeserialize;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
-use solana_axelar_its::state::InterchainTokenService;
+use solana_axelar_its::{state::InterchainTokenService, ItsError};
 use solana_axelar_its_test_fixtures::init_its_service;
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
@@ -191,7 +191,9 @@ fn test_set_pause_status_already_paused() {
         (its_root_pda, paused_its_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidArgument)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+    )];
 
     mollusk.process_and_validate_instruction(
         &duplicate_pause_ix,
@@ -257,7 +259,9 @@ fn test_set_pause_status_unauthorized() {
         (its_root_pda, its_root_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidAccountData)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidAccountData).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 
@@ -321,7 +325,9 @@ fn test_set_pause_status_already_unpaused() {
         (its_root_pda, its_root_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidArgument)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 }

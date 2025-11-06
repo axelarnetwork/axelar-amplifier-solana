@@ -262,7 +262,7 @@ fn process_outbound_transfer(
         GMPPayload::InterchainTransfer(interchain_token_transfer_gmp::InterchainTransfer {
             selector: interchain_token_transfer_gmp::InterchainTransfer::MESSAGE_TYPE_ID
                 .try_into()
-                .map_err(|_err| ProgramError::ArithmeticOverflow)?,
+                .map_err(|_err| ItsError::ArithmeticOverflow)?,
             token_id: token_id.into(),
             source_address: source_address.to_bytes().into(),
             destination_address: destination_address.into(),
@@ -309,7 +309,7 @@ fn take_token(
 
             amount
                 .checked_sub(fee)
-                .ok_or(ProgramError::ArithmeticOverflow)?
+                .ok_or(ItsError::ArithmeticOverflow)?
         }
     };
 

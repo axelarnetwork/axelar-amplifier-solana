@@ -102,7 +102,7 @@ fn cpi_execute_interchain_transfer<'info>(
 ) -> Result<()> {
     let token_id = transfer.token_id.0;
     let source_address = String::from_utf8(transfer.source_address.to_vec())
-        .map_err(|_| ProgramError::InvalidInstructionData)?;
+        .map_err(|_| ItsError::InvalidInstructionData)?;
 
     let destination_address: [u8; 32] = transfer
         .destination_address
@@ -114,7 +114,7 @@ fn cpi_execute_interchain_transfer<'info>(
     let amount: u64 = transfer
         .amount
         .try_into()
-        .map_err(|_| ProgramError::ArithmeticOverflow)?;
+        .map_err(|_| ItsError::ArithmeticOverflow)?;
 
     let data = transfer.data;
 
@@ -188,7 +188,7 @@ fn cpi_execute_link_token<'info>(
     let token_manager_type: u8 = payload
         .token_manager_type
         .try_into()
-        .map_err(|_| ProgramError::ArithmeticOverflow)?; // U256 to u8
+        .map_err(|_| ItsError::ArithmeticOverflow)?; // U256 to u8
 
     let link_params = payload.link_params.to_vec(); // Vec<u8>
 

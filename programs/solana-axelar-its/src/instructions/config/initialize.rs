@@ -1,5 +1,8 @@
 #![allow(clippy::missing_asserts_for_indexing)]
-use crate::state::{InterchainTokenService, Roles, UserRoles};
+use crate::{
+    state::{InterchainTokenService, Roles, UserRoles},
+    ItsError,
+};
 use anchor_lang::prelude::*;
 #[allow(deprecated)]
 use anchor_lang::solana_program::bpf_loader_upgradeable;
@@ -15,7 +18,7 @@ pub struct Initialize<'info> {
         bump,
         seeds::program = bpf_loader_upgradeable::ID,
         constraint = program_data.upgrade_authority_address == Some(payer.key())
-            @ ProgramError::InvalidAccountData
+            @ ItsError::InvalidAccountData
     )]
     pub program_data: Account<'info, ProgramData>,
 

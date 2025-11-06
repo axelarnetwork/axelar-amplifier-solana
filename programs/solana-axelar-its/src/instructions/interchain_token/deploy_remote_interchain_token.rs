@@ -157,7 +157,7 @@ pub fn deploy_remote_interchain_token_handler(
     let inner_payload = GMPPayload::DeployInterchainToken(DeployInterchainToken {
         selector: DeployInterchainToken::MESSAGE_TYPE_ID
             .try_into()
-            .map_err(|_err| ProgramError::ArithmeticOverflow)?,
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
         token_id: token_id.into(),
         name,
         symbol,
@@ -197,7 +197,7 @@ pub(crate) fn get_token_metadata(
         }
     }
 
-    let metadata_account = maybe_metadata_account.ok_or(ProgramError::NotEnoughAccountKeys)?;
+    let metadata_account = maybe_metadata_account.ok_or(ItsError::NotEnoughAccountKeys)?;
     if *metadata_account.owner != mpl_token_metadata::ID {
         msg!("Invalid Metaplex metadata account");
         return err!(ItsError::InvalidMetaplexDataAccount);

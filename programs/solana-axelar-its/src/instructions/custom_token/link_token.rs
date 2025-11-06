@@ -138,7 +138,7 @@ pub fn link_token_handler(
     let message = GMPPayload::LinkToken(LinkTokenPayload {
         selector: LinkTokenPayload::MESSAGE_TYPE_ID
             .try_into()
-            .map_err(|_err| ProgramError::ArithmeticOverflow)?,
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
         token_id: token_id.into(),
         token_manager_type: token_manager_type.into(),
         source_token_address: ctx
