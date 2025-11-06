@@ -12,7 +12,7 @@ runs:
     - name: Install stable
       uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: 1.85.1
+        toolchain: 1.86.0
         components: rustc, rustfmt, rust-std, clippy, rustc-dev, rust-docs
 
     - uses: Swatinem/rust-cache@v2
