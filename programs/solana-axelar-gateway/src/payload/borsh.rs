@@ -75,13 +75,6 @@ impl AnchorDeserialize for SolanaAccountRepr {
         let mut flags = [0_u8; 1];
         reader.read_exact(&mut flags)?;
 
-        if flags[0] > 3 {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "invalid flags",
-            ));
-        };
-
         let is_signer = flags[0] & 1 == 1;
         let is_writable = flags[0] >> 1_u8 == 1;
 
