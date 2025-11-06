@@ -13,8 +13,5 @@ pub use canonical_token::*;
 pub mod gmp;
 pub use gmp::*;
 
-pub mod interchain_transfer;
-pub use interchain_transfer::*;
-
 pub mod token_manager;
 pub use token_manager::*;
