@@ -84,6 +84,7 @@ fn test_initialize_success() {
     assert_eq!(actual_program_data, expected_program_data);
 }
 
+#[allow(clippy::should_panic_without_expect)]
 #[test]
 #[should_panic]
 fn test_initialize_unauthorized_payer() {
