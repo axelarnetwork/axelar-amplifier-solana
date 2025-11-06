@@ -62,7 +62,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
 impl AnchorSerialize for SolanaAccountRepr {
     fn serialize<W: std::io::prelude::Write>(&self, writer: &mut W) -> std::io::Result<()> {
         writer.write_all(self.pubkey.as_ref())?;
-        writer.write_all(&[u8::from(self.is_signer) | u8::from(self.is_writable) << 1_u8])?;
+        writer.write_all(&[u8::from(self.is_signer) | (u8::from(self.is_writable) << 1_u8)])?;
         Ok(())
     }
 }
