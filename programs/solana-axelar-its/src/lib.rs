@@ -254,8 +254,8 @@ pub mod solana_axelar_its {
         instructions::set_flow_limit_handler(ctx, flow_limit)
     }
 
-    pub fn execute(
-        ctx: Context<Execute>,
+    pub fn execute<'info>(
+        ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
         message: solana_axelar_gateway::Message,
         payload: Vec<u8>,
     ) -> Result<()> {

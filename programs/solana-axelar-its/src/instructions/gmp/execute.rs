@@ -23,7 +23,7 @@ pub struct Execute<'info> {
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
-        constraint = !its_root_pda.paused @ ItsError::Paused
+        constraint = !its_root_pda.paused @ ItsError::Paused,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -41,46 +41,34 @@ pub struct Execute<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 
     pub system_program: Program<'info, System>,
-
-    // Remaining accounts
-    #[account(mut)]
-    pub deployer_ata: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub deployer: Option<UncheckedAccount<'info>>,
-
-    #[account(mut)]
-    pub minter: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub minter_roles_pda: Option<UncheckedAccount<'info>>,
-
-    #[account(mut)]
-    pub mpl_token_metadata_account: Option<UncheckedAccount<'info>>,
-    pub mpl_token_metadata_program: Option<UncheckedAccount<'info>>,
-
-    pub sysvar_instructions: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub destination: Option<UncheckedAccount<'info>>,
-    #[account(mut)]
-    pub destination_ata: Option<UncheckedAccount<'info>>,
 }
 
-pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
-    validate_message_raw(&ctx.accounts.axelar_executable(), message.clone(), &payload)?;
+pub fn execute_handler<'info>(
+    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
+    message: Message,
+    payload: Vec<u8>,
+) -> Result<()> {
+    use GMPPayload::{
+        DeployInterchainToken, InterchainTransfer, LinkToken, ReceiveFromHub,
+        RegisterTokenMetadata, SendToHub,
+    };
 
-    msg!("execute_handler");
-    // ITS specific logic
-
+    // Verify that the message comes from the trusted Axelar ITS Hub
     if message.source_address != ctx.accounts.its_root_pda.its_hub_address {
         msg!("Untrusted source address: {}", message.source_address);
         return err!(ItsError::InvalidInstructionData);
     }
 
-    let GMPPayload::ReceiveFromHub(inner_msg) =
-        GMPPayload::decode(&payload).map_err(|_err| ProgramError::InvalidInstructionData)?
+    // Execute can only be called with ReceiveFromHub payload at the top level
+    let ReceiveFromHub(inner_msg) =
+        GMPPayload::decode(&payload).map_err(|_err| ItsError::InvalidInstructionData)?
     else {
         msg!("Unsupported GMP payload");
         return err!(ItsError::InvalidInstructionData);
     };
+
+    // Validate the GMP message
+    validate_message_raw(&ctx.accounts.axelar_executable(), message.clone(), &payload)?;
 
     if !ctx
         .accounts
@@ -90,36 +78,25 @@ pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>
         return err!(ItsError::UntrustedSourceChain);
     }
 
-    let payload = GMPPayload::decode(&inner_msg.payload)
-        .map_err(|_err| ProgramError::InvalidInstructionData)?;
+    let payload =
+        GMPPayload::decode(&inner_msg.payload).map_err(|_err| ItsError::InvalidInstructionData)?;
 
-    perform_self_cpi(payload, ctx, message, &inner_msg.source_chain)?;
+    let source_chain = &inner_msg.source_chain;
 
-    Ok(())
-}
-
-fn perform_self_cpi(
-    payload: GMPPayload,
-    ctx: Context<Execute>,
-    message: Message,
-    source_chain: &str,
-) -> Result<()> {
     match payload {
-        GMPPayload::InterchainTransfer(transfer) => {
-            interchain_transfer_self_invoke(ctx, transfer, message, source_chain)
+        InterchainTransfer(transfer) => {
+            cpi_execute_interchain_transfer(ctx, transfer, message, source_chain)
         }
-        GMPPayload::DeployInterchainToken(deploy) => {
-            deploy_interchain_token_self_invoke(ctx, deploy)
+        DeployInterchainToken(deploy) => cpi_execute_deploy_interchain_token(ctx, deploy),
+        LinkToken(payload) => cpi_execute_link_token(ctx, payload),
+        SendToHub(_) | ReceiveFromHub(_) | RegisterTokenMetadata(_) => {
+            err!(ItsError::InvalidInstructionData)
         }
-        GMPPayload::LinkToken(payload) => link_token_self_invoke(ctx, payload),
-        GMPPayload::SendToHub(_)
-        | GMPPayload::ReceiveFromHub(_)
-        | GMPPayload::RegisterTokenMetadata(_) => err!(ItsError::InvalidInstructionData),
     }
 }
 
-fn interchain_transfer_self_invoke(
-    ctx: Context<Execute>,
+fn cpi_execute_interchain_transfer<'info>(
+    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
     transfer: interchain_token_transfer_gmp::InterchainTransfer,
     message: Message,
     source_chain: &str,
@@ -152,23 +129,17 @@ fn interchain_transfer_self_invoke(
         source_chain: source_chain.to_owned(),
     };
 
+    let mut remaining = ctx.remaining_accounts.iter();
+    let destination = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let destination_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+
     let transfer_instruction = Instruction {
         program_id: crate::id(),
         accounts: crate::accounts::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.key(),
             its_root_pda: ctx.accounts.its_root_pda.key(),
-            destination: ctx
-                .accounts
-                .destination
-                .as_ref()
-                .ok_or(ItsError::AccountNotProvided)?
-                .key(),
-            destination_ata: ctx
-                .accounts
-                .destination_ata
-                .as_ref()
-                .ok_or(ItsError::AccountNotProvided)?
-                .key(),
+            destination: destination.key(),
+            destination_ata: destination_ata.key(),
             token_mint: ctx.accounts.token_mint.key(),
             token_manager_pda: ctx.accounts.token_manager_pda.key(),
             token_manager_ata: ctx.accounts.token_manager_ata.key(),
@@ -185,23 +156,12 @@ fn interchain_transfer_self_invoke(
         crate::__cpi_client_accounts_execute_interchain_transfer::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.to_account_info(),
             its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
-            destination: ctx
-                .accounts
-                .destination
-                .as_ref()
-                .ok_or(ItsError::AccountNotProvided)?
-                .to_account_info(),
-            destination_ata: ctx
-                .accounts
-                .destination_ata
-                .as_ref()
-                .ok_or(ItsError::AccountNotProvided)?
-                .to_account_info(),
+            destination: destination.to_account_info(),
+            destination_ata: destination_ata.to_account_info(),
             token_mint: ctx.accounts.token_mint.to_account_info(),
             token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
             token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
             token_program: ctx.accounts.token_program.to_account_info(),
-            // Event CPI accounts
             event_authority: ctx.accounts.event_authority.to_account_info(),
             program: ctx.accounts.program.to_account_info(),
         }
@@ -215,8 +175,8 @@ fn interchain_transfer_self_invoke(
     )
 }
 
-fn link_token_self_invoke(
-    ctx: Context<Execute>,
+fn cpi_execute_link_token<'info>(
+    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
     payload: interchain_token_transfer_gmp::LinkToken,
 ) -> Result<()> {
     let token_id = payload.token_id.0;
@@ -242,14 +202,14 @@ fn link_token_self_invoke(
         link_params,
     };
 
+    let mut remaining = ctx.remaining_accounts.iter();
+    let deployer = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let minter = remaining.next();
+    let minter_roles_pda = remaining.next();
+
     let accounts = crate::accounts::ExecuteLinkToken {
         payer: ctx.accounts.payer.key(),
-        deployer: ctx
-            .accounts
-            .deployer
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .key(),
+        deployer: deployer.key(),
         system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -257,8 +217,8 @@ fn link_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.key(),
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
-        operator: ctx.accounts.minter.as_ref().map(Key::key), // Use minter as operator
-        operator_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(Key::key),
+        operator: minter.map(Key::key), // Use minter as operator
+        operator_roles_pda: minter_roles_pda.map(Key::key),
         // for event cpi
         event_authority: ctx.accounts.event_authority.key(),
         program: ctx.accounts.program.key(),
@@ -273,12 +233,7 @@ fn link_token_self_invoke(
 
     let account_infos = crate::__cpi_client_accounts_execute_link_token::ExecuteLinkToken {
         payer: ctx.accounts.payer.to_account_info(),
-        deployer: ctx
-            .accounts
-            .deployer
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .to_account_info(),
+        deployer: deployer.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
         token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -286,17 +241,8 @@ fn link_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
         associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-        operator: ctx
-            .accounts
-            .minter
-            .as_ref()
-            .map(ToAccountInfo::to_account_info),
-        operator_roles_pda: ctx
-            .accounts
-            .minter_roles_pda
-            .as_ref()
-            .map(ToAccountInfo::to_account_info),
-        // Event CPI accounts
+        operator: minter.cloned(),
+        operator_roles_pda: minter_roles_pda.cloned(),
         event_authority: ctx.accounts.event_authority.to_account_info(),
         program: ctx.accounts.program.to_account_info(),
     }
@@ -309,8 +255,8 @@ fn link_token_self_invoke(
     )
 }
 
-fn deploy_interchain_token_self_invoke(
-    ctx: Context<Execute>,
+fn cpi_execute_deploy_interchain_token<'info>(
+    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
     deploy: interchain_token_transfer_gmp::DeployInterchainToken,
 ) -> Result<()> {
     // Extract data from the deploy payload
@@ -327,15 +273,20 @@ fn deploy_interchain_token_self_invoke(
         decimals,
     };
 
+    let mut remaining = ctx.remaining_accounts.iter();
+    let deployer_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let deployer = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let sysvar_instructions = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let mpl_token_metadata_program = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let mpl_token_metadata_account = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let minter = remaining.next();
+    let minter_roles_pda = remaining.next();
+
     // Build the accounts using Anchor's generated accounts struct
     let accounts = crate::accounts::ExecuteDeployInterchainToken {
         payer: ctx.accounts.payer.key(),
-        deployer: ctx
-            .accounts
-            .deployer
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .key(),
+        deployer: deployer.key(),
+        deployer_ata: deployer_ata.key(),
         system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -343,33 +294,11 @@ fn deploy_interchain_token_self_invoke(
         token_manager_ata: ctx.accounts.token_manager_ata.key(),
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
-        sysvar_instructions: ctx
-            .accounts
-            .sysvar_instructions
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .key(),
-        mpl_token_metadata_program: ctx
-            .accounts
-            .mpl_token_metadata_program
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .key(),
-        mpl_token_metadata_account: ctx
-            .accounts
-            .mpl_token_metadata_account
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .key(),
-        deployer_ata: ctx
-            .accounts
-            .deployer_ata
-            .as_ref()
-            .ok_or(ItsError::AccountNotProvided)?
-            .key(),
-        minter: ctx.accounts.minter.as_ref().map(Key::key),
-        minter_roles_pda: ctx.accounts.minter_roles_pda.as_ref().map(Key::key),
-        // for event cpi
+        sysvar_instructions: sysvar_instructions.key(),
+        mpl_token_metadata_program: mpl_token_metadata_program.key(),
+        mpl_token_metadata_account: mpl_token_metadata_account.key(),
+        minter: minter.map(Key::key),
+        minter_roles_pda: minter_roles_pda.map(Key::key),
         event_authority: ctx.accounts.event_authority.key(),
         program: ctx.accounts.program.key(),
     };
@@ -383,7 +312,7 @@ fn deploy_interchain_token_self_invoke(
 
     let account_infos = crate::__cpi_client_accounts_execute_deploy_interchain_token::ExecuteDeployInterchainToken {
 		payer: ctx.accounts.payer.to_account_info(),
-		deployer: ctx.accounts.deployer.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
+		deployer: deployer.to_account_info(),
 		system_program: ctx.accounts.system_program.to_account_info(),
 		its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
 		token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -391,27 +320,14 @@ fn deploy_interchain_token_self_invoke(
 		token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
 		token_program: ctx.accounts.token_program.to_account_info(),
 		associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-		sysvar_instructions: ctx.accounts.sysvar_instructions.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
-		mpl_token_metadata_program: ctx
-			.accounts
-			.mpl_token_metadata_program
-			.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
-		mpl_token_metadata_account: ctx
-			.accounts
-			.mpl_token_metadata_account
-			.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
-		deployer_ata: ctx.accounts.deployer_ata.as_ref().ok_or(ItsError::AccountNotProvided)?.to_account_info(),
-		minter: ctx
-			.accounts
-			.minter
-			.as_ref()
-			.map(ToAccountInfo::to_account_info),
-		minter_roles_pda: ctx
-			.accounts
-			.minter_roles_pda
-			.as_ref()
-			.map(ToAccountInfo::to_account_info),
-		// Event CPI accounts
+		sysvar_instructions: sysvar_instructions.to_account_info(),
+		mpl_token_metadata_program: mpl_token_metadata_program.to_account_info(),
+		mpl_token_metadata_account: mpl_token_metadata_account.to_account_info(),
+		deployer_ata: deployer_ata.to_account_info(),
+		minter: minter
+			.cloned(),
+		minter_roles_pda: minter_roles_pda
+			.cloned(),
 		event_authority: ctx.accounts.event_authority.to_account_info(),
 		program: ctx.accounts.program.to_account_info(),
 	}.to_account_infos();
