@@ -97,14 +97,14 @@ pub fn execute_link_token_handler(
         destination_token_address
             .as_ref()
             .try_into()
-            .map_err(|_err| ProgramError::InvalidAccountData)?,
+            .map_err(|_err| ItsError::InvalidAccountData)?,
     );
 
     // verify that the provided token address matches the mint address
     require_keys_eq!(
         token_address,
         ctx.accounts.token_mint.key(),
-        ItsError::TokenMintMismatch,
+        ItsError::InvalidTokenMint,
     );
 
     let operator = match link_params.try_into() {

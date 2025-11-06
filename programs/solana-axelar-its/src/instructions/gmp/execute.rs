@@ -109,7 +109,7 @@ fn cpi_execute_interchain_transfer<'info>(
         .destination_address
         .as_ref()
         .try_into()
-        .map_err(|_| ProgramError::InvalidAccountData)?;
+        .map_err(|_| ItsError::InvalidAccountData)?;
     let destination_address = Pubkey::new_from_array(destination_address);
 
     let amount: u64 = transfer
@@ -184,7 +184,7 @@ fn cpi_execute_link_token<'info>(
         .destination_token_address
         .as_ref()
         .try_into()
-        .map_err(|_| ProgramError::InvalidAccountData)?;
+        .map_err(|_| ItsError::InvalidAccountData)?;
 
     let token_manager_type: u8 = payload
         .token_manager_type

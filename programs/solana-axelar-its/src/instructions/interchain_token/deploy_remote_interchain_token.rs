@@ -58,7 +58,7 @@ pub struct DeployRemoteInterchainToken<'info> {
             &interchain_token_id(&deployer.key(), &salt)
         ],
         bump = token_manager_pda.bump,
-        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
+        constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::TokenMintTokenManagerMissmatch
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
@@ -200,7 +200,7 @@ pub(crate) fn get_token_metadata(
     let metadata_account = maybe_metadata_account.ok_or(ProgramError::NotEnoughAccountKeys)?;
     if *metadata_account.owner != mpl_token_metadata::ID {
         msg!("Invalid Metaplex metadata account");
-        return err!(ItsError::InvalidAccountOwner);
+        return err!(ItsError::InvalidMetaplexDataAccount);
     }
 
     let token_metadata = Metadata::from_bytes(&metadata_account.try_borrow_data()?)?;

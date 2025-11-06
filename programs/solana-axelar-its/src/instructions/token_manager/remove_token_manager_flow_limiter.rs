@@ -1,4 +1,7 @@
-use crate::state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles};
+use crate::{
+    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    ItsError,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -44,7 +47,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
 
     /// The user account from which the FLOW_LIMITER role will be removed
     #[account(
-        constraint = target_user_account.key() != authority_user_account.key() @ ProgramError::InvalidArgument,
+        constraint = target_user_account.key() != authority_user_account.key() @ ItsError::InvalidArgument,
     )]
     pub target_user_account: AccountInfo<'info>,
 

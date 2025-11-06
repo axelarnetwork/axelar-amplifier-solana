@@ -4,20 +4,26 @@ use anchor_lang::prelude::*;
 pub enum ItsError {
     #[msg("The ITS program is paused")]
     Paused,
+    #[msg("Instruction argument is invalid")]
     InvalidArgument,
+    #[msg("Invalid instruction data")]
     InvalidInstructionData,
-    InvalidAccountOwner,
+    #[msg("Invalid Metaplex data account")]
+    InvalidMetaplexDataAccount,
+    #[msg("Minter account not provided")]
     MinterNotProvided,
+    #[msg("Minter roles pda not provided")]
     MinterRolesNotProvided,
+    #[msg("Minter roles pda bump not provided")]
     MinterRolesPdaBumpNotProvided,
+    #[msg("Missing operator account")]
     OperatorNotProvided,
+    #[msg("Missing operator roles pda")]
     OperatorRolesPdaNotProvided,
+    #[msg("Account data is invalid")]
     InvalidAccountData,
-    MissingRemainingAccount,
     #[msg("The role provided is invalid")]
     InvalidRole,
-    #[msg("The token manager type is invalid")]
-    InvalidTokenManagerType,
     #[msg("The source chain name is untrusted")]
     UntrustedSourceChain,
     #[msg("The destination chain name is untrusted")]
@@ -33,12 +39,11 @@ pub enum ItsError {
     #[msg("The signer is not a user account")]
     CallerNotUserAccount,
     #[msg("The token mint is invalid")]
-    TokenMintMismatch,
-    InvalidTokenManagerAta,
-    InvalidTokenManagerPda,
+    InvalidTokenMint,
+    #[msg("Token manager missmatch with token mint")]
+    TokenMintTokenManagerMissmatch,
+    #[msg("Missing remaining account in execute instruction")]
     AccountNotProvided,
-    SourceIdNotProvided,
-    PdaSeedsNotProvided,
     #[msg("source_id and pda_seeds must both be provided together or both be None")]
     InconsistentSourceIdAndPdaSeeds,
 }

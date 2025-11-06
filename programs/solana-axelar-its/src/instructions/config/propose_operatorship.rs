@@ -1,4 +1,7 @@
-use crate::state::{InterchainTokenService, RoleProposal, Roles, RolesError, UserRoles};
+use crate::{
+    state::{InterchainTokenService, RoleProposal, Roles, RolesError, UserRoles},
+    ItsError,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -34,7 +37,7 @@ pub struct ProposeOperatorship<'info> {
 
     /// Destination user account (will receive OPERATOR role)
     #[account(
-        constraint = destination_user_account.key() != origin_user_account.key() @ ProgramError::InvalidArgument,
+        constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]
     pub destination_user_account: AccountInfo<'info>,
 

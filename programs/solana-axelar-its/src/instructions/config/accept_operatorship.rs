@@ -1,4 +1,7 @@
-use crate::state::{InterchainTokenService, RoleProposal, Roles, RolesError, UserRoles};
+use crate::{
+    state::{InterchainTokenService, RoleProposal, Roles, RolesError, UserRoles},
+    ItsError,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -36,7 +39,7 @@ pub struct AcceptOperatorship<'info> {
     /// Origin user account (current operator who proposed the transfer)
     #[account(
         mut,
-        constraint = origin_user_account.key() != destination_user_account.key() @ ProgramError::InvalidArgument,
+        constraint = origin_user_account.key() != destination_user_account.key() @ ItsError::InvalidArgument,
     )]
     pub origin_user_account: AccountInfo<'info>,
 

@@ -37,7 +37,7 @@ pub struct MintInterchainToken<'info> {
         ],
         bump = token_manager_pda.bump,
         constraint = token_manager_pda.token_address == mint.key()
-            @ ItsError::InvalidTokenManagerPda,
+            @ ItsError::TokenMintTokenManagerMissmatch,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
