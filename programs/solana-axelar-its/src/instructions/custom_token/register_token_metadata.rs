@@ -50,7 +50,7 @@ pub struct RegisterTokenMetadata<'info> {
         bump,
         seeds::program = solana_axelar_gateway::ID,
     )]
-    pub gateway_event_authority: SystemAccount<'info>,
+    pub gateway_event_authority: AccountInfo<'info>,
 
     pub gas_service_accounts: GasServiceAccounts<'info>,
 }
