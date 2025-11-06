@@ -128,21 +128,12 @@ pub fn deploy_remote_interchain_token_helper(
     let (its_event_authority, its_event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&ctx.program_id);
 
-    let data = match ctx.minter {
-        Some(minter) => solana_axelar_its::instruction::DeployRemoteInterchainTokenWithMinter {
-            salt,
-            destination_chain: destination_chain.clone(),
-            gas_value,
-            destination_minter: minter.to_bytes().into(),
-        }
-        .data(),
-        None => solana_axelar_its::instruction::DeployRemoteInterchainToken {
-            salt,
-            destination_chain: destination_chain.clone(),
-            gas_value,
-        }
-        .data(),
-    };
+    let data = solana_axelar_its::instruction::DeployRemoteInterchainToken {
+        salt,
+        destination_chain: destination_chain.clone(),
+        gas_value,
+    }
+    .data();
 
     let ix = Instruction {
         program_id: ctx.program_id,
@@ -152,11 +143,6 @@ pub fn deploy_remote_interchain_token_helper(
             token_mint: ctx.token_mint_pda,
             metadata_account: ctx.metadata_account,
             token_manager_pda: ctx.token_manager_pda,
-            // optional minter accounts
-            minter: ctx.minter,
-            deploy_approval_pda: ctx.deploy_approval_pda,
-            minter_roles: ctx.minter_roles,
-            //
             gateway_root_pda,
             gateway_program: solana_axelar_gateway::ID,
             gas_service_accounts: GasServiceAccounts {

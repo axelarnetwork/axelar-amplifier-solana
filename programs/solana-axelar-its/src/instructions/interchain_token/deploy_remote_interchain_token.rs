@@ -1,6 +1,4 @@
 use crate::gmp::*;
-use crate::state::deploy_approval::DeployApproval;
-use crate::state::UserRoles;
 use crate::{
     errors::ItsError,
     events::InterchainTokenDeploymentStarted,
@@ -10,7 +8,6 @@ use crate::{
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::keccak;
 use anchor_spl::token_2022::spl_token_2022::{
     extension::{metadata_pointer::MetadataPointer, BaseStateWithExtensions, StateWithExtensions},
     state::Mint as SplMint,
@@ -64,31 +61,6 @@ pub struct DeployRemoteInterchainToken<'info> {
         constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::InvalidTokenManagerPda
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
-
-    // Optional Minter accounts
-    pub minter: Option<Signer<'info>>,
-
-    #[account(
-        seeds = [
-            DeployApproval::SEED_PREFIX,
-            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref(),
-            &interchain_token_id(&deployer.key(), &salt),
-            &keccak::hash(destination_chain.as_bytes()).to_bytes()
-        ],
-        bump = deploy_approval_pda.bump,
-    )]
-    pub deploy_approval_pda: Option<Account<'info, DeployApproval>>,
-
-    #[account(
-        seeds = [
-            UserRoles::SEED_PREFIX,
-            token_manager_pda.key().as_ref(),
-            minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref()
-        ],
-        bump = minter_roles.bump,
-        constraint = minter_roles.has_minter_role() @ ItsError::InvalidRole
-    )]
-    pub minter_roles: Option<Account<'info, UserRoles>>,
 
     // GMP Accounts
     #[account(
@@ -154,41 +126,18 @@ pub fn deploy_remote_interchain_token_handler(
     salt: [u8; 32],
     destination_chain: String,
     gas_value: u64,
-    maybe_destination_minter: Option<Vec<u8>>,
 ) -> Result<()> {
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
 
     msg!("Instruction: OutboundDeploy");
 
-    let destination_minter_data = if let Some(destination_minter) = maybe_destination_minter {
-        let deploy_approval = ctx
-            .accounts
-            .deploy_approval_pda
-            .as_ref()
-            .ok_or(ItsError::DeployApprovalPDANotProvided)?;
-        let minter = ctx
-            .accounts
-            .minter
-            .as_ref()
-            .ok_or(ItsError::MinterNotProvided)?
-            .to_account_info();
-
-        if deploy_approval.approved_destination_minter != keccak::hash(&destination_minter).0 {
-            msg!("Destination minter does not match deploy approval");
-            return err!(ItsError::InvalidDestinationMinter);
-        }
-
-        Some((Bytes::from(destination_minter), deploy_approval, minter))
-    } else {
-        None
-    };
-
     // get token metadata
     let (name, symbol) = get_token_metadata(
         &ctx.accounts.token_mint.to_account_info(),
         Some(&ctx.accounts.metadata_account),
     )?;
+
     let decimals = ctx.accounts.token_mint.decimals;
 
     if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
@@ -201,10 +150,7 @@ pub fn deploy_remote_interchain_token_handler(
         token_name: name.clone(),
         token_symbol: symbol.clone(),
         token_decimals: decimals,
-        minter: destination_minter_data
-            .as_ref()
-            .map(|data| data.0.to_vec())
-            .unwrap_or_default(),
+        minter: vec![],
         destination_chain: destination_chain.clone(),
     });
 
@@ -216,10 +162,7 @@ pub fn deploy_remote_interchain_token_handler(
         name,
         symbol,
         decimals,
-        minter: destination_minter_data
-            .as_ref()
-            .map(|data| data.0.clone())
-            .unwrap_or_default(),
+        minter: Bytes::default(),
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();

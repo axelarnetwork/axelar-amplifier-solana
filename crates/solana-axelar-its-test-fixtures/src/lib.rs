@@ -13,9 +13,6 @@ pub use interchain_transfer::*;
 pub mod deploy_remote_interchain_token;
 pub use deploy_remote_interchain_token::*;
 
-pub mod approve_deploy_remote_interchain_token;
-pub use approve_deploy_remote_interchain_token::*;
-
 pub mod register_canonical_interchain_token;
 pub use register_canonical_interchain_token::*;
 

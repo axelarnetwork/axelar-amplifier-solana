@@ -88,9 +88,6 @@ pub mod seed_prefixes {
     /// The seed prefix for deriving the flow slot PDA
     pub const FLOW_SLOT_SEED: &[u8] = b"flow-slot";
 
-    /// The seed prefix for deriving the deployment approval PDA
-    pub const DEPLOYMENT_APPROVAL_SEED: &[u8] = state::DeployApproval::SEED_PREFIX;
-
     /// The seed prefix for deriving the interchain transfer execute signing PDA
     pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] = b"interchain-transfer-execute";
 }
@@ -151,49 +148,7 @@ pub mod solana_axelar_its {
             salt,
             destination_chain,
             gas_value,
-            None,
         )
-    }
-
-    pub fn deploy_remote_interchain_token_with_minter(
-        ctx: Context<DeployRemoteInterchainToken>,
-        salt: [u8; 32],
-        destination_chain: String,
-        gas_value: u64,
-        destination_minter: Vec<u8>,
-    ) -> Result<()> {
-        instructions::deploy_remote_interchain_token_handler(
-            ctx,
-            salt,
-            destination_chain,
-            gas_value,
-            Some(destination_minter),
-        )
-    }
-
-    pub fn approve_deploy_remote_interchain_token(
-        ctx: Context<ApproveDeployRemoteInterchainToken>,
-        deployer: Pubkey,
-        salt: [u8; 32],
-        destination_chain: String,
-        destination_minter: Vec<u8>,
-    ) -> Result<()> {
-        instructions::approve_deploy_remote_interchain_token(
-            ctx,
-            deployer,
-            salt,
-            destination_chain,
-            destination_minter,
-        )
-    }
-
-    pub fn revoke_deploy_remote_interchain_token(
-        ctx: Context<RevokeDeployRemoteInterchainToken>,
-        deployer: Pubkey,
-        salt: [u8; 32],
-        destination_chain: String,
-    ) -> Result<()> {
-        instructions::revoke_deploy_remote_interchain_token(ctx, deployer, salt, destination_chain)
     }
 
     pub fn register_token_metadata(
