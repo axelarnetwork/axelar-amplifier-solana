@@ -37,9 +37,9 @@ pub struct ExecuteInterchainTransfer<'info> {
 
     /// CHECK: we check this matches the destination address
     #[account(
-        mut,
         constraint = destination.key() == destination_address
-            @ ItsError::InvalidDestinationAddressAccount)]
+            @ ItsError::InvalidDestinationAddressAccount,
+    )]
     pub destination: UncheckedAccount<'info>,
 
     #[account(
@@ -98,7 +98,7 @@ pub fn execute_interchain_transfer_handler(
         &ctx.accounts.token_manager_pda.to_account_info(),
     )?;
 
-    let destination_token_account = ctx.accounts.destination.key();
+    let destination_token_account = ctx.accounts.destination_ata.key();
     let transferred_amount = handle_give_token_transfer(&mut ctx, amount)?;
 
     let data_hash = if data.is_empty() {
