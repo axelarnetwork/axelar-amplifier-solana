@@ -78,7 +78,7 @@ jobs:
           for program in $PROGRAMS; do
             library_name=$(echo "$program" | tr '-' '_')
             echo "Building $program (library: $library_name)..."
-            solana-verify build --library-name $library_name
+            cargo build-sbf --manifest-path programs/$program/Cargo.toml
           done
 
           # Process in the deploy directory
