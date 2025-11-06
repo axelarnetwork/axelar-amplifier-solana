@@ -79,7 +79,7 @@ impl MessageLeaf {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
-pub struct MerkleisedMessage {
+pub struct MerklizedMessage {
     /// The leaf node representing the message in the Merkle tree.
     pub leaf: MessageLeaf,
 
