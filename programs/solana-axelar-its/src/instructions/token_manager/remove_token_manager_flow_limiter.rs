@@ -69,14 +69,7 @@ pub fn remove_token_manager_flow_limiter_handler(
 
     let target_roles = &mut ctx.accounts.target_roles_account;
 
-    // Remove the FLOW_LIMITER role
     target_roles.roles.remove(Roles::FLOW_LIMITER);
-
-    msg!(
-        "Removed FLOW_LIMITER role for token_id: {:?}, user: {}",
-        ctx.accounts.token_manager_pda.token_id,
-        ctx.accounts.target_user_account.key()
-    );
 
     // Close if no remaining roles
     if !target_roles.has_roles() {
