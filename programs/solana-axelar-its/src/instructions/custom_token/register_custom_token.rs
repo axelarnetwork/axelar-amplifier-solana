@@ -114,7 +114,6 @@ pub fn register_custom_token_handler(
         salt: deploy_salt,
     });
 
-    // Not needed for custom tokens
     validate_mint_extensions(
         token_manager_type,
         &ctx.accounts.token_mint.to_account_info(),
@@ -131,7 +130,6 @@ pub fn register_custom_token_handler(
     );
 
     // Initialize operator roles if provided
-
     if let (Some(operator_roles_pda), Some(bump)) = (
         ctx.accounts.operator_roles_pda.as_mut(),
         ctx.bumps.operator_roles_pda,
