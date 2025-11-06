@@ -29,10 +29,10 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_pda.key().as_ref(),
-            minter.key().as_ref()
+            minter.key().as_ref(),
         ],
         bump = minter_roles.bump,
-        constraint = minter_roles.has_minter_role() @ ItsError::InvalidRole
+        constraint = minter_roles.has_minter_role() @ ItsError::InvalidRole,
     )]
     pub minter_roles: Account<'info, UserRoles>,
 
@@ -44,7 +44,7 @@ pub struct ApproveDeployRemoteInterchainToken<'info> {
             DeployApproval::SEED_PREFIX,
             minter.key().as_ref(),
             &interchain_token_id(&deployer, &salt),
-            &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
+            &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes(),
         ],
         bump
     )]

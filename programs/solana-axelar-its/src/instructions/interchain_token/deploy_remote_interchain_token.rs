@@ -10,6 +10,7 @@ use crate::{
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::keccak;
 use anchor_spl::token_2022::spl_token_2022::{
     extension::{metadata_pointer::MetadataPointer, BaseStateWithExtensions, StateWithExtensions},
     state::Mint as SplMint,
@@ -72,7 +73,7 @@ pub struct DeployRemoteInterchainToken<'info> {
             DeployApproval::SEED_PREFIX,
             minter.as_ref().ok_or(ItsError::MinterNotProvided)?.key().as_ref(),
             &interchain_token_id(&deployer.key(), &salt),
-            &anchor_lang::solana_program::keccak::hashv(&[destination_chain.as_bytes()]).to_bytes()
+            &keccak::hash(destination_chain.as_bytes()).to_bytes()
         ],
         bump = deploy_approval_pda.bump,
     )]
@@ -172,6 +173,11 @@ pub fn deploy_remote_interchain_token_handler(
             .as_ref()
             .ok_or(ItsError::MinterNotProvided)?
             .to_account_info();
+
+        if deploy_approval.approved_destination_minter != keccak::hash(&destination_minter).0 {
+            msg!("Destination minter does not match deploy approval");
+            return err!(ItsError::InvalidDestinationMinter);
+        }
 
         Some((Bytes::from(destination_minter), deploy_approval, minter))
     } else {

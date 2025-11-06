@@ -35,6 +35,8 @@ pub enum ItsError {
     CallerNotUserAccount,
     #[msg("The token mint is invalid")]
     TokenMintMismatch,
+    #[msg("The destination minter is invalid")]
+    InvalidDestinationMinter,
     InvalidTokenManagerAta,
     InvalidTokenManagerPda,
     AccountNotProvided,
