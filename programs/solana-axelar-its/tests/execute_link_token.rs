@@ -156,16 +156,7 @@ fn test_execute_link_token() {
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
-
-    // Step 10: Find required PDAs
-    let (token_manager_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
 
     // For link token, we use the existing mint, not a new PDA
     let token_mint_pda = existing_token_mint;
