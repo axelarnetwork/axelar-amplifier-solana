@@ -55,8 +55,6 @@ pub struct InterchainTransfer<'info> {
     //
     // Gas Service
     //
-
-    // todo: replace with GasServiceAccounts
     /// CHECK: checked by the gas service program
     #[account(mut)]
     pub gas_treasury: UncheckedAccount<'info>,
