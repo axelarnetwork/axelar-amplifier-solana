@@ -41,20 +41,17 @@ fn test_execute_deploy_interchain_token_success() {
 
     assert!(init_result.program_result.is_ok());
 
-    // Step 3: Add ITS program to mollusk - USE the properly configured mollusk
+    // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
 
-    // Use the properly configured mollusk that has Token2022 and other programs
     let mut mollusk = initialize_mollusk();
 
-    // We still need to add the gateway program since initialize_mollusk doesn't include it for execution tests
     mollusk.add_program(
         &GATEWAY_PROGRAM_ID,
         "../../target/deploy/solana_axelar_gateway",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
-    // Update setup to use our properly configured mollusk
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
@@ -67,9 +64,8 @@ fn test_execute_deploy_interchain_token_success() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    // Use our configured mollusk for ITS service initialization too
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &setup.mollusk, // Now this mollusk has Token2022 properly configured
+        &setup.mollusk,
         payer,
         &payer_account,
         payer,
@@ -133,15 +129,8 @@ fn test_execute_deploy_interchain_token_success() {
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
 
-    // Step 9: Find required PDAs - FIXED with correct seeds
-    let (token_manager_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
+    // Step 9: Find required PDAs
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
 
     let (token_mint_pda, _) = Pubkey::find_program_address(
         &[
@@ -184,13 +173,12 @@ fn test_execute_deploy_interchain_token_success() {
             solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
             message.command_id().as_ref(),
         ],
-        &program_id, // The caller program (ITS)
+        &program_id,
     );
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
 
-    // Fix: get_event_authority_and_program_accounts returns 3 elements
     let (its_event_authority, event_authority_account, its_program_account) =
         get_event_authority_and_program_accounts(&program_id);
 
@@ -308,7 +296,7 @@ fn test_execute_deploy_interchain_token_success() {
             },
         ),
         keyed_account_for_system_program(),
-        // Extra accounts for DeployInterchainToken
+        // Remaining accounts for DeployInterchainToken
         (
             deployer_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),

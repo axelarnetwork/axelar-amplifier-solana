@@ -128,15 +128,7 @@ fn test_execute_interchain_transfer_success() {
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
         &deploy_incoming_messages[0];
 
-    // Find required PDAs
-    let (token_manager_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
 
     let (token_mint_pda, _) = Pubkey::find_program_address(
         &[
@@ -305,7 +297,7 @@ fn test_execute_interchain_transfer_success() {
             },
         ),
         keyed_account_for_system_program(),
-        // Extra accounts for DeployInterchainToken
+        // Remaining accounts for DeployInterchainToken
         (
             deployer_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),
@@ -346,17 +338,13 @@ fn test_execute_interchain_transfer_success() {
         .process_instruction(&deploy_execute_instruction, &deploy_execute_accounts);
 
     // Verify deploy success
-    assert!(
-        deploy_result.program_result.is_ok(),
-        "Deploy instruction should succeed: {:?}",
-        deploy_result.program_result
-    );
+    assert!(deploy_result.program_result.is_ok());
 
-    // Step 6: Now create the interchain transfer using the deployed token
+    // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 1_000_000u64;
     let destination_pubkey = payer; // Transfer to same user for simplicity
     let destination_address = destination_pubkey.to_bytes().to_vec(); // 32 bytes for Solana Pubkey
-    let source_address = "ethereum_address_123".to_owned(); // Valid UTF-8 string
+    let source_address = "ethereum_address_123".to_owned(); // some valid UTF-8 string
 
     let source_address_bytes = source_address.as_bytes().to_vec();
 
@@ -410,7 +398,6 @@ fn test_execute_interchain_transfer_success() {
         &program_id,
     );
 
-    // Create destination ATA
     let (destination_ata, _) = Pubkey::find_program_address(
         &[
             destination_pubkey.as_ref(),
@@ -420,7 +407,6 @@ fn test_execute_interchain_transfer_success() {
         &spl_associated_token_account::id(),
     );
 
-    // Execute transfer instruction
     let transfer_instruction_data = solana_axelar_its::instruction::Execute {
         message: transfer_message.clone(),
         payload: transfer_encoded_payload,
@@ -537,14 +523,8 @@ fn test_execute_interchain_transfer_success() {
         .mollusk
         .process_instruction(&transfer_execute_instruction, &transfer_execute_accounts);
 
-    // Verify transfer success
-    assert!(
-        transfer_result.program_result.is_ok(),
-        "Transfer instruction should succeed: {:?}",
-        transfer_result.program_result
-    );
+    assert!(transfer_result.program_result.is_ok());
 
-    // Verify token manager exists and is correct
     let token_manager_account = transfer_result.get_account(&token_manager_pda).unwrap();
     let token_manager =
         TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
