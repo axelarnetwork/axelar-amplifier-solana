@@ -5,6 +5,7 @@ use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
 use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 
 use crate::ItsError;
+use crate::ITS_HUB_CHAIN_NAME;
 
 /// Common GMP accounts needed for outbound operations
 #[derive(Clone)]
@@ -86,7 +87,7 @@ pub fn process_outbound(
 
         pay_gas(
             cpi_ctx,
-            destination_chain.clone(),
+            ITS_HUB_CHAIN_NAME.to_owned(),
             destination_address.clone(),
             payload_hash,
             gas_value,
