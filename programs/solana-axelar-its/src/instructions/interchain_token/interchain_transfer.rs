@@ -73,7 +73,7 @@ pub struct InterchainTransfer<'info> {
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused
             @ ItsError::Paused,
-        constraint = its_root_pda.is_trusted_chain_or_hub(&destination_chain)
+        constraint = its_root_pda.is_trusted_chain(&destination_chain)
             @ ItsError::UntrustedDestinationChain,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
