@@ -185,6 +185,7 @@ syn = { version = "2", features = ["full"] }
 quote = "1"
 proc-macro2 = "1"
 mollusk-svm = "0.5.1"
+mollusk-svm-programs-token = "0.4.1"
 
 # solana programs
 solana-axelar-operators = { path = "programs/solana-axelar-operators", default-features = false }
@@ -199,6 +200,7 @@ axelar-message-primitives = { path = "helpers/axelar-message-primitives" }
 axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
 solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
+solana-axelar-its-test-fixtures = { path = "crates/solana-axelar-its-test-fixtures", default-features = false }
 evm-contracts-rs = { path = "helpers/evm-contracts-rs" }
 evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 governance-gmp = { path = "helpers/governance-gmp" }

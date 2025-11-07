@@ -121,7 +121,7 @@ macro_rules! executable_accounts {
         	mut,
             seeds = [solana_axelar_gateway::IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
             bump = incoming_message_pda.load()?.bump,
-            seeds::program = axelar_gateway_program.key()
+            seeds::program = solana_axelar_gateway::ID,
         )]
         pub incoming_message_pda: AccountLoader<'info, solana_axelar_gateway::IncomingMessage>,
 
@@ -134,14 +134,14 @@ macro_rules! executable_accounts {
         #[account(
             seeds = [solana_axelar_gateway::state::GatewayConfig::SEED_PREFIX],
             bump = gateway_root_pda.load()?.bump,
-            seeds::program = axelar_gateway_program.key(),
+            seeds::program = solana_axelar_gateway::ID,
         )]
         pub gateway_root_pda: AccountLoader<'info, solana_axelar_gateway::state::GatewayConfig>,
 
         #[account(
             seeds = [b"__event_authority"],
             bump,
-            seeds::program = axelar_gateway_program.key()
+            seeds::program = solana_axelar_gateway::ID,
         )]
         pub event_authority: SystemAccount<'info>,
 
