@@ -5,6 +5,7 @@ use solana_axelar_gateway::{
     executable::{validate_message_raw, HasAxelarExecutable},
     executable_accounts, Message,
 };
+use solana_program::instruction::AccountMeta;
 use solana_program::instruction::Instruction;
 
 executable_accounts!(Execute);
@@ -363,10 +364,10 @@ fn invoke_signed_with_its_root_pda(
 pub fn execute_interchain_transfer_extra_accounts(
     destination: Pubkey,
     destination_ata: Pubkey,
-) -> Vec<solana_program::instruction::AccountMeta> {
+) -> Vec<AccountMeta> {
     vec![
-        solana_program::instruction::AccountMeta::new(destination, false),
-        solana_program::instruction::AccountMeta::new(destination_ata, false),
+        AccountMeta::new(destination, false),
+        AccountMeta::new(destination_ata, false),
     ]
 }
 
@@ -379,24 +380,17 @@ pub fn execute_interchain_transfer_extra_accounts(
 /// ```
 pub fn execute_link_token_extra_accounts(
     deployer: Pubkey,
-    minter: Option<Pubkey>,
-    minter_roles_pda: Option<Pubkey>,
-) -> Vec<solana_program::instruction::AccountMeta> {
-    let mut accounts = vec![solana_program::instruction::AccountMeta::new(
-        deployer, false,
-    )];
+    operator: Option<Pubkey>,
+    operator_roles_pda: Option<Pubkey>,
+) -> Vec<AccountMeta> {
+    let mut accounts = vec![AccountMeta::new(deployer, false)];
 
-    if let Some(minter_key) = minter {
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            minter_key, false,
-        ));
+    if let Some(key) = operator {
+        accounts.push(AccountMeta::new(key, false));
     }
 
-    if let Some(minter_roles_pda_key) = minter_roles_pda {
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            minter_roles_pda_key,
-            false,
-        ));
+    if let Some(pda_key) = operator_roles_pda {
+        accounts.push(AccountMeta::new(pda_key, false));
     }
 
     accounts
@@ -425,26 +419,21 @@ pub fn execute_deploy_interchain_token_extra_accounts(
     mpl_token_metadata_account: Pubkey,
     minter: Option<Pubkey>,
     minter_roles_pda: Option<Pubkey>,
-) -> Vec<solana_program::instruction::AccountMeta> {
+) -> Vec<AccountMeta> {
     let mut accounts = vec![
-        solana_program::instruction::AccountMeta::new(deployer_ata, false),
-        solana_program::instruction::AccountMeta::new(deployer, false),
-        solana_program::instruction::AccountMeta::new_readonly(sysvar_instructions, false),
-        solana_program::instruction::AccountMeta::new_readonly(mpl_token_metadata_program, false),
-        solana_program::instruction::AccountMeta::new(mpl_token_metadata_account, false),
+        AccountMeta::new(deployer_ata, false),
+        AccountMeta::new(deployer, false),
+        AccountMeta::new_readonly(sysvar_instructions, false),
+        AccountMeta::new_readonly(mpl_token_metadata_program, false),
+        AccountMeta::new(mpl_token_metadata_account, false),
     ];
 
     if let Some(minter_key) = minter {
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            minter_key, false,
-        ));
+        accounts.push(AccountMeta::new(minter_key, false));
     }
 
     if let Some(minter_roles_pda_key) = minter_roles_pda {
-        accounts.push(solana_program::instruction::AccountMeta::new(
-            minter_roles_pda_key,
-            false,
-        ));
+        accounts.push(AccountMeta::new(minter_roles_pda_key, false));
     }
 
     accounts
