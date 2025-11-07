@@ -60,6 +60,10 @@ pub struct MintInterchainToken<'info> {
 pub fn mint_interchain_token_handler(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
     msg!("Instruction: MintInterchainToken");
 
+    if amount == 0 {
+        return err!(ItsError::InvalidAmount);
+    }
+
     // Mint tokens using the token manager PDA as authority
     let token_manager = &ctx.accounts.token_manager_pda;
     let its_root_pda = &ctx.accounts.its_root_pda;
