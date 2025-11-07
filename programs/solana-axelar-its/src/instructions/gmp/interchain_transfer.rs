@@ -82,6 +82,7 @@ pub struct ExecuteInterchainTransfer<'info> {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::unimplemented)]
 pub fn execute_interchain_transfer_handler(
     mut ctx: Context<ExecuteInterchainTransfer>,
     token_id: [u8; 32],
@@ -92,6 +93,10 @@ pub fn execute_interchain_transfer_handler(
     message: Message,
     source_chain: String,
 ) -> Result<()> {
+    if amount == 0 {
+        return err!(ItsError::InvalidAmount);
+    }
+
     validate_token_manager_type(
         ctx.accounts.token_manager_pda.ty,
         &ctx.accounts.token_mint.to_account_info(),
@@ -121,6 +126,7 @@ pub fn execute_interchain_transfer_handler(
     if !data.is_empty() {
         // TODO invoke signed for execute with token
         msg!("ExecuteWithInterchainToken is not yet implemented");
+        unimplemented!();
     }
 
     Ok(())
