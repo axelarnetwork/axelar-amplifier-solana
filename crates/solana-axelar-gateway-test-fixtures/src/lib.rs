@@ -15,7 +15,7 @@ use solana_axelar_gateway::seed_prefixes::{
 };
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    MerkleisedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID, U256,
+    MerklizedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID, U256,
 };
 use solana_axelar_gateway::{
     CrossChainId, IncomingMessage, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
@@ -981,7 +981,7 @@ pub fn approve_message_helper(
     let message_proof = message_merkle_tree.proof(&[position]);
     let message_proof_bytes = message_proof.to_bytes();
 
-    let merkleised_message = MerkleisedMessage {
+    let merklized_message = MerklizedMessage {
         leaf: message_leaves[position].clone(),
         proof: message_proof_bytes,
     };
@@ -999,7 +999,7 @@ pub fn approve_message_helper(
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
     let approve_instruction_data = solana_axelar_gateway::instruction::ApproveMessage {
-        merkleised_message: merkleised_message.clone(),
+        merklized_message: merklized_message.clone(),
         payload_merkle_root,
     }
     .data();

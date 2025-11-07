@@ -1,0 +1,92 @@
+name: "Build Programs"
+
+on:
+  workflow_call:
+    inputs:
+      commit-hash:
+        description: "The commit hash to build from"
+        type: string
+        required: true
+      environment:
+        description: "The root key to determine the cluster environment (ex: devnet-amplifier, testnet, stagenet, mainnet)"
+        type: string
+        required: true
+    outputs:
+      artifact-name:
+        description: "Name of the uploaded artifact containing all builds"
+        value: ${{ jobs.build.outputs.artifact-name }}
+      artifact-path:
+        description: "Path of the uploaded artifact containing all builds"
+        value: ${{ jobs.build.outputs.artifact-path }}
+
+jobs:
+  build:
+    runs-on: blacksmith-8vcpu-ubuntu-2204
+    outputs:
+      artifact-name: ${{ steps.set-artifact-name.outputs.name }}
+      artifact-path: ${{ steps.set-artifact-name.outputs.path }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout specific commit
+        run: git checkout ${{ inputs.commit-hash }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.86.0
+
+      - name: Set artifact name
+        id: set-artifact-name
+        run: |
+          echo "name=solana-programs-${{ inputs.commit-hash }}" >> $GITHUB_OUTPUT
+          echo "path=target/deploy" >> $GITHUB_OUTPUT
+
+      - name: Install Solana and Anchor
+        run: |
+          # Quick install Anchor + all dependencies
+          curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+
+      - name: Build all programs
+        run: |
+          echo "Warning: All declare_id!() values should already be set in the programs prior to building, and corresponding keypairs should be available in 1pass."
+
+          # Determine the Solana cluster based on the environment
+          ENVIRONMENT="${{ inputs.environment }}"
+
+          if [[ "$ENVIRONMENT" == *"devnet-amplifier"* ]] || [[ "$ENVIRONMENT" == *"stagenet"* ]] || [[ "$ENVIRONMENT" == *"testnet"* ]]; then
+            CLUSTER="devnet"
+          elif [[ "$ENVIRONMENT" == *"mainnet"* ]]; then
+            CLUSTER="mainnet-beta"
+          else
+            echo "Warning: Unknown environment '$ENVIRONMENT', defaulting to devnet"
+            CLUSTER="devnet"
+          fi
+
+          echo "Setting Solana cluster to: $CLUSTER"
+          solana config set --url $CLUSTER
+
+          # Extract package names from release-plz.toml and build each one
+          PROGRAMS=$(grep -A 4 '^\[\[package\]\]' release-plz.toml | grep '^name = ' | sed 's/name = "\(.*\)"/\1/')
+
+          echo "Building programs from release-plz.toml:"
+          echo "$PROGRAMS"
+
+          for program in $PROGRAMS; do
+            library_name=$(echo "$program" | tr '-' '_')
+            echo "Building $program (library: $library_name)..."
+            cargo build-sbf --manifest-path programs/$program/Cargo.toml
+          done
+
+          # Process in the deploy directory
+          cd target/deploy
+
+          # Keep only .so files
+          find . -type f ! -name "*.so" -delete
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-artifact-name.outputs.name }}
+          path: target/deploy
+          retention-days: 1

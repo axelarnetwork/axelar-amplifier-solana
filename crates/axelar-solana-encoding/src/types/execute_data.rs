@@ -27,7 +27,7 @@ pub struct ExecuteData {
 
     /// The payload items, which can either be new messages or a verifier set
     /// rotation, each accompanied by their respective Merkle proofs.
-    pub payload_items: MerkleisedPayload,
+    pub payload_items: MerklizedPayload,
 }
 
 /// Contains information about a single verifier within the signing verifier
@@ -51,11 +51,11 @@ pub struct SigningVerifierSetInfo {
 
 /// Represents the payload data in a Merkle tree structure.
 ///
-/// `MerkleisedPayload` can either be a rotation of the verifier set or a
+/// `MerklizedPayload` can either be a rotation of the verifier set or a
 /// collection of new messages, each accompanied by their respective Merkle
 /// proofs.
 #[derive(Debug, Eq, PartialEq, Clone, borsh::BorshDeserialize, borsh::BorshSerialize)]
-pub enum MerkleisedPayload {
+pub enum MerklizedPayload {
     /// Indicates a rotation of the verifier set, providing the new Merkle root
     /// of the verifier set.
     VerifierSetRotation {
@@ -66,19 +66,19 @@ pub enum MerkleisedPayload {
     /// Contains a list of new messages, each with its corresponding Merkle
     /// proof.
     NewMessages {
-        /// A vector of `MerkleisedMessage` instances, each representing a
+        /// A vector of `MerklizedMessage` instances, each representing a
         /// message and its proof.
-        messages: Vec<MerkleisedMessage>,
+        messages: Vec<MerklizedMessage>,
     },
 }
 
 /// Represents a single message within the payload, along with its Merkle proof.
 ///
-/// Each `MerkleisedMessage` includes the message content encapsulated in a
+/// Each `MerklizedMessage` includes the message content encapsulated in a
 /// `MessageLeaf` and a proof that verifies the message's inclusion in the
 /// Merkle tree.
 #[derive(Debug, Eq, PartialEq, Clone, borsh::BorshDeserialize, borsh::BorshSerialize)]
-pub struct MerkleisedMessage {
+pub struct MerklizedMessage {
     /// The leaf node representing the message in the Merkle tree.
     pub leaf: MessageLeaf,
 

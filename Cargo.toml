@@ -9,6 +9,7 @@ repository = "https://github.com/eigerco/axelar-amplifier-solana"
 homepage = "https://github.com/eigerco/axelar-amplifier-solana"
 license = "MIT/Apache-2.0"
 edition = "2021"
+rust-version = "1.86"
 
 [workspace.lints.clippy]
 cargo = { priority = -1, level = "deny" }
