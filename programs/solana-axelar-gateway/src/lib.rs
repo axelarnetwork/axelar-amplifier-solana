@@ -25,7 +25,7 @@ use program_utils::ensure_single_feature;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("gt2EEXhF49mAGhi6Fxsuwwuoz5Dpx7daAXAWE8sLZ77");
+declare_id!("gtw3LYHmSe3y1cRqCeBuTpyB4KDQHfaqqHQs6Rw19DX");
 
 #[cfg(feature = "stagenet")]
 declare_id!("gtwpfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
@@ -100,10 +100,10 @@ pub mod solana_axelar_gateway {
 
     pub fn approve_message(
         ctx: Context<ApproveMessage>,
-        merkleised_message: MerkleisedMessage,
+        merklized_message: MerklizedMessage,
         payload_merkle_root: [u8; 32],
     ) -> Result<()> {
-        instructions::approve_message_handler(ctx, merkleised_message, payload_merkle_root)
+        instructions::approve_message_handler(ctx, merklized_message, payload_merkle_root)
     }
 
     pub fn validate_message(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {

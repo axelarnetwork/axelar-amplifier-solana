@@ -29,7 +29,7 @@ use udigest::encoding::EncodeValue;
 pub use {borsh, rs_merkle};
 
 use crate::types::execute_data::{
-    ExecuteData, MerkleisedMessage, MerkleisedPayload, SigningVerifierSetInfo,
+    ExecuteData, MerklizedMessage, MerklizedPayload, SigningVerifierSetInfo,
 };
 use crate::types::messages::MessageLeaf;
 use crate::types::verifier_set::VerifierSetLeaf;
@@ -58,7 +58,7 @@ pub fn encode(
     let signer_merkle_tree = merkle_tree::<NativeHasher, VerifierSetLeaf>(leaves.iter());
     let signing_verifier_set_merkle_root = signer_merkle_tree
         .root()
-        .ok_or(EncodingError::CannotMerkeliseEmptyVerifierSet)?;
+        .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)?;
     let (payload_merkle_root, payload_items) = hash_payload_internal(payload, domain_separator)?;
 
     let signing_verifier_set_leaves = leaves
@@ -92,9 +92,9 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
         .saturating_add({
             // estimate heap allocations
             match &execute_data.payload_items {
-                MerkleisedPayload::VerifierSetRotation { .. } => 0,
-                MerkleisedPayload::NewMessages { messages } => {
-                    size_of::<MerkleisedMessage>()
+                MerklizedPayload::VerifierSetRotation { .. } => 0,
+                MerklizedPayload::NewMessages { messages } => {
+                    size_of::<MerklizedMessage>()
                         .saturating_mul(messages.len())
                         .saturating_mul({
                             // allocate for 4 hashes
@@ -127,11 +127,11 @@ pub fn hash_payload(
 }
 
 /// Internal function for hashing payloads, which calculates the root and items
-/// for Merkleised payloads, either messages or a new verifier set.
+/// for Merklized payloads, either messages or a new verifier set.
 fn hash_payload_internal(
     payload: Payload,
     domain_separator: [u8; 32],
-) -> Result<([u8; 32], MerkleisedPayload), EncodingError> {
+) -> Result<([u8; 32], MerklizedPayload), EncodingError> {
     let (payload_merkle_root, payload_items) = match payload {
         Payload::Messages(messages) => {
             let leaves = types::messages::merkle_tree_leaves(messages, domain_separator)?
@@ -139,12 +139,12 @@ fn hash_payload_internal(
             let messages_merkle_tree = merkle_tree::<NativeHasher, MessageLeaf>(leaves.iter());
             let messages_merkle_root = messages_merkle_tree
                 .root()
-                .ok_or(EncodingError::CannotMerkeliseEmptyMessageSet)?;
+                .ok_or(EncodingError::CannotMerklizeEmptyMessageSet)?;
             let messages = leaves
                 .into_iter()
                 .map(|leaf| {
                     let proof = messages_merkle_tree.proof(&[leaf.position.into()]);
-                    MerkleisedMessage {
+                    MerklizedMessage {
                         leaf,
                         proof: proof.to_bytes(),
                     }
@@ -152,13 +152,13 @@ fn hash_payload_internal(
                 .collect::<Vec<_>>();
             (
                 messages_merkle_root,
-                MerkleisedPayload::NewMessages { messages },
+                MerklizedPayload::NewMessages { messages },
             )
         }
         Payload::NewVerifierSet(verifier_set) => {
             let new_verifier_set_merkle_root =
                 verifier_set_hash::<NativeHasher>(&verifier_set, &domain_separator)?;
-            let payload = MerkleisedPayload::VerifierSetRotation {
+            let payload = MerklizedPayload::VerifierSetRotation {
                 new_verifier_set_merkle_root,
             };
             (new_verifier_set_merkle_root, payload)
