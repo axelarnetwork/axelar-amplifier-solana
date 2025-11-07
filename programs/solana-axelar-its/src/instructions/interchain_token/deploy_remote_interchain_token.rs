@@ -140,11 +140,6 @@ pub fn deploy_remote_interchain_token_handler(
 
     let decimals = ctx.accounts.token_mint.decimals;
 
-    if ctx.accounts.token_manager_pda.token_address != ctx.accounts.token_mint.key() {
-        msg!("TokenManager doesn't match mint");
-        return err!(ItsError::InvalidArgument);
-    }
-
     emit_cpi!(InterchainTokenDeploymentStarted {
         token_id,
         token_name: name.clone(),
