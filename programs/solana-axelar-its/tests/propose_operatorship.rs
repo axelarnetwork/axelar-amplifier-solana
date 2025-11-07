@@ -119,8 +119,6 @@ fn test_propose_malicious_operatorship_failure() {
     let current_operator = Pubkey::new_unique();
     let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
-    let proposed_operator = Pubkey::new_unique();
-
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
@@ -167,7 +165,7 @@ fn test_propose_malicious_operatorship_failure() {
             origin_user_account: current_operator,
             origin_roles_account: current_operator_roles_pda,
             resource_account: its_root_pda,
-            destination_user_account: proposed_operator,
+            destination_user_account: malicious_proposed_operator,
             proposal_account: malicious_proposal_pda,
         }
         .to_account_metas(None),
@@ -335,7 +333,7 @@ fn test_propose_operatorship_missing_operator_role_failure() {
     };
 
     let mut user_roles_serialized = Vec::new();
-    user_roles_serialized.extend_from_slice(&UserRoles::DISCRIMINATOR);
+    user_roles_serialized.extend_from_slice(UserRoles::DISCRIMINATOR);
     user_roles_serialized.extend_from_slice(&borsh::to_vec(&user_roles_data).unwrap());
 
     let non_operator_roles_account = Account {

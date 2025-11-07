@@ -208,7 +208,7 @@ fn test_accept_invalid_operatorship() {
     };
 
     let mut proposal_account_data = Vec::new();
-    proposal_account_data.extend_from_slice(&RoleProposal::DISCRIMINATOR);
+    proposal_account_data.extend_from_slice(RoleProposal::DISCRIMINATOR);
     proposal_account_data.extend_from_slice(&borsh::to_vec(&role_proposal_data).unwrap());
 
     let wrong_proposal_account = Account {
