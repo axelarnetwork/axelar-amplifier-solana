@@ -154,6 +154,8 @@ pub fn interchain_transfer_handler(
     caller_pda_seeds: Option<Vec<Vec<u8>>>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
+    msg!("Instruction: InterchainTransfer");
+
     if amount == 0 {
         return err!(ItsError::InvalidAmount);
     }

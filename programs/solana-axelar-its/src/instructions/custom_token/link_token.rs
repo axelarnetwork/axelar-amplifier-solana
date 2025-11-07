@@ -112,6 +112,9 @@ pub fn link_token_handler(
     if token_manager_type == Type::NativeInterchainToken {
         return err!(ItsError::InvalidInstructionData);
     }
+    if destination_token_address.is_empty() {
+        return err!(ItsError::InvalidDestinationAddress);
+    }
 
     // Derive the token ID using the same logic as the existing implementation
     let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
