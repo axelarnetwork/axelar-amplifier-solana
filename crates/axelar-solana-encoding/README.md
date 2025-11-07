@@ -1,7 +1,7 @@
 # Axelar Solana Encoding crate
 
 This crate defines utilities that are used on the following components:
-- Encodes data on the [**Multisig Prover**](https://github.com/eigerco/axelar-amplifier/blob/acd6d68da408ff9ea8859debd3b04427b08f5be3/contracts/multisig-prover/src/encoding/mod.rs#L21) in a Merkelised way
+- Encodes data on the [**Multisig Prover**](https://github.com/eigerco/axelar-amplifier/blob/acd6d68da408ff9ea8859debd3b04427b08f5be3/contracts/multisig-prover/src/encoding/mod.rs#L21) in a Merklized way
 - [**Relayer**](https://github.com/eigerco/axelar-solana-relayer) uses the encoded data to send many small transactions to the Axelar Solana Gateway to approve messages or rotate signer sets
 - [**Axelar Solana Gateway**](../../programs/axelar-solana-gateway/README.md) uses the encoding crate to create hashes that are consistent between all implementations
 - All components listed above use the data types defined in this crate. For a high-level overview, see [the root README.md](../../../README.md)
@@ -10,14 +10,14 @@ This crate defines utilities that are used on the following components:
 
 While `abi` encoding can be used inside Solana programs, the ecosystem primarily has settled on using `borsh`. Borsh encoding is simple to use, relatively cheap (in compute unit consumption), and has JS libraries. It's the default used by the Anchor framework [[source]](https://solana.com/developers/courses/native-onchain-development/serialize-instruction-data-frontend#serialization). Also, Solana is not the only blockchain that uses borsh [[link]](https://docs.near.org/build/smart-contracts/anatomy/serialization), meaning it was a natural choice, and as the limitations above highlight - encoding and decoding the raw data is not the limitation.
 
-## Merkelising the data
+## Merklizing the data
 
 > [!NOTE]
 > For a better understanding of the following chapter - [Wikipedia Merkle Tree](https://en.wikipedia.org/wiki/Merkle_tree).
 > 
 > Our `axelar-solana-encoding` library protects against [second preimage attacks](https://en.wikipedia.org/wiki/Merkle_tree#Second_preimage_attack).
 
-The `axelar-solana-encoding` crate uses Merkle Trees to Merkelise the data and builds commitment schemes. This is necessary because Solana TX and compute limitations prevent doing _everything_ that the EVM gateway can do in a single TX. The defining property of `axelar-solana-encoding` allows the Relayer to send many small transactions without complex on-chain state tracking. Merkle Roots are the commitment values that tie all the small transactions together.
+The `axelar-solana-encoding` crate uses Merkle Trees to Merklize the data and builds commitment schemes. This is necessary because Solana TX and compute limitations prevent doing _everything_ that the EVM gateway can do in a single TX. The defining property of `axelar-solana-encoding` allows the Relayer to send many small transactions without complex on-chain state tracking. Merkle Roots are the commitment values that tie all the small transactions together.
 
 ![Merkle Tree visualisation](https://github.com/user-attachments/assets/6cce2c07-2299-497d-bfdb-e889d3ac67dc)
 
@@ -33,7 +33,7 @@ The unique property of this approach is that:
 
 Let's take a look at how we construct leaf nodes from verifier sets and message batches:
 
-![Merkelising the Data](https://github.com/user-attachments/assets/6bbb91c6-7ba1-4c35-a770-cead1a97dc1a)
+![Merklizing the Data](https://github.com/user-attachments/assets/6bbb91c6-7ba1-4c35-a770-cead1a97dc1a)
 
 > [!NOTE]
 > **Payload digest**: this is the data that the verifiers sign. It is a hash that consists of all the messages, verifiers, and other metadata. 
@@ -53,7 +53,7 @@ Let's take a look at how we construct leaf nodes from verifier sets and message 
 
 ![Execute Data layout](https://github.com/user-attachments/assets/7a6b784b-32a5-42cb-adee-26cdd430fe84)
 
-After the data has been Merkelised, the Multisig Prover neatly packs it together for the Relayer to consume.
+After the data has been Merklized, the Multisig Prover neatly packs it together for the Relayer to consume.
 It encodes:
 - the verifier set that signed the data
 - all the signatures and proofs of every signer in the set
@@ -85,7 +85,7 @@ This means that our `axelar-solana-encoding` code has a branching mechanism that
 
 For encoding the data, we use [udigest crate](https://docs.rs/udigest/0.2.2/udigest/encoding/index.html), which allows us to transform a set of data into a vector of bytes. [Read this article about hashing the data and creating digests](https://www.dfns.co/article/unambiguous-hashing).
 
-### Current limits of the Merkelised implementation
+### Current limits of the Merklized implementation
 Now let's take a look at [the full requirements that the Axelar Solana Gateway must follow and see how it affects the `axelar-solana-encoding` scheme we use](https://github.com/axelarnetwork/axelar-gmp-sdk-solidity/blob/432449d7b330ec6edf5a8e0746644a253486ca87/contracts/gateway/INTEGRATION.md?plain=1#L261):
 
 | Limit | Minimum | Recommended | Axelar Solana Gateway |
@@ -96,7 +96,7 @@ Now let's take a look at [the full requirements that the Axelar Solana Gateway m
 | Message Approval Batching | 1 | Configurable | Practically unlimited |
 | Storage Limit for Messages | Practically unlimited (2^64) | Practically unlimited (2^64) | Practically unlimited |
 
-The message size is tackled purely on the Gateway and is not part of the `axelar-solana-encoding` scheme. The Merkeliesd data allows us to:
+The message size is tackled purely on the Gateway and is not part of the `axelar-solana-encoding` scheme. The Merklized data allows us to:
 - have a signer set up for 256 participants
 - verify a signature for every single signer
 - allows us to have a practically unlimited amount of messages in a batch (limited by how many hashes we can do in a single tx)
@@ -148,7 +148,7 @@ Solana has quite a few different limitations, both in how many actions can be do
 - [Transaction size is capped at 1232 bytes](https://solana.com/docs/core/transactions#key-points). This tx info contains the raw data to send, as well as a list of all of the accounts to be used by the transaction (if you are reading this as a Solidity dev, imagine that you need to provide a list of `[]address` of every storage slot that your on-chain contract will try to read or mutate, including all the storage slots that an internal contract call may touch). This information itself also eats up precious bytes. There's also extra metadata, like the signatures, block hash, and header data, that eat away at the tx size—the more sophisticated the contract, the more accounts it needs to access.
 - Computationally, every operation on Solana has a cost, measured in compute units. The heavier the math operation ([e.g. division](https://solana.com/docs/programs/limitations#signed-division)), the more compute units it will take. Many operations like hashing and signature verification can leverage "syscalls" [(which also have a fixed cost)](https://github.com/anza-xyz/agave/blob/b7bbe36918f23d98e2e73502e3c4cba78d395ba9/program-runtime/src/compute_budget.rs#L133-L178) where the runtime calls a static function on the host machine, leveraging pre-compiled code instead of emulating heavy computations inside the virtual machine.
 
-The most significant limitation of 1232 bytes per tx means that it is impossible to pack the minimum required data (2707 bytes) into a single transaction. In the initial stages of the Axelar-Solana Gateway, we implemented a logic that would store the ExecuteData on-chain in a PDA (aka storage slot for drawing parallels with Solidity). This allowed us to get rid of the size limitations. However, we quickly discovered that computing the desired data in a single TX is impossible, and we require a multi-step computation model. One approach besides Merkelisng the flow would be introducing on-chain state tracking of ExecuteData processing. However, an internal discussion led to the conclusion that it brings no extra security measures, makes the process more expensive in terms of gas fees and introduces a lot of additional complexity. [(For details, see this public report on our attempt)](https://docs.google.com/document/d/1I3PQQ7H6oZNiayteJcrb6T1o2UHrRBcsAkSa7mOBCCY/edit?usp=sharing), we quickly found out that we cannot hash & verify the amount of data we require when "approving messages" on the gateway (reconstructing the payload digest and verifying signatures). Although this example used `bcs` encoding instead of `abi`, which was developed & maintained by Axelar, the internal encoding structure is the same as in the `abi` example described above. Our conclusion was:
+The most significant limitation of 1232 bytes per tx means that it is impossible to pack the minimum required data (2707 bytes) into a single transaction. In the initial stages of the Axelar-Solana Gateway, we implemented a logic that would store the ExecuteData on-chain in a PDA (aka storage slot for drawing parallels with Solidity). This allowed us to get rid of the size limitations. However, we quickly discovered that computing the desired data in a single TX is impossible, and we require a multi-step computation model. One approach besides Merklizing the flow would be introducing on-chain state tracking of ExecuteData processing. However, an internal discussion led to the conclusion that it brings no extra security measures, makes the process more expensive in terms of gas fees and introduces a lot of additional complexity. [(For details, see this public report on our attempt)](https://docs.google.com/document/d/1I3PQQ7H6oZNiayteJcrb6T1o2UHrRBcsAkSa7mOBCCY/edit?usp=sharing), we quickly found out that we cannot hash & verify the amount of data we require when "approving messages" on the gateway (reconstructing the payload digest and verifying signatures). Although this example used `bcs` encoding instead of `abi`, which was developed & maintained by Axelar, the internal encoding structure is the same as in the `abi` example described above. Our conclusion was:
   - The maximum number of signers we can have is 5. It will be less, but never more than 5, depending on the other variables.
   - The maximum number of messages in one batch is 3.  Depending on the other variables, it will be less, but never more than 3.
   - The maximum number of accounts is 20. Depending on the message size, it will be less, but never more than 20.
