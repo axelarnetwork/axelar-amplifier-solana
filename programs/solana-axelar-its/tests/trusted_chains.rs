@@ -408,7 +408,7 @@ fn test_set_trusted_chain_already_exists() {
     ];
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+        anchor_lang::error::Error::from(ItsError::TrustedChainAlreadySet).into(),
     )];
 
     mollusk.process_and_validate_instruction(&duplicate_add_ix, &duplicate_add_accounts, &checks);

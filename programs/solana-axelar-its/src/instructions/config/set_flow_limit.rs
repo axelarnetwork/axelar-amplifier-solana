@@ -11,7 +11,6 @@ pub struct SetFlowLimit<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    #[account()]
     pub operator: Signer<'info>,
 
     #[account(
