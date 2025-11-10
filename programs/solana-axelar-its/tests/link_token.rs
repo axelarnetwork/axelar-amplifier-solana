@@ -2,32 +2,24 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::AccountDeserialize;
-use anchor_lang::{InstructionData, ToAccountMetas};
-use anchor_spl::token_2022::spl_token_2022;
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
-use solana_axelar_its::utils::linked_token_deployer_salt;
+use solana_axelar_its::state::{token_manager::Type, TokenManager};
 use solana_axelar_its::ItsError;
-use solana_axelar_its::{
-    state::{token_manager::Type, TokenManager},
-    utils::interchain_token_id_internal,
+use solana_axelar_its_test_fixtures::{
+    create_test_mint, execute_register_custom_token_helper, LinkTokenParams,
 };
-use solana_axelar_its_test_fixtures::initialize_mollusk;
-use solana_axelar_its_test_fixtures::setup_operator;
-use solana_axelar_its_test_fixtures::{create_test_mint, LinkTokenParams};
 use solana_axelar_its_test_fixtures::{
     execute_link_token_helper, init_its_service_with_ethereum_trusted,
 };
 use solana_axelar_its_test_fixtures::{init_gas_service, LinkTokenContext};
-use solana_sdk::{
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-};
+use solana_axelar_its_test_fixtures::{initialize_mollusk, RegisterCustomTokenContext};
+use solana_axelar_its_test_fixtures::{setup_operator, RegisterCustomTokenParams};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_link_token() {
@@ -90,123 +82,44 @@ fn test_link_token() {
     let mint_authority = Pubkey::new_unique();
     let (token_mint, token_mint_account) = create_test_mint(mint_authority);
 
-    // Register custom token parameters
-    let salt = [2u8; 32];
-    let token_manager_type = Type::LockUnlock; // Use LockUnlock, NOT NativeInterchainToken
-    let operator_param: Option<Pubkey> = None; // No operator
-
-    let token_id = {
-        let deploy_salt = linked_token_deployer_salt(&deployer, &salt);
-        interchain_token_id_internal(&deploy_salt)
+    // Use the register custom token helper
+    let register_ctx = RegisterCustomTokenContext {
+        mollusk,
+        payer,
+        payer_account: payer_account.clone(),
+        deployer,
+        deployer_account: deployer_account.clone(),
+        its_root_pda,
+        its_root_account: its_root_account.clone(),
+        token_mint,
+        token_mint_account,
+        program_id,
     };
 
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
+    let salt = [2u8; 32];
+    let token_manager_type = Type::LockUnlock;
 
-    let token_manager_ata =
-        anchor_spl::associated_token::get_associated_token_address_with_program_id(
-            &token_manager_pda,
-            &token_mint,
-            &spl_token_2022::ID,
-        );
-
-    // Create the register custom token instruction first
-    let register_instruction_data = solana_axelar_its::instruction::RegisterCustomToken {
+    let register_params = RegisterCustomTokenParams {
         salt,
         token_manager_type,
-        operator: operator_param,
+        operator: None, // No operator for this test
     };
 
-    let (event_authority, _, _) = get_event_authority_and_program_accounts(&program_id);
+    let register_checks = vec![Check::success()];
 
-    // Build account metas for register custom token
-    let register_accounts = solana_axelar_its::accounts::RegisterCustomToken {
-        payer,
-        deployer,
-        system_program: solana_sdk::system_program::ID,
-        its_root_pda,
-        token_manager_pda,
-        token_mint,
-        token_manager_ata,
-        token_program: spl_token_2022::ID,
-        associated_token_program: anchor_spl::associated_token::ID,
-        operator: None,
-        operator_roles_pda: None,
-        // for event cpi
-        event_authority,
-        program: program_id,
-    };
+    let register_result =
+        execute_register_custom_token_helper(register_ctx, register_params, register_checks);
 
-    let register_ix = Instruction {
-        program_id,
-        accounts: register_accounts.to_account_metas(None),
-        data: register_instruction_data.data(),
-    };
+    assert!(register_result.result.program_result.is_ok());
 
-    // Set up accounts for register custom token
-    let register_mollusk_accounts = vec![
-        (payer, payer_account.clone()),
-        (deployer, deployer_account.clone()),
-        keyed_account_for_system_program(),
-        (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint, token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            anchor_spl::associated_token::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: {
-                    let rent = anchor_lang::prelude::Rent::default();
-                    bincode::serialize(&rent).unwrap()
-                },
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        // For event CPI
-        (
-            event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
-
-    let register_result = mollusk.process_and_validate_instruction(
-        &register_ix,
-        &register_mollusk_accounts,
-        &[mollusk_svm::result::Check::success()],
-    );
-
-    assert!(
-        register_result.program_result.is_ok(),
-        "Register custom token instruction should succeed: {:?}",
-        register_result.program_result
-    );
+    let token_manager_pda = register_result.token_manager_pda;
+    let mollusk = register_result.mollusk;
 
     // Get the updated token manager account after registration
-    let token_manager_account = register_result.get_account(&token_manager_pda).unwrap();
+    let token_manager_account = register_result
+        .result
+        .get_account(&token_manager_pda)
+        .unwrap();
 
     // Verify token manager was created correctly
     let token_manager =
@@ -312,118 +225,40 @@ fn test_reject_link_token_untrusted_destination_chain() {
     let mint_authority = Pubkey::new_unique();
     let (token_mint, token_mint_account) = create_test_mint(mint_authority);
 
-    // Register custom token parameters
     let salt = [2u8; 32];
     let token_manager_type = Type::LockUnlock; // Use LockUnlock, NOT NativeInterchainToken
-    let operator_param: Option<Pubkey> = None; // No operator
 
-    let token_id = {
-        let deploy_salt = linked_token_deployer_salt(&deployer, &salt);
-        interchain_token_id_internal(&deploy_salt)
+    let register_ctx = RegisterCustomTokenContext {
+        mollusk,
+        payer,
+        payer_account: payer_account.clone(),
+        deployer,
+        deployer_account: deployer_account.clone(),
+        its_root_pda,
+        its_root_account: its_root_account.clone(),
+        token_mint,
+        token_mint_account,
+        program_id,
     };
 
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
-
-    let token_manager_ata =
-        anchor_spl::associated_token::get_associated_token_address_with_program_id(
-            &token_manager_pda,
-            &token_mint,
-            &spl_token_2022::ID,
-        );
-
-    // Create the register custom token instruction first
-    let register_instruction_data = solana_axelar_its::instruction::RegisterCustomToken {
+    let register_params = RegisterCustomTokenParams {
         salt,
         token_manager_type,
-        operator: operator_param,
+        operator: None, // No operator
     };
 
-    let (event_authority, _, _) = get_event_authority_and_program_accounts(&program_id);
+    let register_result =
+        execute_register_custom_token_helper(register_ctx, register_params, vec![Check::success()]);
 
-    // Build account metas for register custom token
-    let register_accounts = solana_axelar_its::accounts::RegisterCustomToken {
-        payer,
-        deployer,
-        system_program: solana_sdk::system_program::ID,
-        its_root_pda,
-        token_manager_pda,
-        token_mint,
-        token_manager_ata,
-        token_program: spl_token_2022::ID,
-        associated_token_program: anchor_spl::associated_token::ID,
-        operator: None,
-        operator_roles_pda: None,
-        // for event cpi
-        event_authority,
-        program: program_id,
-    };
+    assert!(register_result.result.program_result.is_ok());
 
-    let register_ix = Instruction {
-        program_id,
-        accounts: register_accounts.to_account_metas(None),
-        data: register_instruction_data.data(),
-    };
+    let token_manager_pda = register_result.token_manager_pda;
+    let mollusk = register_result.mollusk;
 
-    // Set up accounts for register custom token
-    let register_mollusk_accounts = vec![
-        (payer, payer_account.clone()),
-        (deployer, deployer_account.clone()),
-        keyed_account_for_system_program(),
-        (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint, token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            anchor_spl::associated_token::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: {
-                    let rent = anchor_lang::prelude::Rent::default();
-                    bincode::serialize(&rent).unwrap()
-                },
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        // For event CPI
-        (
-            event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
-
-    let register_result = mollusk.process_and_validate_instruction(
-        &register_ix,
-        &register_mollusk_accounts,
-        &[mollusk_svm::result::Check::success()],
-    );
-
-    assert!(register_result.program_result.is_ok());
-
-    let token_manager_account = register_result.get_account(&token_manager_pda).unwrap();
+    let token_manager_account = register_result
+        .result
+        .get_account(&token_manager_pda)
+        .unwrap();
 
     let token_manager =
         TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
@@ -531,117 +366,40 @@ fn test_reject_link_token_invalid_destination_chain() {
 
     // Register custom token parameters
     let salt = [2u8; 32];
-    let token_manager_type = Type::LockUnlock; // Use LockUnlock, NOT NativeInterchainToken
-    let operator_param: Option<Pubkey> = None; // No operator
+    let token_manager_type = Type::LockUnlock;
 
-    let token_id = {
-        let deploy_salt = linked_token_deployer_salt(&deployer, &salt);
-        interchain_token_id_internal(&deploy_salt)
+    let register_ctx = RegisterCustomTokenContext {
+        mollusk,
+        payer,
+        payer_account: payer_account.clone(),
+        deployer,
+        deployer_account: deployer_account.clone(),
+        its_root_pda,
+        its_root_account: its_root_account.clone(),
+        token_mint,
+        token_mint_account,
+        program_id,
     };
 
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
-
-    let token_manager_ata =
-        anchor_spl::associated_token::get_associated_token_address_with_program_id(
-            &token_manager_pda,
-            &token_mint,
-            &spl_token_2022::ID,
-        );
-
-    // Create the register custom token instruction first
-    let register_instruction_data = solana_axelar_its::instruction::RegisterCustomToken {
+    let register_params = RegisterCustomTokenParams {
         salt,
         token_manager_type,
-        operator: operator_param,
-    };
-
-    let (event_authority, _, _) = get_event_authority_and_program_accounts(&program_id);
-
-    // Build account metas for register custom token
-    let register_accounts = solana_axelar_its::accounts::RegisterCustomToken {
-        payer,
-        deployer,
-        system_program: solana_sdk::system_program::ID,
-        its_root_pda,
-        token_manager_pda,
-        token_mint,
-        token_manager_ata,
-        token_program: spl_token_2022::ID,
-        associated_token_program: anchor_spl::associated_token::ID,
         operator: None,
-        operator_roles_pda: None,
-        // for event cpi
-        event_authority,
-        program: program_id,
     };
 
-    let register_ix = Instruction {
-        program_id,
-        accounts: register_accounts.to_account_metas(None),
-        data: register_instruction_data.data(),
-    };
+    let register_result =
+        execute_register_custom_token_helper(register_ctx, register_params, vec![Check::success()]);
 
-    // Set up accounts for register custom token
-    let register_mollusk_accounts = vec![
-        (payer, payer_account.clone()),
-        (deployer, deployer_account.clone()),
-        keyed_account_for_system_program(),
-        (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint, token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            anchor_spl::associated_token::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: {
-                    let rent = anchor_lang::prelude::Rent::default();
-                    bincode::serialize(&rent).unwrap()
-                },
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        // For event CPI
-        (
-            event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    assert!(register_result.result.program_result.is_ok());
 
-    let register_result = mollusk.process_and_validate_instruction(
-        &register_ix,
-        &register_mollusk_accounts,
-        &[mollusk_svm::result::Check::success()],
-    );
-
-    assert!(register_result.program_result.is_ok());
+    let token_manager_pda = register_result.token_manager_pda;
+    let mollusk = register_result.mollusk;
 
     // Get the updated token manager account after registration
-    let token_manager_account = register_result.get_account(&token_manager_pda).unwrap();
+    let token_manager_account = register_result
+        .result
+        .get_account(&token_manager_pda)
+        .unwrap();
 
     // Verify token manager was created correctly
     let token_manager =

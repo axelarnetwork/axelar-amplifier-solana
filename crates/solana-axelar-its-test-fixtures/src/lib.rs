@@ -21,3 +21,6 @@ pub use utils::*;
 
 pub mod link_token;
 pub use link_token::*;
+
+pub mod register_custom_token;
+pub use register_custom_token::*;
