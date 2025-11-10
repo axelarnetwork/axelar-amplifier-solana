@@ -4,6 +4,7 @@
 
 use anchor_lang::solana_program;
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::{
     associated_token::spl_associated_token_account,
     token_2022::spl_token_2022::{self},
@@ -11,6 +12,7 @@ use anchor_spl::{
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
+use mpl_token_metadata::accounts::Metadata;
 use solana_axelar_gateway::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
@@ -141,32 +143,19 @@ fn test_execute_deploy_interchain_token_success() {
         &program_id,
     );
 
-    let (token_manager_ata, _) = Pubkey::find_program_address(
-        &[
-            token_manager_pda.as_ref(),
-            spl_token_2022::id().as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &spl_associated_token_account::id(),
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &token_mint_pda,
+        &spl_token_2022::id(),
     );
 
-    let (deployer_ata, _) = Pubkey::find_program_address(
-        &[
-            payer.as_ref(),
-            spl_token_2022::id().as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &spl_associated_token_account::id(),
+    let deployer_ata = get_associated_token_address_with_program_id(
+        &payer,
+        &token_mint_pda,
+        &spl_token_2022::id(),
     );
 
-    let (metadata_account, _) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &mpl_token_metadata::ID,
-    );
+    let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
     let (signing_pda, _) = Pubkey::find_program_address(
         &[

@@ -2,8 +2,8 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::solana_program;
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::{associated_token::spl_associated_token_account, token_2022::spl_token_2022};
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, ReceiveFromHub};
 use mollusk_svm::program::keyed_account_for_system_program;
@@ -15,39 +15,13 @@ use solana_axelar_gateway_test_fixtures::{
 };
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_rent_sysvar_data, init_its_service_with_ethereum_trusted, initialize_mollusk,
+    create_rent_sysvar_data, create_test_mint, init_its_service_with_ethereum_trusted,
+    initialize_mollusk,
 };
-use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL,
     pubkey::Pubkey,
 };
-
-fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
-    let mint = Pubkey::new_unique();
-    let mint_data = {
-        let mut data = [0u8; spl_token_2022::state::Mint::LEN];
-        let mint_state = spl_token_2022::state::Mint {
-            mint_authority: Some(mint_authority).into(),
-            supply: 1_000_000_000, // 1 billion tokens
-            decimals: 9,
-            is_initialized: true,
-            freeze_authority: Some(mint_authority).into(),
-        };
-        spl_token_2022::state::Mint::pack(mint_state, &mut data).unwrap();
-        data.to_vec()
-    };
-    let rent = anchor_lang::prelude::Rent::default();
-    let mint_account = Account {
-        lamports: rent.minimum_balance(mint_data.len()),
-        data: mint_data,
-        owner: spl_token_2022::ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    (mint, mint_account)
-}
 
 #[test]
 fn test_execute_link_token() {
@@ -161,13 +135,10 @@ fn test_execute_link_token() {
     // For link token, we use the existing mint, not a new PDA
     let token_mint_pda = existing_token_mint;
 
-    let (token_manager_ata, _) = Pubkey::find_program_address(
-        &[
-            token_manager_pda.as_ref(),
-            spl_token_2022::id().as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &spl_associated_token_account::id(),
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &token_mint_pda,
+        &spl_token_2022::id(),
     );
 
     let (signing_pda, _) = Pubkey::find_program_address(

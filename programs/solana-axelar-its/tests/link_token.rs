@@ -1,7 +1,6 @@
 #![cfg(test)]
 #![allow(clippy::too_many_lines)]
 
-use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022::spl_token_2022;
@@ -17,40 +16,14 @@ use solana_axelar_its::{
     state::{token_manager::Type, TokenManager},
     utils::interchain_token_id_internal,
 };
+use solana_axelar_its_test_fixtures::create_test_mint;
 use solana_axelar_its_test_fixtures::init_gas_service;
 use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
 use solana_axelar_its_test_fixtures::initialize_mollusk;
 use solana_axelar_its_test_fixtures::setup_operator;
-use solana_program::program_pack::Pack;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
-
-fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
-    let mint = Pubkey::new_unique();
-    let mint_data = {
-        let mut data = [0u8; spl_token_2022::state::Mint::LEN];
-        let mint_state = spl_token_2022::state::Mint {
-            mint_authority: Some(mint_authority).into(),
-            supply: 1_000_000_000, // 1 billion tokens
-            decimals: 9,
-            is_initialized: true,
-            freeze_authority: Some(mint_authority).into(),
-        };
-        spl_token_2022::state::Mint::pack(mint_state, &mut data).unwrap();
-        data.to_vec()
-    };
-    let rent = anchor_lang::prelude::Rent::default();
-    let mint_account = Account {
-        lamports: rent.minimum_balance(mint_data.len()),
-        data: mint_data,
-        owner: spl_token_2022::ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    (mint, mint_account)
-}
 
 #[test]
 fn test_link_token() {

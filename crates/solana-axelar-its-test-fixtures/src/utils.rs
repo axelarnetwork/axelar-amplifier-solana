@@ -11,7 +11,34 @@ use mollusk_test_utils::{
 use solana_axelar_gas_service::state::Treasury;
 use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
 use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
+use solana_sdk::program_pack::Pack;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
+
+pub fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
+    let mint = Pubkey::new_unique();
+    let mint_data = {
+        let mut data = [0u8; spl_token_2022::state::Mint::LEN];
+        let mint_state = spl_token_2022::state::Mint {
+            mint_authority: Some(mint_authority).into(),
+            supply: 1_000_000_000, // 1 billion tokens
+            decimals: 9,
+            is_initialized: true,
+            freeze_authority: Some(mint_authority).into(),
+        };
+        spl_token_2022::state::Mint::pack(mint_state, &mut data).unwrap();
+        data.to_vec()
+    };
+    let rent = anchor_lang::prelude::Rent::default();
+    let mint_account = Account {
+        lamports: rent.minimum_balance(mint_data.len()),
+        data: mint_data,
+        owner: spl_token_2022::ID,
+        executable: false,
+        rent_epoch: 0,
+    };
+
+    (mint, mint_account)
+}
 
 pub fn create_rent_sysvar_data() -> Vec<u8> {
     use solana_sdk::rent::Rent;
