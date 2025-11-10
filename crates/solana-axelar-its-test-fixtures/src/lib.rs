@@ -18,3 +18,6 @@ pub use register_canonical_interchain_token::*;
 
 pub mod utils;
 pub use utils::*;
+
+pub mod link_token;
+pub use link_token::*;

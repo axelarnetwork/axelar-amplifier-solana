@@ -96,14 +96,7 @@ fn test_register_canonical_token() {
     );
 
     let token_id = canonical_interchain_token_id(&mint_pubkey);
-    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
 
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
