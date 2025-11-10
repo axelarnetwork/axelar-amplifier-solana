@@ -107,9 +107,12 @@ jobs:
           # This cd to keep the dir structure of the artifacts archive
           cd ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}
 
-          # Archive the program binaries
-          find "." -type f -name "*.so" -maxdepth 1 -print | zip "${{ env.ZIP_ARCHIVE_FILE }}" -@
-          find "." -type f -name "*.so" -maxdepth 1 -print | tar -czvf "${{ env.TAR_ARCHIVE_FILE }}" -T -
+          # Convert package name from kebab-case to snake_case for matching .so filename
+          PROGRAM_SO_NAME=$(echo "${{ env.PACKAGE_NAME }}" | tr '-' '_').so
+
+          # Archive only the specific program binary
+          find "." -type f -name "$PROGRAM_SO_NAME" -maxdepth 1 -print | zip "${{ env.ZIP_ARCHIVE_FILE }}" -@
+          find "." -type f -name "$PROGRAM_SO_NAME" -maxdepth 1 -print | tar -czvf "${{ env.TAR_ARCHIVE_FILE }}" -T -
 
           # Generate SHA-256 Checksums
           for file in "${{ env.TAR_ARCHIVE_FILE }}" "${{ env.ZIP_ARCHIVE_FILE }}"; do
@@ -135,7 +138,9 @@ jobs:
           CF_BUCKET_ROOT_KEY: ${{ inputs.cf-config-bucket-root-key }}
         run: |
           export CF_PROGRAMS_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/programs"
-          export PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "*.so")
+          # Convert package name from kebab-case to snake_case for matching .so filename
+          PROGRAM_SO_NAME=$(echo "${{ env.PACKAGE_NAME }}" | tr '-' '_').so
+          export PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "$PROGRAM_SO_NAME")
 
           printf '%s\n' "$PROGRAM_FILES" | while IFS= read -r program_file; do
             echo "Uploading program file: ${program_file}"
