@@ -388,13 +388,10 @@ fn test_execute_interchain_transfer_success() {
         &program_id,
     );
 
-    let (destination_ata, _) = Pubkey::find_program_address(
-        &[
-            destination_pubkey.as_ref(),
-            spl_token_2022::id().as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &spl_associated_token_account::id(),
+    let destination_ata = get_associated_token_address_with_program_id(
+        &destination_pubkey,
+        &token_mint_pda,
+        &spl_token_2022::id(),
     );
 
     let transfer_instruction_data = solana_axelar_its::instruction::Execute {
