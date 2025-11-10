@@ -24,8 +24,6 @@ pub enum ItsError {
     OperatorRolesPdaNotProvided,
     #[msg("Account data is invalid")]
     InvalidAccountData,
-    #[msg("The role provided is invalid")]
-    InvalidRole,
     #[msg("The source chain name is untrusted")]
     UntrustedSourceChain,
     #[msg("The destination chain name is untrusted")]
