@@ -5,6 +5,7 @@ use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022;
 use anchor_spl::token_2022::spl_token_2022::extension::StateWithExtensions;
 use anchor_spl::token_2022::spl_token_2022::state::Account as TokenAccount;
+use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -251,6 +252,7 @@ fn test_interchain_transfer_lock_unlock() {
         its_root_pda,
         &its_root_account,
         program_id,
+        vec![Check::success()],
     );
 
     assert!(result.program_result.is_ok());

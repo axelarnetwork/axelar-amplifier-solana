@@ -1,10 +1,12 @@
 #![cfg(test)]
 #![allow(clippy::too_many_lines)]
 
+use anchor_lang::prelude::ProgramError;
 use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
+use mollusk_svm::result::Check;
 use solana_axelar_its::{
     state::TokenManager,
     utils::{
@@ -84,6 +86,7 @@ fn test_register_canonical_token() {
         its_root_pda,
         &its_root_account,
         program_id,
+        vec![Check::success()],
     );
 
     assert!(
@@ -133,4 +136,54 @@ fn test_register_canonical_token() {
     assert_eq!(token_manager_ata_data.base.mint, mint_pubkey);
     assert_eq!(token_manager_ata_data.base.owner, token_manager_pda);
     assert_eq!(token_manager_ata_data.base.amount, 0);
+}
+
+#[test]
+fn test_reject_register_canonical_token_with_invalid_metadata() {
+    let program_id = solana_axelar_its::id();
+    let mollusk = initialize_mollusk();
+
+    let payer = Pubkey::new_unique();
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+
+    let operator = Pubkey::new_unique();
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
+
+    // Initialize ITS service first
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+        &mollusk,
+        payer,
+        &payer_account,
+        payer,
+        operator,
+        &operator_account,
+        chain_name.clone(),
+        its_hub_address.clone(),
+    );
+
+    // Create a token mint (this would be an existing token we want to register as canonical)
+    let mint_keypair = Keypair::new();
+    let mint_authority = Keypair::new();
+
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ProgramError::InvalidAccountData).into(),
+    )];
+
+    let result = register_canonical_interchain_token_helper(
+        &mollusk,
+        vec![], // empty mint data
+        &mint_keypair,
+        &mint_authority,
+        payer,
+        &payer_account,
+        its_root_pda,
+        &its_root_account,
+        program_id,
+        checks,
+    );
+
+    assert!(result.program_result.is_err());
 }

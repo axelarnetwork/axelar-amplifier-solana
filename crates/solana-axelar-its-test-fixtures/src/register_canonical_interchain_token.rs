@@ -30,6 +30,7 @@ pub fn register_canonical_interchain_token_helper(
     its_root_pda: Pubkey,
     its_root_account: &Account,
     program_id: Pubkey,
+    checks: Vec<Check>,
 ) -> InstructionResult {
     let mint_pubkey = mint_keypair.pubkey();
 
@@ -147,5 +148,5 @@ pub fn register_canonical_interchain_token_helper(
         (program_id, program_account),
     ];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &[Check::success()])
+    mollusk.process_and_validate_instruction(&ix, &accounts, &checks)
 }

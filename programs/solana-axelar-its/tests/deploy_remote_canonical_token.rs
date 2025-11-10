@@ -7,6 +7,7 @@ use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_svm::result::Check;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
@@ -108,6 +109,7 @@ fn test_deploy_remote_canonical_token() {
         its_root_pda,
         &its_root_account,
         program_id,
+        vec![Check::success()],
     );
 
     assert!(
