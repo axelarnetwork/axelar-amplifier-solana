@@ -110,9 +110,23 @@ jobs:
           # Convert package name from kebab-case to snake_case for matching .so filename
           PROGRAM_SO_NAME=$(echo "${{ env.PACKAGE_NAME }}" | tr '-' '_').so
 
+          # Verify the program binary exists before archiving
+          if [ ! -f "./${PROGRAM_SO_NAME}" ]; then
+            echo "Error: Program binary './${PROGRAM_SO_NAME}' not found"
+            exit 1
+          fi
+
           # Archive only the specific program binary
           find "." -type f -name "$PROGRAM_SO_NAME" -maxdepth 1 -print | zip "${{ env.ZIP_ARCHIVE_FILE }}" -@
           find "." -type f -name "$PROGRAM_SO_NAME" -maxdepth 1 -print | tar -czvf "${{ env.TAR_ARCHIVE_FILE }}" -T -
+
+          # Verify archives were created successfully and are not empty
+          for archive in "${{ env.ZIP_ARCHIVE_FILE }}" "${{ env.TAR_ARCHIVE_FILE }}"; do
+            if [ ! -f "$archive" ] || [ ! -s "$archive" ]; then
+              echo "Error: Archive '$archive' is missing or empty"
+              exit 1
+            fi
+          done
 
           # Generate SHA-256 Checksums
           for file in "${{ env.TAR_ARCHIVE_FILE }}" "${{ env.ZIP_ARCHIVE_FILE }}"; do
@@ -141,6 +155,12 @@ jobs:
           # Convert package name from kebab-case to snake_case for matching .so filename
           PROGRAM_SO_NAME=$(echo "${{ env.PACKAGE_NAME }}" | tr '-' '_').so
           export PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "$PROGRAM_SO_NAME")
+
+          # Verify program file was found
+          if [ -z "$PROGRAM_FILES" ]; then
+            echo "Error: No program binary found matching '$PROGRAM_SO_NAME' in ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}"
+            exit 1
+          fi
 
           printf '%s\n' "$PROGRAM_FILES" | while IFS= read -r program_file; do
             echo "Uploading program file: ${program_file}"
