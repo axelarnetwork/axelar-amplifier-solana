@@ -158,7 +158,7 @@ fn test_accept_operatorship() {
 }
 
 #[test]
-fn test_accept_invalid_operatorship() {
+fn test_reject_invalid_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
