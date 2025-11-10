@@ -3,8 +3,9 @@
 //! This module defines the `ExecuteData` struct and its related components,
 //! which are essential for encoding and verifying data integrity on Solana.
 
+use crate::types::pubkey::EcdsaRecoverableSignature;
+
 use super::messages::MessageLeaf;
-use super::pubkey::Signature;
 use super::verifier_set::VerifierSetLeaf;
 
 /// Represents the complete set of execution data required for verification and
@@ -39,7 +40,7 @@ pub struct ExecuteData {
 #[derive(Debug, Eq, PartialEq, Clone, borsh::BorshDeserialize, borsh::BorshSerialize)]
 pub struct SigningVerifierSetInfo {
     /// The signature provided by the verifier.
-    pub signature: Signature,
+    pub signature: EcdsaRecoverableSignature,
 
     /// The leaf node representing the verifier in the Merkle tree.
     pub leaf: VerifierSetLeaf,

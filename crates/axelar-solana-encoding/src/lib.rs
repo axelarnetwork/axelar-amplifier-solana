@@ -23,7 +23,7 @@ use error::EncodingError;
 use hasher::{NativeHasher, VecBuf};
 use rs_merkle::MerkleTree;
 use types::payload::Payload;
-use types::pubkey::{PublicKey, Signature};
+use types::pubkey::PublicKey;
 use types::verifier_set::{verifier_set_hash, VerifierSet};
 use udigest::encoding::EncodeValue;
 pub use {borsh, rs_merkle};
@@ -32,6 +32,7 @@ use crate::types::execute_data::{
     ExecuteData, MerklizedMessage, MerklizedPayload, SigningVerifierSetInfo,
 };
 use crate::types::messages::MessageLeaf;
+use crate::types::pubkey::EcdsaRecoverableSignature;
 use crate::types::verifier_set::VerifierSetLeaf;
 
 pub mod error;
@@ -49,7 +50,7 @@ pub mod types;
 /// - Payload messages has no items in it
 pub fn encode(
     signing_verifier_set: &VerifierSet,
-    signers_with_signatures: &BTreeMap<PublicKey, Signature>,
+    signers_with_signatures: &BTreeMap<PublicKey, EcdsaRecoverableSignature>,
     domain_separator: [u8; 32],
     payload: Payload,
 ) -> Result<Vec<u8>, EncodingError> {
