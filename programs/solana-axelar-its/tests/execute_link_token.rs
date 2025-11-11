@@ -2,13 +2,11 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
-use anchor_spl::{associated_token::spl_associated_token_account, token_2022::spl_token_2022};
+use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, ReceiveFromHub};
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gateway::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
@@ -17,13 +15,11 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_rent_sysvar_data, create_test_mint, get_message_signing_pda,
-    init_its_service_with_ethereum_trusted, initialize_mollusk,
+    create_test_mint, execute_its_instruction, init_its_service_with_ethereum_trusted,
+    initialize_mollusk, link_token_extra_accounts, ExecuteTestAccounts, ExecuteTestContext,
+    ExecuteTestParams,
 };
-use solana_sdk::{
-    account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL,
-    pubkey::Pubkey,
-};
+use solana_sdk::{account::Account, keccak, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_execute_link_token() {
@@ -143,136 +139,50 @@ fn test_execute_link_token() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = get_message_signing_pda(&message);
+    let context = ExecuteTestContext {
+        mollusk: setup.mollusk,
+        gateway_root_pda,
+        gateway_root_pda_account: gateway_root_pda_account.clone(),
+        its_root_pda,
+        its_root_account,
+        payer,
+        payer_account: payer_account.clone(),
+        program_id,
+    };
 
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let instruction_data = solana_axelar_its::instruction::Execute {
+    let params = ExecuteTestParams {
         message: message.clone(),
         payload: encoded_payload,
-    };
-
-    let executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id,
         incoming_message_pda: *incoming_message_pda,
-        signing_pda,
-        gateway_root_pda,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
-        event_authority: gateway_event_authority,
+        incoming_message_account_data: incoming_message_account_data.clone(),
     };
 
-    let accounts = solana_axelar_its::accounts::Execute {
-        // GMP accounts
-        executable: executable_accounts,
-
-        // ITS accounts
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-
-        // Event CPI accounts
-        event_authority: its_event_authority,
-        program: program_id,
+    let accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, existing_token_mint_account),
+            (
+                token_manager_ata,
+                Account::new(0, 0, &solana_sdk::system_program::ID),
+            ),
+        ],
+        extra_accounts: vec![
+            (payer, payer_account), // deployer same as payer
+        ],
+        extra_account_metas: link_token_extra_accounts(payer),
     };
 
-    let mut account_metas = accounts.to_account_metas(None);
-    account_metas.extend(
-        solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(
-            payer, None, None,
-        ),
-    );
+    let checks = vec![Check::success()];
 
-    let execute_instruction = Instruction {
-        program_id,
-        accounts: account_metas,
-        data: instruction_data.data(),
-    };
+    let test_result = execute_its_instruction(context, params, accounts_config, checks);
 
-    let incoming_message_account = Account {
-        lamports: setup
-            .mollusk
-            .sysvars
-            .rent
-            .minimum_balance(incoming_message_account_data.len()),
-        data: incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
+    assert!(test_result.result.program_result.is_ok());
 
-    let execute_accounts = vec![
-        // AxelarExecuteAccounts
-        (*incoming_message_pda, incoming_message_account),
-        (
-            signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        // ITS Accounts
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint_pda, existing_token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for LinkToken
-        (payer, payer_account), // deployer same as payer for simplicity
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
-
-    let result = setup
-        .mollusk
-        .process_instruction(&execute_instruction, &execute_accounts);
-
-    assert!(result.program_result.is_ok());
-
-    let token_manager_account = result.get_account(&token_manager_pda).unwrap();
+    let token_manager_account = test_result.result.get_account(&token_manager_pda).unwrap();
     let token_manager =
         TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
 
-    assert_eq!(token_manager.token_id, token_id,);
+    assert_eq!(token_manager.token_id, token_id);
 }
 
 #[test]
@@ -393,136 +303,46 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = get_message_signing_pda(&message);
+    let context = ExecuteTestContext {
+        mollusk: setup.mollusk,
+        gateway_root_pda,
+        gateway_root_pda_account: gateway_root_pda_account.clone(),
+        its_root_pda,
+        its_root_account,
+        payer,
+        payer_account: payer_account.clone(),
+        program_id,
+    };
 
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let instruction_data = solana_axelar_its::instruction::Execute {
+    let params = ExecuteTestParams {
         message: message.clone(),
         payload: encoded_payload,
-    };
-
-    let executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id,
         incoming_message_pda: *incoming_message_pda,
-        signing_pda,
-        gateway_root_pda,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
-        event_authority: gateway_event_authority,
+        incoming_message_account_data: incoming_message_account_data.clone(),
     };
 
-    let accounts = solana_axelar_its::accounts::Execute {
-        // GMP accounts
-        executable: executable_accounts,
-
-        // ITS accounts
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-
-        // Event CPI accounts
-        event_authority: its_event_authority,
-        program: program_id,
+    let accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, existing_token_mint_account),
+            (
+                token_manager_ata,
+                Account::new(0, 0, &solana_sdk::system_program::ID),
+            ),
+        ],
+        extra_accounts: vec![
+            (payer, payer_account), // deployer same as payer
+        ],
+        extra_account_metas: link_token_extra_accounts(payer),
     };
-
-    let mut account_metas = accounts.to_account_metas(None);
-    account_metas.extend(
-        solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(
-            payer, None, None,
-        ),
-    );
-
-    let execute_instruction = Instruction {
-        program_id,
-        accounts: account_metas,
-        data: instruction_data.data(),
-    };
-
-    let incoming_message_account = Account {
-        lamports: setup
-            .mollusk
-            .sysvars
-            .rent
-            .minimum_balance(incoming_message_account_data.len()),
-        data: incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let execute_accounts = vec![
-        // AxelarExecuteAccounts
-        (*incoming_message_pda, incoming_message_account),
-        (
-            signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        // ITS Accounts
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint_pda, existing_token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for LinkToken
-        (payer, payer_account), // deployer same as payer for simplicity
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(ItsError::InvalidInstructionData).into(),
     )];
 
-    let result = setup.mollusk.process_and_validate_instruction(
-        &execute_instruction,
-        &execute_accounts,
-        &checks,
-    );
+    let test_result = execute_its_instruction(context, params, accounts_config, checks);
 
-    assert!(result.program_result.is_err());
+    assert!(test_result.result.program_result.is_err());
 }
 
 #[test]
@@ -643,136 +463,46 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = get_message_signing_pda(&message);
+    let context = ExecuteTestContext {
+        mollusk: setup.mollusk,
+        gateway_root_pda,
+        gateway_root_pda_account: gateway_root_pda_account.clone(),
+        its_root_pda,
+        its_root_account,
+        payer,
+        payer_account: payer_account.clone(),
+        program_id,
+    };
 
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let instruction_data = solana_axelar_its::instruction::Execute {
+    let params = ExecuteTestParams {
         message: message.clone(),
         payload: encoded_payload,
-    };
-
-    let executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id,
         incoming_message_pda: *incoming_message_pda,
-        signing_pda,
-        gateway_root_pda,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
-        event_authority: gateway_event_authority,
+        incoming_message_account_data: incoming_message_account_data.clone(),
     };
 
-    let accounts = solana_axelar_its::accounts::Execute {
-        // GMP accounts
-        executable: executable_accounts,
-
-        // ITS accounts
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-
-        // Event CPI accounts
-        event_authority: its_event_authority,
-        program: program_id,
+    let accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, existing_token_mint_account),
+            (
+                token_manager_ata,
+                Account::new(0, 0, &solana_sdk::system_program::ID),
+            ),
+        ],
+        extra_accounts: vec![
+            (payer, payer_account), // deployer same as payer
+        ],
+        extra_account_metas: link_token_extra_accounts(payer),
     };
-
-    let mut account_metas = accounts.to_account_metas(None);
-    account_metas.extend(
-        solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(
-            payer, None, None,
-        ),
-    );
-
-    let execute_instruction = Instruction {
-        program_id,
-        accounts: account_metas,
-        data: instruction_data.data(),
-    };
-
-    let incoming_message_account = Account {
-        lamports: setup
-            .mollusk
-            .sysvars
-            .rent
-            .minimum_balance(incoming_message_account_data.len()),
-        data: incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let execute_accounts = vec![
-        // AxelarExecuteAccounts
-        (*incoming_message_pda, incoming_message_account),
-        (
-            signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        // ITS Accounts
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint_pda, existing_token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for LinkToken
-        (payer, payer_account), // deployer same as payer for simplicity
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(ItsError::InvalidTokenMint).into(),
     )];
 
-    let result = setup.mollusk.process_and_validate_instruction(
-        &execute_instruction,
-        &execute_accounts,
-        &checks,
-    );
+    let test_result = execute_its_instruction(context, params, accounts_config, checks);
 
-    assert!(result.program_result.is_err());
+    assert!(test_result.result.program_result.is_err());
 }
 
 #[test]
@@ -895,134 +625,44 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = get_message_signing_pda(&message);
+    let context = ExecuteTestContext {
+        mollusk: setup.mollusk,
+        gateway_root_pda,
+        gateway_root_pda_account: gateway_root_pda_account.clone(),
+        its_root_pda,
+        its_root_account,
+        payer,
+        payer_account: payer_account.clone(),
+        program_id,
+    };
 
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let instruction_data = solana_axelar_its::instruction::Execute {
+    let params = ExecuteTestParams {
         message: message.clone(),
         payload: encoded_payload,
-    };
-
-    let executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id, // Using valid token_id for helper function (mismatch with payload)
         incoming_message_pda: *incoming_message_pda,
-        signing_pda,
-        gateway_root_pda,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
-        event_authority: gateway_event_authority,
+        incoming_message_account_data: incoming_message_account_data.clone(),
     };
 
-    let accounts = solana_axelar_its::accounts::Execute {
-        // GMP accounts
-        executable: executable_accounts,
-
-        // ITS accounts
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-
-        // Event CPI accounts
-        event_authority: its_event_authority,
-        program: program_id,
+    let accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, existing_token_mint_account),
+            (
+                token_manager_ata,
+                Account::new(0, 0, &solana_sdk::system_program::ID),
+            ),
+        ],
+        extra_accounts: vec![
+            (payer, payer_account), // deployer same as payer
+        ],
+        extra_account_metas: link_token_extra_accounts(payer),
     };
-
-    let mut account_metas = accounts.to_account_metas(None);
-    account_metas.extend(
-        solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(
-            payer, None, None,
-        ),
-    );
-
-    let execute_instruction = Instruction {
-        program_id,
-        accounts: account_metas,
-        data: instruction_data.data(),
-    };
-
-    let incoming_message_account = Account {
-        lamports: setup
-            .mollusk
-            .sysvars
-            .rent
-            .minimum_balance(incoming_message_account_data.len()),
-        data: incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let execute_accounts = vec![
-        // AxelarExecuteAccounts
-        (*incoming_message_pda, incoming_message_account),
-        (
-            signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        // ITS Accounts
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (token_mint_pda, existing_token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for LinkToken
-        (payer, payer_account), // deployer same as payer for simplicity
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    let result = setup.mollusk.process_and_validate_instruction(
-        &execute_instruction,
-        &execute_accounts,
-        &checks,
-    );
+    let test_result = execute_its_instruction(context, params, accounts_config, checks);
 
-    assert!(result.program_result.is_err());
+    assert!(test_result.result.program_result.is_err());
 }
