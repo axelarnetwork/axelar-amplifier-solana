@@ -141,7 +141,7 @@ pub fn execute_deploy_interchain_token_handler(
         }
         (false, Some(minter_account), Some(_)) => {
             // Valid: Minter specified with both accounts
-            if minter_account.key().to_bytes().to_vec() != minter {
+            if minter_account.key().to_bytes().as_ref() != minter.as_slice() {
                 msg!("Invalid minter configuration: minter argument doesn't match account");
                 return err!(ItsError::InvalidArgument);
             }
