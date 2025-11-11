@@ -17,8 +17,8 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_rent_sysvar_data, create_test_mint, init_its_service_with_ethereum_trusted,
-    initialize_mollusk,
+    create_rent_sysvar_data, create_test_mint, get_message_signing_pda,
+    init_its_service_with_ethereum_trusted, initialize_mollusk,
 };
 use solana_sdk::{
     account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL,
@@ -143,13 +143,7 @@ fn test_execute_link_token() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            message.command_id().as_ref(),
-        ],
-        &program_id,
-    );
+    let (signing_pda, _) = get_message_signing_pda(&message);
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
@@ -399,13 +393,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            message.command_id().as_ref(),
-        ],
-        &program_id,
-    );
+    let (signing_pda, _) = get_message_signing_pda(&message);
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
@@ -655,13 +643,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            message.command_id().as_ref(),
-        ],
-        &program_id,
-    );
+    let (signing_pda, _) = get_message_signing_pda(&message);
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
@@ -913,13 +895,7 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
         &spl_token_2022::id(),
     );
 
-    let (signing_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            message.command_id().as_ref(),
-        ],
-        &program_id,
-    );
+    let (signing_pda, _) = get_message_signing_pda(&message);
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);

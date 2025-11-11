@@ -9,10 +9,37 @@ use mollusk_test_utils::{
     create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
 };
 use solana_axelar_gas_service::state::Treasury;
+use solana_axelar_gateway::Message;
 use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
 use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
 use solana_sdk::program_pack::Pack;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
+
+pub fn get_message_signing_pda(message: &Message) -> (Pubkey, u8) {
+    let program_id = solana_axelar_its::id();
+    Pubkey::find_program_address(
+        &[
+            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
+            message.command_id().as_ref(),
+        ],
+        &program_id,
+    )
+}
+
+pub fn get_token_mint_pda(token_id: [u8; 32]) -> (Pubkey, u8) {
+    let program_id = solana_axelar_its::id();
+    let (its_root_pda, _) =
+        Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &program_id);
+
+    Pubkey::find_program_address(
+        &[
+            solana_axelar_its::seed_prefixes::INTERCHAIN_TOKEN_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    )
+}
 
 pub fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
     let mint = Pubkey::new_unique();

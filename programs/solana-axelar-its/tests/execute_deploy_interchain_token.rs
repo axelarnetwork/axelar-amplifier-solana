@@ -20,8 +20,8 @@ use solana_axelar_gateway_test_fixtures::{
 };
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_rent_sysvar_data, create_sysvar_instructions_data,
-    init_its_service_with_ethereum_trusted, initialize_mollusk,
+    create_rent_sysvar_data, create_sysvar_instructions_data, get_message_signing_pda,
+    get_token_mint_pda, init_its_service_with_ethereum_trusted, initialize_mollusk,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
 use solana_sdk::{
@@ -134,14 +134,7 @@ fn test_execute_deploy_interchain_token_success() {
     // Step 9: Find required PDAs
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
 
-    let (token_mint_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::seed_prefixes::INTERCHAIN_TOKEN_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
+    let (token_mint_pda, _) = get_token_mint_pda(token_id);
 
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
@@ -157,13 +150,7 @@ fn test_execute_deploy_interchain_token_success() {
 
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
-    let (signing_pda, _) = Pubkey::find_program_address(
-        &[
-            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            message.command_id().as_ref(),
-        ],
-        &program_id,
-    );
+    let (signing_pda, _) = get_message_signing_pda(&message);
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
