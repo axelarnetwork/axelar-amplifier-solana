@@ -534,7 +534,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
         &checks,
     );
 
-    assert!(result.program_result.is_err())
+    assert!(result.program_result.is_err());
 }
 
 #[test]
@@ -790,7 +790,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
         &checks,
     );
 
-    assert!(result.program_result.is_err())
+    assert!(result.program_result.is_err());
 }
 
 #[test]
@@ -1048,5 +1048,5 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
         &checks,
     );
 
-    assert!(result.program_result.is_err())
+    assert!(result.program_result.is_err());
 }

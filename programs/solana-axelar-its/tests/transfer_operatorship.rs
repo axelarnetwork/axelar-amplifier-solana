@@ -270,7 +270,7 @@ fn test_reject_transfer_operatorship_without_operator_role() {
     current_operator_roles.roles = Roles::empty();
 
     let mut new_data = Vec::new();
-    new_data.extend_from_slice(&UserRoles::DISCRIMINATOR);
+    new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
     current_operator_roles
         .serialize(&mut new_data)
         .expect("Failed to serialize");
