@@ -1,3 +1,4 @@
+use crate::{create_rent_sysvar_data, create_sysvar_instructions_data};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
@@ -10,8 +11,6 @@ use solana_axelar_its::{
     seed_prefixes::INTERCHAIN_TOKEN_SEED, state::TokenManager, utils::interchain_token_id,
 };
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
-
-use crate::{create_rent_sysvar_data, create_sysvar_instructions_data};
 
 pub struct DeployInterchainTokenContext {
     mollusk: Mollusk,

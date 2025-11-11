@@ -35,7 +35,7 @@ fn test_deploy_remote_interchain_token() {
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
 
-    let (_, treasury_pda) = init_gas_service(
+    let (_, treasury_pda_account) = init_gas_service(
         &mollusk,
         operator,
         &operator_account,
@@ -87,57 +87,46 @@ fn test_deploy_remote_interchain_token() {
         deployer_account,
         program_id,
         payer,
-        payer_account,
+        payer_account.clone(),
         None,
         None,
     );
 
-    let (
-        result,
-        token_manager_pda,
-        token_mint_pda,
-        _token_manager_ata,
-        _deployer_ata,
-        metadata_account,
-        mollusk,
-    ) = deploy_interchain_token_helper(
-        salt,
-        name.clone(),
-        symbol.clone(),
-        decimals,
-        initial_supply,
-        ctx,
-    );
+    let (result, token_manager_pda, token_mint_pda, _, _, metadata_account, mollusk) =
+        deploy_interchain_token_helper(
+            salt,
+            name.clone(),
+            symbol.clone(),
+            decimals,
+            initial_supply,
+            ctx,
+        );
 
-    assert!(
-        result.program_result.is_ok(),
-        "Deploy interchain token instruction should succeed: {:?}",
-        result.program_result
-    );
+    assert!(result.program_result.is_ok());
 
     let destination_chain = "ethereum".to_owned();
     let gas_value = 0u64;
 
+    let token_mint_account = result.get_account(&token_mint_pda).unwrap().clone();
+    let metadata_account_data = result.get_account(&metadata_account).unwrap().clone();
+    let token_manager_account = result.get_account(&token_manager_pda).unwrap().clone();
+    let its_root_account = result.get_account(&its_root_pda).unwrap().clone();
+
     let ctx = DeployRemoteInterchainTokenContext::new(
-        result,
         mollusk,
         program_id,
-        payer,
+        (payer, payer_account),
         deployer,
-        token_mint_pda,
-        metadata_account,
-        token_manager_pda,
-        its_root_pda,
-        treasury_pda,
+        (token_mint_pda, token_mint_account),
+        (metadata_account, metadata_account_data),
+        (token_manager_pda, token_manager_account),
+        (its_root_pda, its_root_account),
+        treasury_pda_account,
         gateway_root_pda_account.clone(),
     );
 
     let remote_result =
         deploy_remote_interchain_token_helper(salt, destination_chain.clone(), gas_value, ctx);
 
-    assert!(
-        remote_result.program_result.is_ok(),
-        "Deploy remote interchain token instruction should succeed: {:?}",
-        remote_result.program_result
-    );
+    assert!(remote_result.program_result.is_ok());
 }
