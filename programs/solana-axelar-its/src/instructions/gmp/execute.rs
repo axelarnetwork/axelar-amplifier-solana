@@ -267,6 +267,7 @@ fn cpi_execute_deploy_interchain_token<'info>(
     let name = deploy.name;
     let symbol = deploy.symbol;
     let decimals = deploy.decimals;
+    let minter = deploy.minter;
 
     // Create the instruction data using Anchor's InstructionData trait
     let instruction_data = crate::instruction::ExecuteDeployInterchainToken {
@@ -274,6 +275,7 @@ fn cpi_execute_deploy_interchain_token<'info>(
         name,
         symbol,
         decimals,
+        minter: minter.to_vec(),
     };
 
     let mut remaining = ctx.remaining_accounts.iter();
