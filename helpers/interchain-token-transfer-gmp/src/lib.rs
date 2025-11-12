@@ -164,6 +164,11 @@ impl GMPPayload {
 
         let variant = alloy_primitives::U256::abi_decode(&bytes[0..32], true)?;
 
+        // upper bytes should be 0
+        if variant > alloy_primitives::U256::from(RegisterTokenMetadata::MESSAGE_TYPE_ID) {
+            return Err(alloy_sol_types::Error::custom("Invalid payload"));
+        }
+
         match variant.byte(0) {
             InterchainTransfer::MESSAGE_TYPE_ID => Ok(GMPPayload::InterchainTransfer(
                 InterchainTransfer::abi_decode_params(bytes, true)?,
