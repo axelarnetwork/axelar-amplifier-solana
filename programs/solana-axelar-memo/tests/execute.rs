@@ -1,8 +1,8 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use axelar_solana_encoding::hasher::MerkleTree;
-use axelar_solana_encoding::hasher::SolanaSyscallHasher;
+use solana_axelar_encoding::hasher::MerkleTree;
+use solana_axelar_encoding::hasher::SolanaSyscallHasher;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;

@@ -12,7 +12,7 @@ udigest.workspace = true
 bytemuck.workspace = true
 bnum.workspace = true
 anchor-lang.workspace = true
-axelar-solana-encoding = { workspace = true, features = ["solana"] }
+solana-axelar-encoding = { workspace = true, features = ["solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
 alloy-primitives.workspace = true

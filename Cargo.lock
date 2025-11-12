@@ -905,7 +905,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
-name = "axelar-solana-encoding"
+name = "solana-axelar-encoding"
 version = "0.1.0"
 dependencies = [
  "arrayref",
@@ -6533,7 +6533,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "anchor-lang",
- "axelar-solana-encoding",
+ "solana-axelar-encoding",
  "bitvec",
  "bnum",
  "bytemuck",
@@ -6559,7 +6559,7 @@ name = "solana-axelar-gateway-test-fixtures"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-encoding",
+ "solana-axelar-encoding",
  "bincode",
  "libsecp256k1",
  "mollusk-svm 0.5.1",
@@ -6652,7 +6652,7 @@ name = "solana-axelar-memo"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-encoding",
+ "solana-axelar-encoding",
  "bincode",
  "hex",
  "mollusk-svm 0.5.1",

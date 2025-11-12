@@ -30,7 +30,7 @@ pub mod contracts {
         include!(concat!(env!("OUT_DIR"), "/AxelarAmplifierGatewayProxy.rs"));
     }
 
-    pub mod axelar_solana_multicall {
+    pub mod solana_axelar_multicall {
         include!(concat!(env!("OUT_DIR"), "/AxelarSolanaMultiCall.rs"));
     }
 

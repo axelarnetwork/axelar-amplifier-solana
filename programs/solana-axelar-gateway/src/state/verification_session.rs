@@ -2,7 +2,7 @@ use crate::U128;
 use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
+use solana_axelar_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use bitvec::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use udigest::{encoding::EncodeValue, Digestable};
@@ -110,8 +110,8 @@ impl SignatureVerificationSessionData {
     }
 
     pub fn verify_ecdsa_signature(
-        pubkey: &axelar_solana_encoding::types::pubkey::Secp256k1Pubkey,
-        signature: &axelar_solana_encoding::types::pubkey::EcdsaRecoverableSignature,
+        pubkey: &solana_axelar_encoding::types::pubkey::Secp256k1Pubkey,
+        signature: &solana_axelar_encoding::types::pubkey::EcdsaRecoverableSignature,
         message: &[u8; 32],
     ) -> bool {
         // Hash the prefixed message to get a 32-byte digest

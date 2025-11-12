@@ -141,7 +141,7 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "axelar-solana-encoding"
+crate = "solana-axelar-encoding"
 expression = "MIT"
 license-files = []
 

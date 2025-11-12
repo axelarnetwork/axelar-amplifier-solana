@@ -4,7 +4,7 @@ use crate::{
     MessageStatus, SignatureVerificationSessionData,
 };
 use anchor_lang::prelude::*;
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
+use solana_axelar_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use std::str::FromStr;
 
 #[derive(Accounts)]

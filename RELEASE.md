@@ -1,4 +1,4 @@
-# `axelar-solana-*` Crate Release Process
+# `solana-axelar-*` Crate Release Process
 
 ## Prerequisites
 
@@ -46,13 +46,13 @@
 
 ### 5. Verify Release
 
-1. Navigate to the newly released crates on [crates.io](https://crates.io/search?q=axelar-solana).
+1. Navigate to the newly released crates on [crates.io](https://crates.io/search?q=solana-axelar).
 2. Verify the version numbers for each of the following crates are as expected:
     - `programs/`
-        - [`axelar-solana-gateway`](https://crates.io/crates/axelar-solana-gateway)
-        - [`axelar-solana-governance`](https://crates.io/crates/axelar-solana-governance)
-        - [`axelar-solana-its`](https://crates.io/crates/axelar-solana-its)
-        - [`axelar-solana-gas-service`](https://crates.io/crates/axelar-solana-gas-service)
-        - [`axelar-solana-multicall`](https://crates.io/crates/axelar-solana-multicall)
+        - [`solana-axelar-gateway`](https://crates.io/crates/solana-axelar-gateway)
+        - [`solana-axelar-governance`](https://crates.io/crates/solana-axelar-governance)
+        - [`solana-axelar-its`](https://crates.io/crates/solana-axelar-its)
+        - [`solana-axelar-gas-service`](https://crates.io/crates/solana-axelar-gas-service)
+        - [`solana-axelar-multicall`](https://crates.io/crates/solana-axelar-multicall)
 3. Verify the GitHub Releases page is as expected: <https://github.com/axelarnetwork/axelar-amplifier-solana/releases>
 4. Verify the GitHub Tags page is as expected: <https://github.com/axelarnetwork/axelar-amplifier-solana/tags>

@@ -9,7 +9,7 @@ use ethers::types::{Address, Bytes, U256};
 use ethers::utils::keccak256;
 use evm_contracts_rs::contracts::{
     axelar_amplifier_gateway, axelar_amplifier_gateway_proxy, axelar_auth_weighted,
-    axelar_create3_deployer, axelar_gas_service, axelar_memo, axelar_solana_multicall,
+    axelar_create3_deployer, axelar_gas_service, axelar_memo, solana_axelar_multicall,
     custom_test_token, example_encoder, gateway_caller, interchain_proxy, interchain_token,
     interchain_token_deployer, interchain_token_factory, interchain_token_service, token_handler,
     token_manager, token_manager_deployer,
@@ -543,15 +543,15 @@ impl crate::EvmSigner {
     pub async fn deploy_solana_multicall(
         &self,
         gateway: axelar_amplifier_gateway::AxelarAmplifierGateway<ContractMiddleware>,
-    ) -> anyhow::Result<axelar_solana_multicall::AxelarSolanaMultiCall<ContractMiddleware>> {
+    ) -> anyhow::Result<solana_axelar_multicall::AxelarSolanaMultiCall<ContractMiddleware>> {
         let factory = ContractFactory::new(
-            axelar_solana_multicall::AXELARSOLANAMULTICALL_ABI.clone(),
-            axelar_solana_multicall::AXELARSOLANAMULTICALL_BYTECODE.clone(),
+            solana_axelar_multicall::AXELARSOLANAMULTICALL_ABI.clone(),
+            solana_axelar_multicall::AXELARSOLANAMULTICALL_BYTECODE.clone(),
             self.signer.clone(),
         );
         let deployer = factory.deploy(gateway.address())?;
         let contract = self.deploy_custom_poll(deployer.tx).await?;
-        Ok(axelar_solana_multicall::AxelarSolanaMultiCall::<
+        Ok(solana_axelar_multicall::AxelarSolanaMultiCall::<
             ContractMiddleware,
         >::new(contract, self.signer.clone()))
     }
