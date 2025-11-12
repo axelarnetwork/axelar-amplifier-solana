@@ -108,8 +108,13 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
             }
         })
         .saturating_add(
-            size_of::<SigningVerifierSetInfo>()
-                .saturating_mul(execute_data.signing_verifier_set_leaves.len()),
+            execute_data
+                .signing_verifier_set_leaves
+                .iter()
+                .map(|info| {
+                    size_of::<SigningVerifierSetInfo>().saturating_add(info.merkle_proof.len())
+                })
+                .sum::<usize>(),
         )
 }
 
@@ -188,5 +193,137 @@ pub trait LeafHash: udigest::Digestable {
         let mut buffer = VecBuf(vec![]);
         self.unambiguously_encode(EncodeValue::new(&mut buffer));
         T::hash(&buffer.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use types::messages::{CrossChainId, Message, Messages};
+
+    fn create_test_verifier_set(num_verifiers: usize) -> VerifierSet {
+        let signers = (0..num_verifiers)
+            .map(|i| (PublicKey::Ed25519([u8::try_from(i).unwrap(); 32]), 1u128))
+            .collect();
+
+        VerifierSet {
+            nonce: 0,
+            signers,
+            quorum: num_verifiers as u128,
+        }
+    }
+
+    fn create_test_signatures(verifier_set: &VerifierSet) -> BTreeMap<PublicKey, Signature> {
+        verifier_set
+            .signers
+            .keys()
+            .map(|pubkey| (*pubkey, Signature::Ed25519([0u8; 64])))
+            .collect()
+    }
+
+    #[test]
+    fn estimate_size_accounts_for_merkle_proofs() {
+        let domain_separator = [1u8; 32];
+        let verifier_set = create_test_verifier_set(10);
+        let signatures = create_test_signatures(&verifier_set);
+        let payload = Payload::Messages(Messages(vec![Message {
+            cc_id: CrossChainId {
+                chain: "test-chain".to_owned(),
+                id: "1".to_owned(),
+            },
+            source_address: "source".to_owned(),
+            destination_address: "dest".to_owned(),
+            destination_chain: "chain".to_owned(),
+            payload_hash: [2u8; 32],
+        }]));
+
+        let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
+            .expect("encoding should succeed");
+
+        let execute_data: ExecuteData =
+            borsh::from_slice(&encoded).expect("deserialization should succeed");
+
+        let estimated_size = estimate_size(&execute_data);
+
+        assert!(encoded.len() <= estimated_size,);
+
+        let total_merkle_proof_bytes: usize = execute_data
+            .signing_verifier_set_leaves
+            .iter()
+            .map(|info| info.merkle_proof.len())
+            .sum();
+
+        assert!(total_merkle_proof_bytes > 0);
+
+        let size_without_proofs = size_of::<ExecuteData>()
+            + execute_data
+                .signing_verifier_set_leaves
+                .iter()
+                .map(|_| size_of::<SigningVerifierSetInfo>())
+                .sum::<usize>();
+
+        assert!(estimated_size >= size_without_proofs + total_merkle_proof_bytes);
+    }
+
+    #[test]
+    fn estimate_size_prevents_reallocations() {
+        let domain_separator = [1u8; 32];
+        let verifier_set = create_test_verifier_set(5);
+        let signatures = create_test_signatures(&verifier_set);
+        let payload = Payload::Messages(Messages(
+            (0..3)
+                .map(|i| Message {
+                    cc_id: CrossChainId {
+                        chain: format!("chain-{i}"),
+                        id: i.to_string(),
+                    },
+                    source_address: format!("source-{i}"),
+                    destination_address: format!("dest-{i}"),
+                    destination_chain: format!("chain-{i}"),
+                    payload_hash: [i; 32],
+                })
+                .collect(),
+        ));
+
+        let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
+            .expect("encoding should succeed");
+
+        let execute_data: ExecuteData =
+            borsh::from_slice(&encoded).expect("deserialization should succeed");
+
+        let estimated_size = estimate_size(&execute_data);
+
+        assert!(encoded.len() <= estimated_size);
+    }
+
+    #[test]
+    fn estimate_size_scales_with_merkle_proof_size() {
+        let domain_separator = [1u8; 32];
+
+        // Test with different numbers of verifiers (which affects merkle proof size)
+        for num_verifiers in [2, 4, 8, 16, 32] {
+            let verifier_set = create_test_verifier_set(num_verifiers);
+            let signatures = create_test_signatures(&verifier_set);
+            let payload = Payload::Messages(Messages(vec![Message {
+                cc_id: CrossChainId {
+                    chain: "test".to_owned(),
+                    id: "1".to_owned(),
+                },
+                source_address: "src".to_owned(),
+                destination_address: "dst".to_owned(),
+                destination_chain: "chain".to_owned(),
+                payload_hash: [0u8; 32],
+            }]));
+
+            let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
+                .expect("encoding should succeed");
+
+            let execute_data: ExecuteData =
+                borsh::from_slice(&encoded).expect("deserialization should succeed");
+
+            let estimated_size = estimate_size(&execute_data);
+
+            assert!(encoded.len() <= estimated_size);
+        }
     }
 }
