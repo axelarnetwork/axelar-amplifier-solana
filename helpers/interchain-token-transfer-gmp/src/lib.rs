@@ -156,6 +156,12 @@ impl RegisterTokenMetadata {
 
 impl GMPPayload {
     pub fn decode(bytes: &[u8]) -> Result<Self, alloy_sol_types::Error> {
+        if bytes.len() < 32 {
+            return Err(alloy_sol_types::Error::custom(
+                "Insufficient payload length",
+            ));
+        }
+
         let variant = alloy_primitives::U256::abi_decode(&bytes[0..32], true)?;
 
         match variant.byte(0) {
