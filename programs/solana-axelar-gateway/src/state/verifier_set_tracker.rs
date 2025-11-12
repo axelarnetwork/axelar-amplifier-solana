@@ -1,5 +1,5 @@
-use crate::{VerifierSetHash, U256};
 use anchor_lang::prelude::*;
+use solana_axelar_std::{VerifierSetHash, U256};
 
 /// Ever-incrementing counter for keeping track of the sequence of signer sets
 pub type Epoch = U256;

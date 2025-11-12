@@ -1,0 +1,31 @@
+[package]
+name = "solana-axelar-std"
+version = "0.1.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[dependencies]
+alloy-primitives.workspace = true
+arrayref.workspace = true
+hex.workspace = true
+bs58.workspace = true
+rs_merkle.workspace = true
+udigest.workspace = true
+thiserror.workspace = true
+sha3 = { workspace = true, optional = true }
+solana-keccak-hasher = { workspace = true, optional = true }
+borsh.workspace = true
+bytemuck.workspace = true
+bnum.workspace = true
+
+[dev-dependencies]
+sha3.workspace = true
+solana-keccak-hasher.workspace = true
+rand.workspace = true
+
+[features]
+default = []
+native = ["dep:sha3", "dep:borsh"]
+solana = ["dep:solana-keccak-hasher", "dep:anchor-lang"]

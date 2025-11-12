@@ -3,38 +3,16 @@
 use arrayref::mut_array_refs;
 pub use rs_merkle::{Hasher, MerkleProof, MerkleTree};
 
-pub(crate) struct VecBuf(pub(crate) Vec<u8>);
+pub mod leaf;
+pub mod native;
+pub mod solana;
 
-impl udigest::encoding::Buffer for VecBuf {
-    fn write(&mut self, bytes: &[u8]) {
-        self.0.extend_from_slice(bytes);
-    }
-}
+pub use leaf::LeafHash;
 
-/// A Merkle Tree hasher that utilizes Solana's `keccak` syscall to merge nodes.
+#[cfg(any(feature = "sha3", test))]
+pub use native::NativeHasher;
 #[cfg(any(feature = "solana", test))]
-#[derive(Copy, Clone)]
-pub struct SolanaSyscallHasher;
-
-#[cfg(any(feature = "solana", test))]
-impl rs_merkle::Hasher for SolanaSyscallHasher {
-    type Hash = [u8; 32];
-
-    fn hash(data: &[u8]) -> Self::Hash {
-        solana_program::keccak::hashv(&[data]).to_bytes()
-    }
-
-    fn concat_and_hash(left: &Self::Hash, right: Option<&Self::Hash>) -> Self::Hash {
-        concat_and_hash(left, right, Self::hash)
-    }
-}
-
-#[cfg(any(feature = "solana", test))]
-impl HashvSupport for SolanaSyscallHasher {
-    fn hashv(data: &[&[u8]]) -> [u8; 32] {
-        solana_program::keccak::hashv(data).to_bytes()
-    }
-}
+pub use solana::SolanaSyscallHasher;
 
 /// Trait providing support for hashing multiple byte slices.
 ///
@@ -52,41 +30,6 @@ pub trait HashvSupport {
     ///
     /// A 32-byte array representing the combined hash of the input slices.
     fn hashv(vals: &[&[u8]]) -> [u8; 32];
-}
-
-/// A Merkle Tree hasher that uses the native `sha3` crate's `Keccak256` hashing
-/// algorithm.
-///
-/// The `NativeHasher` is suitable for environments outside of Solana, providing
-/// a reliable and efficient hashing mechanism for Merkle tree operations.
-#[derive(Copy, Clone)]
-pub struct NativeHasher;
-
-impl HashvSupport for NativeHasher {
-    fn hashv(vals: &[&[u8]]) -> [u8; 32] {
-        use sha3::digest::Digest;
-        let mut hasher = sha3::Keccak256::default();
-        for val in vals {
-            hasher.update(val);
-        }
-        let res = hasher.finalize();
-        res.into()
-    }
-}
-
-impl rs_merkle::Hasher for NativeHasher {
-    type Hash = [u8; 32];
-
-    fn hash(data: &[u8]) -> Self::Hash {
-        use sha3::digest::Digest;
-        let mut hasher = sha3::Keccak256::default();
-        hasher.update(data);
-        hasher.finalize().into()
-    }
-
-    fn concat_and_hash(left: &Self::Hash, right: Option<&Self::Hash>) -> Self::Hash {
-        concat_and_hash(left, right, Self::hash)
-    }
 }
 
 /// This implementation deviates from the default for several reasons:

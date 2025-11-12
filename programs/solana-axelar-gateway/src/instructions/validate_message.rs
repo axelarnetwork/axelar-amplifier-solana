@@ -1,8 +1,8 @@
 use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
-use crate::{
-    GatewayConfig, GatewayError, IncomingMessage, Message, MessageExecutedEvent, MessageStatus,
-};
+use crate::{GatewayConfig, GatewayError, IncomingMessage, MessageExecutedEvent, MessageStatus};
 use anchor_lang::prelude::*;
+use solana_axelar_std::hasher::{LeafHash, SolanaSyscallHasher};
+use solana_axelar_std::Message;
 use std::str::FromStr;
 
 #[derive(Accounts)]
@@ -17,7 +17,7 @@ pub struct ValidateMessage<'info> {
         constraint = incoming_message_pda.load()?.status.is_approved()
             @ GatewayError::MessageNotApproved,
         // CHECK: message hash must match
-        constraint = incoming_message_pda.load()?.message_hash == message.hash()
+        constraint = incoming_message_pda.load()?.message_hash == message.hash::<SolanaSyscallHasher>()
             @ GatewayError::InvalidMessageHash
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,

@@ -7,7 +7,6 @@ use anchor_lang::{
     prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
     ToAccountMetas,
 };
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::seed_prefixes::{
@@ -15,11 +14,15 @@ use solana_axelar_gateway::seed_prefixes::{
 };
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    MerklizedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID, U256,
+    ID as GATEWAY_PROGRAM_ID,
 };
-use solana_axelar_gateway::{
-    CrossChainId, IncomingMessage, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
+use solana_axelar_gateway::{IncomingMessage, Message};
+use solana_axelar_std::hasher::{LeafHash, SolanaSyscallHasher};
+use solana_axelar_std::{
+    CrossChainId, MerklizedMessage, MessageLeaf, Signature, SigningVerifierSetInfo,
+    VerifierSetLeaf, U256,
 };
+use solana_axelar_std::{MerkleTree, PublicKey};
 use solana_sdk::{
     account::Account,
     instruction::{AccountMeta, Instruction},
@@ -160,31 +163,32 @@ pub fn setup_test_with_real_signers() -> (
 
     // Step 2: Create verifier set with your 2 real signers
     let quorum_threshold = 100;
+
     let verifier_leaves = vec![
-        VerifierSetLeaf::new(
-            0,
-            quorum_threshold,
-            PublicKey::Secp256k1(compressed_pubkey_1),
-            50,
-            0,
-            2,
+        VerifierSetLeaf {
+            nonce: 0,
+            quorum: quorum_threshold,
+            signer_pubkey: PublicKey(compressed_pubkey_1),
+            signer_weight: 50,
+            position: 0,
+            set_size: 2,
             domain_separator,
-        ),
-        VerifierSetLeaf::new(
-            0,
-            quorum_threshold,
-            PublicKey::Secp256k1(compressed_pubkey_2),
-            50,
-            1,
-            2,
+        },
+        VerifierSetLeaf {
+            nonce: 0,
+            quorum: quorum_threshold,
+            signer_pubkey: PublicKey(compressed_pubkey_2),
+            signer_weight: 50,
+            position: 1,
+            set_size: 2,
             domain_separator,
-        ),
+        },
     ];
 
     // Step 3: Calculate the REAL verifier set hash
     let verifier_leaf_hashes: Vec<[u8; 32]> = verifier_leaves
         .iter()
-        .map(solana_axelar_gateway::VerifierSetLeaf::hash)
+        .map(VerifierSetLeaf::hash::<SolanaSyscallHasher>)
         .collect();
     let verifier_merkle_tree =
         MerkleTree::<SolanaSyscallHasher>::from_leaves(&verifier_leaf_hashes);
@@ -566,11 +570,16 @@ pub fn create_verifier_info(
     let mut signature_bytes = signature.serialize().to_vec();
     signature_bytes.push(recovery_id.serialize() + 27);
     let signature_array: [u8; 65] = signature_bytes.try_into().unwrap();
+    let signature = Signature(signature_array);
 
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
 
-    SigningVerifierSetInfo::new(signature_array, *verifier_leaf, merkle_proof_bytes)
+    SigningVerifierSetInfo {
+        signature,
+        leaf: *verifier_leaf,
+        merkle_proof: merkle_proof_bytes,
+    }
 }
 
 pub fn call_contract_helper(
@@ -953,7 +962,7 @@ pub fn setup_message_merkle_tree(
 
     let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
         .iter()
-        .map(solana_axelar_gateway::MessageLeaf::hash)
+        .map(MessageLeaf::hash::<SolanaSyscallHasher>)
         .collect();
 
     let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
@@ -1247,7 +1256,7 @@ pub fn setup_message_merkle_tree_from_messages(
 
     let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
         .iter()
-        .map(solana_axelar_gateway::MessageLeaf::hash)
+        .map(MessageLeaf::hash::<SolanaSyscallHasher>)
         .collect();
 
     let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);

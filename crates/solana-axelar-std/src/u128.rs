@@ -1,5 +1,4 @@
-use anchor_lang::{AnchorDeserialize, AnchorSerialize};
-
+use borsh::{BorshDeserialize, BorshSerialize};
 use bytemuck::{Pod, Zeroable};
 
 /// Custom u128 type with 8-byte alignment instead of the default 16-byte alignment.
@@ -80,14 +79,14 @@ impl From<u64> for U128 {
     }
 }
 
-// Implement AnchorSerialize/Deserialize to serialize as u128 in IDL
-impl AnchorSerialize for U128 {
+// Implement BorshSerialize/Deserialize to serialize as u128 in IDL
+impl BorshSerialize for U128 {
     fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
         writer.write_all(&self.0)
     }
 }
 
-impl AnchorDeserialize for U128 {
+impl BorshDeserialize for U128 {
     fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         let mut bytes = [0u8; 16];
         reader.read_exact(&mut bytes)?;
