@@ -1,3 +1,4 @@
+use crate::{create_rent_sysvar_data, get_message_signing_pda};
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
 use mollusk_svm::result::Check;
 use mollusk_svm::Mollusk;
@@ -5,8 +6,6 @@ use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gateway::{Message, ID as GATEWAY_PROGRAM_ID};
 use solana_axelar_its::state::TokenManager;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
-
-use crate::{create_rent_sysvar_data, get_message_signing_pda};
 
 pub struct ExecuteTestContext {
     pub mollusk: Mollusk,
@@ -38,6 +37,7 @@ pub struct ExecuteTestResult {
     pub all_accounts: Vec<(Pubkey, Account)>,
 }
 
+#[allow(clippy::indexing_slicing)]
 pub fn execute_its_instruction(
     context: ExecuteTestContext,
     params: ExecuteTestParams,

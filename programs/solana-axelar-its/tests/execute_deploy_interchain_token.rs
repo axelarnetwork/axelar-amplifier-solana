@@ -5,7 +5,7 @@
 use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
-use anchor_spl::token_2022::spl_token_2022::{self};
+use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;

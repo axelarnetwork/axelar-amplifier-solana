@@ -168,16 +168,16 @@ fn test_deploy_remote_canonical_token() {
     let mint_account = result.get_account(&mint_pubkey).unwrap().clone();
     let token_manager_account = result.get_account(&token_manager_pda).unwrap().clone();
 
-    let ctx = DeployRemoteCanonicalTokenContext {
+    let ctx = DeployRemoteCanonicalTokenContext::new(
         mollusk,
-        deployer: (deployer, deployer_account),
-        mint: (mint_pubkey, mint_account),
-        metadata: (metadata_account_pda, metadata_account),
-        token_manager: (token_manager_pda, token_manager_account),
-        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
-        gas_treasury: (gas_treasury_pda, treasury_pda_account),
-        its_root: (its_root_pda, its_root_account),
-    };
+        (deployer, deployer_account),
+        (mint_pubkey, mint_account),
+        (metadata_account_pda, metadata_account),
+        (token_manager_pda, token_manager_account),
+        (gateway_root_pda, gateway_root_pda_account.clone()),
+        (gas_treasury_pda, treasury_pda_account),
+        (its_root_pda, its_root_account),
+    );
 
     let deploy_result = deploy_remote_canonical_token_helper(
         ctx,
@@ -334,16 +334,16 @@ fn test_reject_deploy_remote_canonical_token_with_mismatched_token_id() {
 
     let mint_account = result.get_account(&mint_pubkey).unwrap().clone();
 
-    let ctx = DeployRemoteCanonicalTokenContext {
+    let ctx = DeployRemoteCanonicalTokenContext::new(
         mollusk,
-        deployer: (deployer, deployer_account),
-        mint: (mint_pubkey, mint_account),
-        metadata: (metadata_account_pda, metadata_account),
-        token_manager: (mismatched_token_manager_pda, token_manager_account), // Use the mismatched PDA with correct account data
-        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
-        gas_treasury: (gas_treasury_pda, treasury_pda_account),
-        its_root: (its_root_pda, its_root_account),
-    };
+        (deployer, deployer_account),
+        (mint_pubkey, mint_account),
+        (metadata_account_pda, metadata_account),
+        (mismatched_token_manager_pda, token_manager_account), // Use the mismatched PDA with correct account data
+        (gateway_root_pda, gateway_root_pda_account.clone()),
+        (gas_treasury_pda, treasury_pda_account),
+        (its_root_pda, its_root_account),
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),

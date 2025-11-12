@@ -19,6 +19,31 @@ pub struct DeployRemoteCanonicalTokenContext {
     pub its_root: (Pubkey, Account),
 }
 
+impl DeployRemoteCanonicalTokenContext {
+    pub fn new(
+        mollusk: Mollusk,
+        deployer: (Pubkey, Account),
+        mint: (Pubkey, Account),
+        metadata: (Pubkey, Account),
+        token_manager: (Pubkey, Account),
+        gateway_root: (Pubkey, Account),
+        gas_treasury: (Pubkey, Account),
+        its_root: (Pubkey, Account),
+    ) -> Self {
+        Self {
+            mollusk,
+            deployer,
+            mint,
+            metadata,
+            token_manager,
+            gateway_root,
+            gas_treasury,
+            its_root,
+        }
+    }
+}
+
+
 pub fn deploy_remote_canonical_token_helper(
     ctx: DeployRemoteCanonicalTokenContext,
     destination_chain: String,
