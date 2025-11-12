@@ -223,8 +223,11 @@ pub mod solana_axelar_its {
         name: String,
         symbol: String,
         decimals: u8,
+        minter: Vec<u8>,
     ) -> Result<()> {
-        instructions::execute_deploy_interchain_token_handler(ctx, token_id, name, symbol, decimals)
+        instructions::execute_deploy_interchain_token_handler(
+            ctx, token_id, name, symbol, decimals, minter,
+        )
     }
 
     pub fn execute_link_token(
