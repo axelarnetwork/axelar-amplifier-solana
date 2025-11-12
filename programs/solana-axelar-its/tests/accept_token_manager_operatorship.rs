@@ -56,26 +56,23 @@ fn test_accept_token_manager_operatorship() {
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &current_operator);
 
-    let deploy_ctx = DeployInterchainTokenContext::new(
+    let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account.clone(),
-        current_operator,
-        current_operator_account.clone(),
+        (its_root_pda, its_root_account.clone()),
+        (current_operator, current_operator_account.clone()),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         Some(current_operator),
         Some(minter_roles_pda),
     );
 
     let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
         salt,
         token_name,
         token_symbol,
         decimals,
         initial_supply,
-        deploy_ctx,
     );
 
     assert!(deploy_result.program_result.is_ok());
@@ -260,26 +257,23 @@ fn test_reject_invalid_token_manager_operatorship() {
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &current_operator);
 
-    let deploy_ctx = DeployInterchainTokenContext::new(
+    let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account.clone(),
-        current_operator,
-        current_operator_account.clone(),
+        (its_root_pda, its_root_account.clone()),
+        (current_operator, current_operator_account.clone()),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         Some(current_operator),
         Some(minter_roles_pda),
     );
 
     let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
         salt,
         token_name,
         token_symbol,
         decimals,
         initial_supply,
-        deploy_ctx,
     );
 
     assert!(deploy_result.program_result.is_ok());

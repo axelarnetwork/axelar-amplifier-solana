@@ -68,13 +68,10 @@ fn test_deploy_interchain_token() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account,
+        (payer, payer_account),
         Some(minter),
         Some(minter_roles_pda),
     );
@@ -88,12 +85,12 @@ fn test_deploy_interchain_token() {
         metadata_account,
         _,
     ) = deploy_interchain_token_helper(
+        ctx,
         salt,
         name.clone(),
         symbol.clone(),
         decimals,
         initial_supply,
-        ctx,
     );
 
     assert!(

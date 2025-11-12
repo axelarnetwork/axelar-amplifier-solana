@@ -14,13 +14,10 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 
 pub struct DeployInterchainTokenContext {
     mollusk: Mollusk,
-    its_root_pda: Pubkey,
-    its_root_account: Account,
-    deployer: Pubkey,
-    deployer_account: Account,
+    its_root: (Pubkey, Account),
+    deployer: (Pubkey, Account),
     program_id: Pubkey,
-    payer: Pubkey,
-    payer_account: Account,
+    payer: (Pubkey, Account),
     minter: Option<Pubkey>,
     minter_roles_pda: Option<Pubkey>,
 }
@@ -28,25 +25,19 @@ pub struct DeployInterchainTokenContext {
 impl DeployInterchainTokenContext {
     pub fn new(
         mollusk: Mollusk,
-        its_root_pda: Pubkey,
-        its_root_account: Account,
-        deployer: Pubkey,
-        deployer_account: Account,
+        its_root: (Pubkey, Account),
+        deployer: (Pubkey, Account),
         program_id: Pubkey,
-        payer: Pubkey,
-        payer_account: Account,
+        payer: (Pubkey, Account),
         minter: Option<Pubkey>,
         minter_roles_pda: Option<Pubkey>,
     ) -> Self {
         Self {
             mollusk,
-            its_root_pda,
-            its_root_account,
+            its_root,
             deployer,
-            deployer_account,
             program_id,
             payer,
-            payer_account,
             minter,
             minter_roles_pda,
         }
@@ -54,12 +45,12 @@ impl DeployInterchainTokenContext {
 }
 
 pub fn deploy_interchain_token_helper(
+    ctx: DeployInterchainTokenContext,
     salt: [u8; 32],
     name: String,
     symbol: String,
     decimals: u8,
     initial_supply: u64,
-    ctx: DeployInterchainTokenContext,
 ) -> (
     InstructionResult,
     Pubkey,
@@ -69,11 +60,11 @@ pub fn deploy_interchain_token_helper(
     Pubkey,
     Mollusk,
 ) {
-    let token_id = interchain_token_id(&ctx.deployer, &salt);
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, ctx.its_root_pda);
+    let token_id = interchain_token_id(&ctx.deployer.0, &salt);
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, ctx.its_root.0);
 
     let (token_mint_pda, _) = Pubkey::find_program_address(
-        &[INTERCHAIN_TOKEN_SEED, ctx.its_root_pda.as_ref(), &token_id],
+        &[INTERCHAIN_TOKEN_SEED, ctx.its_root.0.as_ref(), &token_id],
         &ctx.program_id,
     );
 
@@ -84,7 +75,7 @@ pub fn deploy_interchain_token_helper(
     );
 
     let deployer_ata = get_associated_token_address_with_program_id(
-        &ctx.deployer,
+        &ctx.deployer.0,
         &token_mint_pda,
         &spl_token_2022::ID,
     );
@@ -113,10 +104,10 @@ pub fn deploy_interchain_token_helper(
     let ix = Instruction {
         program_id: ctx.program_id,
         accounts: solana_axelar_its::accounts::DeployInterchainToken {
-            payer: ctx.payer,
-            deployer: ctx.deployer,
+            payer: ctx.payer.0,
+            deployer: ctx.deployer.0,
             system_program: solana_sdk::system_program::ID,
-            its_root_pda: ctx.its_root_pda,
+            its_root_pda: ctx.its_root.0,
             token_manager_pda,
             token_mint: token_mint_pda,
             token_manager_ata,
@@ -136,10 +127,10 @@ pub fn deploy_interchain_token_helper(
     };
 
     let accounts = vec![
-        (ctx.payer, ctx.payer_account),
-        (ctx.deployer, ctx.deployer_account),
+        (ctx.payer.0, ctx.payer.1),
+        (ctx.deployer.0, ctx.deployer.1),
         keyed_account_for_system_program(),
-        (ctx.its_root_pda, ctx.its_root_account),
+        (ctx.its_root.0, ctx.its_root.1),
         (
             token_manager_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),

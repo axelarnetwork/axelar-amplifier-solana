@@ -94,13 +94,10 @@ fn test_interchain_transfer_mint_burn() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account,
+        (payer, payer_account),
         None,
         None,
     );
@@ -114,12 +111,12 @@ fn test_interchain_transfer_mint_burn() {
         _metadata_account,
         mollusk,
     ) = deploy_interchain_token_helper(
+        ctx,
         salt,
         name.clone(),
         symbol.clone(),
         decimals,
         initial_supply,
-        ctx,
     );
 
     assert!(result.program_result.is_ok());

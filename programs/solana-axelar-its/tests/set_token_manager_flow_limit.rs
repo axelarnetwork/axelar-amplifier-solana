@@ -62,24 +62,21 @@ fn test_set_token_manager_flow_limit_success() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account.clone(),
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account.clone()),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         Some(minter),
         Some(minter_roles_pda),
     );
 
     let (result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
         salt,
         name.clone(),
         symbol.clone(),
         decimals,
         initial_supply,
-        ctx,
     );
 
     assert!(result.program_result.is_ok());
@@ -256,24 +253,21 @@ fn test_reject_set_token_manager_flow_limit_with_unauthorized_operator() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account.clone(),
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account.clone()),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         Some(minter),
         Some(minter_roles_pda),
     );
 
     let (result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
         salt,
         name.clone(),
         symbol.clone(),
         decimals,
         initial_supply,
-        ctx,
     );
 
     assert!(result.program_result.is_ok());
@@ -437,24 +431,21 @@ fn test_reject_set_token_manager_flow_limit_without_operator_role() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account.clone(),
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account.clone()),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         Some(minter),
         Some(minter_roles_pda),
     );
 
     let (result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
         salt,
         name.clone(),
         symbol.clone(),
         decimals,
         initial_supply,
-        ctx,
     );
 
     assert!(result.program_result.is_ok());

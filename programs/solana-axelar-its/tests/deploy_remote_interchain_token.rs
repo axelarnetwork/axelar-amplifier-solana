@@ -83,25 +83,22 @@ fn test_deploy_remote_interchain_token() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         None,
         None,
     );
 
     let (result, token_manager_pda, token_mint_pda, _, _, metadata_account, mollusk) =
         deploy_interchain_token_helper(
+            ctx,
             salt,
             name.clone(),
             symbol.clone(),
             decimals,
             initial_supply,
-            ctx,
         );
 
     assert!(result.program_result.is_ok());
@@ -200,25 +197,22 @@ fn test_reject_deploy_remote_interchain_token_with_no_token_manager() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         None,
         None,
     );
 
     let (result, token_manager_pda, token_mint_pda, _, _, metadata_account, mollusk) =
         deploy_interchain_token_helper(
+            ctx,
             salt,
             name.clone(),
             symbol.clone(),
             decimals,
             initial_supply,
-            ctx,
         );
 
     assert!(result.program_result.is_ok());
@@ -324,25 +318,22 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         None,
         None,
     );
 
     let (result, token_manager_pda, token_mint_pda, _, _, metadata_account, mollusk) =
         deploy_interchain_token_helper(
+            ctx,
             salt,
             name.clone(),
             symbol.clone(),
             decimals,
             initial_supply,
-            ctx,
         );
 
     assert!(result.program_result.is_ok());
@@ -445,25 +436,22 @@ fn test_reject_deploy_remote_interchain_token_for_missmatched_mint() {
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
         program_id,
-        payer,
-        payer_account.clone(),
+        (payer, payer_account.clone()),
         None,
         None,
     );
 
     let (result, token_manager_pda, token_mint_pda, _, _, metadata_account, mollusk) =
         deploy_interchain_token_helper(
+            ctx,
             salt,
             name.clone(),
             symbol.clone(),
             decimals,
             initial_supply,
-            ctx,
         );
 
     assert!(result.program_result.is_ok());
