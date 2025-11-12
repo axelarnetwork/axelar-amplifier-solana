@@ -3,23 +3,21 @@
 
 use anchor_lang::solana_program;
 use anchor_lang::AnchorSerialize;
-use anchor_lang::InstructionData;
-use anchor_lang::ToAccountMetas;
 use anchor_spl::token_2022::spl_token_2022;
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
 use solana_axelar_its::state::TokenManager;
+use solana_axelar_its_test_fixtures::deploy_remote_canonical_token::deploy_remote_canonical_token_helper;
 use solana_axelar_its_test_fixtures::init_gas_service;
 use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
 use solana_axelar_its_test_fixtures::initialize_mollusk;
 use solana_axelar_its_test_fixtures::register_canonical_interchain_token_helper;
 use solana_axelar_its_test_fixtures::setup_operator;
+use solana_axelar_its_test_fixtures::DeployRemoteCanonicalTokenContext;
 use solana_program::program_pack::Pack;
 use solana_sdk::signature::Keypair;
 use solana_sdk::signer::Signer;
@@ -166,123 +164,33 @@ fn test_deploy_remote_canonical_token() {
     };
 
     // Get gas treasury PDA
-    let (gas_treasury_pda, _gas_treasury_bump) = Pubkey::find_program_address(
+    let (gas_treasury_pda, _) = Pubkey::find_program_address(
         &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
         &solana_axelar_gas_service::id(),
     );
 
-    // Get call contract signing PDA
-    let (call_contract_signing_pda, _call_contract_signing_bump) = Pubkey::find_program_address(
-        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        &program_id,
-    );
+    let mint_account = result.get_account(&mint_pubkey).unwrap().clone();
+    let token_manager_account = result.get_account(&token_manager_pda).unwrap().clone();
 
-    // Get event authorities
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-
-    let (gas_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
-
-    let (event_authority, event_authority_account, program_account) =
-        mollusk_test_utils::get_event_authority_and_program_accounts(&program_id);
-
-    // Create the deploy remote canonical instruction
-    let deploy_remote_ix = solana_program::instruction::Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::DeployRemoteCanonicalInterchainToken {
-            payer: deployer,
-            token_mint: mint_pubkey,
-            metadata_account: metadata_account_pda,
-            token_manager_pda,
-            gateway_root_pda,
-            gateway_program: solana_axelar_gateway::ID,
-            system_program: solana_sdk::system_program::ID,
-            its_root_pda,
-            call_contract_signing_pda,
-            gateway_event_authority,
-            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-                gas_treasury: gas_treasury_pda,
-                gas_service: solana_axelar_gas_service::id(),
-                gas_event_authority,
-            },
-            event_authority,
-            program: program_id,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::DeployRemoteCanonicalInterchainToken {
-            destination_chain: destination_chain.clone(),
-            gas_value,
-        }
-        .data(),
+    let ctx = DeployRemoteCanonicalTokenContext {
+        mollusk,
+        deployer: (deployer, deployer_account),
+        mint: (mint_pubkey, mint_account),
+        metadata: (metadata_account_pda, metadata_account),
+        token_manager: (token_manager_pda, token_manager_account),
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        gas_treasury: (gas_treasury_pda, treasury_pda_account),
+        its_root: (its_root_pda, its_root_account),
     };
 
-    // Set up accounts for deploy remote canonical instruction
-    let deploy_accounts = vec![
-        (deployer, deployer_account.clone()),
-        (
-            mint_pubkey,
-            result.get_account(&mint_pubkey).unwrap().clone(),
-        ),
-        (metadata_account_pda, metadata_account),
-        (
-            token_manager_pda,
-            result.get_account(&token_manager_pda).unwrap().clone(),
-        ),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            solana_axelar_gateway::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (gas_treasury_pda, treasury_pda_account.clone()),
-        (
-            solana_axelar_gas_service::id(),
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        (its_root_pda, its_root_account.clone()),
-        (
-            call_contract_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            program_id,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            gas_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        // For event CPI
-        (event_authority, event_authority_account),
-        (program_id, program_account),
-    ];
+    let deploy_result = deploy_remote_canonical_token_helper(
+        ctx,
+        destination_chain,
+        gas_value,
+        vec![Check::success()],
+    );
 
-    let deploy_result = mollusk.process_instruction(&deploy_remote_ix, &deploy_accounts);
-
-    assert!(deploy_result.program_result.is_ok(),);
+    assert!(deploy_result.program_result.is_ok());
 }
 
 #[test]
@@ -383,9 +291,9 @@ fn test_reject_deploy_remote_canonical_token_with_mismatched_token_id() {
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let token_manager_account = result.get_account(&token_manager_pda).unwrap().clone();
 
-    // use an invalid token_id
-    let token_id = [123u8; 32];
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
+    // use an invalid token_id to create a mismatched token_manager_pda
+    let invalid_token_id = [123u8; 32];
+    let (mismatched_token_manager_pda, _) = TokenManager::find_pda(invalid_token_id, its_root_pda);
 
     // Get metadata account PDA
     let (metadata_account_pda, _metadata_bump) = Pubkey::find_program_address(
@@ -432,118 +340,25 @@ fn test_reject_deploy_remote_canonical_token_with_mismatched_token_id() {
         &solana_axelar_gas_service::id(),
     );
 
-    // Get call contract signing PDA
-    let (call_contract_signing_pda, _call_contract_signing_bump) = Pubkey::find_program_address(
-        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        &program_id,
-    );
+    let mint_account = result.get_account(&mint_pubkey).unwrap().clone();
 
-    // Get event authorities
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-
-    let (gas_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
-
-    let (event_authority, event_authority_account, program_account) =
-        mollusk_test_utils::get_event_authority_and_program_accounts(&program_id);
-
-    // Create the deploy remote canonical instruction
-    let deploy_remote_ix = solana_program::instruction::Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::DeployRemoteCanonicalInterchainToken {
-            payer: deployer,
-            token_mint: mint_pubkey,
-            metadata_account: metadata_account_pda,
-            token_manager_pda,
-            gateway_root_pda,
-            gateway_program: solana_axelar_gateway::ID,
-            system_program: solana_sdk::system_program::ID,
-            its_root_pda,
-            call_contract_signing_pda,
-            gateway_event_authority,
-            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-                gas_treasury: gas_treasury_pda,
-                gas_service: solana_axelar_gas_service::id(),
-                gas_event_authority,
-            },
-            event_authority,
-            program: program_id,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::DeployRemoteCanonicalInterchainToken {
-            destination_chain: destination_chain.clone(),
-            gas_value,
-        }
-        .data(),
+    let ctx = DeployRemoteCanonicalTokenContext {
+        mollusk,
+        deployer: (deployer, deployer_account),
+        mint: (mint_pubkey, mint_account),
+        metadata: (metadata_account_pda, metadata_account),
+        token_manager: (mismatched_token_manager_pda, token_manager_account), // Use the mismatched PDA with correct account data
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        gas_treasury: (gas_treasury_pda, treasury_pda_account),
+        its_root: (its_root_pda, its_root_account),
     };
-
-    // Set up accounts for deploy remote canonical instruction
-    let deploy_accounts = vec![
-        (deployer, deployer_account.clone()),
-        (
-            mint_pubkey,
-            result.get_account(&mint_pubkey).unwrap().clone(),
-        ),
-        (metadata_account_pda, metadata_account),
-        (token_manager_pda, token_manager_account),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            solana_axelar_gateway::ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (gas_treasury_pda, treasury_pda_account.clone()),
-        (
-            solana_axelar_gas_service::id(),
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        (its_root_pda, its_root_account.clone()),
-        (
-            call_contract_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            program_id,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            gas_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        // For event CPI
-        (event_authority, event_authority_account),
-        (program_id, program_account),
-    ];
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
     let deploy_result =
-        mollusk.process_and_validate_instruction(&deploy_remote_ix, &deploy_accounts, &checks);
+        deploy_remote_canonical_token_helper(ctx, destination_chain, gas_value, checks);
 
     assert!(deploy_result.program_result.is_err());
 }

@@ -27,3 +27,7 @@ pub use register_custom_token::*;
 
 pub mod execute;
 pub use execute::*;
+
+pub mod deploy_remote_canonical_token;
+pub use deploy_remote_canonical_token::*;
+
