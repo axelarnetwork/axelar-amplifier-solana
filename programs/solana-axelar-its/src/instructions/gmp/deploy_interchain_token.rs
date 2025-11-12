@@ -122,12 +122,35 @@ pub fn execute_deploy_interchain_token_handler(
     name: String,
     symbol: String,
     decimals: u8,
+    minter: Vec<u8>,
 ) -> Result<()> {
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
         msg!("Name and/or symbol length too long");
         return err!(ItsError::InvalidArgument);
+    }
+
+    match (
+        minter.is_empty(),
+        &ctx.accounts.minter,
+        &ctx.accounts.minter_roles_pda,
+    ) {
+        (true, None, None) => {
+            // Valid: No minter specified
+        }
+        (false, Some(minter_account), Some(_)) => {
+            // Valid: Minter specified with both accounts
+            if minter_account.key().to_bytes().as_ref() != minter.as_slice() {
+                msg!("Invalid minter configuration: minter argument doesn't match account");
+                return err!(ItsError::InvalidArgument);
+            }
+        }
+        _ => {
+            // All other combinations are invalid
+            msg!("Invalid minter configuration: minter field and optional accounts must be consistent");
+            return err!(ItsError::InvalidArgument);
+        }
     }
 
     // Call process_inbound_deploy directly with the context accounts
