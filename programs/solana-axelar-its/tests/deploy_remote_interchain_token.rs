@@ -98,6 +98,7 @@ fn test_deploy_remote_interchain_token() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(result.program_result.is_ok());
@@ -211,6 +212,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_token_manager() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(result.program_result.is_ok());
@@ -331,6 +333,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(result.program_result.is_ok());
@@ -448,6 +451,7 @@ fn test_reject_deploy_remote_interchain_token_for_missmatched_mint() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(result.program_result.is_ok());

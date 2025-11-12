@@ -5,9 +5,11 @@
 use anchor_lang::solana_program::program_pack::Pack;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
+use mollusk_svm::result::Check;
 use solana_axelar_its::{
     state::{TokenManager, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id_internal},
+    ItsError,
 };
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk,
@@ -89,6 +91,7 @@ fn test_deploy_interchain_token() {
         symbol.clone(),
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(
@@ -192,4 +195,65 @@ fn test_deploy_interchain_token() {
         metadata_symbol, symbol,
         "Metadata symbol should match the input symbol"
     );
+}
+
+#[test]
+fn test_reject_deploy_interchain_token_zero_supply_no_minter() {
+    let mollusk = initialize_mollusk();
+
+    let payer = Pubkey::new_unique();
+    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+
+    let deployer = Pubkey::new_unique();
+    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+
+    let operator = Pubkey::new_unique();
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
+
+    // Initialize ITS service first
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+        &mollusk,
+        payer,
+        &payer_account,
+        payer,
+        operator,
+        &operator_account,
+        chain_name.clone(),
+        its_hub_address.clone(),
+    );
+
+    // Create simple token deployment parameters
+    let salt = [1u8; 32];
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
+    let decimals = 9u8;
+    let initial_supply = 0u64; // invalid initial supply
+
+    let ctx = DeployInterchainTokenContext::new(
+        mollusk,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
+        (payer, payer_account),
+        None,
+        None,
+    );
+
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::ZeroSupplyToken).into(),
+    )];
+
+    let (result, _, _, _, _, _, _) = deploy_interchain_token_helper(
+        ctx,
+        salt,
+        name.clone(),
+        symbol.clone(),
+        decimals,
+        initial_supply,
+        checks,
+    );
+
+    assert!(result.program_result.is_err(),);
 }

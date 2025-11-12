@@ -76,6 +76,7 @@ fn test_set_token_manager_flow_limit_success() {
         symbol.clone(),
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(result.program_result.is_ok());
@@ -266,6 +267,7 @@ fn test_reject_set_token_manager_flow_limit_with_unauthorized_operator() {
         symbol.clone(),
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(result.program_result.is_ok());
@@ -443,6 +445,7 @@ fn test_reject_set_token_manager_flow_limit_without_operator_role() {
         symbol.clone(),
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(result.program_result.is_ok());

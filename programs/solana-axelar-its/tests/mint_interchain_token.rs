@@ -86,6 +86,7 @@ fn test_deploy_and_mint_interchain_token() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(deploy_result.program_result.is_ok());
@@ -265,6 +266,7 @@ fn test_reject_mint_interchain_token_invalid_authority() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(deploy_result.program_result.is_ok());
@@ -424,6 +426,7 @@ fn test_reject_mint_interchain_token_with_no_minter_role() {
             symbol.clone(),
             decimals,
             initial_supply,
+            vec![Check::success()],
         );
 
     assert!(deploy_result.program_result.is_ok());

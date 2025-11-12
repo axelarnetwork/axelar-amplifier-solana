@@ -67,8 +67,15 @@ fn test_remove_token_manager_flow_limiter() {
         Some(minter_roles_pda),
     );
 
-    let (deploy_result, token_manager_pda, _, _, _, _, mollusk) =
-        deploy_interchain_token_helper(ctx, salt, name, symbol, decimals, initial_supply);
+    let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
+        salt,
+        name,
+        symbol,
+        decimals,
+        initial_supply,
+        vec![Check::success()],
+    );
 
     assert!(
         deploy_result.program_result.is_ok(),
@@ -243,8 +250,15 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
         Some(minter_roles_pda),
     );
 
-    let (deploy_result, token_manager_pda, _, _, _, _, mollusk) =
-        deploy_interchain_token_helper(ctx, salt, name, symbol, decimals, initial_supply);
+    let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
+        salt,
+        name,
+        symbol,
+        decimals,
+        initial_supply,
+        vec![Check::success()],
+    );
 
     assert!(
         deploy_result.program_result.is_ok(),
@@ -419,8 +433,15 @@ fn test_reject_remove_token_manager_flow_limiter_without_operator_role() {
         Some(minter_roles_pda),
     );
 
-    let (deploy_result, token_manager_pda, _, _, _, _, mollusk) =
-        deploy_interchain_token_helper(ctx, salt, name, symbol, decimals, initial_supply);
+    let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
+        ctx,
+        salt,
+        name,
+        symbol,
+        decimals,
+        initial_supply,
+        vec![Check::success()],
+    );
 
     assert!(
         deploy_result.program_result.is_ok(),

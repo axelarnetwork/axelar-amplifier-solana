@@ -74,6 +74,7 @@ fn test_transfer_token_manager_operatorship_success() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());
@@ -239,6 +240,7 @@ fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() 
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());
@@ -367,6 +369,7 @@ fn test_reject_transfer_token_manager_operatorship_without_operator_role() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());

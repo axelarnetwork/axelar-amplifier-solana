@@ -115,6 +115,7 @@ fn test_interchain_transfer_mint_burn() {
         symbol.clone(),
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(result.program_result.is_ok());

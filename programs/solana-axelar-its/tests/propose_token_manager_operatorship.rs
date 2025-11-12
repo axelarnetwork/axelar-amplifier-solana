@@ -73,6 +73,7 @@ fn test_propose_token_manager_operatorship() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());
@@ -219,6 +220,7 @@ fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());
@@ -345,6 +347,7 @@ fn test_reject_propose_token_manager_operatorship_without_operator_role() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());

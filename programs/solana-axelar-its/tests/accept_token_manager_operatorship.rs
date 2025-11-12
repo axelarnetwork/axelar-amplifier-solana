@@ -3,6 +3,7 @@
 
 use anchor_lang::AccountDeserialize;
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_svm::result::Check;
 use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
@@ -72,6 +73,7 @@ fn test_accept_token_manager_operatorship() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());
@@ -272,6 +274,7 @@ fn test_reject_invalid_token_manager_operatorship() {
         token_symbol,
         decimals,
         initial_supply,
+        vec![Check::success()],
     );
 
     assert!(deploy_result.program_result.is_ok());

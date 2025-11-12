@@ -4,7 +4,7 @@ use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
     token_2022::spl_token_2022::{self},
 };
-use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_its::{
@@ -48,6 +48,7 @@ pub fn deploy_interchain_token_helper(
     symbol: String,
     decimals: u8,
     initial_supply: u64,
+    checks: Vec<Check>,
 ) -> (
     InstructionResult,
     Pubkey,
@@ -198,7 +199,8 @@ pub fn deploy_interchain_token_helper(
     ];
 
     (
-        ctx.mollusk.process_instruction(&ix, &accounts),
+        ctx.mollusk
+            .process_and_validate_instruction(&ix, &accounts, &checks),
         token_manager_pda,
         token_mint_pda,
         token_manager_ata,
