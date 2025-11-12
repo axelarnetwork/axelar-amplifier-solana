@@ -47,6 +47,10 @@ jobs:
           # Quick install Anchor + all dependencies
           curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
 
+          # Add Solana to PATH
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
       - name: Build all programs
         run: |
           echo "Warning: All declare_id!() values should already be set in the programs prior to building, and corresponding keypairs should be available in 1pass."
