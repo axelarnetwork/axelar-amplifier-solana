@@ -9,9 +9,9 @@ use ethers::types::{Address, Bytes, U256};
 use ethers::utils::keccak256;
 use evm_contracts_rs::contracts::{
     axelar_amplifier_gateway, axelar_amplifier_gateway_proxy, axelar_auth_weighted,
-    axelar_create3_deployer, axelar_gas_service, axelar_memo, solana_axelar_multicall,
-    custom_test_token, example_encoder, gateway_caller, interchain_proxy, interchain_token,
-    interchain_token_deployer, interchain_token_factory, interchain_token_service, token_handler,
+    axelar_create3_deployer, axelar_gas_service, axelar_memo, custom_test_token, example_encoder,
+    gateway_caller, interchain_proxy, interchain_token, interchain_token_deployer,
+    interchain_token_factory, interchain_token_service, solana_axelar_multicall, token_handler,
     token_manager, token_manager_deployer,
 };
 

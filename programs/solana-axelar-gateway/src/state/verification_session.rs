@@ -2,9 +2,9 @@ use crate::U128;
 use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use solana_axelar_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use bitvec::prelude::*;
 use bytemuck::{Pod, Zeroable};
+use solana_axelar_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use udigest::{encoding::EncodeValue, Digestable};
 
 /// This PDA tracks that all the signatures for a given payload get verified
