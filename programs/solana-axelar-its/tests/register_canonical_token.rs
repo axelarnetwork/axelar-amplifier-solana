@@ -26,7 +26,6 @@ use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_register_canonical_token() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -81,11 +80,8 @@ fn test_register_canonical_token() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 
@@ -133,7 +129,6 @@ fn test_register_canonical_token() {
 
 #[test]
 fn test_reject_register_canonical_token_with_invalid_metadata() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -170,11 +165,8 @@ fn test_reject_register_canonical_token_with_invalid_metadata() {
         vec![], // empty mint data
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         checks,
     );
 

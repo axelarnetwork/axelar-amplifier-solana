@@ -16,7 +16,6 @@ pub struct DeployInterchainTokenContext {
     mollusk: Mollusk,
     its_root: (Pubkey, Account),
     deployer: (Pubkey, Account),
-    program_id: Pubkey,
     payer: (Pubkey, Account),
     minter: Option<Pubkey>,
     minter_roles_pda: Option<Pubkey>,
@@ -27,7 +26,6 @@ impl DeployInterchainTokenContext {
         mollusk: Mollusk,
         its_root: (Pubkey, Account),
         deployer: (Pubkey, Account),
-        program_id: Pubkey,
         payer: (Pubkey, Account),
         minter: Option<Pubkey>,
         minter_roles_pda: Option<Pubkey>,
@@ -36,7 +34,6 @@ impl DeployInterchainTokenContext {
             mollusk,
             its_root,
             deployer,
-            program_id,
             payer,
             minter,
             minter_roles_pda,
@@ -60,12 +57,13 @@ pub fn deploy_interchain_token_helper(
     Pubkey,
     Mollusk,
 ) {
+    let program_id = solana_axelar_its::id();
     let token_id = interchain_token_id(&ctx.deployer.0, &salt);
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, ctx.its_root.0);
 
     let (token_mint_pda, _) = Pubkey::find_program_address(
         &[INTERCHAIN_TOKEN_SEED, ctx.its_root.0.as_ref(), &token_id],
-        &ctx.program_id,
+        &program_id,
     );
 
     let token_manager_ata = get_associated_token_address_with_program_id(
@@ -90,7 +88,7 @@ pub fn deploy_interchain_token_helper(
     );
 
     let (event_authority, event_authority_account, program_account) =
-        get_event_authority_and_program_accounts(&ctx.program_id);
+        get_event_authority_and_program_accounts(&program_id);
 
     let ix_data = solana_axelar_its::instruction::DeployInterchainToken {
         salt,
@@ -102,7 +100,7 @@ pub fn deploy_interchain_token_helper(
     .data();
 
     let ix = Instruction {
-        program_id: ctx.program_id,
+        program_id,
         accounts: solana_axelar_its::accounts::DeployInterchainToken {
             payer: ctx.payer.0,
             deployer: ctx.deployer.0,
@@ -120,7 +118,7 @@ pub fn deploy_interchain_token_helper(
             minter: ctx.minter,
             minter_roles_pda: ctx.minter_roles_pda,
             event_authority,
-            program: ctx.program_id,
+            program: program_id,
         }
         .to_account_metas(None),
         data: ix_data,
@@ -187,16 +185,16 @@ pub fn deploy_interchain_token_helper(
         ),
         // Minter accounts - use program_id as placeholder if None
         (
-            ctx.minter.unwrap_or(ctx.program_id),
+            ctx.minter.unwrap_or(program_id),
             Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID),
         ),
         (
-            ctx.minter_roles_pda.unwrap_or(ctx.program_id),
+            ctx.minter_roles_pda.unwrap_or(program_id),
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         // For event CPI
         (event_authority, event_authority_account),
-        (ctx.program_id, program_account),
+        (program_id, program_account),
     ];
 
     (

@@ -1,3 +1,4 @@
+use crate::create_rent_sysvar_data;
 use anchor_lang::prelude::Rent;
 use anchor_lang::AnchorSerialize;
 use anchor_lang::{InstructionData, ToAccountMetas};
@@ -18,20 +19,16 @@ use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 
-use crate::create_rent_sysvar_data;
-
 pub fn register_canonical_interchain_token_helper(
     mollusk: &Mollusk,
     mint_data: Vec<u8>,
     mint_keypair: &Keypair,
     mint_authority: &Keypair,
-    payer: Pubkey,
-    payer_account: &Account,
-    its_root_pda: Pubkey,
-    its_root_account: &Account,
-    program_id: Pubkey,
+    payer: (Pubkey, Account),
+    its_root: (Pubkey, Account),
     checks: Vec<Check>,
 ) -> InstructionResult {
+    let program_id = solana_axelar_its::id();
     let mint_pubkey = mint_keypair.pubkey();
 
     let mint_account = Account {
@@ -86,7 +83,7 @@ pub fn register_canonical_interchain_token_helper(
 
     // Calculate the token ID and manager PDA
     let token_id = canonical_interchain_token_id(&mint_pubkey);
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root.0);
 
     // Calculate the token manager ATA
     let token_manager_ata = get_associated_token_address_with_program_id(
@@ -99,10 +96,10 @@ pub fn register_canonical_interchain_token_helper(
     let ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::RegisterCanonicalInterchainToken {
-            payer,
+            payer: payer.0,
             metadata_account: metadata_account_pda,
             system_program: solana_sdk::system_program::ID,
-            its_root_pda,
+            its_root_pda: its_root.0,
             token_manager_pda,
             token_mint: mint_pubkey,
             token_manager_ata,
@@ -118,10 +115,10 @@ pub fn register_canonical_interchain_token_helper(
 
     // Set up accounts
     let accounts = vec![
-        (payer, payer_account.clone()),
+        (payer.0, payer.1),
         (metadata_account_pda, metadata_account),
         keyed_account_for_system_program(),
-        (its_root_pda, its_root_account.clone()),
+        (its_root.0, its_root.1),
         (
             token_manager_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),

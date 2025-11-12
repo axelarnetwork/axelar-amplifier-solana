@@ -141,13 +141,9 @@ fn test_execute_link_token() {
 
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {
@@ -305,13 +301,9 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
 
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {
@@ -465,13 +457,9 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
 
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {
@@ -627,13 +615,9 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
 
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {

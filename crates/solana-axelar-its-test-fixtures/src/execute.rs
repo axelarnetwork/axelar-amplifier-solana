@@ -1,4 +1,4 @@
-use anchor_lang::{InstructionData, ToAccountMetas};
+use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
 use mollusk_svm::result::Check;
 use mollusk_svm::Mollusk;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
@@ -8,19 +8,13 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 
 use crate::{create_rent_sysvar_data, get_message_signing_pda};
 
-/// Context for executing ITS instructions
 pub struct ExecuteTestContext {
     pub mollusk: Mollusk,
-    pub gateway_root_pda: Pubkey,
-    pub gateway_root_pda_account: Account,
-    pub its_root_pda: Pubkey,
-    pub its_root_account: Account,
-    pub payer: Pubkey,
-    pub payer_account: Account,
-    pub program_id: Pubkey,
+    pub gateway_root: (Pubkey, Account),
+    pub its_root: (Pubkey, Account),
+    pub payer: (Pubkey, Account),
 }
 
-/// Parameters for the execute instruction
 pub struct ExecuteTestParams {
     pub message: Message,
     pub payload: Vec<u8>,
@@ -29,30 +23,29 @@ pub struct ExecuteTestParams {
     pub incoming_message_account_data: Vec<u8>,
 }
 
-/// Account configuration for execute instruction
 pub struct ExecuteTestAccounts {
     /// Core ITS accounts that are always needed
     pub core_accounts: Vec<(Pubkey, Account)>,
     /// Extra accounts specific to the instruction type (e.g., for deploy, link, transfer)
     pub extra_accounts: Vec<(Pubkey, Account)>,
     /// Extra account metas for remaining accounts
-    pub extra_account_metas: Vec<anchor_lang::solana_program::instruction::AccountMeta>,
+    pub extra_account_metas: Vec<AccountMeta>,
 }
 
-/// Result of the execute test
 pub struct ExecuteTestResult {
     pub result: mollusk_svm::result::InstructionResult,
     pub instruction: Instruction,
     pub all_accounts: Vec<(Pubkey, Account)>,
 }
 
-/// Helper function to execute ITS instructions with common setup
 pub fn execute_its_instruction(
     context: ExecuteTestContext,
     params: ExecuteTestParams,
     accounts_config: ExecuteTestAccounts,
     checks: Vec<Check>,
 ) -> ExecuteTestResult {
+    let program_id = solana_axelar_its::id();
+
     let ExecuteTestParams {
         message,
         payload,
@@ -67,8 +60,7 @@ pub fn execute_its_instruction(
         extra_account_metas,
     } = accounts_config;
 
-    // Derive required PDAs
-    let (token_manager_pda, _) = TokenManager::find_pda(token_id, context.its_root_pda);
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, context.its_root.0);
 
     let (signing_pda, _) = get_message_signing_pda(&message);
 
@@ -76,9 +68,8 @@ pub fn execute_its_instruction(
         get_event_authority_and_program_accounts(&GATEWAY_PROGRAM_ID);
 
     let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&context.program_id);
+        get_event_authority_and_program_accounts(&program_id);
 
-    // Create instruction data
     let instruction_data = solana_axelar_its::instruction::Execute {
         message: message.clone(),
         payload,
@@ -88,15 +79,15 @@ pub fn execute_its_instruction(
     let executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
         incoming_message_pda,
         signing_pda,
-        gateway_root_pda: context.gateway_root_pda,
+        gateway_root_pda: context.gateway_root.0,
         event_authority: gateway_event_authority,
         axelar_gateway_program: GATEWAY_PROGRAM_ID,
     };
 
     let base_accounts = solana_axelar_its::accounts::Execute {
         executable: executable_accounts,
-        payer: context.payer,
-        its_root_pda: context.its_root_pda,
+        payer: context.payer.0,
+        its_root_pda: context.its_root.0,
         token_manager_pda,
         token_mint: core_accounts[0].0, // First core account should be token_mint
         token_manager_ata: core_accounts[1].0, // Second should be token_manager_ata
@@ -104,14 +95,14 @@ pub fn execute_its_instruction(
         associated_token_program: anchor_spl::associated_token::spl_associated_token_account::id(),
         system_program: solana_sdk::system_program::ID,
         event_authority: its_event_authority,
-        program: context.program_id,
+        program: program_id,
     };
 
     let mut account_metas = base_accounts.to_account_metas(None);
     account_metas.extend(extra_account_metas);
 
     let execute_instruction = Instruction {
-        program_id: context.program_id,
+        program_id,
         accounts: account_metas,
         data: instruction_data.data(),
     };
@@ -137,7 +128,7 @@ pub fn execute_its_instruction(
             signing_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (context.gateway_root_pda, context.gateway_root_pda_account),
+        (context.gateway_root.0, context.gateway_root.1),
         (
             gateway_event_authority,
             Account::new(0, 0, &solana_sdk::system_program::ID),
@@ -153,8 +144,8 @@ pub fn execute_its_instruction(
             },
         ),
         // Base ITS accounts
-        (context.payer, context.payer_account.clone()),
-        (context.its_root_pda, context.its_root_account),
+        (context.payer.0, context.payer.1),
+        (context.its_root.0, context.its_root.1),
         (
             token_manager_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
@@ -187,7 +178,7 @@ pub fn execute_its_instruction(
     // Add event CPI accounts
     execute_accounts.extend(vec![
         (its_event_authority, event_authority_account),
-        (context.program_id, its_program_account),
+        (program_id, its_program_account),
     ]);
 
     // Execute the instruction

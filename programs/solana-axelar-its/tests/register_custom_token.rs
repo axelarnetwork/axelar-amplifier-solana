@@ -24,7 +24,6 @@ use solana_sdk::{
 
 #[test]
 fn test_register_custom_token_without_operator() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -61,15 +60,10 @@ fn test_register_custom_token_without_operator() {
 
     let ctx = RegisterCustomTokenContext {
         mollusk,
-        payer,
-        payer_account,
-        deployer,
-        deployer_account,
-        its_root_pda,
-        its_root_account,
-        token_mint,
-        token_mint_account,
-        program_id,
+        payer: (payer, payer_account.clone()),
+        deployer: (deployer, deployer_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        token_mint: (token_mint, token_mint_account),
     };
 
     let params = RegisterCustomTokenParams {
@@ -111,7 +105,6 @@ fn test_register_custom_token_without_operator() {
 
 #[test]
 fn test_reject_register_custom_token_with_native_interchain() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -148,15 +141,10 @@ fn test_reject_register_custom_token_with_native_interchain() {
 
     let ctx = RegisterCustomTokenContext {
         mollusk,
-        payer,
-        payer_account,
-        deployer,
-        deployer_account,
-        its_root_pda,
-        its_root_account,
-        token_mint,
-        token_mint_account,
-        program_id,
+        payer: (payer, payer_account.clone()),
+        deployer: (deployer, deployer_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        token_mint: (token_mint, token_mint_account),
     };
 
     let params = RegisterCustomTokenParams {
@@ -175,7 +163,6 @@ fn test_reject_register_custom_token_with_native_interchain() {
 
 #[test]
 fn test_register_custom_token_with_operator() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -213,15 +200,10 @@ fn test_register_custom_token_with_operator() {
 
     let ctx = RegisterCustomTokenContext {
         mollusk,
-        payer,
-        payer_account,
-        deployer,
-        deployer_account,
-        its_root_pda,
-        its_root_account,
-        token_mint,
-        token_mint_account,
-        program_id,
+        payer: (payer, payer_account.clone()),
+        deployer: (deployer, deployer_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        token_mint: (token_mint, token_mint_account),
     };
 
     let params = RegisterCustomTokenParams {

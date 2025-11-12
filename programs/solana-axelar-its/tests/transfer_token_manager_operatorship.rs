@@ -62,7 +62,6 @@ fn test_transfer_token_manager_operatorship_success() {
         mollusk,
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
-        program_id,
         (payer, payer_account.clone()),
         Some(current_operator), // minter (will get OPERATOR role for token manager)
         Some(minter_roles_pda), // minter_roles_pda
@@ -228,7 +227,6 @@ fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() 
         mollusk,
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
-        program_id,
         (payer, payer_account.clone()),
         Some(current_operator), // minter (will get OPERATOR role for token manager)
         Some(minter_roles_pda), // minter_roles_pda
@@ -357,7 +355,6 @@ fn test_reject_transfer_token_manager_operatorship_without_operator_role() {
         mollusk,
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
-        program_id,
         (payer, payer_account.clone()),
         Some(current_operator), // minter (will get OPERATOR role for token manager)
         Some(minter_roles_pda), // minter_roles_pda

@@ -52,7 +52,6 @@ fn test_link_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -82,18 +81,12 @@ fn test_link_token() {
     let mint_authority = Pubkey::new_unique();
     let (token_mint, token_mint_account) = create_test_mint(mint_authority);
 
-    // Use the register custom token helper
     let register_ctx = RegisterCustomTokenContext {
         mollusk,
-        payer,
-        payer_account: payer_account.clone(),
-        deployer,
-        deployer_account: deployer_account.clone(),
-        its_root_pda,
-        its_root_account: its_root_account.clone(),
-        token_mint,
-        token_mint_account,
-        program_id,
+        payer: (payer, payer_account.clone()),
+        deployer: (deployer, deployer_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        token_mint: (token_mint, token_mint_account),
     };
 
     let salt = [2u8; 32];
@@ -135,19 +128,12 @@ fn test_link_token() {
     // Now use the helper function for the link token part
     let ctx = LinkTokenContext {
         mollusk,
-        payer,
-        payer_account,
-        deployer,
-        deployer_account,
-        its_root_pda,
-        its_root_account,
-        token_manager_pda,
-        token_manager_account: token_manager_account.clone(),
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        gas_treasury,
-        treasury_account,
-        program_id,
+        payer: (payer, payer_account),
+        deployer: (deployer, deployer_account),
+        its_root: (its_root_pda, its_root_account),
+        token_manager: (token_manager_pda, token_manager_account.clone()),
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        gas_treasury: (gas_treasury, treasury_account),
     };
 
     let params = LinkTokenParams {
@@ -195,7 +181,6 @@ fn test_reject_link_token_untrusted_destination_chain() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -230,15 +215,10 @@ fn test_reject_link_token_untrusted_destination_chain() {
 
     let register_ctx = RegisterCustomTokenContext {
         mollusk,
-        payer,
-        payer_account: payer_account.clone(),
-        deployer,
-        deployer_account: deployer_account.clone(),
-        its_root_pda,
-        its_root_account: its_root_account.clone(),
-        token_mint,
-        token_mint_account,
-        program_id,
+        payer: (payer, payer_account.clone()),
+        deployer: (deployer, deployer_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        token_mint: (token_mint, token_mint_account),
     };
 
     let register_params = RegisterCustomTokenParams {
@@ -271,19 +251,12 @@ fn test_reject_link_token_untrusted_destination_chain() {
 
     let ctx = LinkTokenContext {
         mollusk,
-        payer,
-        payer_account,
-        deployer,
-        deployer_account,
-        its_root_pda,
-        its_root_account,
-        token_manager_pda,
-        token_manager_account: token_manager_account.clone(),
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        gas_treasury,
-        treasury_account,
-        program_id,
+        payer: (payer, payer_account),
+        deployer: (deployer, deployer_account),
+        its_root: (its_root_pda, its_root_account),
+        token_manager: (token_manager_pda, token_manager_account.clone()),
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        gas_treasury: (gas_treasury, treasury_account),
     };
 
     let params = LinkTokenParams {
@@ -334,7 +307,6 @@ fn test_reject_link_token_invalid_destination_chain() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -370,15 +342,10 @@ fn test_reject_link_token_invalid_destination_chain() {
 
     let register_ctx = RegisterCustomTokenContext {
         mollusk,
-        payer,
-        payer_account: payer_account.clone(),
-        deployer,
-        deployer_account: deployer_account.clone(),
-        its_root_pda,
-        its_root_account: its_root_account.clone(),
-        token_mint,
-        token_mint_account,
-        program_id,
+        payer: (payer, payer_account.clone()),
+        deployer: (deployer, deployer_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        token_mint: (token_mint, token_mint_account),
     };
 
     let register_params = RegisterCustomTokenParams {
@@ -412,22 +379,14 @@ fn test_reject_link_token_invalid_destination_chain() {
         &solana_axelar_gas_service::ID,
     );
 
-    // Now use the helper function for the link token part with INVALID destination chain
     let ctx = LinkTokenContext {
         mollusk,
-        payer,
-        payer_account,
-        deployer,
-        deployer_account,
-        its_root_pda,
-        its_root_account,
-        token_manager_pda,
-        token_manager_account: token_manager_account.clone(),
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        gas_treasury,
-        treasury_account,
-        program_id,
+        payer: (payer, payer_account),
+        deployer: (deployer, deployer_account),
+        its_root: (its_root_pda, its_root_account),
+        token_manager: (token_manager_pda, token_manager_account.clone()),
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        gas_treasury: (gas_treasury, treasury_account),
     };
 
     let params = LinkTokenParams {

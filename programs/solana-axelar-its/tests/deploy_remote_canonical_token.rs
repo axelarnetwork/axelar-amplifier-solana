@@ -52,7 +52,6 @@ fn test_deploy_remote_canonical_token() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -102,11 +101,8 @@ fn test_deploy_remote_canonical_token() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 
@@ -222,7 +218,6 @@ fn test_reject_deploy_remote_canonical_token_with_mismatched_token_id() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -272,11 +267,8 @@ fn test_reject_deploy_remote_canonical_token_with_mismatched_token_id() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 

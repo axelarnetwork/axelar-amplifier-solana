@@ -8,19 +8,12 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 
 pub struct LinkTokenContext {
     pub mollusk: Mollusk,
-    pub payer: Pubkey,
-    pub payer_account: Account,
-    pub deployer: Pubkey,
-    pub deployer_account: Account,
-    pub its_root_pda: Pubkey,
-    pub its_root_account: Account,
-    pub token_manager_pda: Pubkey,
-    pub token_manager_account: Account,
-    pub gateway_root_pda: Pubkey,
-    pub gateway_root_pda_account: Account,
-    pub gas_treasury: Pubkey,
-    pub treasury_account: Account,
-    pub program_id: Pubkey,
+    pub payer: (Pubkey, Account),
+    pub deployer: (Pubkey, Account),
+    pub its_root: (Pubkey, Account),
+    pub token_manager: (Pubkey, Account),
+    pub gateway_root: (Pubkey, Account),
+    pub gas_treasury: (Pubkey, Account),
 }
 
 pub struct LinkTokenParams {
@@ -43,7 +36,7 @@ pub fn execute_link_token_helper(
     params: LinkTokenParams,
     checks: Vec<Check>,
 ) -> LinkTokenResult {
-    let program_id = ctx.program_id;
+    let program_id = solana_axelar_its::id();
 
     // Derive required PDAs
     let (call_contract_signing_pda, _) = Pubkey::find_program_address(
@@ -71,17 +64,17 @@ pub fn execute_link_token_helper(
 
     // Build accounts
     let link_accounts = solana_axelar_its::accounts::LinkToken {
-        payer: ctx.payer,
-        deployer: ctx.deployer,
-        its_root_pda: ctx.its_root_pda,
-        token_manager_pda: ctx.token_manager_pda,
-        gateway_root_pda: ctx.gateway_root_pda,
+        payer: ctx.payer.0,
+        deployer: ctx.deployer.0,
+        its_root_pda: ctx.its_root.0,
+        token_manager_pda: ctx.token_manager.0,
+        gateway_root_pda: ctx.gateway_root.0,
         gateway_program: solana_axelar_gateway::ID,
         system_program: solana_sdk::system_program::ID,
         call_contract_signing_pda,
         gateway_event_authority,
         gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-            gas_treasury: ctx.gas_treasury,
+            gas_treasury: ctx.gas_treasury.0,
             gas_service: solana_axelar_gas_service::ID,
             gas_event_authority,
         },
@@ -98,10 +91,10 @@ pub fn execute_link_token_helper(
 
     // Setup accounts for mollusk
     let link_mollusk_accounts = vec![
-        (ctx.payer, ctx.payer_account),
-        (ctx.deployer, ctx.deployer_account),
-        (ctx.token_manager_pda, ctx.token_manager_account.clone()),
-        (ctx.gateway_root_pda, ctx.gateway_root_pda_account.clone()),
+        (ctx.payer.0, ctx.payer.1),
+        (ctx.deployer.0, ctx.deployer.1),
+        (ctx.token_manager.0, ctx.token_manager.1),
+        (ctx.gateway_root.0, ctx.gateway_root.1),
         (
             solana_axelar_gateway::ID,
             Account {
@@ -112,7 +105,7 @@ pub fn execute_link_token_helper(
                 rent_epoch: 0,
             },
         ),
-        (ctx.gas_treasury, ctx.treasury_account),
+        (ctx.gas_treasury.0, ctx.gas_treasury.1),
         (
             solana_axelar_gas_service::ID,
             Account {
@@ -124,7 +117,7 @@ pub fn execute_link_token_helper(
             },
         ),
         keyed_account_for_system_program(),
-        (ctx.its_root_pda, ctx.its_root_account),
+        (ctx.its_root.0, ctx.its_root.1),
         (
             call_contract_signing_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),

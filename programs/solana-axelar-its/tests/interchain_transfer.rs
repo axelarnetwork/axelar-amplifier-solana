@@ -60,7 +60,6 @@ fn test_interchain_transfer_mint_burn() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -96,7 +95,6 @@ fn test_interchain_transfer_mint_burn() {
         mollusk,
         (its_root_pda, its_root_account),
         (deployer, deployer_account),
-        program_id,
         (payer, payer_account),
         None,
         None,
@@ -198,7 +196,6 @@ fn test_interchain_transfer_lock_unlock() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -248,11 +245,8 @@ fn test_interchain_transfer_lock_unlock() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 
@@ -369,7 +363,6 @@ fn test_reject_interchain_transfer_with_invalid_token_id() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -419,11 +412,8 @@ fn test_reject_interchain_transfer_with_invalid_token_id() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 
@@ -537,7 +527,6 @@ fn test_reject_interchain_transfer_if_sender_has_no_tokens() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -587,11 +576,8 @@ fn test_reject_interchain_transfer_if_sender_has_no_tokens() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 
@@ -703,7 +689,6 @@ fn test_reject_interchain_transfer_if_amount_is_0() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -753,11 +738,8 @@ fn test_reject_interchain_transfer_if_amount_is_0() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 
@@ -869,7 +851,6 @@ fn test_reject_interchain_transfer_if_destination_address_is_empty() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -919,11 +900,8 @@ fn test_reject_interchain_transfer_if_destination_address_is_empty() {
         mint_data,
         &mint_keypair,
         &mint_authority,
-        payer,
-        &payer_account,
-        its_root_pda,
-        &its_root_account,
-        program_id,
+        (payer, payer_account),
+        (its_root_pda, its_root_account.clone()),
         vec![Check::success()],
     );
 

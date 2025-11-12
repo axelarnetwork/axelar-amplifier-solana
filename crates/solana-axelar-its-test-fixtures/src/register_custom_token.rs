@@ -8,15 +8,10 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 
 pub struct RegisterCustomTokenContext {
     pub mollusk: Mollusk,
-    pub payer: Pubkey,
-    pub payer_account: Account,
-    pub deployer: Pubkey,
-    pub deployer_account: Account,
-    pub its_root_pda: Pubkey,
-    pub its_root_account: Account,
-    pub token_mint: Pubkey,
-    pub token_mint_account: Account,
-    pub program_id: Pubkey,
+    pub payer: (Pubkey, Account),
+    pub deployer: (Pubkey, Account),
+    pub its_root: (Pubkey, Account),
+    pub token_mint: (Pubkey, Account),
 }
 
 pub struct RegisterCustomTokenParams {
@@ -39,22 +34,22 @@ pub fn execute_register_custom_token_helper(
     params: RegisterCustomTokenParams,
     checks: Vec<Check>,
 ) -> RegisterCustomTokenResult {
-    let program_id = ctx.program_id;
+    let program_id = solana_axelar_its::id();
 
     // Calculate token ID and derive PDAs
     let token_id = {
         let deploy_salt =
-            solana_axelar_its::utils::linked_token_deployer_salt(&ctx.deployer, &params.salt);
+            solana_axelar_its::utils::linked_token_deployer_salt(&ctx.deployer.0, &params.salt);
         solana_axelar_its::utils::interchain_token_id_internal(&deploy_salt)
     };
 
     let (token_manager_pda, _) =
-        solana_axelar_its::state::TokenManager::find_pda(token_id, ctx.its_root_pda);
+        solana_axelar_its::state::TokenManager::find_pda(token_id, ctx.its_root.0);
 
     let token_manager_ata =
         anchor_spl::associated_token::get_associated_token_address_with_program_id(
             &token_manager_pda,
-            &ctx.token_mint,
+            &ctx.token_mint.0,
             &anchor_spl::token_2022::spl_token_2022::ID,
         );
 
@@ -78,12 +73,12 @@ pub fn execute_register_custom_token_helper(
 
     // Build account metas
     let accounts = solana_axelar_its::accounts::RegisterCustomToken {
-        payer: ctx.payer,
-        deployer: ctx.deployer,
+        payer: ctx.payer.0,
+        deployer: ctx.deployer.0,
         system_program: solana_sdk::system_program::ID,
-        its_root_pda: ctx.its_root_pda,
+        its_root_pda: ctx.its_root.0,
         token_manager_pda,
-        token_mint: ctx.token_mint,
+        token_mint: ctx.token_mint.0,
         token_manager_ata,
         token_program: anchor_spl::token_2022::spl_token_2022::ID,
         associated_token_program: anchor_spl::associated_token::ID,
@@ -102,15 +97,15 @@ pub fn execute_register_custom_token_helper(
 
     // Setup accounts for mollusk
     let mut mollusk_accounts = vec![
-        (ctx.payer, ctx.payer_account),
-        (ctx.deployer, ctx.deployer_account),
+        (ctx.payer.0, ctx.payer.1),
+        (ctx.deployer.0, ctx.deployer.1),
         keyed_account_for_system_program(),
-        (ctx.its_root_pda, ctx.its_root_account),
+        (ctx.its_root.0, ctx.its_root.1),
         (
             token_manager_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
-        (ctx.token_mint, ctx.token_mint_account),
+        (ctx.token_mint.0, ctx.token_mint.1),
         (
             token_manager_ata,
             Account::new(0, 0, &solana_sdk::system_program::ID),

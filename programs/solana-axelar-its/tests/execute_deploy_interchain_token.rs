@@ -130,13 +130,9 @@ fn test_execute_deploy_interchain_token_success() {
     // Step 11: Execute using helper function
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {
@@ -343,13 +339,9 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     // Step 11: Execute using helper function
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {
@@ -524,13 +516,9 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
     // Step 11: Execute using helper function
     let context = ExecuteTestContext {
         mollusk: setup.mollusk,
-        gateway_root_pda,
-        gateway_root_pda_account: gateway_root_pda_account.clone(),
-        its_root_pda,
-        its_root_account,
-        payer,
-        payer_account: payer_account.clone(),
-        program_id,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account),
+        payer: (payer, payer_account.clone()),
     };
 
     let params = ExecuteTestParams {

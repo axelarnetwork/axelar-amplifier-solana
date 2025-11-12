@@ -18,7 +18,6 @@ use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_deploy_interchain_token() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let payer = Pubkey::new_unique();
@@ -70,7 +69,6 @@ fn test_deploy_interchain_token() {
         mollusk,
         (its_root_pda, its_root_account),
         (deployer, deployer_account),
-        program_id,
         (payer, payer_account),
         Some(minter),
         Some(minter_roles_pda),
