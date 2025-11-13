@@ -2,11 +2,10 @@ use crate::GatewayError;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use bitvec::prelude::*;
-use bytemuck::{Pod, Zeroable};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    hasher::SolanaSyscallHasher, EcdsaRecoverableSignature, MerkleProof, Secp256k1Pubkey,
-    SigningVerifierSetInfo, VerifierSetHash, VerifierSetLeaf, U128,
+    EcdsaRecoverableSignature, MerkleProof, Secp256k1Pubkey, SigningVerifierSetInfo,
+    VerifierSetLeaf, U128,
 };
 
 /// This PDA tracks that all the signatures for a given payload get verified
@@ -61,11 +60,10 @@ impl SignatureVerificationSessionData {
         self.check_slot_is_done(&verifier_info.leaf)?;
 
         // Check: Merkle proof
-        let merkle_proof =
-            MerkleProof::<SolanaSyscallHasher>::from_bytes(&verifier_info.merkle_proof)
-                .map_err(|_err| GatewayError::InvalidMerkleProof)?;
+        let merkle_proof = MerkleProof::from_bytes(&verifier_info.merkle_proof)
+            .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
-        let leaf_hash = verifier_info.leaf.hash::<SolanaSyscallHasher>();
+        let leaf_hash = verifier_info.leaf.hash();
 
         if !merkle_proof.verify(
             *verifier_set_merkle_root,
@@ -216,8 +214,8 @@ impl SignatureVerificationSessionData {
 }
 
 /// Controls the signature verification session for a given payload.
-#[repr(C)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Pod, Zeroable)]
+#[zero_copy]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SignatureVerification {
     /// Accumulated signer threshold required to validate the payload.
     ///
@@ -243,7 +241,7 @@ pub struct SignatureVerification {
     /// signing verifier set.
     /// This data is later used when rotating signers to figure out which
     /// verifier set was the one that actually performed the validation.
-    pub signing_verifier_set_hash: VerifierSetHash,
+    pub signing_verifier_set_hash: [u8; 32],
 }
 
 impl SignatureVerification {

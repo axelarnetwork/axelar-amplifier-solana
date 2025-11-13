@@ -1,6 +1,4 @@
 use std::collections::BTreeMap;
-
-use borsh::{BorshDeserialize, BorshSerialize};
 use udigest::Digestable;
 
 use crate::{hasher::LeafHash, EncodingError, PublicKey, Signature};
@@ -12,7 +10,7 @@ use crate::{hasher::LeafHash, EncodingError, PublicKey, Signature};
 /// by their public keys, each assigned a specific weight. Additionally, it
 /// includes a quorum value that may be used to determine consensus requirements
 /// within the set.
-#[derive(Debug, Eq, PartialEq, Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Debug, Eq, PartialEq, Clone, borsh::BorshDeserialize, borsh::BorshSerialize)]
 pub struct VerifierSet {
     /// A nonce value that can be used to track changes or updates to the
     /// verifier set.
@@ -31,7 +29,15 @@ pub struct VerifierSet {
 
 pub type VerifierSetHash = [u8; 32];
 
-#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct VerifierSetLeaf {
     /// The nonce value from the associated `VerifierSet`.
     pub nonce: u64,
@@ -66,7 +72,15 @@ impl LeafHash for VerifierSetLeaf {}
 /// This struct holds the verifier's signature, their corresponding leaf in the
 /// verifier set Merkle tree, and the Merkle proof needed to verify their
 /// inclusion in the set.
-#[derive(Debug, Eq, PartialEq, Clone, borsh::BorshDeserialize, borsh::BorshSerialize)]
+#[derive(Debug, Eq, PartialEq, Clone)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct SigningVerifierSetInfo {
     /// The signature provided by the verifier.
     pub signature: Signature,

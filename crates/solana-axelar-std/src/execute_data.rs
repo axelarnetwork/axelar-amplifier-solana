@@ -5,7 +5,7 @@ use rs_merkle::MerkleTree;
 use udigest::encoding::EncodeValue;
 
 use crate::{
-    hasher::leaf::VecBuf,
+    hasher::VecBuf,
     message::{MerklizedMessage, MessageLeaf, Messages},
     verifier_set::{self, verifier_set_hash, SigningVerifierSetInfo},
     EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,

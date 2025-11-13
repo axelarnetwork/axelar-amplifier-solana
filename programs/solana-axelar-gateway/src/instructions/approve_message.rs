@@ -5,7 +5,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::{hasher::SolanaSyscallHasher, rs_merkle, MerklizedMessage};
+use solana_axelar_std::MerklizedMessage;
 use std::str::FromStr;
 
 #[derive(Accounts)]
@@ -60,9 +60,9 @@ pub fn approve_message_handler(
         return err!(GatewayError::InvalidDomainSeparator);
     }
 
-    let leaf_hash = merklized_message.leaf.hash::<SolanaSyscallHasher>();
-    let message_hash = merklized_message.leaf.message.hash::<SolanaSyscallHasher>();
-    let proof = rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&merklized_message.proof)
+    let leaf_hash = merklized_message.leaf.hash();
+    let message_hash = merklized_message.leaf.message.hash();
+    let proof = solana_axelar_std::MerkleProof::from_bytes(&merklized_message.proof)
         .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
     // Check: leaf node is part of the payload merkle root

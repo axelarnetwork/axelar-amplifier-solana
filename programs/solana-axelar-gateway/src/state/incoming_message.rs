@@ -22,7 +22,7 @@ impl IncomingMessage {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Pod, Zeroable)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Pod, Zeroable, AnchorSerialize, AnchorDeserialize)]
 pub struct MessageStatus(u8);
 
 impl MessageStatus {

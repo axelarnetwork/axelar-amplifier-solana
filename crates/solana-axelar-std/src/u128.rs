@@ -1,4 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::*;
+#[cfg(not(feature = "anchor"))]
 use bytemuck::{Pod, Zeroable};
 
 /// Custom u128 type with 8-byte alignment instead of the default 16-byte alignment.
@@ -17,22 +21,28 @@ use bytemuck::{Pod, Zeroable};
 /// data from the previous program version that used `u128`.
 ///
 /// The byte representation is identical to `u128`, ensuring backwards compatibility.
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Pod, Zeroable)]
 #[repr(C)]
-pub struct U128([u8; 16]);
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(not(feature = "anchor"), derive(Copy, Clone, Pod, Zeroable))]
+#[cfg_attr(feature = "anchor", zero_copy)]
+pub struct U128 {
+    pub(crate) bytes: [u8; 16],
+}
 
 impl U128 {
-    pub const ZERO: Self = Self([0u8; 16]);
-    pub const MAX: Self = Self([0xFF; 16]);
+    pub const ZERO: Self = Self { bytes: [0u8; 16] };
+    pub const MAX: Self = Self { bytes: [0xFF; 16] };
 
     #[allow(clippy::little_endian_bytes)]
     pub const fn new(value: u128) -> Self {
-        Self(value.to_le_bytes())
+        Self {
+            bytes: value.to_le_bytes(),
+        }
     }
 
     #[allow(clippy::little_endian_bytes)]
     pub const fn get(self) -> u128 {
-        u128::from_le_bytes(self.0)
+        u128::from_le_bytes(self.bytes)
     }
 
     #[must_use]
@@ -82,7 +92,7 @@ impl From<u64> for U128 {
 // Implement BorshSerialize/Deserialize to serialize as u128 in IDL
 impl BorshSerialize for U128 {
     fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        writer.write_all(&self.0)
+        writer.write_all(&self.bytes)
     }
 }
 
@@ -90,7 +100,7 @@ impl BorshDeserialize for U128 {
     fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
         let mut bytes = [0u8; 16];
         reader.read_exact(&mut bytes)?;
-        Ok(Self(bytes))
+        Ok(Self { bytes })
     }
 }
 
@@ -114,7 +124,7 @@ mod tests {
         let u128_bytes = test_value.to_le_bytes();
         let custom_u128 = U128::new(test_value);
 
-        assert_eq!(custom_u128.0, u128_bytes);
+        assert_eq!(custom_u128.bytes, u128_bytes);
         assert_eq!(custom_u128.get(), test_value);
     }
 

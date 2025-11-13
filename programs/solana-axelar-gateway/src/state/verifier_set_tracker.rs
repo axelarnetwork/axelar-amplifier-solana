@@ -15,7 +15,7 @@ pub struct VerifierSetTracker {
     /// The epoch associated with this verifier set
     pub epoch: Epoch,
     /// The verifier set hash
-    pub verifier_set_hash: VerifierSetHash,
+    pub verifier_set_hash: [u8; 32],
 }
 
 impl VerifierSetTracker {

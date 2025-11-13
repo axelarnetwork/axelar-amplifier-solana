@@ -1,11 +1,18 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use udigest::Digestable;
 
 use crate::{hasher::LeafHash, EncodingError};
 
 /// Identifies a specific blockchain and its unique identifier within that
 /// chain.
-#[derive(Clone, PartialEq, Eq, Debug, Digestable, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Digestable)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct CrossChainId {
     /// The name or identifier of the source blockchain.
     pub chain: String,
@@ -15,7 +22,15 @@ pub struct CrossChainId {
 }
 
 /// Represents a message intended for cross-chain communication.
-#[derive(Clone, PartialEq, Eq, Debug, Digestable, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Digestable)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct Message {
     /// The cross-chain identifier of the message
     pub cc_id: CrossChainId,
@@ -36,13 +51,6 @@ pub struct Message {
 impl LeafHash for Message {}
 
 impl Message {
-    #[cfg(feature = "sha3")]
-    pub fn command_id(&self) -> [u8; 32] {
-        let cc_id = &self.cc_id;
-        NativeHasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()])
-    }
-
-    #[cfg(feature = "solana")]
     pub fn command_id(&self) -> [u8; 32] {
         let cc_id = &self.cc_id;
         solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0
@@ -58,7 +66,15 @@ pub struct Messages(pub Vec<Message>);
 /// The `MessageLeaf` struct includes the message itself along with metadata
 /// required for Merkle tree operations, such as its position within the tree,
 /// the total size of the set, and a domain separator.
-#[derive(Clone, PartialEq, Eq, Debug, Digestable, BorshDeserialize, BorshSerialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Digestable)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct MessageLeaf {
     /// The message contained within this leaf node.
     pub message: Message,
@@ -107,7 +123,15 @@ pub(crate) fn merkle_tree_leaves(
 /// Each `MerklizedMessage` includes the message content encapsulated in a
 /// `MessageLeaf` and a proof that verifies the message's inclusion in the
 /// Merkle tree.
-#[derive(Debug, Eq, PartialEq, Clone, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, Eq, PartialEq, Clone)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct MerklizedMessage {
     /// The leaf node representing the message in the Merkle tree.
     pub leaf: MessageLeaf,

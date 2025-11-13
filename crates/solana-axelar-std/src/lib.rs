@@ -7,8 +7,11 @@ pub use u256::U256;
 pub mod pubkey;
 pub use pubkey::*;
 
+use crate::hasher::Hasher;
 pub use rs_merkle;
-pub use rs_merkle::{MerkleProof, MerkleTree};
+
+pub type MerkleProof = rs_merkle::MerkleProof<Hasher>;
+pub type MerkleTree = rs_merkle::MerkleTree<Hasher>;
 
 pub mod hasher;
 

@@ -14,7 +14,7 @@ use solana_axelar_gateway_test_fixtures::{
     mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
     setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
 };
-use solana_axelar_std::hasher::{LeafHash, SolanaSyscallHasher};
+use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::U256;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
@@ -301,7 +301,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 
     assert_eq!(
         incoming_message_account_data.message_hash,
-        messages.first().unwrap().hash::<SolanaSyscallHasher>()
+        messages.first().unwrap().hash()
     );
 
     assert_eq!(

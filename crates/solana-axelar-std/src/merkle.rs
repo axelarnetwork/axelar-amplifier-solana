@@ -1,7 +1,7 @@
 use rs_merkle::MerkleTree;
 use udigest::encoding::EncodeValue;
 
-use crate::hasher::leaf::VecBuf;
+use crate::hasher::VecBuf;
 
 pub(crate) fn merkle_tree<'a, T: rs_merkle::Hasher, K: udigest::Digestable + 'a>(
     leaves: impl Iterator<Item = &'a K>,

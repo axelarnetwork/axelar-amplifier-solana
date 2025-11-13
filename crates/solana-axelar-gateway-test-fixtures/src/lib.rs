@@ -17,7 +17,7 @@ use solana_axelar_gateway::{
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{IncomingMessage, Message};
-use solana_axelar_std::hasher::{LeafHash, SolanaSyscallHasher};
+use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
     CrossChainId, MerklizedMessage, MessageLeaf, Signature, SigningVerifierSetInfo,
     VerifierSetLeaf, U256,
@@ -139,7 +139,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
 pub fn setup_test_with_real_signers() -> (
     TestSetup,
     Vec<VerifierSetLeaf>,
-    MerkleTree<SolanaSyscallHasher>,
+    MerkleTree,
     SecretKey,
     SecretKey,
 ) {
@@ -186,12 +186,9 @@ pub fn setup_test_with_real_signers() -> (
     ];
 
     // Step 3: Calculate the REAL verifier set hash
-    let verifier_leaf_hashes: Vec<[u8; 32]> = verifier_leaves
-        .iter()
-        .map(VerifierSetLeaf::hash::<SolanaSyscallHasher>)
-        .collect();
-    let verifier_merkle_tree =
-        MerkleTree::<SolanaSyscallHasher>::from_leaves(&verifier_leaf_hashes);
+    let verifier_leaf_hashes: Vec<[u8; 32]> =
+        verifier_leaves.iter().map(VerifierSetLeaf::hash).collect();
+    let verifier_merkle_tree = MerkleTree::from_leaves(&verifier_leaf_hashes);
     let verifier_set_hash = verifier_merkle_tree.root().unwrap();
 
     // Step 4: Derive PDAs with the REAL verifier set hash
@@ -558,7 +555,7 @@ pub fn create_verifier_info(
     payload_merkle_root: [u8; 32],
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
-    verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
+    verifier_merkle_tree: &MerkleTree,
 ) -> SigningVerifierSetInfo {
     let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
@@ -928,12 +925,7 @@ pub fn transfer_operatorship_helper(
 pub fn setup_message_merkle_tree(
     setup: &TestSetup,
     _verifier_set_merkle_root: [u8; 32],
-) -> (
-    Vec<Message>,
-    Vec<MessageLeaf>,
-    MerkleTree<SolanaSyscallHasher>,
-    [u8; 32],
-) {
+) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
     let messages = vec![
         create_test_message(
             "ethereum",
@@ -960,12 +952,9 @@ pub fn setup_message_merkle_tree(
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
-        .iter()
-        .map(MessageLeaf::hash::<SolanaSyscallHasher>)
-        .collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
 
-    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
 
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 
@@ -979,7 +968,7 @@ pub fn setup_message_merkle_tree(
 
 pub fn approve_message_helper(
     setup: &TestSetup,
-    message_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    message_merkle_tree: MerkleTree,
     message_leaves: Vec<MessageLeaf>,
     messages: &[Message],
     payload_merkle_root: [u8; 32],
@@ -1113,7 +1102,7 @@ pub fn approve_messages_on_gateway(
     secret_key_1: &SecretKey,
     secret_key_2: &SecretKey,
     verifier_leaves: Vec<VerifierSetLeaf>,
-    verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    verifier_merkle_tree: MerkleTree,
 ) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
         setup_message_merkle_tree_from_messages(setup, messages);
@@ -1237,12 +1226,7 @@ pub fn approve_messages_on_gateway(
 pub fn setup_message_merkle_tree_from_messages(
     setup: &TestSetup,
     messages: Vec<Message>,
-) -> (
-    Vec<Message>,
-    Vec<MessageLeaf>,
-    MerkleTree<SolanaSyscallHasher>,
-    [u8; 32],
-) {
+) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
     let message_leaves: Vec<MessageLeaf> = messages
         .iter()
         .enumerate()
@@ -1254,12 +1238,9 @@ pub fn setup_message_merkle_tree_from_messages(
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
-        .iter()
-        .map(MessageLeaf::hash::<SolanaSyscallHasher>)
-        .collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
 
-    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
 
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 

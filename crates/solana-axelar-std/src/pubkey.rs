@@ -4,7 +4,6 @@
 //! handling public keys and signatures within the system. It supports multiple
 //! cryptographic algorithms, including Secp256k1 and Ed25519, providing a
 //! unified interface for public key and signature management.
-use borsh::{BorshDeserialize, BorshSerialize};
 use udigest::Digestable;
 
 //
@@ -18,8 +17,14 @@ pub const SECP256K1_COMPRESSED_PUBKEY_LEN: usize = 33;
 pub type Secp256k1Pubkey = [u8; SECP256K1_COMPRESSED_PUBKEY_LEN];
 
 /// Represents a public key using supported cryptographic algorithms.
-#[derive(
-    Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Digestable, BorshSerialize, BorshDeserialize,
+#[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Digestable)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
 )]
 pub struct PublicKey(pub Secp256k1Pubkey);
 
@@ -42,7 +47,15 @@ pub const ECDSA_RECOVERABLE_SIGNATURE_LEN: usize = 65;
 pub type EcdsaRecoverableSignature = [u8; ECDSA_RECOVERABLE_SIGNATURE_LEN];
 
 /// Represents a digital signature using supported cryptographic algorithms.
-#[derive(Eq, PartialEq, Clone, Copy, BorshDeserialize, BorshSerialize)]
+#[derive(Eq, PartialEq, Clone, Copy)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
 pub struct Signature(pub EcdsaRecoverableSignature);
 
 #[allow(clippy::min_ident_chars)]

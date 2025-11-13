@@ -1,12 +1,17 @@
 //! U256 implementation of uint256.
 use std::fmt::Display;
 
-use borsh::{BorshDeserialize, BorshSerialize};
 use bytemuck::{Pod, Zeroable};
 
 /// [U256] represents uint256.
-#[derive(
-    Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable, BorshSerialize, BorshDeserialize,
+#[derive(Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
 )]
 #[repr(transparent)]
 pub struct U256 {

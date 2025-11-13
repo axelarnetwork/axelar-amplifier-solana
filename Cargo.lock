@@ -6663,6 +6663,7 @@ name = "solana-axelar-std"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives",
+ "anchor-lang",
  "arrayref",
  "bnum",
  "borsh 0.10.4",
@@ -6671,7 +6672,6 @@ dependencies = [
  "hex",
  "rand 0.8.5",
  "rs_merkle",
- "sha3",
  "solana-keccak-hasher",
  "thiserror 1.0.69",
  "udigest",
