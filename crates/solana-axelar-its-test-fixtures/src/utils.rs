@@ -12,8 +12,36 @@ use solana_axelar_gas_service::state::Treasury;
 use solana_axelar_gateway::Message;
 use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
 use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
+use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::program_pack::Pack;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
+
+pub fn keyed_account_for_program(program_id: Pubkey) -> (Pubkey, Account) {
+    (
+        program_id,
+        Account {
+            lamports: LAMPORTS_PER_SOL,
+            data: vec![],
+            owner: solana_sdk::bpf_loader_upgradeable::id(),
+            executable: true,
+            rent_epoch: 0,
+        },
+    )
+}
+
+pub fn new_test_account() -> (Pubkey, Account) {
+    let pubkey = Pubkey::new_unique();
+    let account = new_default_account();
+    (pubkey, account)
+}
+
+pub fn new_default_account() -> Account {
+    Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID)
+}
+
+pub fn new_empty_account() -> Account {
+    Account::new(0, 0, &solana_sdk::system_program::ID)
+}
 
 pub fn get_message_signing_pda(message: &Message) -> (Pubkey, u8) {
     let program_id = solana_axelar_its::id();
@@ -201,14 +229,8 @@ pub fn setup_operator(
     // List accounts
     let accounts = vec![
         (operator, operator_account.clone()),
-        (
-            registry,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            operator_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (registry, new_empty_account()),
+        (operator_pda, new_empty_account()),
         keyed_account_for_system_program(),
     ];
 
@@ -257,10 +279,7 @@ pub fn init_gas_service(
     let accounts = vec![
         (operator, operator_account.clone()),
         (operator_pda, operator_pda_account.clone()),
-        (
-            treasury,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (treasury, new_empty_account()),
         keyed_account_for_system_program(),
     ];
 
@@ -337,16 +356,10 @@ pub fn init_its_service(
     let accounts = vec![
         (payer, payer_account.clone()),
         (program_data, program_data_account.clone()),
-        (
-            its_root_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (its_root_pda, new_empty_account()),
         keyed_account_for_system_program(),
         (operator, operator_account.clone()),
-        (
-            user_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (user_roles_pda, new_empty_account()),
     ];
 
     let checks = vec![

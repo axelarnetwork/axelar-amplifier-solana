@@ -16,13 +16,15 @@ use solana_axelar_gateway_test_fixtures::{
 };
 use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
+use solana_axelar_its_test_fixtures::new_empty_account;
+use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::{
     create_sysvar_instructions_data, deploy_interchain_token_extra_accounts,
     execute_its_instruction, get_token_mint_pda, init_its_service_with_ethereum_trusted,
     initialize_mollusk, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
-use solana_sdk::{account::Account, keccak, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
@@ -45,10 +47,8 @@ fn test_execute_deploy_interchain_token_success() {
     );
     setup.mollusk = mollusk;
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
@@ -145,20 +145,11 @@ fn test_execute_deploy_interchain_token_success() {
 
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
-            (
-                token_mint_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_mint_pda, new_empty_account()),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
-            (
-                deployer_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (deployer_ata, new_empty_account()),
             (payer, payer_account), // deployer is also payer
             (
                 solana_sdk::sysvar::instructions::ID,
@@ -180,10 +171,7 @@ fn test_execute_deploy_interchain_token_success() {
                     rent_epoch: 0,
                 },
             ),
-            (
-                metadata_account,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (metadata_account, new_empty_account()),
         ],
         extra_account_metas: deploy_interchain_token_extra_accounts(
             deployer_ata,
@@ -254,10 +242,8 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     );
     setup.mollusk = mollusk;
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
@@ -354,20 +340,11 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
 
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
-            (
-                token_mint_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_mint_pda, new_empty_account()),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
-            (
-                deployer_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (deployer_ata, new_empty_account()),
             (payer, payer_account), // deployer is also payer
             (
                 solana_sdk::sysvar::instructions::ID,
@@ -389,10 +366,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
                     rent_epoch: 0,
                 },
             ),
-            (
-                metadata_account,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (metadata_account, new_empty_account()),
         ],
         extra_account_metas: deploy_interchain_token_extra_accounts(
             deployer_ata,
@@ -429,10 +403,8 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
     );
     setup.mollusk = mollusk;
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
@@ -531,20 +503,11 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
 
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
-            (
-                token_mint_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_mint_pda, new_empty_account()),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
-            (
-                deployer_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (deployer_ata, new_empty_account()),
             (payer, payer_account), // deployer is also payer
             (
                 solana_sdk::sysvar::instructions::ID,
@@ -566,10 +529,7 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
                     rent_epoch: 0,
                 },
             ),
-            (
-                metadata_account,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (metadata_account, new_empty_account()),
         ],
         extra_account_metas: deploy_interchain_token_extra_accounts(
             deployer_ata,

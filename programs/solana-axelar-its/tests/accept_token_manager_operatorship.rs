@@ -7,11 +7,11 @@ use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     accept_token_manager_operatorship_helper, deploy_interchain_token_helper, init_its_service,
-    initialize_mollusk, propose_token_manager_operatorship_helper,
-    AcceptTokenManagerOperatorshipContext, DeployInterchainTokenContext,
-    ProposeTokenManagerOperatorshipContext,
+    initialize_mollusk, new_empty_account, new_test_account,
+    propose_token_manager_operatorship_helper, AcceptTokenManagerOperatorshipContext,
+    DeployInterchainTokenContext, ProposeTokenManagerOperatorshipContext,
 };
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn test_accept_token_manager_operatorship() {
@@ -20,15 +20,10 @@ fn test_accept_token_manager_operatorship() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (_, payer_account) = new_test_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -109,10 +104,7 @@ fn test_accept_token_manager_operatorship() {
         its_root_pda: (its_root_pda, its_root_account.clone()),
         token_manager_account: (token_manager_pda, token_manager_account.clone()),
         destination_user_account: (proposed_operator, proposed_operator_account.clone()),
-        proposal_account: (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        proposal_account: (proposal_pda, new_empty_account()),
     };
 
     let (propose_result, mollusk) =
@@ -187,15 +179,11 @@ fn test_reject_invalid_token_manager_operatorship() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (_, payer_account) = new_test_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
-    let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -276,10 +264,7 @@ fn test_reject_invalid_token_manager_operatorship() {
         its_root_pda: (its_root_pda, its_root_account.clone()),
         token_manager_account: (token_manager_pda, token_manager_account.clone()),
         destination_user_account: (proposed_operator, proposed_operator_account.clone()),
-        proposal_account: (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        proposal_account: (proposal_pda, new_empty_account()),
     };
 
     let (propose_result, mollusk) =
@@ -294,9 +279,7 @@ fn test_reject_invalid_token_manager_operatorship() {
         .expect("Failed to deserialize RoleProposal");
     assert_eq!(proposal_data.roles, Roles::OPERATOR);
 
-    let malicious_proposed_operator = Pubkey::new_unique();
-    let malicious_proposed_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (malicious_proposed_operator, malicious_proposed_operator_account) = new_test_account();
 
     // Accept operatorship transfer
     let (new_operator_roles_pda, _) =

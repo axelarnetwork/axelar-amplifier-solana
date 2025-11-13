@@ -6,8 +6,9 @@ use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::state::{RoleProposal, Roles, UserRoles};
 use solana_axelar_its_test_fixtures::{
-    accept_operatorship_helper, init_its_service, propose_operatorship_helper,
-    AcceptOperatorshipContext, ProposeOperatorshipContext,
+    accept_operatorship_helper, init_its_service, new_default_account, new_empty_account,
+    new_test_account, propose_operatorship_helper, AcceptOperatorshipContext,
+    ProposeOperatorshipContext,
 };
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
@@ -18,13 +19,11 @@ fn test_accept_operatorship() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -124,13 +123,10 @@ fn test_reject_invalid_operatorship() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
-
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -186,10 +182,7 @@ fn test_reject_invalid_operatorship() {
         mollusk,
         (payer, payer_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_roles_pda, new_empty_account()),
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
         (

@@ -8,24 +8,19 @@ use anchor_lang::{
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_default_account,
+    new_empty_account, new_test_account, DeployInterchainTokenContext,
 };
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn test_remove_token_manager_flow_limiter() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -83,8 +78,7 @@ fn test_remove_token_manager_flow_limiter() {
         deploy_result.program_result
     );
 
-    let flow_limiter_user = Pubkey::new_unique();
-    let flow_limiter_user_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (flow_limiter_user, flow_limiter_user_account) = new_test_account();
     let (flow_limiter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &flow_limiter_user);
 
     let add_flow_limiter_ix = Instruction {
@@ -107,7 +101,7 @@ fn test_remove_token_manager_flow_limiter() {
         .get_account(&minter_roles_pda)
         .expect("Minter roles account should exist after token deployment");
 
-    let minter_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let minter_account = new_default_account();
 
     let add_flow_limiter_accounts = vec![
         keyed_account_for_system_program(),
@@ -123,10 +117,7 @@ fn test_remove_token_manager_flow_limiter() {
                 .clone(),
         ),
         (flow_limiter_user, flow_limiter_user_account.clone()),
-        (
-            flow_limiter_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (flow_limiter_roles_pda, new_empty_account()),
     ];
 
     let add_flow_limiter_result =
@@ -201,14 +192,9 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -266,8 +252,7 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
         deploy_result.program_result
     );
 
-    let flow_limiter_user = Pubkey::new_unique();
-    let flow_limiter_user_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (flow_limiter_user, flow_limiter_user_account) = new_test_account();
     let (flow_limiter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &flow_limiter_user);
 
     let add_flow_limiter_ix = Instruction {
@@ -290,7 +275,7 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
         .get_account(&minter_roles_pda)
         .expect("Minter roles account should exist after token deployment");
 
-    let minter_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let minter_account = new_default_account();
 
     let add_flow_limiter_accounts = vec![
         keyed_account_for_system_program(),
@@ -306,10 +291,7 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
                 .clone(),
         ),
         (flow_limiter_user, flow_limiter_user_account.clone()),
-        (
-            flow_limiter_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (flow_limiter_roles_pda, new_empty_account()),
     ];
 
     let add_flow_limiter_result =
@@ -332,7 +314,7 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
     );
 
     let malicious_minter = Pubkey::new_unique();
-    let malicious_minter_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let malicious_minter_account = new_default_account();
 
     // Now test removing the flow limiter role
     let remove_flow_limiter_ix = Instruction {
@@ -384,14 +366,9 @@ fn test_reject_remove_token_manager_flow_limiter_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -449,8 +426,7 @@ fn test_reject_remove_token_manager_flow_limiter_without_operator_role() {
         deploy_result.program_result
     );
 
-    let flow_limiter_user = Pubkey::new_unique();
-    let flow_limiter_user_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (flow_limiter_user, flow_limiter_user_account) = new_test_account();
     let (flow_limiter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &flow_limiter_user);
 
     let add_flow_limiter_ix = Instruction {
@@ -473,7 +449,7 @@ fn test_reject_remove_token_manager_flow_limiter_without_operator_role() {
         .get_account(&minter_roles_pda)
         .expect("Minter roles account should exist after token deployment");
 
-    let minter_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let minter_account = new_default_account();
 
     let add_flow_limiter_accounts = vec![
         keyed_account_for_system_program(),
@@ -489,10 +465,7 @@ fn test_reject_remove_token_manager_flow_limiter_without_operator_role() {
                 .clone(),
         ),
         (flow_limiter_user, flow_limiter_user_account.clone()),
-        (
-            flow_limiter_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (flow_limiter_roles_pda, new_empty_account()),
     ];
 
     let add_flow_limiter_result =

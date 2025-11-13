@@ -9,14 +9,11 @@ use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtension
 use mollusk_svm::result::Check;
 use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_empty_account,
+    new_test_account, DeployInterchainTokenContext,
 };
 use solana_sdk::program_pack::Pack;
-use solana_sdk::{
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    rent::Rent,
-};
+use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey, rent::Rent};
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
@@ -24,27 +21,15 @@ fn test_deploy_and_mint_interchain_token() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (
-        its_root_pda,
-        its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -165,7 +150,7 @@ fn test_deploy_and_mint_interchain_token() {
         .clone();
 
     // Create minter account
-    let minter_account = Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let minter_account = new_empty_account();
 
     let mint_accounts_vec = vec![
         (token_mint_pda, token_mint_account),
@@ -204,27 +189,15 @@ fn test_reject_mint_interchain_token_invalid_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (
-        its_root_pda,
-        its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -347,7 +320,7 @@ fn test_reject_mint_interchain_token_invalid_authority() {
         .clone();
 
     // Create minter account
-    let minter_account = Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let minter_account = new_empty_account();
 
     let mint_accounts = vec![
         (token_mint_pda, token_mint_account),
@@ -371,14 +344,9 @@ fn test_reject_mint_interchain_token_with_no_minter_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -520,7 +488,7 @@ fn test_reject_mint_interchain_token_with_no_minter_role() {
     minter_roles_account_clone.data = new_data;
 
     // Create minter account
-    let minter_account = Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let minter_account = new_empty_account();
 
     let mint_accounts_vec = vec![
         (token_mint_pda, token_mint_account),

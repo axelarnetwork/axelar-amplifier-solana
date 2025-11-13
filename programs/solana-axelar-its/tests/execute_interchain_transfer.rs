@@ -24,12 +24,10 @@ use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsErro
 use solana_axelar_its_test_fixtures::{
     create_rent_sysvar_data, create_sysvar_instructions_data, get_message_signing_pda,
     get_token_mint_pda, init_its_service_with_ethereum_trusted, initialize_mollusk,
+    keyed_account_for_program, new_empty_account, new_test_account,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
-use solana_sdk::{
-    account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL,
-    pubkey::Pubkey,
-};
+use solana_sdk::{account::Account, instruction::Instruction, keccak, pubkey::Pubkey};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
@@ -56,11 +54,9 @@ fn test_execute_interchain_transfer_success() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -227,40 +223,16 @@ fn test_execute_interchain_transfer_success() {
             *deploy_incoming_message_pda,
             deploy_incoming_message_account,
         ),
-        (
-            deploy_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deploy_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         // ITS Accounts
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_mint_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_pda, new_empty_account()),
+        (token_mint_pda, new_empty_account()),
+        (token_manager_ata, new_empty_account()),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -275,10 +247,7 @@ fn test_execute_interchain_transfer_success() {
         ),
         keyed_account_for_system_program(),
         // Remaining accounts for DeployInterchainToken
-        (
-            deployer_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deployer_ata, new_empty_account()),
         (payer, payer_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
@@ -300,10 +269,7 @@ fn test_execute_interchain_transfer_success() {
                 rent_epoch: 0,
             },
         ),
-        (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (metadata_account, new_empty_account()),
         // Event CPI accounts
         (its_event_authority, event_authority_account.clone()),
         (program_id, its_program_account.clone()),
@@ -439,25 +405,10 @@ fn test_execute_interchain_transfer_success() {
             *transfer_incoming_message_pda,
             transfer_incoming_message_account,
         ),
-        (
-            transfer_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (transfer_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account),
         (
@@ -540,11 +491,9 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -710,40 +659,16 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
             *deploy_incoming_message_pda,
             deploy_incoming_message_account,
         ),
-        (
-            deploy_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deploy_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         // ITS Accounts
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_mint_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_pda, new_empty_account()),
+        (token_mint_pda, new_empty_account()),
+        (token_manager_ata, new_empty_account()),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -758,10 +683,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
         ),
         keyed_account_for_system_program(),
         // Remaining accounts for DeployInterchainToken
-        (
-            deployer_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deployer_ata, new_empty_account()),
         (payer, payer_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
@@ -783,10 +705,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
                 rent_epoch: 0,
             },
         ),
-        (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (metadata_account, new_empty_account()),
         // Event CPI accounts
         (its_event_authority, event_authority_account.clone()),
         (program_id, its_program_account.clone()),
@@ -922,25 +841,10 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
             *transfer_incoming_message_pda,
             transfer_incoming_message_account,
         ),
-        (
-            transfer_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (transfer_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account),
         (
@@ -1007,11 +911,9 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -1178,40 +1080,16 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
             *deploy_incoming_message_pda,
             deploy_incoming_message_account,
         ),
-        (
-            deploy_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deploy_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         // ITS Accounts
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_mint_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_pda, new_empty_account()),
+        (token_mint_pda, new_empty_account()),
+        (token_manager_ata, new_empty_account()),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -1226,10 +1104,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
         ),
         keyed_account_for_system_program(),
         // Remaining accounts for DeployInterchainToken
-        (
-            deployer_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deployer_ata, new_empty_account()),
         (payer, payer_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
@@ -1251,10 +1126,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
                 rent_epoch: 0,
             },
         ),
-        (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (metadata_account, new_empty_account()),
         // Event CPI accounts
         (its_event_authority, event_authority_account.clone()),
         (program_id, its_program_account.clone()),
@@ -1392,25 +1264,10 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
             *transfer_incoming_message_pda,
             transfer_incoming_message_account,
         ),
-        (
-            transfer_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (transfer_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account),
         (
@@ -1477,11 +1334,9 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -1647,40 +1502,16 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
             *deploy_incoming_message_pda,
             deploy_incoming_message_account,
         ),
-        (
-            deploy_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deploy_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         // ITS Accounts
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_mint_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_pda, new_empty_account()),
+        (token_mint_pda, new_empty_account()),
+        (token_manager_ata, new_empty_account()),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -1695,10 +1526,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
         ),
         keyed_account_for_system_program(),
         // Remaining accounts for DeployInterchainToken
-        (
-            deployer_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (deployer_ata, new_empty_account()),
         (payer, payer_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
@@ -1720,10 +1548,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
                 rent_epoch: 0,
             },
         ),
-        (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (metadata_account, new_empty_account()),
         // Event CPI accounts
         (its_event_authority, event_authority_account.clone()),
         (program_id, its_program_account.clone()),
@@ -1859,25 +1684,10 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
             *transfer_incoming_message_pda,
             transfer_incoming_message_account,
         ),
-        (
-            transfer_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (transfer_signing_pda, new_empty_account()),
         (gateway_root_pda, gateway_root_pda_account.clone()),
-        (
-            gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            GATEWAY_PROGRAM_ID,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
+        (gateway_event_authority, new_empty_account()),
+        keyed_account_for_program(GATEWAY_PROGRAM_ID),
         (payer, payer_account.clone()),
         (its_root_pda, its_root_account),
         (

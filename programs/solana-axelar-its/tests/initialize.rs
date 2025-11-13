@@ -5,11 +5,8 @@
 use anchor_lang::AccountDeserialize;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
-use solana_axelar_its_test_fixtures::init_its_service;
-use {
-    solana_sdk::{account::Account, pubkey::Pubkey},
-    solana_sdk_ids::bpf_loader_upgradeable,
-};
+use solana_axelar_its_test_fixtures::{init_its_service, new_default_account, new_test_account};
+use {solana_sdk::pubkey::Pubkey, solana_sdk_ids::bpf_loader_upgradeable};
 
 #[test]
 fn test_initialize_success() {
@@ -20,31 +17,24 @@ fn test_initialize_success() {
 
     // We require that the payer be the upgrade_authority
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
 
-    let (
-        its_root_pda,
-        its_root_account,
-        user_roles_pda,
-        user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
-        &mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
+    let (its_root_pda, its_root_account, user_roles_pda, user_roles_account, _, _) =
+        init_its_service(
+            &mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Verify the ITS root PDA is properly initialized
     let its_data = InterchainTokenService::try_deserialize(&mut its_root_account.data.as_slice())
@@ -86,25 +76,15 @@ fn test_initialize_unauthorized_payer() {
     let upgrade_authority = Pubkey::new_unique();
 
     // We make the payer different from the upgrade_authority
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
 
     // This should fail because payer is not the upgrade authority
     // The program data account was created with authorized_payer as authority
-    let (
-        _its_root_pda,
-        _its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
+    init_its_service(
         &mollusk,
         payer,
         &payer_account,

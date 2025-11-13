@@ -14,12 +14,13 @@ use solana_axelar_its_test_fixtures::deploy_remote_interchain_token_helper;
 use solana_axelar_its_test_fixtures::init_gas_service;
 use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
 use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::setup_operator;
 use solana_axelar_its_test_fixtures::DeployRemoteInterchainTokenContext;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, DeployInterchainTokenContext,
 };
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
 fn test_deploy_remote_interchain_token() {
@@ -31,8 +32,7 @@ fn test_deploy_remote_interchain_token() {
     let gas_service_program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -51,14 +51,9 @@ fn test_deploy_remote_interchain_token() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -145,8 +140,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_token_manager() {
     let gas_service_program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -165,14 +159,9 @@ fn test_reject_deploy_remote_interchain_token_with_no_token_manager() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -266,8 +255,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
     let gas_service_program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -286,14 +274,9 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -384,8 +367,7 @@ fn test_reject_deploy_remote_interchain_token_for_missmatched_mint() {
     let gas_service_program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -404,14 +386,9 @@ fn test_reject_deploy_remote_interchain_token_for_missmatched_mint() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();

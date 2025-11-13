@@ -16,11 +16,11 @@ use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
 use solana_axelar_its_test_fixtures::init_gas_service;
 use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
 use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::new_empty_account;
+use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::setup_operator;
 use solana_program::program_pack::Pack;
-use solana_sdk::{
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-};
+use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 use spl_token_2022::state::Mint;
 
 #[test]
@@ -35,8 +35,7 @@ fn test_register_token_metadata() {
     let gas_service_program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -55,11 +54,9 @@ fn test_register_token_metadata() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -151,19 +148,13 @@ fn test_register_token_metadata() {
         (solana_axelar_gas_service::ID, gas_service_program_account),
         mollusk_svm::program::keyed_account_for_system_program(),
         (its_root_pda, its_root_account),
-        (
-            call_contract_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (call_contract_signing_pda, new_empty_account()),
         (program_id, program_account),
         (gateway_event_authority, gateway_event_authority_account),
         (gas_event_authority, gas_event_authority_account),
         // for event cpi
         (event_authority, event_authority_account),
-        (
-            program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (program_id, new_empty_account()),
     ];
 
     let checks = vec![Check::success()];
@@ -189,8 +180,7 @@ fn test_register_token_metadata_failure_for_empty_mint() {
     let gas_service_program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let (operator_pda, operator_pda_account) =
         setup_operator(&mut mollusk, operator, &operator_account);
@@ -209,11 +199,9 @@ fn test_register_token_metadata_failure_for_empty_mint() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
 
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -290,19 +278,13 @@ fn test_register_token_metadata_failure_for_empty_mint() {
         (solana_axelar_gas_service::ID, gas_service_program_account),
         mollusk_svm::program::keyed_account_for_system_program(),
         (its_root_pda, its_root_account),
-        (
-            call_contract_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (call_contract_signing_pda, new_empty_account()),
         (program_id, program_account),
         (gateway_event_authority, gateway_event_authority_account),
         (gas_event_authority, gas_event_authority_account),
         // for event cpi
         (event_authority, event_authority_account),
-        (
-            program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (program_id, new_empty_account()),
     ];
 
     let checks = vec![Check::err(

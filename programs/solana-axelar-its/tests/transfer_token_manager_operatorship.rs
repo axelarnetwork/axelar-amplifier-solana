@@ -7,12 +7,12 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_empty_account,
+    new_test_account, DeployInterchainTokenContext,
 };
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
+    solana_sdk::pubkey::Pubkey,
 };
 
 #[test]
@@ -20,17 +20,12 @@ fn test_transfer_token_manager_operatorship_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let upgrade_authority = Pubkey::new_unique();
+    let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID); // More lamports
+    let (_, payer_account) = new_test_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -130,10 +125,7 @@ fn test_transfer_token_manager_operatorship_success() {
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_token_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_token_roles_pda, new_empty_account()),
     ];
 
     let result = mollusk.process_instruction(&ix, &accounts);
@@ -186,17 +178,12 @@ fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() 
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let upgrade_authority = Pubkey::new_unique();
+    let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID); // More lamports
+    let (_, payer_account) = new_test_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -297,10 +284,7 @@ fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() 
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_token_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_token_roles_pda, new_empty_account()),
     ];
 
     let checks = vec![Check::err(
@@ -315,17 +299,12 @@ fn test_reject_transfer_token_manager_operatorship_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let upgrade_authority = Pubkey::new_unique();
+    let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID); // More lamports
+    let (_, payer_account) = new_test_account(); // More lamports
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -429,10 +408,7 @@ fn test_reject_transfer_token_manager_operatorship_without_operator_role() {
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_token_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_token_roles_pda, new_empty_account()),
     ];
 
     let checks = vec![Check::err(

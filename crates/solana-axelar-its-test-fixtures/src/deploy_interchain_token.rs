@@ -1,4 +1,4 @@
-use crate::{create_rent_sysvar_data, create_sysvar_instructions_data};
+use crate::{create_rent_sysvar_data, create_sysvar_instructions_data, new_empty_account};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
@@ -130,18 +130,9 @@ pub fn deploy_interchain_token_helper(
         (ctx.deployer.0, ctx.deployer.1),
         keyed_account_for_system_program(),
         (ctx.its_root.0, ctx.its_root.1),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_mint_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_pda, new_empty_account()),
+        (token_mint_pda, new_empty_account()),
+        (token_manager_ata, new_empty_account()),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
         (
@@ -176,14 +167,8 @@ pub fn deploy_interchain_token_helper(
                 rent_epoch: 0,
             },
         ),
-        (
-            metadata_account,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            deployer_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (metadata_account, new_empty_account()),
+        (deployer_ata, new_empty_account()),
         // Minter accounts - use program_id as placeholder if None
         (
             ctx.minter.unwrap_or(program_id),
@@ -191,7 +176,7 @@ pub fn deploy_interchain_token_helper(
         ),
         (
             ctx.minter_roles_pda.unwrap_or(program_id),
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            new_empty_account(),
         ),
         // For event CPI
         (event_authority, event_authority_account),

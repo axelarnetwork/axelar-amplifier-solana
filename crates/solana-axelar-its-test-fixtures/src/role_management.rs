@@ -5,6 +5,8 @@ use mollusk_svm::{
 use solana_axelar_its::state::RoleProposal;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 
+use crate::new_empty_account;
+
 pub struct ProposeOperatorshipContext {
     pub mollusk: Mollusk,
     pub payer: (Pubkey, Account),
@@ -40,10 +42,7 @@ impl ProposeOperatorshipContext {
             origin_roles_account,
             resource_account,
             destination_user_account,
-            proposal_account: (
-                proposal_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            proposal_account: (proposal_pda, new_empty_account()),
         }
     }
 }
@@ -115,10 +114,7 @@ impl AcceptOperatorshipContext {
             mollusk,
             payer,
             destination_user_account,
-            destination_roles_account: (
-                destination_roles_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            destination_roles_account: (destination_roles_pda, new_empty_account()),
             resource_account,
             origin_user_account,
             origin_roles_account,
@@ -226,10 +222,7 @@ impl ProposeTokenManagerOperatorshipContext {
             its_root_pda,
             token_manager_account,
             destination_user_account,
-            proposal_account: (
-                proposal_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            proposal_account: (proposal_pda, new_empty_account()),
         }
     }
 
@@ -324,10 +317,7 @@ impl AcceptTokenManagerOperatorshipContext {
             mollusk,
             payer,
             destination_user_account,
-            destination_roles_account: (
-                destination_roles_pda,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            destination_roles_account: (destination_roles_pda, new_empty_account()),
             its_root_pda,
             token_manager_account,
             origin_user_account,

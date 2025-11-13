@@ -5,10 +5,12 @@ use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::state::{Roles, RolesError, UserRoles};
-use solana_axelar_its_test_fixtures::init_its_service;
+use solana_axelar_its_test_fixtures::{
+    init_its_service, new_default_account, new_empty_account, new_test_account,
+};
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::{account::Account, pubkey::Pubkey},
+    solana_sdk::pubkey::Pubkey,
 };
 
 #[test]
@@ -18,13 +20,10 @@ fn test_transfer_operatorship_success() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
-
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -82,10 +81,7 @@ fn test_transfer_operatorship_success() {
         ),
         (its_root_pda, its_root_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_roles_pda, new_empty_account()),
     ];
 
     let result = mollusk.process_instruction(&ix, &accounts);
@@ -121,13 +117,11 @@ fn test_reject_transfer_operatorship_with_invalid_authority() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -187,10 +181,7 @@ fn test_reject_transfer_operatorship_with_invalid_authority() {
         ),
         (its_root_pda, its_root_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_roles_pda, new_empty_account()),
     ];
 
     let checks = vec![Check::err(
@@ -207,13 +198,11 @@ fn test_reject_transfer_operatorship_without_operator_role() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
-    let new_operator = Pubkey::new_unique();
-    let new_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (new_operator, new_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -287,10 +276,7 @@ fn test_reject_transfer_operatorship_without_operator_role() {
         ),
         (its_root_pda, its_root_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (new_operator_roles_pda, new_empty_account()),
     ];
 
     let checks = vec![Check::err(

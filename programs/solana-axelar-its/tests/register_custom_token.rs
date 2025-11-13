@@ -14,26 +14,19 @@ use solana_axelar_its::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use solana_axelar_its_test_fixtures::{
-    create_test_mint, execute_register_custom_token_helper, RegisterCustomTokenContext,
-    RegisterCustomTokenParams,
+    create_test_mint, execute_register_custom_token_helper, new_empty_account, new_test_account,
+    RegisterCustomTokenContext, RegisterCustomTokenParams,
 };
 use solana_axelar_its_test_fixtures::{init_its_service, initialize_mollusk};
-use solana_sdk::{
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-};
+use solana_sdk::{instruction::Instruction, pubkey::Pubkey};
 
 #[test]
 fn test_register_custom_token_without_operator() {
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -107,14 +100,9 @@ fn test_register_custom_token_without_operator() {
 fn test_reject_register_custom_token_with_native_interchain() {
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -165,14 +153,9 @@ fn test_reject_register_custom_token_with_native_interchain() {
 fn test_register_custom_token_with_operator() {
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -244,14 +227,9 @@ fn test_reject_register_custom_token_with_mismatched_operator() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -332,34 +310,16 @@ fn test_reject_register_custom_token_with_mismatched_operator() {
         (deployer, deployer_account),
         keyed_account_for_system_program(),
         (its_root_pda, its_root_account),
-        (
-            token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_pda, new_empty_account()),
         (token_mint, token_mint_account),
-        (
-            token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (token_manager_ata, new_empty_account()),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            operator,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (operator, new_empty_account()),
+        (operator_roles_pda, new_empty_account()),
         // For event CPI
-        (
-            event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (event_authority, new_empty_account()),
+        (program_id, new_empty_account()),
     ];
 
     let checks = vec![Check::err(

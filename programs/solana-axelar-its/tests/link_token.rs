@@ -10,6 +10,7 @@ use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
 use solana_axelar_its::state::{token_manager::Type, TokenManager};
 use solana_axelar_its::ItsError;
+use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::{
     create_test_mint, execute_register_custom_token_helper, LinkTokenParams,
 };
@@ -19,7 +20,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_axelar_its_test_fixtures::{init_gas_service, LinkTokenContext};
 use solana_axelar_its_test_fixtures::{initialize_mollusk, RegisterCustomTokenContext};
 use solana_axelar_its_test_fixtures::{setup_operator, RegisterCustomTokenParams};
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn test_link_token() {
@@ -31,8 +32,7 @@ fn test_link_token() {
     let mut gas_service_mollusk =
         setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let gas_operator = Pubkey::new_unique();
-    let gas_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (gas_operator, gas_operator_account) = new_test_account();
 
     let (gas_operator_pda, gas_operator_pda_account) = setup_operator(
         &mut gas_service_mollusk,
@@ -54,14 +54,9 @@ fn test_link_token() {
 
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let its_operator = Pubkey::new_unique();
-    let its_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (its_operator, its_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -160,8 +155,7 @@ fn test_reject_link_token_untrusted_destination_chain() {
     let mut gas_service_mollusk =
         setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let gas_operator = Pubkey::new_unique();
-    let gas_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (gas_operator, gas_operator_account) = new_test_account();
 
     let (gas_operator_pda, gas_operator_pda_account) = setup_operator(
         &mut gas_service_mollusk,
@@ -183,14 +177,9 @@ fn test_reject_link_token_untrusted_destination_chain() {
 
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let its_operator = Pubkey::new_unique();
-    let its_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (its_operator, its_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -287,8 +276,7 @@ fn test_reject_link_token_invalid_destination_chain() {
     let mut gas_service_mollusk =
         setup_mollusk(&gas_service_program_id, "solana_axelar_gas_service");
 
-    let gas_operator = Pubkey::new_unique();
-    let gas_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (gas_operator, gas_operator_account) = new_test_account();
 
     let (gas_operator_pda, gas_operator_pda_account) = setup_operator(
         &mut gas_service_mollusk,
@@ -309,14 +297,9 @@ fn test_reject_link_token_invalid_destination_chain() {
 
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let its_operator = Pubkey::new_unique();
-    let its_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (its_operator, its_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();

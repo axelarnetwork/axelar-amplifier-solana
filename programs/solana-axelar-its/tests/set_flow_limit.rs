@@ -12,47 +12,36 @@ use solana_axelar_its::{
     utils::interchain_token_id,
 };
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_default_account,
+    new_test_account, DeployInterchainTokenContext,
 };
 use solana_program::instruction::Instruction;
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn test_set_flow_limit_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (
-        its_root_pda,
-        its_root_account,
-        user_roles_pda,
-        user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
-        &mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
+    let (its_root_pda, its_root_account, user_roles_pda, user_roles_account, _, _) =
+        init_its_service(
+            &mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Deploy an interchain token first
     let salt = [1u8; 32];
@@ -120,7 +109,7 @@ fn test_set_flow_limit_success() {
 
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let operator_account = new_default_account();
 
     let accounts = vec![
         (payer, payer_account),
@@ -157,14 +146,9 @@ fn test_reject_set_flow_limit_with_unauthorized_operator() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -256,7 +240,7 @@ fn test_reject_set_flow_limit_with_unauthorized_operator() {
 
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let operator_account = new_default_account();
 
     let accounts = vec![
         (payer, payer_account),
@@ -282,14 +266,9 @@ fn test_reject_set_flow_limit_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -393,7 +372,7 @@ fn test_reject_set_flow_limit_without_operator_role() {
 
     let updated_its_root_account = result.get_account(&its_root_pda).unwrap();
     let updated_token_manager_account = result.get_account(&token_manager_pda).unwrap();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let operator_account = new_default_account();
 
     let accounts = vec![
         (payer, payer_account),

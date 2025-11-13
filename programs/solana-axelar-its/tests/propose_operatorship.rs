@@ -9,7 +9,8 @@ use solana_axelar_its::{
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{
-    init_its_service, propose_operatorship_helper, ProposeOperatorshipContext,
+    init_its_service, new_default_account, new_test_account, propose_operatorship_helper,
+    ProposeOperatorshipContext,
 };
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
@@ -20,13 +21,12 @@ fn test_propose_operatorship() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let proposed_operator_account = new_default_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -95,10 +95,9 @@ fn test_propose_malicious_operatorship_failure() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -128,8 +127,7 @@ fn test_propose_malicious_operatorship_failure() {
 
     let attacker = Pubkey::new_unique();
     let malicious_proposed_operator = Pubkey::new_unique();
-    let malicious_proposed_operator_account =
-        Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let malicious_proposed_operator_account = new_default_account();
 
     let ctx = ProposeOperatorshipContext::new(
         mollusk,
@@ -161,10 +159,9 @@ fn test_propose_self_failure() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let proposed_operator = current_operator;
     let proposed_operator_account = current_operator_account.clone();
@@ -222,20 +219,19 @@ fn test_propose_operatorship_missing_operator_role_failure() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
     let non_operator = Pubkey::new_unique();
-    let non_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let non_operator_account = new_default_account();
 
     let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let proposed_operator_account = new_default_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service with a proper operator first
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,

@@ -12,37 +12,24 @@ use solana_axelar_its::{
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_test_account,
     DeployInterchainTokenContext,
 };
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_deploy_interchain_token() {
     let mollusk = initialize_mollusk();
-
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (
-        its_root_pda,
-        its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -201,14 +188,9 @@ fn test_deploy_interchain_token() {
 fn test_reject_deploy_interchain_token_zero_supply_no_minter() {
     let mollusk = initialize_mollusk();
 
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();

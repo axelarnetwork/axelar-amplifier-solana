@@ -6,28 +6,23 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::state::{RoleProposal, Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_test_account,
     propose_token_manager_operatorship_helper, DeployInterchainTokenContext,
     ProposeTokenManagerOperatorshipContext,
 };
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn test_propose_token_manager_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let upgrade_authority = Pubkey::new_unique();
+    let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (_, payer_account) = new_test_account(); // Get a fresh account for payer
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -145,17 +140,12 @@ fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let upgrade_authority = Pubkey::new_unique();
+    let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (_, payer_account) = new_test_account(); // Get a fresh account for payer
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -253,17 +243,12 @@ fn test_reject_propose_token_manager_operatorship_without_operator_role() {
     let _program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
-    let upgrade_authority = Pubkey::new_unique();
+    let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (_, payer_account) = new_test_account(); // Get a fresh account for payer
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account =
-        Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();

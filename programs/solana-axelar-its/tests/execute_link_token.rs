@@ -16,10 +16,10 @@ use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
     create_test_mint, execute_its_instruction, init_its_service_with_ethereum_trusted,
-    initialize_mollusk, link_token_extra_accounts, ExecuteTestAccounts, ExecuteTestContext,
-    ExecuteTestParams,
+    initialize_mollusk, link_token_extra_accounts, new_empty_account, new_test_account,
+    ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
 };
-use solana_sdk::{account::Account, keccak, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::{keccak, pubkey::Pubkey};
 
 #[test]
 fn test_execute_link_token() {
@@ -51,11 +51,8 @@ fn test_execute_link_token() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -157,10 +154,7 @@ fn test_execute_link_token() {
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
             (token_mint_pda, existing_token_mint_account),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
             (payer, payer_account), // deployer same as payer
@@ -211,11 +205,8 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -317,10 +308,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
             (token_mint_pda, existing_token_mint_account),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
             (payer, payer_account), // deployer same as payer
@@ -367,11 +355,8 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -473,10 +458,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
             (token_mint_pda, existing_token_mint_account),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
             (payer, payer_account), // deployer same as payer
@@ -523,11 +505,8 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (payer, payer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -631,10 +610,7 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
     let accounts_config = ExecuteTestAccounts {
         core_accounts: vec![
             (token_mint_pda, existing_token_mint_account),
-            (
-                token_manager_ata,
-                Account::new(0, 0, &solana_sdk::system_program::ID),
-            ),
+            (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
             (payer, payer_account), // deployer same as payer
