@@ -5,7 +5,9 @@ use anchor_lang::{prelude::borsh, AccountDeserialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::state::{RoleProposal, Roles, UserRoles};
-use solana_axelar_its_test_fixtures::init_its_service;
+use solana_axelar_its_test_fixtures::{
+    init_its_service, propose_operatorship_helper, ProposeOperatorshipContext,
+};
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
     solana_sdk::{account::Account, pubkey::Pubkey},
@@ -34,8 +36,8 @@ fn test_accept_operatorship() {
         its_root_account,
         current_operator_roles_pda,
         current_operator_roles_account,
-        _program_data,
-        _program_data_account,
+        _,
+        _,
     ) = init_its_service(
         &mollusk,
         payer,
@@ -52,26 +54,8 @@ fn test_accept_operatorship() {
             .expect("Failed to deserialize current operator roles");
     assert!(current_roles_data.roles.contains(Roles::OPERATOR));
 
-    let (proposal_pda, _bump) =
-        RoleProposal::find_pda(&its_root_pda, &current_operator, &new_operator, &program_id);
-
-    let propose_ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: current_operator_roles_pda,
-            resource_account: its_root_pda,
-            destination_user_account: new_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeOperatorship {}.data(),
-    };
-
-    let propose_accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -80,13 +64,13 @@ fn test_accept_operatorship() {
         ),
         (its_root_pda, its_root_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
-    let propose_result = mollusk.process_instruction(&propose_ix, &propose_accounts);
+    let checks = vec![Check::success()];
+    let (propose_result, mollusk) = propose_operatorship_helper(ctx, checks);
+
+    let (proposal_pda, _bump) =
+        RoleProposal::find_pda(&its_root_pda, &current_operator, &new_operator, &program_id);
     assert!(propose_result.program_result.is_ok());
 
     let proposal_account_after_propose = propose_result

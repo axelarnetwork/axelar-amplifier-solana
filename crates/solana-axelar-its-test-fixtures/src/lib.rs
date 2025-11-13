@@ -31,3 +31,5 @@ pub use execute::*;
 pub mod deploy_remote_canonical_token;
 pub use deploy_remote_canonical_token::*;
 
+pub mod role_management;
+pub use role_management::*;
