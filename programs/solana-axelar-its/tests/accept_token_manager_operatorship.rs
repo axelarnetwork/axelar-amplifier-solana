@@ -2,19 +2,16 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::AccountDeserialize;
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    propose_token_manager_operatorship_helper, DeployInterchainTokenContext,
+    accept_token_manager_operatorship_helper, deploy_interchain_token_helper, init_its_service,
+    initialize_mollusk, propose_token_manager_operatorship_helper,
+    AcceptTokenManagerOperatorshipContext, DeployInterchainTokenContext,
     ProposeTokenManagerOperatorshipContext,
 };
-use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
-};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_accept_token_manager_operatorship() {
@@ -134,31 +131,11 @@ fn test_accept_token_manager_operatorship() {
     let (new_operator_roles_pda, new_operator_roles_bump) =
         UserRoles::find_pda(&token_manager_pda, &proposed_operator);
 
-    let accept_ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::AcceptTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            destination_user_account: proposed_operator,
-            destination_roles_account: new_operator_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            origin_user_account: current_operator,
-            origin_roles_account: minter_roles_pda,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::AcceptTokenManagerOperatorship {}.data(),
-    };
-
-    let accept_accounts = vec![
-        keyed_account_for_system_program(),
+    let accept_ctx = AcceptTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        new_operator_roles_pda,
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (current_operator, current_operator_account.clone()),
@@ -170,9 +147,10 @@ fn test_accept_token_manager_operatorship() {
                 .clone(),
         ),
         (proposal_pda, proposal_account.clone()),
-    ];
+    );
 
-    let accept_result = mollusk.process_instruction(&accept_ix, &accept_accounts);
+    let (accept_result, _) =
+        accept_token_manager_operatorship_helper(accept_ctx, vec![Check::success()]);
     assert!(accept_result.program_result.is_ok());
 
     // Old operator should no longer have OPERATOR role
@@ -324,34 +302,14 @@ fn test_reject_invalid_token_manager_operatorship() {
     let (new_operator_roles_pda, _) =
         UserRoles::find_pda(&token_manager_pda, &malicious_proposed_operator);
 
-    let accept_ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::AcceptTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            destination_user_account: malicious_proposed_operator,
-            destination_roles_account: new_operator_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            origin_user_account: current_operator,
-            origin_roles_account: minter_roles_pda,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::AcceptTokenManagerOperatorship {}.data(),
-    };
-
-    let accept_accounts = vec![
-        keyed_account_for_system_program(),
+    let accept_ctx = AcceptTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (
             malicious_proposed_operator,
             malicious_proposed_operator_account,
         ),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        new_operator_roles_pda,
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (current_operator, current_operator_account.clone()),
@@ -363,9 +321,13 @@ fn test_reject_invalid_token_manager_operatorship() {
                 .clone(),
         ),
         (proposal_pda, proposal_account.clone()),
-    ];
+    );
 
-    let accept_result = mollusk.process_instruction(&accept_ix, &accept_accounts);
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
+    )];
+
+    let (accept_result, _) = accept_token_manager_operatorship_helper(accept_ctx, checks);
     assert!(accept_result.program_result.is_err());
 
     // Old operator should still have OPERATOR role

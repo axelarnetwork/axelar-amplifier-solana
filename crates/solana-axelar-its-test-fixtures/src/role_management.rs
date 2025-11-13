@@ -294,3 +294,111 @@ pub fn propose_token_manager_operatorship_helper(
         .process_and_validate_instruction(&ix, &accounts, &checks);
     (result, ctx.mollusk)
 }
+
+pub struct AcceptTokenManagerOperatorshipContext {
+    pub mollusk: Mollusk,
+    pub payer: (Pubkey, Account),
+    pub destination_user_account: (Pubkey, Account),
+    pub destination_roles_account: (Pubkey, Account),
+    pub its_root_pda: (Pubkey, Account),
+    pub token_manager_account: (Pubkey, Account),
+    pub origin_user_account: (Pubkey, Account),
+    pub origin_roles_account: (Pubkey, Account),
+    pub proposal_account: (Pubkey, Account),
+}
+
+impl AcceptTokenManagerOperatorshipContext {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        mollusk: Mollusk,
+        payer: (Pubkey, Account),
+        destination_user_account: (Pubkey, Account),
+        destination_roles_pda: Pubkey,
+        its_root_pda: (Pubkey, Account),
+        token_manager_account: (Pubkey, Account),
+        origin_user_account: (Pubkey, Account),
+        origin_roles_account: (Pubkey, Account),
+        proposal_account: (Pubkey, Account),
+    ) -> Self {
+        Self {
+            mollusk,
+            payer,
+            destination_user_account,
+            destination_roles_account: (
+                destination_roles_pda,
+                Account::new(0, 0, &solana_sdk::system_program::ID),
+            ),
+            its_root_pda,
+            token_manager_account,
+            origin_user_account,
+            origin_roles_account,
+            proposal_account,
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn with_custom_destination_roles_account(
+        mollusk: Mollusk,
+        payer: (Pubkey, Account),
+        destination_user_account: (Pubkey, Account),
+        custom_destination_roles_account: (Pubkey, Account),
+        its_root_pda: (Pubkey, Account),
+        token_manager_account: (Pubkey, Account),
+        origin_user_account: (Pubkey, Account),
+        origin_roles_account: (Pubkey, Account),
+        proposal_account: (Pubkey, Account),
+    ) -> Self {
+        Self {
+            mollusk,
+            payer,
+            destination_user_account,
+            destination_roles_account: custom_destination_roles_account,
+            its_root_pda,
+            token_manager_account,
+            origin_user_account,
+            origin_roles_account,
+            proposal_account,
+        }
+    }
+}
+
+pub fn accept_token_manager_operatorship_helper(
+    ctx: AcceptTokenManagerOperatorshipContext,
+    checks: Vec<Check>,
+) -> (InstructionResult, Mollusk) {
+    let program_id = solana_axelar_its::id();
+
+    let ix = Instruction {
+        program_id,
+        accounts: solana_axelar_its::accounts::AcceptTokenManagerOperatorship {
+            system_program: solana_sdk::system_program::ID,
+            payer: ctx.payer.0,
+            destination_user_account: ctx.destination_user_account.0,
+            destination_roles_account: ctx.destination_roles_account.0,
+            its_root_pda: ctx.its_root_pda.0,
+            token_manager_account: ctx.token_manager_account.0,
+            origin_user_account: ctx.origin_user_account.0,
+            origin_roles_account: ctx.origin_roles_account.0,
+            proposal_account: ctx.proposal_account.0,
+        }
+        .to_account_metas(None),
+        data: solana_axelar_its::instruction::AcceptTokenManagerOperatorship {}.data(),
+    };
+
+    let accounts = vec![
+        keyed_account_for_system_program(),
+        ctx.payer,
+        ctx.destination_user_account,
+        ctx.destination_roles_account,
+        ctx.its_root_pda,
+        ctx.token_manager_account,
+        ctx.origin_user_account,
+        ctx.origin_roles_account,
+        ctx.proposal_account,
+    ];
+
+    let result = ctx
+        .mollusk
+        .process_and_validate_instruction(&ix, &accounts, &checks);
+    (result, ctx.mollusk)
+}
