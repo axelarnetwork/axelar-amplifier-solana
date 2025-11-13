@@ -145,7 +145,7 @@ fn test_execute_deploy_interchain_token_success() {
         ],
         extra_accounts: vec![
             (deployer_ata, new_empty_account()),
-            (payer, payer_account), // deployer is also payer
+            (payer, payer_account.clone()),
             (
                 solana_sdk::sysvar::instructions::ID,
                 Account {
@@ -173,6 +173,7 @@ fn test_execute_deploy_interchain_token_success() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let checks = vec![Check::success()];
@@ -363,6 +364,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let checks = vec![Check::err(
@@ -521,6 +523,7 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let checks = vec![Check::err(

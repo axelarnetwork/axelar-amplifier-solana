@@ -2,34 +2,30 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::AccountDeserialize;
 use anchor_spl::{
-    associated_token::{
-        get_associated_token_address_with_program_id, spl_associated_token_account,
-    },
+    associated_token::get_associated_token_address_with_program_id,
     token_2022::spl_token_2022::{self},
 };
 use interchain_token_transfer_gmp::{
     DeployInterchainToken, GMPPayload, InterchainTransfer, ReceiveFromHub,
 };
-use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use mollusk_test_utils::get_event_authority_and_program_accounts;
+use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
-use solana_axelar_gateway::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
+use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsError};
 use solana_axelar_its_test_fixtures::{
-    create_rent_sysvar_data, create_sysvar_instructions_data,
-    deploy_interchain_token_extra_accounts, execute_its_instruction, get_message_signing_pda,
-    get_token_mint_pda, init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs,
-    interchain_transfer_extra_accounts, keyed_account_for_program, new_empty_account,
+    create_sysvar_instructions_data, deploy_interchain_token_extra_accounts,
+    execute_its_instruction, get_token_mint_pda, init_its_service_with_ethereum_trusted,
+    initialize_mollusk_with_programs, interchain_transfer_extra_accounts, new_empty_account,
     new_test_account, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
-use solana_sdk::{account::Account, instruction::Instruction, keccak, pubkey::Pubkey};
+use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
@@ -52,7 +48,6 @@ fn test_execute_interchain_transfer_success() {
 
     // Step 4: Initialize ITS service
     let (payer, payer_account) = new_test_account();
-
     let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
@@ -190,6 +185,7 @@ fn test_execute_interchain_transfer_success() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let deploy_result = execute_its_instruction(
@@ -272,115 +268,61 @@ fn test_execute_interchain_transfer_success() {
     let deployer_ata_account_after_deploy =
         deploy_result.result.get_account(&deployer_ata).unwrap();
 
-    // Use new mollusk for transfer execution
+    // Use new mollusk for transfer execution with helper function
     let transfer_mollusk = initialize_mollusk_with_programs();
+    let transfer_context = ExecuteTestContext {
+        mollusk: transfer_mollusk,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        payer: (payer, payer_account.clone()),
+    };
 
-    let transfer_instruction_data = solana_axelar_its::instruction::Execute {
+    let transfer_params = ExecuteTestParams {
         message: transfer_message.clone(),
         payload: transfer_encoded_payload,
-    };
-
-    let (transfer_signing_pda, _) = get_message_signing_pda(&transfer_message);
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let transfer_executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id,
         incoming_message_pda: *transfer_incoming_message_pda,
-        signing_pda: transfer_signing_pda,
-        gateway_root_pda,
-        event_authority: gateway_event_authority,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
+        incoming_message_account_data: transfer_incoming_message_account_data.clone(),
     };
 
-    let transfer_accounts = solana_axelar_its::accounts::Execute {
-        executable: transfer_executable_accounts,
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-        event_authority: its_event_authority,
-        program: program_id,
-    };
-
-    let mut transfer_account_metas = transfer_accounts.to_account_metas(None);
-    transfer_account_metas.extend(interchain_transfer_extra_accounts(
-        destination_pubkey,
-        destination_ata,
-    ));
-
-    let transfer_execute_instruction = Instruction {
-        program_id,
-        accounts: transfer_account_metas,
-        data: transfer_instruction_data.data(),
-    };
-
-    let transfer_incoming_message_account = Account {
-        lamports: transfer_mollusk
-            .sysvars
-            .rent
-            .minimum_balance(transfer_incoming_message_account_data.len()),
-        data: transfer_incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let transfer_execute_accounts = vec![
-        (
-            *transfer_incoming_message_pda,
-            transfer_incoming_message_account,
+    let transfer_accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, token_mint_account_after_deploy.clone()),
+            (token_manager_ata, token_manager_ata_after_deploy.clone()),
+        ],
+        extra_accounts: vec![
+            (destination_pubkey, payer_account.clone()),
+            (destination_ata, deployer_ata_account_after_deploy.clone()),
+        ],
+        extra_account_metas: interchain_transfer_extra_accounts(
+            destination_ata,
+            destination_pubkey,
         ),
-        (transfer_signing_pda, new_empty_account()),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (gateway_event_authority, new_empty_account()),
-        keyed_account_for_program(GATEWAY_PROGRAM_ID),
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account),
-        (
-            token_manager_pda,
-            token_manager_account_after_deploy.clone(),
-        ),
-        (token_mint_pda, token_mint_account_after_deploy.clone()),
-        (token_manager_ata, token_manager_ata_after_deploy.clone()),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for InterchainTransfer
-        (destination_pubkey, payer_account.clone()),
-        (destination_ata, deployer_ata_account_after_deploy.clone()),
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
+        token_manager_account: Some(token_manager_account_after_deploy.clone()),
+    };
 
-    let transfer_result = transfer_mollusk
-        .process_instruction(&transfer_execute_instruction, &transfer_execute_accounts);
+    let transfer_result = execute_its_instruction(
+        transfer_context,
+        transfer_params,
+        transfer_accounts_config,
+        vec![mollusk_svm::result::Check::success()],
+    );
 
-    assert!(transfer_result.program_result.is_ok());
+    assert!(transfer_result.result.program_result.is_ok());
 
-    let token_manager_account = transfer_result.get_account(&token_manager_pda).unwrap();
+    let token_manager_account = transfer_result
+        .result
+        .get_account(&token_manager_pda)
+        .unwrap();
     let token_manager =
         TokenManager::try_deserialize(&mut token_manager_account.data.as_ref()).unwrap();
     assert_eq!(token_manager.token_id, token_id);
 
     // Verify that the destination got their tokens
-    let destination_ata_account_after = transfer_result.get_account(&destination_ata).unwrap();
+    let destination_ata_account_after = transfer_result
+        .result
+        .get_account(&destination_ata)
+        .unwrap();
     let destination_ata_data =
         StateWithExtensions::<Token2022Account>::unpack(&destination_ata_account_after.data)
             .unwrap();
@@ -390,7 +332,7 @@ fn test_execute_interchain_transfer_success() {
     assert_eq!(destination_ata_data.base.owner, destination_pubkey,);
     assert!(destination_ata_data.base.is_initialized());
 
-    let token_mint_account_after = transfer_result.get_account(&token_mint_pda).unwrap();
+    let token_mint_account_after = transfer_result.result.get_account(&token_mint_pda).unwrap();
     let token_mint_after =
         spl_token_2022::state::Mint::unpack(&token_mint_account_after.data).unwrap();
 
@@ -555,6 +497,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let deploy_result = execute_its_instruction(
@@ -637,114 +580,51 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     let deployer_ata_account_after_deploy =
         deploy_result.result.get_account(&deployer_ata).unwrap();
 
-    // Use new mollusk for transfer execution
+    // Use new mollusk for transfer execution with helper function
     let transfer_mollusk = initialize_mollusk_with_programs();
+    let transfer_context = ExecuteTestContext {
+        mollusk: transfer_mollusk,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        payer: (payer, payer_account.clone()),
+    };
 
-    let transfer_instruction_data = solana_axelar_its::instruction::Execute {
+    let transfer_params = ExecuteTestParams {
         message: transfer_message.clone(),
         payload: transfer_encoded_payload,
-    };
-
-    let (transfer_signing_pda, _) = get_message_signing_pda(&transfer_message);
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let transfer_executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id,
         incoming_message_pda: *transfer_incoming_message_pda,
-        signing_pda: transfer_signing_pda,
-        gateway_root_pda,
-        event_authority: gateway_event_authority,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
+        incoming_message_account_data: transfer_incoming_message_account_data.clone(),
     };
 
-    let transfer_accounts = solana_axelar_its::accounts::Execute {
-        executable: transfer_executable_accounts,
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-        event_authority: its_event_authority,
-        program: program_id,
-    };
-
-    let mut transfer_account_metas = transfer_accounts.to_account_metas(None);
-    transfer_account_metas.extend(interchain_transfer_extra_accounts(
-        destination_pubkey,
-        destination_ata,
-    ));
-
-    let transfer_execute_instruction = Instruction {
-        program_id,
-        accounts: transfer_account_metas,
-        data: transfer_instruction_data.data(),
-    };
-
-    let transfer_incoming_message_account = Account {
-        lamports: transfer_mollusk
-            .sysvars
-            .rent
-            .minimum_balance(transfer_incoming_message_account_data.len()),
-        data: transfer_incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let transfer_execute_accounts = vec![
-        (
-            *transfer_incoming_message_pda,
-            transfer_incoming_message_account,
+    let transfer_accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, token_mint_account_after_deploy.clone()),
+            (token_manager_ata, token_manager_ata_after_deploy.clone()),
+        ],
+        extra_accounts: vec![
+            (destination_pubkey, payer_account.clone()),
+            (destination_ata, deployer_ata_account_after_deploy.clone()),
+        ],
+        extra_account_metas: interchain_transfer_extra_accounts(
+            destination_ata,
+            destination_pubkey,
         ),
-        (transfer_signing_pda, new_empty_account()),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (gateway_event_authority, new_empty_account()),
-        keyed_account_for_program(GATEWAY_PROGRAM_ID),
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            token_manager_account_after_deploy.clone(),
-        ),
-        (token_mint_pda, token_mint_account_after_deploy.clone()),
-        (token_manager_ata, token_manager_ata_after_deploy.clone()),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for InterchainTransfer
-        (destination_pubkey, payer_account.clone()),
-        (destination_ata, deployer_ata_account_after_deploy.clone()),
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
+        token_manager_account: Some(token_manager_account_after_deploy.clone()),
+    };
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(ItsError::InvalidAmount).into(),
     )];
 
-    let transfer_result = transfer_mollusk.process_and_validate_instruction(
-        &transfer_execute_instruction,
-        &transfer_execute_accounts,
-        &checks,
+    let transfer_result = execute_its_instruction(
+        transfer_context,
+        transfer_params,
+        transfer_accounts_config,
+        checks,
     );
 
-    assert!(transfer_result.program_result.is_err());
+    assert!(transfer_result.result.program_result.is_err());
 }
 
 #[test]
@@ -905,6 +785,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let deploy_result = execute_its_instruction(
@@ -989,114 +870,53 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     let deployer_ata_account_after_deploy =
         deploy_result.result.get_account(&deployer_ata).unwrap();
 
-    // Use new mollusk for transfer execution
+    // Use new mollusk for transfer execution with helper function
     let transfer_mollusk = initialize_mollusk_with_programs();
+    let transfer_context = ExecuteTestContext {
+        mollusk: transfer_mollusk,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        payer: (payer, payer_account.clone()),
+    };
 
-    let transfer_instruction_data = solana_axelar_its::instruction::Execute {
+    let wrong_token_id = [123u8; 32];
+
+    let transfer_params = ExecuteTestParams {
         message: transfer_message.clone(),
         payload: transfer_encoded_payload,
-    };
-
-    let (transfer_signing_pda, _) = get_message_signing_pda(&transfer_message);
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let transfer_executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id: wrong_token_id, // Use the wrong token ID
         incoming_message_pda: *transfer_incoming_message_pda,
-        signing_pda: transfer_signing_pda,
-        gateway_root_pda,
-        event_authority: gateway_event_authority,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
+        incoming_message_account_data: transfer_incoming_message_account_data.clone(),
     };
 
-    let transfer_accounts = solana_axelar_its::accounts::Execute {
-        executable: transfer_executable_accounts,
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-        event_authority: its_event_authority,
-        program: program_id,
-    };
-
-    let mut transfer_account_metas = transfer_accounts.to_account_metas(None);
-    transfer_account_metas.extend(interchain_transfer_extra_accounts(
-        destination_pubkey,
-        destination_ata,
-    ));
-
-    let transfer_execute_instruction = Instruction {
-        program_id,
-        accounts: transfer_account_metas,
-        data: transfer_instruction_data.data(),
-    };
-
-    let transfer_incoming_message_account = Account {
-        lamports: transfer_mollusk
-            .sysvars
-            .rent
-            .minimum_balance(transfer_incoming_message_account_data.len()),
-        data: transfer_incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let transfer_execute_accounts = vec![
-        (
-            *transfer_incoming_message_pda,
-            transfer_incoming_message_account,
+    let transfer_accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, token_mint_account_after_deploy.clone()),
+            (token_manager_ata, token_manager_ata_after_deploy.clone()),
+        ],
+        extra_accounts: vec![
+            (destination_pubkey, payer_account.clone()),
+            (destination_ata, deployer_ata_account_after_deploy.clone()),
+        ],
+        extra_account_metas: interchain_transfer_extra_accounts(
+            destination_ata,
+            destination_pubkey,
         ),
-        (transfer_signing_pda, new_empty_account()),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (gateway_event_authority, new_empty_account()),
-        keyed_account_for_program(GATEWAY_PROGRAM_ID),
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            token_manager_account_after_deploy.clone(),
-        ),
-        (token_mint_pda, token_mint_account_after_deploy.clone()),
-        (token_manager_ata, token_manager_ata_after_deploy.clone()),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for InterchainTransfer
-        (destination_pubkey, payer_account.clone()),
-        (destination_ata, deployer_ata_account_after_deploy.clone()),
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
+        token_manager_account: Some(token_manager_account_after_deploy.clone()),
+    };
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    let transfer_result = transfer_mollusk.process_and_validate_instruction(
-        &transfer_execute_instruction,
-        &transfer_execute_accounts,
-        &checks,
+    let transfer_result = execute_its_instruction(
+        transfer_context,
+        transfer_params,
+        transfer_accounts_config,
+        checks,
     );
 
-    assert!(transfer_result.program_result.is_err());
+    assert!(transfer_result.result.program_result.is_err());
 }
 
 #[test]
@@ -1257,6 +1077,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
             payer,
             metadata_account,
         ),
+        token_manager_account: None,
     };
 
     let deploy_result = execute_its_instruction(
@@ -1339,112 +1160,49 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     let deployer_ata_account_after_deploy =
         deploy_result.result.get_account(&deployer_ata).unwrap();
 
-    // Use new mollusk for transfer execution
+    // Use new mollusk for transfer execution with helper function
     let transfer_mollusk = initialize_mollusk_with_programs();
+    let transfer_context = ExecuteTestContext {
+        mollusk: transfer_mollusk,
+        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
+        its_root: (its_root_pda, its_root_account.clone()),
+        payer: (payer, payer_account.clone()),
+    };
 
-    let transfer_instruction_data = solana_axelar_its::instruction::Execute {
+    let transfer_params = ExecuteTestParams {
         message: transfer_message.clone(),
         payload: transfer_encoded_payload,
-    };
-
-    let (transfer_signing_pda, _) = get_message_signing_pda(&transfer_message);
-    let (gateway_event_authority, _, _) =
-        get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
-    let (its_event_authority, event_authority_account, its_program_account) =
-        get_event_authority_and_program_accounts(&program_id);
-
-    let transfer_executable_accounts = solana_axelar_its::accounts::AxelarExecuteAccounts {
+        token_id,
         incoming_message_pda: *transfer_incoming_message_pda,
-        signing_pda: transfer_signing_pda,
-        gateway_root_pda,
-        event_authority: gateway_event_authority,
-        axelar_gateway_program: GATEWAY_PROGRAM_ID,
+        incoming_message_account_data: transfer_incoming_message_account_data.clone(),
     };
 
-    let transfer_accounts = solana_axelar_its::accounts::Execute {
-        executable: transfer_executable_accounts,
-        payer,
-        its_root_pda,
-        token_manager_pda,
-        token_mint: token_mint_pda,
-        token_manager_ata,
-        token_program: spl_token_2022::id(),
-        associated_token_program: spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
-        event_authority: its_event_authority,
-        program: program_id,
-    };
-
-    let mut transfer_account_metas = transfer_accounts.to_account_metas(None);
-    transfer_account_metas.extend(interchain_transfer_extra_accounts(
-        destination_pubkey,
-        destination_ata,
-    ));
-
-    let transfer_execute_instruction = Instruction {
-        program_id,
-        accounts: transfer_account_metas,
-        data: transfer_instruction_data.data(),
-    };
-
-    let transfer_incoming_message_account = Account {
-        lamports: transfer_mollusk
-            .sysvars
-            .rent
-            .minimum_balance(transfer_incoming_message_account_data.len()),
-        data: transfer_incoming_message_account_data.clone(),
-        owner: GATEWAY_PROGRAM_ID,
-        executable: false,
-        rent_epoch: 0,
-    };
-
-    let transfer_execute_accounts = vec![
-        (
-            *transfer_incoming_message_pda,
-            transfer_incoming_message_account,
+    let transfer_accounts_config = ExecuteTestAccounts {
+        core_accounts: vec![
+            (token_mint_pda, token_mint_account_after_deploy.clone()),
+            (token_manager_ata, token_manager_ata_after_deploy.clone()),
+        ],
+        extra_accounts: vec![
+            (destination_pubkey, payer_account.clone()),
+            (destination_ata, deployer_ata_account_after_deploy.clone()),
+        ],
+        extra_account_metas: interchain_transfer_extra_accounts(
+            destination_ata,
+            destination_pubkey,
         ),
-        (transfer_signing_pda, new_empty_account()),
-        (gateway_root_pda, gateway_root_pda_account.clone()),
-        (gateway_event_authority, new_empty_account()),
-        keyed_account_for_program(GATEWAY_PROGRAM_ID),
-        (payer, payer_account.clone()),
-        (its_root_pda, its_root_account.clone()),
-        (
-            token_manager_pda,
-            token_manager_account_after_deploy.clone(),
-        ),
-        (token_mint_pda, token_mint_account_after_deploy.clone()),
-        (token_manager_ata, token_manager_ata_after_deploy.clone()),
-        mollusk_svm_programs_token::token2022::keyed_account(),
-        mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        keyed_account_for_system_program(),
-        // Extra accounts for InterchainTransfer
-        (destination_pubkey, payer_account.clone()),
-        (destination_ata, deployer_ata_account_after_deploy.clone()),
-        // Event CPI accounts
-        (its_event_authority, event_authority_account),
-        (program_id, its_program_account),
-    ];
+        token_manager_account: Some(token_manager_account_after_deploy.clone()),
+    };
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(ItsError::InvalidDestinationAddressAccount).into(),
     )];
 
-    let transfer_result = transfer_mollusk.process_and_validate_instruction(
-        &transfer_execute_instruction,
-        &transfer_execute_accounts,
-        &checks,
+    let transfer_result = execute_its_instruction(
+        transfer_context,
+        transfer_params,
+        transfer_accounts_config,
+        checks,
     );
 
-    assert!(transfer_result.program_result.is_err());
+    assert!(transfer_result.result.program_result.is_err());
 }

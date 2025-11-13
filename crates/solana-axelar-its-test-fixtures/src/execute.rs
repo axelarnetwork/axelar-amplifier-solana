@@ -29,6 +29,8 @@ pub struct ExecuteTestAccounts {
     pub extra_accounts: Vec<(Pubkey, Account)>,
     /// Extra account metas for remaining accounts
     pub extra_account_metas: Vec<AccountMeta>,
+    /// Optional token manager account data (if None, creates empty account)
+    pub token_manager_account: Option<Account>,
 }
 
 pub struct ExecuteTestResult {
@@ -58,6 +60,7 @@ pub fn execute_its_instruction(
         core_accounts,
         extra_accounts,
         extra_account_metas,
+        token_manager_account,
     } = accounts_config;
 
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, context.its_root.0);
@@ -148,7 +151,8 @@ pub fn execute_its_instruction(
         (context.its_root.0, context.its_root.1),
         (
             token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            token_manager_account
+                .unwrap_or_else(|| Account::new(0, 0, &solana_sdk::system_program::ID)),
         ),
     ];
 
@@ -227,7 +231,7 @@ pub fn interchain_transfer_extra_accounts(
     destination: Pubkey,
 ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
     solana_axelar_its::instructions::gmp::execute::execute_interchain_transfer_extra_accounts(
-        destination_token_account,
         destination,
+        destination_token_account,
     )
 }
