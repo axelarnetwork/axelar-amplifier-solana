@@ -27,7 +27,9 @@ use solana_axelar_its_test_fixtures::{
 use solana_axelar_its_test_fixtures::{
     init_its_service_with_ethereum_trusted, perform_interchain_transfer,
 };
-use solana_axelar_its_test_fixtures::{initialize_mollusk, InterchainTransferContext};
+use solana_axelar_its_test_fixtures::{
+    initialize_mollusk_with_programs, InterchainTransferContext,
+};
 use solana_sdk::program_pack::Pack;
 use solana_sdk::rent::Rent;
 use solana_sdk::signature::Keypair;
@@ -59,7 +61,7 @@ fn test_interchain_transfer_mint_burn() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -190,7 +192,7 @@ fn test_interchain_transfer_lock_unlock() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -350,7 +352,7 @@ fn test_reject_interchain_transfer_with_invalid_token_id() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -507,7 +509,7 @@ fn test_reject_interchain_transfer_if_sender_has_no_tokens() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -663,7 +665,7 @@ fn test_reject_interchain_transfer_if_amount_is_0() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -819,7 +821,7 @@ fn test_reject_interchain_transfer_if_destination_address_is_empty() {
     let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();

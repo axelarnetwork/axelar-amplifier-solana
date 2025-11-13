@@ -13,7 +13,7 @@ use solana_axelar_its::ItsError;
 use solana_axelar_its_test_fixtures::deploy_remote_interchain_token_helper;
 use solana_axelar_its_test_fixtures::init_gas_service;
 use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
-use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::initialize_mollusk_with_programs;
 use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::setup_operator;
 use solana_axelar_its_test_fixtures::DeployRemoteInterchainTokenContext;
@@ -49,7 +49,7 @@ fn test_deploy_remote_interchain_token() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -157,7 +157,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_token_manager() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -272,7 +272,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -384,7 +384,7 @@ fn test_reject_deploy_remote_interchain_token_for_missmatched_mint() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();

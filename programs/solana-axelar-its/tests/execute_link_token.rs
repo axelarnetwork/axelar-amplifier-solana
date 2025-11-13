@@ -7,7 +7,7 @@ use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, ReceiveFromHub};
 use mollusk_svm::result::Check;
-use solana_axelar_gateway::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
+use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
@@ -16,8 +16,8 @@ use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
     create_test_mint, execute_its_instruction, init_its_service_with_ethereum_trusted,
-    initialize_mollusk, link_token_extra_accounts, new_empty_account, new_test_account,
-    ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
+    initialize_mollusk_with_programs, link_token_extra_accounts, new_empty_account,
+    new_test_account, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
 };
 use solana_sdk::{keccak, pubkey::Pubkey};
 
@@ -36,16 +36,7 @@ fn test_execute_link_token() {
 
     // Step 3: Add ITS program to mollusk - USE the properly configured mollusk
     let program_id = solana_axelar_its::id();
-
-    // Use the properly configured mollusk that has Token2022 and other programs
-    let mut mollusk = initialize_mollusk();
-
-    // We still need to add the gateway program since initialize_mollusk doesn't include it for execution tests
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
 
     // Update setup to use our properly configured mollusk
     setup.mollusk = mollusk;
@@ -177,31 +168,18 @@ fn test_execute_link_token() {
 
 #[test]
 fn test_reject_execute_link_token_with_invalid_token_manager_type() {
-    // Step 1: Setup gateway with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
 
-    // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     assert!(init_result.program_result.is_ok());
 
-    // Step 3: Add ITS program to mollusk - USE the properly configured mollusk
     let program_id = solana_axelar_its::id();
+    let mollusk = initialize_mollusk_with_programs();
 
-    // Use the properly configured mollusk that has Token2022 and other programs
-    let mut mollusk = initialize_mollusk();
-
-    // We still need to add the gateway program since initialize_mollusk doesn't include it for execution tests
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
-
-    // Update setup to use our properly configured mollusk
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
@@ -338,18 +316,9 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
 
     assert!(init_result.program_result.is_ok());
 
-    // Step 3: Add ITS program to mollusk - USE the properly configured mollusk
+    // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
-
-    // Use the properly configured mollusk that has Token2022 and other programs
-    let mut mollusk = initialize_mollusk();
-
-    // We still need to add the gateway program since initialize_mollusk doesn't include it for execution tests
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
 
     // Update setup to use our properly configured mollusk
     setup.mollusk = mollusk;
@@ -488,18 +457,9 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
 
     assert!(init_result.program_result.is_ok());
 
-    // Step 3: Add ITS program to mollusk - USE the properly configured mollusk
+    // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
-
-    // Use the properly configured mollusk that has Token2022 and other programs
-    let mut mollusk = initialize_mollusk();
-
-    // We still need to add the gateway program since initialize_mollusk doesn't include it for execution tests
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
 
     // Update setup to use our properly configured mollusk
     setup.mollusk = mollusk;

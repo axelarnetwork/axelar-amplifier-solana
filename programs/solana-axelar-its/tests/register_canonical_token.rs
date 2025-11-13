@@ -16,7 +16,7 @@ use solana_axelar_its::{
 };
 use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::{
-    init_its_service, initialize_mollusk, register_canonical_interchain_token_helper,
+    init_its_service, initialize_mollusk_with_programs, register_canonical_interchain_token_helper,
 };
 use solana_program::program_pack::Pack;
 use solana_sdk::{signature::Keypair, signer::Signer};
@@ -24,7 +24,7 @@ use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_register_canonical_token() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
 
@@ -118,7 +118,7 @@ fn test_register_canonical_token() {
 
 #[test]
 fn test_reject_register_canonical_token_with_invalid_metadata() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
 

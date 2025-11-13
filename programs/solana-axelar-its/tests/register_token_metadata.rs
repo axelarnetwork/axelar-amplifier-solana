@@ -15,7 +15,7 @@ use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
 use solana_axelar_its_test_fixtures::init_gas_service;
 use solana_axelar_its_test_fixtures::init_its_service_with_ethereum_trusted;
-use solana_axelar_its_test_fixtures::initialize_mollusk;
+use solana_axelar_its_test_fixtures::initialize_mollusk_with_programs;
 use solana_axelar_its_test_fixtures::new_empty_account;
 use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::setup_operator;
@@ -52,7 +52,7 @@ fn test_register_token_metadata() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
 
@@ -197,7 +197,7 @@ fn test_register_token_metadata_failure_for_empty_mint() {
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
 

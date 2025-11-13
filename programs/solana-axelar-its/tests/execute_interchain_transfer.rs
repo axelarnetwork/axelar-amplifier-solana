@@ -23,7 +23,7 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsError};
 use solana_axelar_its_test_fixtures::{
     create_rent_sysvar_data, create_sysvar_instructions_data, get_message_signing_pda,
-    get_token_mint_pda, init_its_service_with_ethereum_trusted, initialize_mollusk,
+    get_token_mint_pda, init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs,
     keyed_account_for_program, new_empty_account, new_test_account,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
@@ -45,12 +45,7 @@ fn test_execute_interchain_transfer_success() {
 
     // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
@@ -482,12 +477,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
 
     // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
@@ -902,12 +892,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
 
     // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
@@ -1325,12 +1310,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
 
     // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service

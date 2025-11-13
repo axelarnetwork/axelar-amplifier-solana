@@ -9,8 +9,8 @@ use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtension
 use mollusk_svm::result::Check;
 use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_empty_account,
-    new_test_account, DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
+    new_empty_account, new_test_account, DeployInterchainTokenContext,
 };
 use solana_sdk::program_pack::Pack;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey, rent::Rent};
@@ -19,7 +19,7 @@ use spl_token_2022::state::Account as Token2022Account;
 #[test]
 fn test_deploy_and_mint_interchain_token() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -187,7 +187,7 @@ fn test_deploy_and_mint_interchain_token() {
 #[test]
 fn test_reject_mint_interchain_token_invalid_authority() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -342,7 +342,7 @@ fn test_reject_mint_interchain_token_invalid_authority() {
 #[test]
 fn test_reject_mint_interchain_token_with_no_minter_role() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();

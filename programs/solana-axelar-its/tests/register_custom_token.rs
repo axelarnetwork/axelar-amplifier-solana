@@ -17,12 +17,12 @@ use solana_axelar_its_test_fixtures::{
     create_test_mint, execute_register_custom_token_helper, new_empty_account, new_test_account,
     RegisterCustomTokenContext, RegisterCustomTokenParams,
 };
-use solana_axelar_its_test_fixtures::{init_its_service, initialize_mollusk};
+use solana_axelar_its_test_fixtures::{init_its_service, initialize_mollusk_with_programs};
 use solana_sdk::{instruction::Instruction, pubkey::Pubkey};
 
 #[test]
 fn test_register_custom_token_without_operator() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -98,7 +98,7 @@ fn test_register_custom_token_without_operator() {
 
 #[test]
 fn test_reject_register_custom_token_with_native_interchain() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -151,7 +151,7 @@ fn test_reject_register_custom_token_with_native_interchain() {
 
 #[test]
 fn test_register_custom_token_with_operator() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -225,7 +225,7 @@ fn test_register_custom_token_with_operator() {
 #[test]
 fn test_reject_register_custom_token_with_mismatched_operator() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();

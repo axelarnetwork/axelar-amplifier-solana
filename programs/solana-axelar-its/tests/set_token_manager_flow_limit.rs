@@ -12,8 +12,8 @@ use solana_axelar_its::{
     utils::interchain_token_id,
 };
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_default_account,
-    new_empty_account, new_test_account, DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
+    new_default_account, new_empty_account, new_test_account, DeployInterchainTokenContext,
 };
 use solana_program::instruction::Instruction;
 use solana_sdk::pubkey::Pubkey;
@@ -21,7 +21,7 @@ use solana_sdk::pubkey::Pubkey;
 #[test]
 fn test_set_token_manager_flow_limit_success() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -203,7 +203,7 @@ fn test_set_token_manager_flow_limit_success() {
 #[test]
 fn test_reject_set_token_manager_flow_limit_with_unauthorized_operator() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -372,7 +372,7 @@ fn test_reject_set_token_manager_flow_limit_with_unauthorized_operator() {
 #[test]
 fn test_reject_set_token_manager_flow_limit_without_operator_role() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();

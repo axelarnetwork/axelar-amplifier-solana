@@ -109,7 +109,7 @@ pub fn create_sysvar_instructions_data() -> Vec<u8> {
     construct_instructions_data(instructions)
 }
 
-pub fn initialize_mollusk() -> Mollusk {
+pub fn initialize_mollusk_with_programs() -> Mollusk {
     let program_id = solana_axelar_its::id();
     let mut mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 

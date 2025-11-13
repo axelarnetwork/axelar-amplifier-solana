@@ -9,7 +9,7 @@ use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
-use solana_axelar_gateway::{GatewayConfig, ID as GATEWAY_PROGRAM_ID};
+use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
@@ -21,7 +21,7 @@ use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::{
     create_sysvar_instructions_data, deploy_interchain_token_extra_accounts,
     execute_its_instruction, get_token_mint_pda, init_its_service_with_ethereum_trusted,
-    initialize_mollusk, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
+    initialize_mollusk_with_programs, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
 use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
@@ -39,12 +39,7 @@ fn test_execute_deploy_interchain_token_success() {
     assert!(init_result.program_result.is_ok());
 
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     let (payer, payer_account) = new_test_account();
@@ -234,12 +229,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     assert!(init_result.program_result.is_ok());
 
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     let (payer, payer_account) = new_test_account();
@@ -395,12 +385,7 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
     assert!(init_result.program_result.is_ok());
 
     let program_id = solana_axelar_its::id();
-    let mut mollusk = initialize_mollusk();
-    mollusk.add_program(
-        &GATEWAY_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    let mollusk = initialize_mollusk_with_programs();
     setup.mollusk = mollusk;
 
     let (payer, payer_account) = new_test_account();

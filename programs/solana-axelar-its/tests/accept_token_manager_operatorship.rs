@@ -7,7 +7,7 @@ use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     accept_token_manager_operatorship_helper, deploy_interchain_token_helper, init_its_service,
-    initialize_mollusk, new_empty_account, new_test_account,
+    initialize_mollusk_with_programs, new_empty_account, new_test_account,
     propose_token_manager_operatorship_helper, AcceptTokenManagerOperatorshipContext,
     DeployInterchainTokenContext, ProposeTokenManagerOperatorshipContext,
 };
@@ -16,7 +16,7 @@ use solana_sdk::pubkey::Pubkey;
 #[test]
 fn test_accept_token_manager_operatorship() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
@@ -175,7 +175,7 @@ fn test_accept_token_manager_operatorship() {
 #[test]
 fn test_reject_invalid_token_manager_operatorship() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;

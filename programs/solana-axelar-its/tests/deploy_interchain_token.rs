@@ -12,15 +12,15 @@ use solana_axelar_its::{
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_test_account,
-    DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
+    new_test_account, DeployInterchainTokenContext,
 };
 use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_deploy_interchain_token() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
     let (operator, operator_account) = new_test_account();
@@ -186,7 +186,7 @@ fn test_deploy_interchain_token() {
 
 #[test]
 fn test_reject_deploy_interchain_token_zero_supply_no_minter() {
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();

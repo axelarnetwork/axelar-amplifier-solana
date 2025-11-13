@@ -7,8 +7,8 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk, new_empty_account,
-    new_test_account, DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
+    new_empty_account, new_test_account, DeployInterchainTokenContext,
 };
 use {
     anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
@@ -18,7 +18,7 @@ use {
 #[test]
 fn test_transfer_token_manager_operatorship_success() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
@@ -176,7 +176,7 @@ fn test_transfer_token_manager_operatorship_success() {
 #[test]
 fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
@@ -297,7 +297,7 @@ fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() 
 #[test]
 fn test_reject_transfer_token_manager_operatorship_without_operator_role() {
     let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
+    let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
