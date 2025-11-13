@@ -58,21 +58,21 @@ pub fn process_outbound(
     gmp_accounts: GMPAccounts,
     destination_chain: String,
     gas_value: u64,
-    inner_payload: GMPPayload,
-    should_send_to_hub: bool,
+    payload: GMPPayload,
 ) -> Result<()> {
-    // Wrap the inner payload if we need to send to hub
-    let payload = if should_send_to_hub {
-        GMPPayload::SendToHub(SendToHub {
+    // All outbound payloads except RegisterTokenMetadata need to be wrapped in SendToHub
+    // See https://github.com/axelarnetwork/axelar-amplifier/blob/main/packages/interchain-token-service-std/src/primitives.rs#L107-L121
+    let payload = if matches!(payload, GMPPayload::RegisterTokenMetadata(_)) {
+        payload.encode()
+    } else {
+        let wrapped = GMPPayload::SendToHub(SendToHub {
             selector: SendToHub::MESSAGE_TYPE_ID
                 .try_into()
                 .map_err(|_err| ItsError::ArithmeticOverflow)?,
             destination_chain: destination_chain.clone(),
-            payload: inner_payload.encode().into(),
-        })
-        .encode()
-    } else {
-        inner_payload.encode()
+            payload: payload.encode().into(),
+        });
+        wrapped.encode()
     };
 
     let payload_hash = solana_program::keccak::hash(&payload).to_bytes();

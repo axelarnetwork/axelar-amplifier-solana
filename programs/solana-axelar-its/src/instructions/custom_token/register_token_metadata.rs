@@ -104,7 +104,6 @@ pub fn register_token_metadata_handler(
         ITS_HUB_CHAIN_NAME.to_owned(),
         gas_value,
         inner_payload,
-        false, // don't wrap inner payload
     )?;
 
     Ok(())
