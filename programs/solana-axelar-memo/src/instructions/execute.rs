@@ -11,7 +11,7 @@ pub struct Execute<'info> {
     pub executable: AxelarExecuteAccounts<'info>,
 
     // The counter account
-    #[account(mut, seeds = [Counter::SEED_PREFIX], bump)]
+    #[account(mut, seeds = [Counter::SEED_PREFIX], bump = counter.bump)]
     pub counter: Account<'info, Counter>,
 }
 

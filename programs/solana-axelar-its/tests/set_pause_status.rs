@@ -2,20 +2,15 @@
 #![allow(clippy::str_to_string)]
 #![allow(clippy::print_stdout)]
 
-use anchor_lang::{prelude::ProgramError, AccountDeserialize};
+use anchor_lang::AccountDeserialize;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
-use solana_axelar_its::state::InterchainTokenService;
+use solana_axelar_its::{state::InterchainTokenService, ItsError};
+use solana_axelar_its_test_fixtures::init_its_service;
 use {
-    anchor_lang::{
-        solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
-    },
+    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
     solana_sdk::{account::Account, pubkey::Pubkey},
 };
-
-// Import helper functions from initialize.rs
-mod initialize;
-use initialize::init_its_service;
 
 #[test]
 fn test_set_pause_status_success() {
@@ -24,10 +19,10 @@ fn test_set_pause_status_success() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority; // Must be upgrade authority
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -129,10 +124,10 @@ fn test_set_pause_status_already_paused() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -196,7 +191,9 @@ fn test_set_pause_status_already_paused() {
         (its_root_pda, paused_its_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidArgument)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+    )];
 
     mollusk.process_and_validate_instruction(
         &duplicate_pause_ix,
@@ -212,14 +209,15 @@ fn test_set_pause_status_unauthorized() {
 
     let upgrade_authority = Pubkey::new_unique();
     let authorized_payer = upgrade_authority;
-    let authorized_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let authorized_payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     // Unauthorized user
     let unauthorized_payer = Pubkey::new_unique();
-    let unauthorized_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let unauthorized_payer_account =
+        Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -261,7 +259,9 @@ fn test_set_pause_status_unauthorized() {
         (its_root_pda, its_root_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidAccountData)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidAccountData).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 
@@ -280,10 +280,10 @@ fn test_set_pause_status_already_unpaused() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -325,7 +325,9 @@ fn test_set_pause_status_already_unpaused() {
         (its_root_pda, its_root_account.clone()),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidArgument)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 }

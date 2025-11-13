@@ -1,3 +1,4 @@
+use alloy_primitives::U256;
 use alloy_sol_types::{
     abi::{
         token::{DynSeqToken, PackedSeqToken, WordToken},
@@ -106,10 +107,20 @@ fn extract_payload_slice_and_solana_accounts(
     // They are all represented by a single word (u256, which has 32 bytes).
     let mut accounts = Vec::with_capacity(account_words.len());
     for (WordToken(pubkey_token), WordToken(signer), WordToken(writable)) in account_words {
+        let signer = U256::from_be_bytes(signer.0);
+        if signer > U256::from(1) {
+            return Err(PayloadError::AbiError);
+        }
+
+        let writable = U256::from_be_bytes(writable.0);
+        if writable > U256::from(1) {
+            return Err(PayloadError::AbiError);
+        }
+
         accounts.push(SolanaAccountRepr {
             pubkey: pubkey_token,
-            is_signer: signer.last() == Some(&1),
-            is_writable: writable.last() == Some(&1),
+            is_signer: signer == U256::from(1),
+            is_writable: writable == U256::from(1),
         });
     }
 

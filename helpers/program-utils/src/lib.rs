@@ -11,7 +11,6 @@ use solana_program::sysvar::Sysvar;
 use solana_program::{msg, sysvar};
 use solana_sdk_ids::system_program;
 
-pub mod pda;
 /// mini helper to log from native Rust or to the program log
 /// Very useful for debugging when you have to run some code on Solana and via
 /// native Rust
@@ -200,11 +199,11 @@ pub fn transfer_lamports(
 /// 4. `lamports` field of both account infos should not currently be borrowed.
 ///
 /// # Examples
-/// ```
+/// ```ignore
 /// transfer_lamports_anchor!(
 ///  ctx.accounts.from_account,
 ///  ctx.accounts.to_account,
-///  amount
+///  amount,
 /// );
 /// ```
 #[macro_export]

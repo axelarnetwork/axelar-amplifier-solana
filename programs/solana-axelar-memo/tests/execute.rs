@@ -3,16 +3,16 @@
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use axelar_solana_encoding::hasher::MerkleTree;
 use axelar_solana_encoding::hasher::SolanaSyscallHasher;
-use axelar_solana_gateway_v2_test_fixtures::{
-    approve_message_helper, create_verifier_info, initialize_gateway,
-    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
-    verify_signature_helper,
-};
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway::{CrossChainId, Message, MessageLeaf};
+use solana_axelar_gateway_test_fixtures::{
+    approve_message_helper, create_verifier_info, initialize_gateway,
+    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
+    verify_signature_helper,
+};
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;

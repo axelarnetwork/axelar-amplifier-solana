@@ -3,16 +3,16 @@
 /// Common Error type used within the encoding crate.
 #[derive(Debug, thiserror::Error)]
 pub enum EncodingError {
-    /// Indicates that an attempt was made to merkelise an empty verifier set.
+    /// Indicates that an attempt was made to merklize an empty verifier set.
     #[error("Empty verifier set")]
-    CannotMerkeliseEmptyVerifierSet,
+    CannotMerklizeEmptyVerifierSet,
 
-    /// Indicates that an attempt was made to merkelise an empty message batch.
+    /// Indicates that an attempt was made to merklize an empty message batch.
     #[error("Empty message batch")]
-    CannotMerkeliseEmptyMessageSet,
+    CannotMerklizeEmptyMessageSet,
 
-    /// Indicates that the set to be merkelised exceeds the allowable size.
-    #[error("The set that needs to be merkelised is too large")]
+    /// Indicates that the set to be merklized exceeds the allowable size.
+    #[error("The set that needs to be merklized is too large")]
     SetSizeTooLarge,
 
     /// Represents I/O related errors (usually encoding related)

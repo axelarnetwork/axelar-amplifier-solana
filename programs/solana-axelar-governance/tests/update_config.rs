@@ -1,9 +1,9 @@
 use anchor_lang::AccountDeserialize;
-use axelar_solana_governance_v2_test_fixtures::{
-    initialize_governance, mock_setup_test, update_config,
-};
 use solana_axelar_governance::{
     state::GovernanceConfig, GovernanceConfigInit, GovernanceConfigUpdate,
+};
+use solana_axelar_governance_test_fixtures::{
+    initialize_governance, mock_setup_test, update_config,
 };
 
 #[test]

@@ -1,3 +1,4 @@
+use crate::ITS_HUB_CHAIN_NAME;
 use anchor_lang::prelude::*;
 
 // TODO(v2) check sizes
@@ -31,6 +32,10 @@ pub struct InterchainTokenService {
 
 impl InterchainTokenService {
     pub const SEED_PREFIX: &'static [u8] = b"interchain-token-service";
+
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+    }
 
     pub fn space(trusted_chains_len: usize) -> usize {
         InterchainTokenService::DISCRIMINATOR.len() + // Anchor account discriminator
@@ -67,21 +72,23 @@ impl InterchainTokenService {
         self.paused = false;
     }
 
-    pub fn is_trusted_chain(&self, chain_name: String) -> bool {
+    pub fn is_trusted_chain(&self, chain_name: &str) -> bool {
         self.trusted_chains.iter().any(|chain| *chain == chain_name)
     }
 
     /// Add a chain as trusted
     pub fn add_trusted_chain(&mut self, chain_name: String) {
-        // Only add if not already present to avoid duplicates
-        if !self.trusted_chains.iter().any(|chain| *chain == chain_name) {
+        // Only add if not already present to avoid duplicates and not the hub
+        if !self.trusted_chains.iter().any(|chain| *chain == chain_name)
+            && chain_name != ITS_HUB_CHAIN_NAME
+        {
             self.trusted_chains.push(chain_name);
         }
     }
 
     /// Remove a chain from trusted
-    pub fn remove_trusted_chain(&mut self, chain_name: String) {
-        self.trusted_chains.retain(|chain| *chain != chain_name);
+    pub fn remove_trusted_chain(&mut self, chain_name: &str) {
+        self.trusted_chains.retain(|chain| *chain != *chain_name);
     }
 }
 

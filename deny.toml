@@ -186,32 +186,12 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "its-instruction-builder"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "axelar-solana-gateway-test-fixtures"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "axelar-solana-gateway-v2-test-fixtures"
+crate = "solana-axelar-gateway-test-fixtures"
 expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
 crate = "mollusk-test-utils"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "solana-axelar-multicall-legacy"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "dummy-axelar-solana-gateway"
 expression = "MIT"
 license-files = []
 
@@ -222,56 +202,6 @@ license-files = []
 
 [[licenses.clarify]]
 crate = "evm-contracts-test-suite"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "dummy-axelar-solana-event-cpi"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "event-cpi"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "event-cpi-macros"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "event-cpi-test-utils"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "anchor-discriminators"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "anchor-discriminators-macros"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "solana-axelar-gateway-legacy"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "solana-axelar-its-legacy"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "solana-axelar-governance-legacy"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "solana-axelar-memo-legacy"
 expression = "MIT"
 license-files = []
 

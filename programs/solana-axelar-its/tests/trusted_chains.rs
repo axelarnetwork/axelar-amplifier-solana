@@ -2,20 +2,20 @@
 #![allow(clippy::str_to_string)]
 #![allow(clippy::print_stdout)]
 
-use anchor_lang::{prelude::ProgramError, AccountDeserialize, Discriminator};
+use anchor_lang::{AccountDeserialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
-use solana_axelar_its::state::{InterchainTokenService, Roles, RolesError, UserRoles};
+use solana_axelar_its::{
+    state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    ItsError,
+};
+use solana_axelar_its_test_fixtures::init_its_service;
 use {
     anchor_lang::{
         solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
     },
     solana_sdk::{account::Account, pubkey::Pubkey},
 };
-
-// Import helper functions from initialize.rs
-mod initialize;
-use initialize::init_its_service;
 
 #[test]
 fn test_set_trusted_chain_success() {
@@ -24,10 +24,10 @@ fn test_set_trusted_chain_success() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority; // Must be upgrade authority
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -109,7 +109,7 @@ fn test_set_trusted_chain_success() {
     assert!(updated_its_data
         .trusted_chains
         .contains(&trusted_chain_name));
-    assert!(updated_its_data.is_trusted_chain(trusted_chain_name.clone()));
+    assert!(updated_its_data.is_trusted_chain(&trusted_chain_name));
 }
 
 #[test]
@@ -120,11 +120,11 @@ fn test_set_trusted_chain_operator_success() {
     let upgrade_authority = Pubkey::new_unique();
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     // The payer is the operator
     let init_payer = upgrade_authority;
-    let init_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let init_payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -206,7 +206,7 @@ fn test_set_trusted_chain_operator_success() {
     assert!(updated_its_data
         .trusted_chains
         .contains(&trusted_chain_name));
-    assert!(updated_its_data.is_trusted_chain(trusted_chain_name.clone()));
+    assert!(updated_its_data.is_trusted_chain(&trusted_chain_name));
 }
 
 #[test]
@@ -217,11 +217,11 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
     let upgrade_authority = Pubkey::new_unique();
 
     let operator = upgrade_authority;
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     // The payer is the operator
     let init_payer = upgrade_authority;
-    let init_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let init_payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -303,7 +303,7 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
     assert!(updated_its_data
         .trusted_chains
         .contains(&trusted_chain_name));
-    assert!(updated_its_data.is_trusted_chain(trusted_chain_name.clone()));
+    assert!(updated_its_data.is_trusted_chain(&trusted_chain_name));
 }
 
 #[test]
@@ -313,10 +313,10 @@ fn test_set_trusted_chain_already_exists() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -407,7 +407,9 @@ fn test_set_trusted_chain_already_exists() {
         (program_id, program_account),
     ];
 
-    let checks = vec![Check::err(ProgramError::InvalidArgument)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::TrustedChainAlreadySet).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&duplicate_add_ix, &duplicate_add_accounts, &checks);
 }
@@ -419,14 +421,15 @@ fn test_set_trusted_chain_unauthorized() {
 
     let upgrade_authority = Pubkey::new_unique();
     let authorized_payer = upgrade_authority;
-    let authorized_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let authorized_payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     // Unauthorized user
     let unauthorized_payer = Pubkey::new_unique();
-    let unauthorized_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let unauthorized_payer_account =
+        Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -484,7 +487,9 @@ fn test_set_trusted_chain_unauthorized() {
         (program_id, program_account),
     ];
 
-    let checks = vec![Check::err(ProgramError::MissingRequiredSignature)];
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::MissingRequiredSignature).into(),
+    )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
 }
@@ -498,10 +503,10 @@ fn test_set_trusted_chain_missing_operator_role() {
     let upgrade_authority = Pubkey::new_unique();
 
     let init_payer = upgrade_authority;
-    let init_payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let init_payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();
@@ -574,10 +579,10 @@ fn test_set_multiple_trusted_chains() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
+    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
 
     let chain_name = "solana".to_string();
     let its_hub_address = "0x123456789abcdef".to_string();

@@ -22,8 +22,7 @@ num-traits.workspace = true
 program-utils.workspace = true
 
 [dev-dependencies]
-solana-axelar-gateway-legacy = { workspace = true, features = ["no-entrypoint"], default-features = false }
-axelar-solana-gateway-v2-test-fixtures.workspace = true
+solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 rand.workspace = true
@@ -57,17 +56,9 @@ custom-panic = []
 
 
 # Network features - these pass through to the gateway dependency
-devnet-amplifier = [
-	"solana-axelar-gateway-legacy/devnet-amplifier",
-]
-stagenet = [
-	"solana-axelar-gateway-legacy/stagenet",
-]
-testnet = [
-	"solana-axelar-gateway-legacy/testnet",
-]
-mainnet = [
-	"solana-axelar-gateway-legacy/mainnet",
-]
+devnet-amplifier = []
+stagenet = []
+testnet = []
+mainnet = []
 
 default = ["devnet-amplifier"]

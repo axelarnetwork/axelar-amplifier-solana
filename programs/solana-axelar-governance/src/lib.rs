@@ -15,7 +15,21 @@ pub use events::*;
 
 pub mod payload_conversions;
 
-declare_id!("go2HuaNdyr7S1mbq9Z7aD4su1vgZRyPkdLAFxNBDSNm");
+use program_utils::ensure_single_feature;
+
+ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+
+#[cfg(feature = "devnet-amplifier")]
+declare_id!("govKw1XM67EFoyLoJ7x6A8qtyJqEw5ZREGfwYxJtYt8");
+
+#[cfg(feature = "stagenet")]
+declare_id!("govpfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
+
+#[cfg(feature = "testnet")]
+declare_id!("govpFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
+
+#[cfg(feature = "mainnet")]
+declare_id!("gov1111111111111111111111111111111111111111");
 
 /// Seed prefixes for different PDAs initialized by the Governance program.
 pub mod seed_prefixes {

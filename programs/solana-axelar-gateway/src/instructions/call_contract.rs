@@ -31,6 +31,7 @@ pub fn call_contract_handler(
     let caller = &ctx.accounts.caller;
     let signing_pda = &ctx.accounts.signing_pda;
 
+    // TODO we must check the caller's key is on the curve
     if caller.is_signer {
         // Direct signer, so not a program, continue
     } else {
@@ -54,7 +55,7 @@ pub fn call_contract_handler(
             expected_signing_pda,
             GatewayError::InvalidSigningPDA
         );
-    };
+    }
 
     // A valid signing PDA was provided and it's a signer, continue
 

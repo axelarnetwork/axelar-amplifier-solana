@@ -1,11 +1,17 @@
-pub mod initialize;
-pub use initialize::*;
+pub mod config;
+pub use config::*;
 
-pub mod set_pause_status;
-pub use set_pause_status::*;
+pub mod interchain_token;
+pub use interchain_token::*;
 
-pub mod set_trusted_chain;
-pub use set_trusted_chain::*;
+pub mod custom_token;
+pub use custom_token::*;
 
-pub mod remove_trusted_chain;
-pub use remove_trusted_chain::*;
+pub mod canonical_token;
+pub use canonical_token::*;
+
+pub mod gmp;
+pub use gmp::*;
+
+pub mod token_manager;
+pub use token_manager::*;
