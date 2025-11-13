@@ -59,16 +59,21 @@ pub fn process_outbound(
     destination_chain: String,
     gas_value: u64,
     inner_payload: GMPPayload,
+    should_send_to_hub: bool,
 ) -> Result<()> {
-    // Wrap the inner payload
-    let payload = GMPPayload::SendToHub(SendToHub {
-        selector: SendToHub::MESSAGE_TYPE_ID
-            .try_into()
-            .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        destination_chain: destination_chain.clone(),
-        payload: inner_payload.encode().into(),
-    })
-    .encode();
+    // Wrap the inner payload if we need to send to hub
+    let payload = if should_send_to_hub {
+        GMPPayload::SendToHub(SendToHub {
+            selector: SendToHub::MESSAGE_TYPE_ID
+                .try_into()
+                .map_err(|_err| ItsError::ArithmeticOverflow)?,
+            destination_chain: destination_chain.clone(),
+            payload: inner_payload.encode().into(),
+        })
+        .encode()
+    } else {
+        inner_payload.encode()
+    };
 
     let payload_hash = solana_program::keccak::hash(&payload).to_bytes();
     let destination_address = gmp_accounts.its_hub_address;

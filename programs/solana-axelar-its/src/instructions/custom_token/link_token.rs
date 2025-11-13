@@ -157,7 +157,13 @@ pub fn link_token_handler(
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
 
     // Process the outbound GMP message
-    process_outbound(gmp_accounts, destination_chain, gas_value, message)?;
+    process_outbound(
+        gmp_accounts,
+        destination_chain,
+        gas_value,
+        message,
+        true, // wrap inner payload with SendToHub
+    )?;
 
     Ok(token_id)
 }

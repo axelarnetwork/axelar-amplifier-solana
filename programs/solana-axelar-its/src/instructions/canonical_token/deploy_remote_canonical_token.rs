@@ -150,7 +150,13 @@ pub fn deploy_remote_canonical_interchain_token_handler(
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
 
-    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
+    process_outbound(
+        gmp_accounts,
+        destination_chain,
+        gas_value,
+        inner_payload,
+        true, // wrap inner payload with SendToHub
+    )?;
 
     Ok(())
 }
