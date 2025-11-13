@@ -2,16 +2,14 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::{prelude::borsh, AccountDeserialize, Discriminator};
-use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
+use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::state::{RoleProposal, Roles, UserRoles};
 use solana_axelar_its_test_fixtures::{
-    init_its_service, propose_operatorship_helper, ProposeOperatorshipContext,
+    accept_operatorship_helper, init_its_service, propose_operatorship_helper,
+    AcceptOperatorshipContext, ProposeOperatorshipContext,
 };
-use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::{account::Account, pubkey::Pubkey},
-};
+use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
 fn test_accept_operatorship() {
@@ -78,35 +76,12 @@ fn test_accept_operatorship() {
         .expect("Proposal account should exist after propose");
 
     // Now create the destination roles PDA
-    let (new_operator_roles_pda, _bump) = Pubkey::find_program_address(
-        &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
-        &program_id,
-    );
+    let (new_operator_roles_pda, _bump) = UserRoles::find_pda(&its_root_pda, &new_operator);
 
-    let accept_ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::AcceptOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            destination_user_account: new_operator,
-            destination_roles_account: new_operator_roles_pda,
-            resource_account: its_root_pda,
-            origin_user_account: current_operator,
-            origin_roles_account: current_operator_roles_pda,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::AcceptOperatorship {}.data(),
-    };
-
-    let accept_accounts = vec![
-        keyed_account_for_system_program(),
+    let accept_ctx = AcceptOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (new_operator, new_operator_account.clone()),
-        (
-            new_operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -114,9 +89,10 @@ fn test_accept_operatorship() {
             current_operator_roles_account.clone(),
         ),
         (proposal_pda, proposal_account_after_propose.clone()),
-    ];
+    );
 
-    let accept_result = mollusk.process_instruction(&accept_ix, &accept_accounts);
+    let checks = vec![Check::success()];
+    let (accept_result, _) = accept_operatorship_helper(accept_ctx, checks);
     assert!(accept_result.program_result.is_ok());
 
     // Verify the operatorship transfer
@@ -204,29 +180,10 @@ fn test_reject_invalid_operatorship() {
     };
 
     // Now create the destination roles PDA
-    let (new_operator_roles_pda, _bump) = Pubkey::find_program_address(
-        &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
-        &program_id,
-    );
+    let (new_operator_roles_pda, _bump) = UserRoles::find_pda(&its_root_pda, &new_operator);
 
-    let accept_ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::AcceptOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            destination_user_account: new_operator,
-            destination_roles_account: new_operator_roles_pda,
-            resource_account: its_root_pda,
-            origin_user_account: current_operator,
-            origin_roles_account: current_operator_roles_pda,
-            proposal_account: wrong_proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::AcceptOperatorship {}.data(),
-    };
-
-    let accept_accounts = vec![
-        keyed_account_for_system_program(),
+    let accept_ctx = AcceptOperatorshipContext::with_custom_destination_roles_account(
+        mollusk,
         (payer, payer_account.clone()),
         (new_operator, new_operator_account.clone()),
         (
@@ -240,11 +197,12 @@ fn test_reject_invalid_operatorship() {
             current_operator_roles_account.clone(),
         ),
         (wrong_proposal_pda, wrong_proposal_account.clone()),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&accept_ix, &accept_accounts, &checks);
+    let (result, _) = accept_operatorship_helper(accept_ctx, checks);
+    assert!(result.program_result.is_err());
 }
