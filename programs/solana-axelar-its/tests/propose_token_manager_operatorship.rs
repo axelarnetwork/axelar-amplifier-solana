@@ -2,18 +2,15 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use solana_axelar_its::state::{RoleProposal, Roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    DeployInterchainTokenContext,
+    propose_token_manager_operatorship_helper, DeployInterchainTokenContext,
+    ProposeTokenManagerOperatorshipContext,
 };
-use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
-};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 #[test]
 fn test_propose_token_manager_operatorship() {
@@ -100,24 +97,8 @@ fn test_propose_token_manager_operatorship() {
         &program_id,
     );
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: minter_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: proposed_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeTokenManagerOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -127,13 +108,10 @@ fn test_propose_token_manager_operatorship() {
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
-    let result = mollusk.process_instruction(&ix, &accounts);
+    let checks = vec![Check::success()];
+    let (result, _) = propose_token_manager_operatorship_helper(ctx, checks);
 
     assert!(result.program_result.is_ok());
 
@@ -240,7 +218,7 @@ fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
     assert!(current_operator_token_roles.roles.contains(Roles::OPERATOR));
 
     // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
-    let (proposal_pda, _) = RoleProposal::find_pda(
+    let (_proposal_pda, _) = RoleProposal::find_pda(
         &token_manager_pda,
         &current_operator,
         &proposed_operator,
@@ -249,24 +227,8 @@ fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
 
     let invalid_current_operator = Pubkey::new_unique();
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: invalid_current_operator,
-            origin_roles_account: minter_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: proposed_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeTokenManagerOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (invalid_current_operator, current_operator_account.clone()),
         (
@@ -276,22 +238,19 @@ fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_token_manager_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }
 
 #[test]
 fn test_reject_propose_token_manager_operatorship_without_operator_role() {
-    let program_id = solana_axelar_its::id();
+    let _program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk();
 
     let upgrade_authority = Pubkey::new_unique();
@@ -378,31 +337,9 @@ fn test_reject_propose_token_manager_operatorship_without_operator_role() {
     current_operator_token_roles_account_clone.data = new_data;
 
     // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
-    let (proposal_pda, _) = RoleProposal::find_pda(
-        &token_manager_pda,
-        &current_operator,
-        &proposed_operator,
-        &program_id,
-    );
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: minter_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: proposed_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeTokenManagerOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -412,15 +349,12 @@ fn test_reject_propose_token_manager_operatorship_without_operator_role() {
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(RolesError::MissingOperatorRole).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_token_manager_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }
