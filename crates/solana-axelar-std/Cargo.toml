@@ -10,7 +10,6 @@ workspace = true
 alloy-primitives.workspace = true
 arrayref.workspace = true
 hex.workspace = true
-bs58.workspace = true
 rs_merkle.workspace = true
 udigest.workspace = true
 thiserror.workspace = true

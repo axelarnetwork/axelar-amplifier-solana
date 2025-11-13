@@ -6518,7 +6518,6 @@ dependencies = [
  "alloy-sol-types",
  "anchor-lang",
  "bitvec",
- "bnum",
  "bytemuck",
  "evm-contracts-rs",
  "evm-contracts-test-suite",
@@ -6535,7 +6534,6 @@ dependencies = [
  "solana-sdk",
  "test-log",
  "tokio",
- "udigest",
 ]
 
 [[package]]
@@ -6667,7 +6665,6 @@ dependencies = [
  "arrayref",
  "bnum",
  "borsh 0.10.4",
- "bs58",
  "bytemuck",
  "hex",
  "rand 0.8.5",
