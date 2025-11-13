@@ -1,5 +1,5 @@
 [package]
-name = "axelar-solana-encoding"
+name = "solana-axelar-std"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,20 +7,21 @@ edition = "2021"
 workspace = true
 
 [dependencies]
+alloy-primitives.workspace = true
 arrayref.workspace = true
 hex.workspace = true
-bs58.workspace = true
 rs_merkle.workspace = true
-sha3.workspace = true
-solana-program = { workspace = true, optional = true }
-thiserror.workspace = true
 udigest.workspace = true
+thiserror.workspace = true
 borsh.workspace = true
+anchor-lang = {workspace = true, optional = true }
+solana-keccak-hasher.workspace = true
+bytemuck.workspace = true
+bnum.workspace = true
 
 [dev-dependencies]
-solana-program = { workspace = true }
 rand.workspace = true
 
 [features]
 default = []
-solana = ["dep:solana-program"]
+anchor = ["dep:anchor-lang"]

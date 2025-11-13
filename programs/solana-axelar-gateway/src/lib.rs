@@ -10,9 +10,6 @@ pub use state::*;
 pub mod events;
 pub use events::*;
 
-pub mod types;
-pub use types::*;
-
 pub mod errors;
 pub use errors::*;
 
@@ -21,6 +18,8 @@ pub mod executable;
 pub mod payload;
 
 use program_utils::ensure_single_feature;
+
+pub use solana_axelar_std::Message;
 
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
@@ -93,20 +92,23 @@ pub mod solana_axelar_gateway {
     pub fn verify_signature(
         ctx: Context<VerifySignature>,
         payload_merkle_root: [u8; 32],
-        verifier_info: crate::verification_session::SigningVerifierSetInfo,
+        verifier_info: solana_axelar_std::SigningVerifierSetInfo,
     ) -> Result<()> {
         instructions::verify_signature_handler(ctx, payload_merkle_root, verifier_info)
     }
 
     pub fn approve_message(
         ctx: Context<ApproveMessage>,
-        merklized_message: MerklizedMessage,
+        merklized_message: solana_axelar_std::MerklizedMessage,
         payload_merkle_root: [u8; 32],
     ) -> Result<()> {
         instructions::approve_message_handler(ctx, merklized_message, payload_merkle_root)
     }
 
-    pub fn validate_message(ctx: Context<ValidateMessage>, message: Message) -> Result<()> {
+    pub fn validate_message(
+        ctx: Context<ValidateMessage>,
+        message: solana_axelar_std::Message,
+    ) -> Result<()> {
         instructions::validate_message_handler(ctx, message)
     }
 

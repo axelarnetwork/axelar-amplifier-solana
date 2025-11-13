@@ -2,9 +2,10 @@
 use crate::seed_prefixes::{GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED};
 use crate::{
     state::config::{GatewayConfig, InitializeConfigParams},
-    GatewayError, VerifierSetTracker, U256,
+    GatewayError, VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
+use solana_axelar_std::U256;
 
 #[derive(Accounts)]
 #[instruction(params: InitializeConfigParams)]

@@ -1,9 +1,7 @@
 #![allow(clippy::empty_structs_with_brackets)]
-use crate::{
-    verification_session::SigningVerifierSetInfo, GatewayConfig, GatewayError,
-    SignatureVerificationSessionData, VerifierSetTracker,
-};
+use crate::{GatewayConfig, GatewayError, SignatureVerificationSessionData, VerifierSetTracker};
 use anchor_lang::prelude::*;
+use solana_axelar_std::SigningVerifierSetInfo;
 
 #[derive(Accounts)]
 #[instruction(merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo)]
