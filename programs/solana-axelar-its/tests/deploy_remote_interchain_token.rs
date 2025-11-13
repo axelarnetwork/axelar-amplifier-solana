@@ -7,7 +7,6 @@ use solana_axelar_gateway::seed_prefixes::GATEWAY_SEED;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
-
 use solana_axelar_its::seed_prefixes::INTERCHAIN_TOKEN_SEED;
 use solana_axelar_its::ItsError;
 use solana_axelar_its_test_fixtures::deploy_remote_interchain_token_helper;
