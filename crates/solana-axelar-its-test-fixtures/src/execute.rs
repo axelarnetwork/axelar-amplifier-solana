@@ -1,6 +1,6 @@
-use crate::{create_rent_sysvar_data, get_message_signing_pda};
+use crate::get_message_signing_pda;
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
-use mollusk_svm::result::Check;
+use mollusk_svm::result::{Check, InstructionResult};
 use mollusk_svm::Mollusk;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gateway::{Message, ID as GATEWAY_PROGRAM_ID};
@@ -34,7 +34,7 @@ pub struct ExecuteTestAccounts {
 }
 
 pub struct ExecuteTestResult {
-    pub result: mollusk_svm::result::InstructionResult,
+    pub result: InstructionResult,
     pub instruction: Instruction,
     pub all_accounts: Vec<(Pubkey, Account)>,
 }
@@ -149,6 +149,8 @@ pub fn execute_its_instruction(
         // Base ITS accounts
         (context.payer.0, context.payer.1),
         (context.its_root.0, context.its_root.1),
+        // empty: linkToken, deployInterchainToken since its deployed
+        // non-empty: interchainTransfer
         (
             token_manager_pda,
             token_manager_account
@@ -159,20 +161,10 @@ pub fn execute_its_instruction(
     // Add core accounts (token_mint, token_manager_ata, etc.)
     execute_accounts.extend(core_accounts);
 
-    // Add system accounts
+    // Add common system accounts
     execute_accounts.extend(vec![
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
-        (
-            solana_sdk::sysvar::rent::ID,
-            Account {
-                lamports: 1_000_000_000,
-                data: create_rent_sysvar_data(),
-                owner: solana_sdk::sysvar::rent::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
         mollusk_svm::program::keyed_account_for_system_program(),
     ]);
 

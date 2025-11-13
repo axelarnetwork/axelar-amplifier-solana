@@ -43,7 +43,6 @@ impl DeployRemoteCanonicalTokenContext {
     }
 }
 
-
 pub fn deploy_remote_canonical_token_helper(
     ctx: DeployRemoteCanonicalTokenContext,
     destination_chain: String,
