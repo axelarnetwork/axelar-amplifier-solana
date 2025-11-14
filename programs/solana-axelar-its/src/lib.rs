@@ -89,7 +89,8 @@ pub mod seed_prefixes {
     pub const FLOW_SLOT_SEED: &[u8] = b"flow-slot";
 
     /// The seed prefix for deriving the interchain transfer execute signing PDA
-    pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] = b"interchain-transfer-execute";
+    pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] =
+        state::InterchainTransferExecute::SEED_PREFIX;
 }
 
 #[program]
@@ -246,25 +247,25 @@ pub mod solana_axelar_its {
         )
     }
 
-    pub fn execute_interchain_transfer(
-        ctx: Context<ExecuteInterchainTransfer>,
-        token_id: [u8; 32],
-        source_address: String,
-        destination_address: Pubkey,
-        amount: u64,
-        data: Vec<u8>,
+    pub fn execute_interchain_transfer<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
         message: solana_axelar_gateway::Message,
         source_chain: String,
+        source_address: String,
+        destination_address: Pubkey,
+        token_id: [u8; 32],
+        amount: u64,
+        data: Vec<u8>,
     ) -> Result<()> {
         instructions::execute_interchain_transfer_handler(
             ctx,
-            token_id,
-            source_address,
-            destination_address,
-            amount,
-            data,
             message,
             source_chain,
+            source_address,
+            destination_address,
+            token_id,
+            amount,
+            data,
         )
     }
 

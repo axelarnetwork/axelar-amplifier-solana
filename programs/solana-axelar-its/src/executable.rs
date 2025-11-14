@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, InstructionData};
 #[allow(unused_imports)]
 use solana_axelar_gateway::executable::*;
 
@@ -15,6 +15,11 @@ use crate as solana_axelar_its;
 /// ```
 pub const ITS_EXECUTE_IX_DISC: &[u8; 8] = &[251, 218, 49, 130, 208, 58, 231, 44];
 
+/// The index of the first account that is expected to be passed to the
+/// destination program.
+pub const ITS_EXECUTE_PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
+
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct ExecuteWithInterchainTokenPayload {
     /// The unique message id.
     pub command_id: [u8; 32],
@@ -34,6 +39,11 @@ pub struct ExecuteWithInterchainTokenPayload {
     pub data: Vec<u8>,
 }
 
+impl Discriminator for ExecuteWithInterchainTokenPayload {
+    const DISCRIMINATOR: &'static [u8] = ITS_EXECUTE_IX_DISC;
+}
+impl InstructionData for ExecuteWithInterchainTokenPayload {}
+
 /// Holds references to the Axelar executable accounts needed for validation.
 /// This is returned by the `HasAxelarExecutable` trait.
 pub struct AxelarExecutableWithInterchainTokenAccountRefs<'a, 'info> {
@@ -49,4 +59,40 @@ pub trait HasAxelarExecutableWithInterchainToken<'info> {
     fn axelar_executable_with_interchain_token(
         &self,
     ) -> AxelarExecutableWithInterchainTokenAccountRefs<'_, 'info>;
+}
+
+//
+// Accounts
+//
+
+pub struct AxelarExecuteWithInterchainToken<'info> {
+    pub token_program: AccountInfo<'info>,
+    pub token_mint: AccountInfo<'info>,
+    pub destination_program_ata: AccountInfo<'info>,
+    pub interchain_transfer_execute: AccountInfo<'info>,
+}
+
+impl<'info> anchor_lang::ToAccountMetas for AxelarExecuteWithInterchainToken<'info> {
+    fn to_account_metas(&self, is_signer: Option<bool>) -> Vec<AccountMeta> {
+        vec![
+            AccountMeta::new(self.token_program.key(), false),
+            AccountMeta::new(self.token_mint.key(), false),
+            AccountMeta::new(self.destination_program_ata.key(), false),
+            AccountMeta::new(
+                self.interchain_transfer_execute.key(),
+                is_signer.unwrap_or(false),
+            ),
+        ]
+    }
+}
+
+impl<'info> anchor_lang::ToAccountInfos<'info> for AxelarExecuteWithInterchainToken<'info> {
+    fn to_account_infos(&self) -> Vec<AccountInfo<'info>> {
+        vec![
+            self.interchain_transfer_execute.clone(),
+            self.token_program.clone(),
+            self.token_mint.clone(),
+            self.destination_program_ata.clone(),
+        ]
+    }
 }
