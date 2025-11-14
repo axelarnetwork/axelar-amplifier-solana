@@ -18,3 +18,18 @@ pub use register_canonical_interchain_token::*;
 
 pub mod utils;
 pub use utils::*;
+
+pub mod link_token;
+pub use link_token::*;
+
+pub mod register_custom_token;
+pub use register_custom_token::*;
+
+pub mod execute;
+pub use execute::*;
+
+pub mod deploy_remote_canonical_token;
+pub use deploy_remote_canonical_token::*;
+
+pub mod role_management;
+pub use role_management::*;
