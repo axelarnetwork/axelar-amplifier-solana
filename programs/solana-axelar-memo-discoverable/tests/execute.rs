@@ -30,9 +30,11 @@ fn test_execute() {
         relayer_discovery::find_transaction_pda(&solana_axelar_memo_discoverable::id()).0;
     let init_ix = solana_axelar_memo_discoverable::instruction::Init {};
     let init_accounts = solana_axelar_memo_discoverable::accounts::Init {
-        relayer_transaction: transaction_pda,
-        payer: fixture.setup.payer,
-        system_program: SYSTEM_PROGRAM_ID,
+        transaction: solana_axelar_memo_discoverable::accounts::RelayerTransactionAccounts {
+            relayer_transaction: transaction_pda,
+            payer: fixture.setup.payer,
+            system_program: SYSTEM_PROGRAM_ID,
+        },
     };
     let init_instruction = Instruction {
         program_id: EXECUTABLE_ID,

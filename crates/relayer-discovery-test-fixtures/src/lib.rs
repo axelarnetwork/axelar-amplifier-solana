@@ -5,17 +5,17 @@ use anchor_lang::{AnchorDeserialize, Key};
 
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 
-use axelar_solana_gateway_v2_test_fixtures::{
-    approve_message_helper, create_verifier_info, initialize_gateway,
-    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
-    verify_signature_helper, TestSetup,
-};
 use libsecp256k1::SecretKey;
 use mollusk_svm::result::InstructionResult;
 use mollusk_svm::result::ProgramResult;
 use relayer_discovery::structs::RelayerTransaction;
 use relayer_discovery::{find_transaction_pda, ConvertError, RelayerDiscovery};
 use solana_axelar_gateway::{Message, MessageLeaf, VerifierSetLeaf};
+use solana_axelar_gateway_test_fixtures::{
+    approve_message_helper, create_verifier_info, initialize_gateway,
+    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
+    verify_signature_helper, TestSetup,
+};
 use solana_sdk::pubkey::ParsePubkeyError;
 use solana_sdk::{
     account::Account, instruction::Instruction, pubkey::Pubkey,

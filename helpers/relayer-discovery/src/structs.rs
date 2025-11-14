@@ -1,11 +1,7 @@
 #![deny(missing_docs)]
 
 use anchor_lang::prelude::*;
-use program_utils::pda::init_pda_raw_bytes;
-use solana_program::entrypoint::ProgramResult;
 use solana_program::pubkey::Pubkey;
-
-use crate::find_transaction_pda;
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
 /// A single piece of data to be passed by the relayer. Each of these can be converted to Vec<u8>.
@@ -55,46 +51,4 @@ pub enum RelayerTransaction {
     Final(Vec<RelayerInstruction>),
     /// This instruction should be simulated to eventually get a `Final` transaction.
     Discovery(RelayerInstruction),
-}
-
-impl RelayerTransaction {
-    /// Helper function that serializes the enum. There must be a better way of doing this that escapes me, but variable length PDAs seem difficult with anchor.
-    ///
-    /// # Arguments
-    ///
-    /// * `program_id` - The program id that is initializing their `transactionn_pda`.
-    /// * `system_account` - The system account.
-    /// * `payer` - The payer account, which needs to have enough lamports to pay for the initialization.
-    /// * `into` - The `transaction_pda` for this `program_id`, which have the right key for the given `program_id`.
-    ///
-    /// # Returns
-    ///
-    /// Returns the `ProgramResult` for the initialization.
-    pub fn init<'a>(
-        &self,
-        program_id: &Pubkey,
-        system_account: &AccountInfo<'a>,
-        payer: &AccountInfo<'a>,
-        into: &AccountInfo<'a>,
-    ) -> ProgramResult {
-        let mut serialized_data = Vec::with_capacity(256);
-        self.serialize(&mut serialized_data)?;
-
-        let (expected_pda, bump) = find_transaction_pda(program_id);
-        if &expected_pda != into.key {
-            return Err(ProgramError::InvalidAccountOwner);
-        }
-
-        let signer_seeds = [crate::TRANSACTION_PDA_SEED, &[bump]];
-        init_pda_raw_bytes(
-            payer,
-            into,
-            program_id,
-            system_account,
-            &serialized_data,
-            &signer_seeds,
-        )?;
-
-        Ok(())
-    }
 }
