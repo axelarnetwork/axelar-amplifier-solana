@@ -209,6 +209,7 @@ interchain-token-transfer-gmp = { path = "helpers/interchain-token-transfer-gmp"
 program-utils = { path = "helpers/program-utils", default-features = false }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 role-management = { path = "helpers/role-management" }
+relayer-discovery = { path = "helpers/relayer-discovery"}
 
 [workspace.metadata.cargo-machete]
 ignored = ["num-traits"]

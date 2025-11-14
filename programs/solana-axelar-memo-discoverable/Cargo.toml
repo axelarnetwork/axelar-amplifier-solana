@@ -13,7 +13,7 @@ solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 relayer-discovery.workspace=true
 
 [dev-dependencies]
-axelar-solana-gateway-v2-test-fixtures.workspace = true
+solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 bincode.workspace = true

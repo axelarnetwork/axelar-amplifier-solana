@@ -18,5 +18,4 @@ anchor-lang.workspace = true
 [dev-dependencies]
 solana-sdk.workspace = true
 solana-program-test.workspace = true
-axelar-solana-gateway-v2-test-fixtures = { workspace = true, default-features = false }
-dummy-axelar-solana-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
+solana-axelar-gateway-test-fixtures = { workspace = true, default-features = false }

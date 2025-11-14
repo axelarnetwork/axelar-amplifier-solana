@@ -5518,10 +5518,9 @@ name = "relayer-discovery"
 version = "0.0.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-gateway-v2-test-fixtures",
- "dummy-axelar-solana-gateway",
  "program-utils",
  "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -5533,11 +5532,11 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "axelar-solana-encoding",
- "axelar-solana-gateway-v2-test-fixtures",
  "libsecp256k1",
- "mollusk-svm",
+ "mollusk-svm 0.5.1",
  "relayer-discovery",
  "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
  "solana-sdk",
  "thiserror 1.0.69",
 ]
@@ -6689,6 +6688,23 @@ dependencies = [
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
+ "solana-sdk",
+]
+
+[[package]]
+name = "solana-axelar-memo-discoverable"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "bincode",
+ "hex",
+ "mollusk-svm 0.5.1",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-program",
  "solana-sdk",
 ]
 
