@@ -357,7 +357,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
 }
 
 #[test]
-fn test_reject_deploy_remote_interchain_token_for_missmatched_mint() {
+fn test_reject_deploy_remote_interchain_token_for_mismatched_mint() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
