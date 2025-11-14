@@ -53,38 +53,8 @@ impl core::fmt::Debug for PublicKey {
     }
 }
 
-/// The length of an Ed25519 signature in bytes.
-pub const ED25519_SIGNATURE_LEN: usize = 64;
-
 /// The length of a recoverable ECDSA signature in bytes.
 pub const ECDSA_RECOVERABLE_SIGNATURE_LEN: usize = 65;
 
 /// Type alias for a recoverable ECDSA signature.
 pub type EcdsaRecoverableSignature = [u8; ECDSA_RECOVERABLE_SIGNATURE_LEN];
-
-/// Type alias for an Ed25519 signature.
-pub type Ed25519Signature = [u8; ED25519_SIGNATURE_LEN];
-
-/// Represents a digital signature using supported cryptographic algorithms.
-#[derive(Eq, PartialEq, Clone, Copy, borsh::BorshDeserialize, borsh::BorshSerialize)]
-pub enum Signature {
-    /// Recoverable ECDSA signature.
-    EcdsaRecoverable(EcdsaRecoverableSignature),
-
-    /// Ed25519 signature.
-    Ed25519(Ed25519Signature),
-}
-
-#[allow(clippy::min_ident_chars)]
-impl core::fmt::Debug for Signature {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::EcdsaRecoverable(sig) => {
-                write!(f, "EcdsaRecoverable({})", hex::encode(sig))
-            }
-            Self::Ed25519(sig) => {
-                write!(f, "Ed25519({})", hex::encode(sig))
-            }
-        }
-    }
-}
