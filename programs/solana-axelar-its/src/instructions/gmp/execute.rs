@@ -102,8 +102,7 @@ fn cpi_execute_interchain_transfer<'info>(
     source_chain: &str,
 ) -> Result<()> {
     let token_id = transfer.token_id.0;
-    let source_address = String::from_utf8(transfer.source_address.to_vec())
-        .map_err(|_| ItsError::InvalidInstructionData)?;
+    let source_address = hex::encode(transfer.source_address.to_vec());
 
     let destination_address: [u8; 32] = transfer
         .destination_address
