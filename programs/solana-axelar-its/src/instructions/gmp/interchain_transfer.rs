@@ -105,6 +105,7 @@ pub fn execute_interchain_transfer_handler(
 
     let destination_token_account = ctx.accounts.destination_ata.key();
     let transferred_amount = handle_give_token_transfer(&mut ctx, amount)?;
+    let source_address = hex::decode(source_address).map_err(|_| ItsError::InvalidSourceAddress)?;
 
     let data_hash = if data.is_empty() {
         [0; 32]
@@ -116,7 +117,7 @@ pub fn execute_interchain_transfer_handler(
         command_id: message.command_id(),
         token_id,
         source_chain,
-        source_address: source_address.as_bytes().to_vec(),
+        source_address,
         destination_address,
         destination_token_account,
         amount: transferred_amount,
