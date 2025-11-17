@@ -9,9 +9,91 @@ use mollusk_test_utils::{
     create_program_data_account, get_event_authority_and_program_accounts, setup_mollusk,
 };
 use solana_axelar_gas_service::state::Treasury;
+use solana_axelar_gateway::Message;
 use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
 use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
+use solana_sdk::native_token::LAMPORTS_PER_SOL;
+use solana_sdk::program_pack::Pack;
 use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
+
+pub fn keyed_account_for_program(program_id: Pubkey) -> (Pubkey, Account) {
+    (
+        program_id,
+        Account {
+            lamports: LAMPORTS_PER_SOL,
+            data: vec![],
+            owner: solana_sdk::bpf_loader_upgradeable::id(),
+            executable: true,
+            rent_epoch: 0,
+        },
+    )
+}
+
+pub fn new_test_account() -> (Pubkey, Account) {
+    let pubkey = Pubkey::new_unique();
+    let account = new_default_account();
+    (pubkey, account)
+}
+
+pub fn new_default_account() -> Account {
+    Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID)
+}
+
+pub fn new_empty_account() -> Account {
+    Account::new(0, 0, &solana_sdk::system_program::ID)
+}
+
+pub fn get_message_signing_pda(message: &Message) -> (Pubkey, u8) {
+    let program_id = solana_axelar_its::id();
+    Pubkey::find_program_address(
+        &[
+            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
+            message.command_id().as_ref(),
+        ],
+        &program_id,
+    )
+}
+
+pub fn get_token_mint_pda(token_id: [u8; 32]) -> (Pubkey, u8) {
+    let program_id = solana_axelar_its::id();
+    let (its_root_pda, _) =
+        Pubkey::find_program_address(&[InterchainTokenService::SEED_PREFIX], &program_id);
+
+    Pubkey::find_program_address(
+        &[
+            solana_axelar_its::seed_prefixes::INTERCHAIN_TOKEN_SEED,
+            its_root_pda.as_ref(),
+            &token_id,
+        ],
+        &program_id,
+    )
+}
+
+pub fn create_test_mint(mint_authority: Pubkey) -> (Pubkey, Account) {
+    let mint = Pubkey::new_unique();
+    let mint_data = {
+        let mut data = [0u8; spl_token_2022::state::Mint::LEN];
+        let mint_state = spl_token_2022::state::Mint {
+            mint_authority: Some(mint_authority).into(),
+            supply: 1_000_000_000, // 1 billion tokens
+            decimals: 9,
+            is_initialized: true,
+            freeze_authority: Some(mint_authority).into(),
+        };
+        spl_token_2022::state::Mint::pack(mint_state, &mut data).unwrap();
+        data.to_vec()
+    };
+    let rent = anchor_lang::prelude::Rent::default();
+    let mint_account = Account {
+        lamports: rent.minimum_balance(mint_data.len()),
+        data: mint_data,
+        owner: spl_token_2022::ID,
+        executable: false,
+        rent_epoch: 0,
+    };
+
+    (mint, mint_account)
+}
 
 pub fn create_rent_sysvar_data() -> Vec<u8> {
     use solana_sdk::rent::Rent;
@@ -27,7 +109,7 @@ pub fn create_sysvar_instructions_data() -> Vec<u8> {
     construct_instructions_data(instructions)
 }
 
-pub fn initialize_mollusk() -> Mollusk {
+pub fn initialize_mollusk_with_programs() -> Mollusk {
     let program_id = solana_axelar_its::id();
     let mut mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -147,14 +229,8 @@ pub fn setup_operator(
     // List accounts
     let accounts = vec![
         (operator, operator_account.clone()),
-        (
-            registry,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-        (
-            operator_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (registry, new_empty_account()),
+        (operator_pda, new_empty_account()),
         keyed_account_for_system_program(),
     ];
 
@@ -203,10 +279,7 @@ pub fn init_gas_service(
     let accounts = vec![
         (operator, operator_account.clone()),
         (operator_pda, operator_pda_account.clone()),
-        (
-            treasury,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (treasury, new_empty_account()),
         keyed_account_for_system_program(),
     ];
 
@@ -283,16 +356,10 @@ pub fn init_its_service(
     let accounts = vec![
         (payer, payer_account.clone()),
         (program_data, program_data_account.clone()),
-        (
-            its_root_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (its_root_pda, new_empty_account()),
         keyed_account_for_system_program(),
         (operator, operator_account.clone()),
-        (
-            user_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
+        (user_roles_pda, new_empty_account()),
     ];
 
     let checks = vec![

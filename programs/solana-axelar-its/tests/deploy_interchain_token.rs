@@ -5,43 +5,31 @@
 use anchor_lang::solana_program::program_pack::Pack;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
+use mollusk_svm::result::Check;
 use solana_axelar_its::{
     state::{TokenManager, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id_internal},
+    ItsError,
 };
 use solana_axelar_its_test_fixtures::{
-    deploy_interchain_token_helper, init_its_service, initialize_mollusk,
-    DeployInterchainTokenContext,
+    deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
+    new_test_account, DeployInterchainTokenContext,
 };
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
 fn test_deploy_interchain_token() {
-    let program_id = solana_axelar_its::id();
-    let mollusk = initialize_mollusk();
-
-    let payer = Pubkey::new_unique();
-    let payer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let deployer = Pubkey::new_unique();
-    let deployer_account = Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID);
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let mollusk = initialize_mollusk_with_programs();
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (
-        its_root_pda,
-        its_root_account,
-        _user_roles_pda,
-        _user_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -62,32 +50,15 @@ fn test_deploy_interchain_token() {
     let minter = Pubkey::new_unique();
 
     let token_id = solana_axelar_its::utils::interchain_token_id(&deployer, &salt);
-    let (token_manager_pda, _token_manager_bump) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::seed_prefixes::TOKEN_MANAGER_SEED,
-            its_root_pda.as_ref(),
-            &token_id,
-        ],
-        &program_id,
-    );
-    let (minter_roles_pda, minter_roles_pda_bump) = Pubkey::find_program_address(
-        &[
-            solana_axelar_its::state::UserRoles::SEED_PREFIX,
-            token_manager_pda.as_ref(),
-            minter.as_ref(),
-        ],
-        &program_id,
-    );
+    let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
+    let (minter_roles_pda, minter_roles_pda_bump) =
+        UserRoles::find_pda(&token_manager_pda, &minter);
 
     let ctx = DeployInterchainTokenContext::new(
         mollusk,
-        its_root_pda,
-        its_root_account,
-        deployer,
-        deployer_account,
-        program_id,
-        payer,
-        payer_account,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
+        (payer, payer_account),
         Some(minter),
         Some(minter_roles_pda),
     );
@@ -101,12 +72,13 @@ fn test_deploy_interchain_token() {
         metadata_account,
         _,
     ) = deploy_interchain_token_helper(
+        ctx,
         salt,
         name.clone(),
         symbol.clone(),
         decimals,
         initial_supply,
-        ctx,
+        vec![Check::success()],
     );
 
     assert!(
@@ -210,4 +182,60 @@ fn test_deploy_interchain_token() {
         metadata_symbol, symbol,
         "Metadata symbol should match the input symbol"
     );
+}
+
+#[test]
+fn test_reject_deploy_interchain_token_zero_supply_no_minter() {
+    let mollusk = initialize_mollusk_with_programs();
+
+    let (payer, payer_account) = new_test_account();
+    let (deployer, deployer_account) = new_test_account();
+    let (operator, operator_account) = new_test_account();
+
+    let chain_name = "solana".to_owned();
+    let its_hub_address = "0x123456789abcdef".to_owned();
+
+    // Initialize ITS service first
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+        &mollusk,
+        payer,
+        &payer_account,
+        payer,
+        operator,
+        &operator_account,
+        chain_name.clone(),
+        its_hub_address.clone(),
+    );
+
+    // Create simple token deployment parameters
+    let salt = [1u8; 32];
+    let name = "Test Token".to_owned();
+    let symbol = "TEST".to_owned();
+    let decimals = 9u8;
+    let initial_supply = 0u64; // invalid initial supply
+
+    let ctx = DeployInterchainTokenContext::new(
+        mollusk,
+        (its_root_pda, its_root_account),
+        (deployer, deployer_account),
+        (payer, payer_account),
+        None,
+        None,
+    );
+
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::ZeroSupplyToken).into(),
+    )];
+
+    let (result, _, _, _, _, _, _) = deploy_interchain_token_helper(
+        ctx,
+        salt,
+        name.clone(),
+        symbol.clone(),
+        decimals,
+        initial_supply,
+        checks,
+    );
+
+    assert!(result.program_result.is_err(),);
 }

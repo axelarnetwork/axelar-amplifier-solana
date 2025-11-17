@@ -5,7 +5,7 @@ use rs_merkle::MerkleTree;
 use udigest::encoding::EncodeValue;
 
 use crate::{
-    hasher::VecBuf,
+    hasher::{Hasher, VecBuf},
     message::{MerklizedMessage, MessageLeaf, Messages},
     verifier_set::{self, verifier_set_hash, SigningVerifierSetInfo},
     EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
@@ -77,7 +77,7 @@ pub enum MerklizedPayload {
 /// - Verifier Set has no items in it
 /// - Payload messages have too many items in it
 /// - Payload messages has no items in it
-pub fn encode<T: rs_merkle::Hasher<Hash = [u8; 32]>>(
+pub fn encode(
     signing_verifier_set: &VerifierSet,
     signers_with_signatures: &BTreeMap<PublicKey, Signature>,
     domain_separator: [u8; 32],
@@ -85,12 +85,12 @@ pub fn encode<T: rs_merkle::Hasher<Hash = [u8; 32]>>(
 ) -> Result<Vec<u8>, EncodingError> {
     let leaves = verifier_set::merkle_tree_leaves(signing_verifier_set, &domain_separator)?
         .collect::<Vec<_>>();
-    let signer_merkle_tree = merkle_tree::<T, VerifierSetLeaf>(leaves.iter());
+    let signer_merkle_tree = merkle_tree::<Hasher, VerifierSetLeaf>(leaves.iter());
     let signing_verifier_set_merkle_root = signer_merkle_tree
         .root()
         .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)?;
     let (payload_merkle_root, payload_items) =
-        hash_payload_internal::<T>(payload, domain_separator)?;
+        hash_payload_internal::<Hasher>(payload, domain_separator)?;
 
     let signing_verifier_set_leaves = leaves
         .into_iter()
@@ -139,8 +139,13 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
             }
         })
         .saturating_add(
-            size_of::<SigningVerifierSetInfo>()
-                .saturating_mul(execute_data.signing_verifier_set_leaves.len()),
+            execute_data
+                .signing_verifier_set_leaves
+                .iter()
+                .map(|info| {
+                    size_of::<SigningVerifierSetInfo>().saturating_add(info.merkle_proof.len())
+                })
+                .sum::<usize>(),
         )
 }
 
@@ -210,4 +215,142 @@ pub(crate) fn merkle_tree<'a, T: rs_merkle::Hasher, K: udigest::Digestable + 'a>
         })
         .collect::<Vec<_>>();
     MerkleTree::<T>::from_leaves(&leaves)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{CrossChainId, Message, Messages};
+    use crate::{ECDSA_RECOVERABLE_SIGNATURE_LEN, SECP256K1_COMPRESSED_PUBKEY_LEN};
+
+    fn create_test_verifier_set(num_verifiers: usize) -> VerifierSet {
+        let signers = (0..num_verifiers)
+            .map(|i| {
+                (
+                    PublicKey([u8::try_from(i).unwrap(); SECP256K1_COMPRESSED_PUBKEY_LEN]),
+                    1u128,
+                )
+            })
+            .collect();
+
+        VerifierSet {
+            nonce: 0,
+            signers,
+            quorum: num_verifiers as u128,
+        }
+    }
+
+    fn create_test_signatures(verifier_set: &VerifierSet) -> BTreeMap<PublicKey, Signature> {
+        verifier_set
+            .signers
+            .keys()
+            .map(|pubkey| (*pubkey, Signature([0u8; ECDSA_RECOVERABLE_SIGNATURE_LEN])))
+            .collect()
+    }
+
+    #[test]
+    fn estimate_size_accounts_for_merkle_proofs() {
+        let domain_separator = [1u8; 32];
+        let verifier_set = create_test_verifier_set(10);
+        let signatures = create_test_signatures(&verifier_set);
+        let payload = Payload::Messages(Messages(vec![Message {
+            cc_id: CrossChainId {
+                chain: "test-chain".to_owned(),
+                id: "1".to_owned(),
+            },
+            source_address: "source".to_owned(),
+            destination_address: "dest".to_owned(),
+            destination_chain: "chain".to_owned(),
+            payload_hash: [2u8; 32],
+        }]));
+
+        let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
+            .expect("encoding should succeed");
+
+        let execute_data: ExecuteData = borsh::BorshDeserialize::try_from_slice(&encoded)
+            .expect("deserialization should succeed");
+
+        let estimated_size = estimate_size(&execute_data);
+
+        assert!(encoded.len() <= estimated_size,);
+
+        let total_merkle_proof_bytes: usize = execute_data
+            .signing_verifier_set_leaves
+            .iter()
+            .map(|info| info.merkle_proof.len())
+            .sum();
+
+        assert!(total_merkle_proof_bytes > 0);
+
+        let size_without_proofs = size_of::<ExecuteData>()
+            + execute_data
+                .signing_verifier_set_leaves
+                .iter()
+                .map(|_| size_of::<SigningVerifierSetInfo>())
+                .sum::<usize>();
+
+        assert!(estimated_size >= size_without_proofs + total_merkle_proof_bytes);
+    }
+
+    #[test]
+    fn estimate_size_prevents_reallocations() {
+        let domain_separator = [1u8; 32];
+        let verifier_set = create_test_verifier_set(5);
+        let signatures = create_test_signatures(&verifier_set);
+        let payload = Payload::Messages(Messages(
+            (0..3)
+                .map(|i| Message {
+                    cc_id: CrossChainId {
+                        chain: format!("chain-{i}"),
+                        id: i.to_string(),
+                    },
+                    source_address: format!("source-{i}"),
+                    destination_address: format!("dest-{i}"),
+                    destination_chain: format!("chain-{i}"),
+                    payload_hash: [i; 32],
+                })
+                .collect(),
+        ));
+
+        let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
+            .expect("encoding should succeed");
+
+        let execute_data: ExecuteData = borsh::BorshDeserialize::try_from_slice(&encoded)
+            .expect("deserialization should succeed");
+
+        let estimated_size = estimate_size(&execute_data);
+
+        assert!(encoded.len() <= estimated_size);
+    }
+
+    #[test]
+    fn estimate_size_scales_with_merkle_proof_size() {
+        let domain_separator = [1u8; 32];
+
+        // Test with different numbers of verifiers (which affects merkle proof size)
+        for num_verifiers in [2, 4, 8, 16, 32] {
+            let verifier_set = create_test_verifier_set(num_verifiers);
+            let signatures = create_test_signatures(&verifier_set);
+            let payload = Payload::Messages(Messages(vec![Message {
+                cc_id: CrossChainId {
+                    chain: "test".to_owned(),
+                    id: "1".to_owned(),
+                },
+                source_address: "src".to_owned(),
+                destination_address: "dst".to_owned(),
+                destination_chain: "chain".to_owned(),
+                payload_hash: [0u8; 32],
+            }]));
+
+            let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
+                .expect("encoding should succeed");
+
+            let execute_data: ExecuteData = borsh::BorshDeserialize::try_from_slice(&encoded)
+                .expect("deserialization should succeed");
+
+            let estimated_size = estimate_size(&execute_data);
+
+            assert!(encoded.len() <= estimated_size);
+        }
+    }
 }

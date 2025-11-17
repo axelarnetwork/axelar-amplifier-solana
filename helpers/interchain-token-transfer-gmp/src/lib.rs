@@ -156,7 +156,21 @@ impl RegisterTokenMetadata {
 
 impl GMPPayload {
     pub fn decode(bytes: &[u8]) -> Result<Self, alloy_sol_types::Error> {
+        if bytes.len() < 32 {
+            return Err(alloy_sol_types::Error::custom(
+                "Insufficient payload length",
+            ));
+        }
+
         let variant = alloy_primitives::U256::abi_decode(&bytes[0..32], true)?;
+
+        // Check that only the lowest 8 bits are used (upper bytes must be zero)
+        let lower = variant & alloy_primitives::U256::from(0xffu8);
+        if variant != lower {
+            return Err(alloy_sol_types::Error::custom(
+                "Invalid payload (nonzero upper bits)",
+            ));
+        }
 
         match variant.byte(0) {
             InterchainTransfer::MESSAGE_TYPE_ID => Ok(GMPPayload::InterchainTransfer(

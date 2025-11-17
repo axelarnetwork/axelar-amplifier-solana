@@ -19,7 +19,7 @@ pub mod verifier_set;
 pub use verifier_set::{SigningVerifierSetInfo, VerifierSet, VerifierSetHash, VerifierSetLeaf};
 
 pub mod message;
-pub use message::{CrossChainId, MerklizedMessage, Message, MessageLeaf};
+pub use message::{CrossChainId, MerklizedMessage, Message, MessageLeaf, Messages};
 
 mod error;
 pub use error::EncodingError;
