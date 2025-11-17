@@ -30,7 +30,6 @@ Changes:
 name = "solana-axelar-gas-service"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
-publish_all_features = true
 git_release_enable = true
 publish = true
 
@@ -38,7 +37,6 @@ publish = true
 name = "solana-axelar-gateway"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
-publish_all_features = true
 git_release_enable = true
 publish = true
 
@@ -46,7 +44,6 @@ publish = true
 name = "solana-axelar-governance"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
-publish_all_features = true
 git_release_enable = true
 publish = true
 
@@ -54,7 +51,6 @@ publish = true
 name = "solana-axelar-its"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
-publish_all_features = true
 git_release_enable = true
 publish = true
 
@@ -62,7 +58,6 @@ publish = true
 name = "solana-axelar-memo"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
-publish_all_features = true
 git_release_enable = true
 publish = true
 
@@ -70,7 +65,6 @@ publish = true
 name = "solana-axelar-operators"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
-publish_all_features = true
 git_release_enable = true
 publish = true
 
