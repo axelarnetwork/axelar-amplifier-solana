@@ -1,6 +1,6 @@
 # This workflow creates a github release using release-plz, and publishes it as a rust crate and also create the necessary artifacts.
 
-name: Release
+name: "Release 4: Execute Release (release.yaml)"
 on:
   workflow_dispatch:
 

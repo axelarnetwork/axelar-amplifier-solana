@@ -1,5 +1,5 @@
 # Workflow to fetch the latest commit hash on the main branch and upload artifacts to CF storage.
-name: Build and upload pre-release
+name: "Release 1: Build & Upload Programs (pre-release.yaml)"
 on:
   push:
     branches:
