@@ -77,7 +77,6 @@ pub fn handover_mint_authority_handler(
     let mint = &ctx.accounts.mint;
     let authority = &ctx.accounts.authority;
     let token_manager = &ctx.accounts.token_manager;
-    let payer = &ctx.accounts.payer;
     let minter_roles = &mut ctx.accounts.minter_roles;
     let token_program = &ctx.accounts.token_program;
 
@@ -121,7 +120,7 @@ pub fn handover_mint_authority_handler(
 
             msg!(
                 "Transferred mint authority to token manager and granted MINTER role to {}",
-                payer.key()
+                authority.key()
             );
 
             Ok(())
