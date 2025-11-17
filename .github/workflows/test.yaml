@@ -43,8 +43,14 @@ jobs:
           rust-cache: "buildjet"
           cache-key: ${{ matrix.program }}
 
-      - name: cargo build-sbf ${{ matrix.program }}
-        run: cargo build-sbf --manifest-path programs/${{ matrix.program }}/Cargo.toml
+      - name: cargo build-sbf all programs
+        run: |
+          cargo build-sbf --manifest-path programs/solana-axelar-gateway/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-gas-service/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-governance/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-its/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-memo/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-operators/Cargo.toml
 
       - name: cargo test-sbf ${{ matrix.program }}
         run: cargo test-sbf -p ${{ matrix.program }}
