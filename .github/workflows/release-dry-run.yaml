@@ -1,6 +1,6 @@
 # This workflow performs a dry-run release using release-plz
 
-name: "Release 2: Dry-Run Release (release-dry-run.yaml)"
+name: "Release Step 2: Dry-Run Release (release-dry-run.yaml)"
 
 on:
   workflow_dispatch:
