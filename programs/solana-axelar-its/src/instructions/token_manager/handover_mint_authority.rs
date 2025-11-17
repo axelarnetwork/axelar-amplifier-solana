@@ -96,7 +96,7 @@ pub fn handover_mint_authority_handler(
     match maybe_mint_authority {
         COption::None => {
             msg!("Cannot hand over mint authority of a TokenManager for non-mintable token");
-            return err!(ItsError::InvalidArgument);
+            err!(ItsError::InvalidArgument)
         }
         COption::Some(mint_authority) if mint_authority == authority.key() => {
             // The given authority is the mint authority. Transfer it to the TokenManager
