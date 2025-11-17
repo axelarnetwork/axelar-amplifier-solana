@@ -22,6 +22,7 @@ spl-token-metadata-interface.workspace = true
 interchain-token-transfer-gmp.workspace = true
 
 [dev-dependencies]
+rand.workspace = true
 solana-program.workspace = true
 solana-axelar-gas-service.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
@@ -33,6 +34,8 @@ mollusk-svm.workspace = true
 mollusk-test-utils.workspace = true
 mollusk-svm-programs-token.workspace = true
 hex.workspace = true
+libsecp256k1.workspace = true
+axelar-solana-encoding.workspace = true
 
 [package.metadata.cargo-machete]
 ignored = ["anchor-spl", "bytemuck", "solana-axelar-gas-service", "solana-axelar-operators"]
