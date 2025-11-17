@@ -5,6 +5,10 @@ inputs:
     description: "which cache to use for Rust"
     required: false
     default: "github"
+  cache-key:
+    description: "additional cache key suffix for parallel jobs"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -17,9 +21,11 @@ runs:
 
     - uses: Swatinem/rust-cache@v2
       with:
-        cache-all-crates: true
+        cache-all-crates: false
         cache-on-failure: true
         cache-provider: ${{ inputs.rust-cache }}
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+        key: ${{ inputs.cache-key }}
         workspaces: |
           .
 

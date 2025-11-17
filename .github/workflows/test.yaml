@@ -20,7 +20,17 @@ name: test
 jobs:
   test:
     runs-on: blacksmith-8vcpu-ubuntu-2204
-    name: test
+    name: test-${{ matrix.program }}
+    strategy:
+      fail-fast: false
+      matrix:
+        program:
+          - solana-axelar-gateway
+          - solana-axelar-gas-service
+          - solana-axelar-governance
+          - solana-axelar-its
+          - solana-axelar-memo
+          - solana-axelar-operators
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +41,35 @@ jobs:
         uses: ./.github/actions/setup-repo
         with:
           rust-cache: "buildjet"
+          cache-key: ${{ matrix.program }}
 
-      - name: cargo xtask test
-        run: cargo xtask test
+      - name: cargo build-sbf ${{ matrix.program }}
+        run: cargo build-sbf --manifest-path programs/${{ matrix.program }}/Cargo.toml
+
+      - name: cargo test-sbf ${{ matrix.program }}
+        run: cargo test-sbf -p ${{ matrix.program }}
+
+  test-auxiliary-crates:
+    runs-on: blacksmith-16vcpu-ubuntu-2204
+    name: test-auxiliary-crates
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup repo
+        uses: ./.github/actions/setup-repo
+        with:
+          rust-cache: "buildjet"
+          cache-key: auxiliary
+
+      - name: cargo test auxiliary crates
+        run: |
+          cargo test --workspace \
+            --exclude solana-axelar-gateway \
+            --exclude solana-axelar-gas-service \
+            --exclude solana-axelar-governance \
+            --exclude solana-axelar-its \
+            --exclude solana-axelar-memo \
+            --exclude solana-axelar-operators
