@@ -3,7 +3,7 @@ members = ["programs/*", "helpers/*", "xtask", "crates/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 authors = []
 repository = "https://github.com/eigerco/axelar-amplifier-solana"
 homepage = "https://github.com/eigerco/axelar-amplifier-solana"
