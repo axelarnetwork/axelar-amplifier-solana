@@ -4,7 +4,6 @@ use crate::{
     instructions::validate_mint_extensions,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
-    utils::truncate_utf8,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
@@ -281,11 +280,6 @@ fn create_token_metadata<'info>(
     token_id: [u8; 32],
     token_manager_bump: u8,
 ) -> Result<()> {
-    let mut truncated_name = name.to_owned();
-    let mut truncated_symbol = symbol.to_owned();
-    truncate_utf8(&mut truncated_name, mpl_token_metadata::MAX_NAME_LENGTH);
-    truncate_utf8(&mut truncated_symbol, mpl_token_metadata::MAX_SYMBOL_LENGTH);
-
     // Create the token metadata using Metaplex CPI
     CreateV1CpiBuilder::new(&accounts.mpl_token_metadata_program.to_account_info())
         .metadata(&accounts.mpl_token_metadata_account.to_account_info())
@@ -295,8 +289,8 @@ fn create_token_metadata<'info>(
         .update_authority(&accounts.token_manager_pda.to_account_info(), true)
         .payer(&accounts.payer.to_account_info())
         .is_mutable(false)
-        .name(truncated_name)
-        .symbol(truncated_symbol)
+        .name(name.to_owned())
+        .symbol(symbol.to_owned())
         .uri(String::with_capacity(0))
         .seller_fee_basis_points(0)
         .system_program(&accounts.system_program.to_account_info())

@@ -1,6 +1,5 @@
-use anchor_lang::prelude::*;
-
 use crate::ITS_HUB_CHAIN_NAME;
+use anchor_lang::prelude::*;
 
 // TODO(v2) check sizes
 pub const ITS_HUB_ADDRESS_MAX_LEN: usize = 45;
@@ -77,14 +76,12 @@ impl InterchainTokenService {
         self.trusted_chains.iter().any(|chain| *chain == chain_name)
     }
 
-    pub fn is_trusted_chain_or_hub(&self, chain_name: &str) -> bool {
-        self.is_trusted_chain(chain_name) || chain_name == ITS_HUB_CHAIN_NAME
-    }
-
     /// Add a chain as trusted
     pub fn add_trusted_chain(&mut self, chain_name: String) {
-        // Only add if not already present to avoid duplicates
-        if !self.trusted_chains.iter().any(|chain| *chain == chain_name) {
+        // Only add if not already present to avoid duplicates and not the hub
+        if !self.trusted_chains.iter().any(|chain| *chain == chain_name)
+            && chain_name != ITS_HUB_CHAIN_NAME
+        {
             self.trusted_chains.push(chain_name);
         }
     }

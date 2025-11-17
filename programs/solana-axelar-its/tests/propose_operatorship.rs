@@ -2,17 +2,17 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::{prelude::borsh, AccountDeserialize, Discriminator};
-use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
+use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::{
     state::{RoleProposal, Roles, UserRoles},
     ItsError,
 };
-use solana_axelar_its_test_fixtures::init_its_service;
-use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::{account::Account, pubkey::Pubkey},
+use solana_axelar_its_test_fixtures::{
+    init_its_service, new_default_account, new_test_account, propose_operatorship_helper,
+    ProposeOperatorshipContext,
 };
+use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
 fn test_propose_operatorship() {
@@ -21,13 +21,12 @@ fn test_propose_operatorship() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let proposed_operator_account = new_default_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -37,8 +36,8 @@ fn test_propose_operatorship() {
         its_root_account,
         current_operator_roles_pda,
         current_operator_roles_account,
-        _program_data,
-        _program_data_account,
+        _,
+        _,
     ) = init_its_service(
         &mollusk,
         payer,
@@ -55,30 +54,8 @@ fn test_propose_operatorship() {
             .expect("Failed to deserialize current operator roles");
     assert!(current_roles_data.roles.contains(Roles::OPERATOR));
 
-    let (proposal_pda, _bump) = RoleProposal::find_pda(
-        &its_root_pda,
-        &current_operator,
-        &proposed_operator,
-        &program_id,
-    );
-
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: current_operator_roles_pda,
-            resource_account: its_root_pda,
-            destination_user_account: proposed_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -87,15 +64,19 @@ fn test_propose_operatorship() {
         ),
         (its_root_pda, its_root_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
-    let result = mollusk.process_instruction(&ix, &accounts);
+    let checks = vec![Check::success()];
+    let (result, _) = propose_operatorship_helper(ctx, checks);
 
     assert!(result.program_result.is_ok());
+
+    let (proposal_pda, _bump) = RoleProposal::find_pda(
+        &its_root_pda,
+        &current_operator,
+        &proposed_operator,
+        &program_id,
+    );
 
     let proposal_account = result
         .get_account(&proposal_pda)
@@ -114,10 +95,9 @@ fn test_propose_malicious_operatorship_failure() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -147,35 +127,12 @@ fn test_propose_malicious_operatorship_failure() {
 
     let attacker = Pubkey::new_unique();
     let malicious_proposed_operator = Pubkey::new_unique();
-    let malicious_proposed_operator_account =
-        Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let malicious_proposed_operator_account = new_default_account();
 
-    let (malicious_proposal_pda, _) = RoleProposal::find_pda(
-        &its_root_pda,
-        &attacker,
-        &malicious_proposed_operator,
-        &program_id,
-    );
-
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: current_operator_roles_pda,
-            resource_account: its_root_pda,
-            destination_user_account: malicious_proposed_operator,
-            proposal_account: malicious_proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
-        (current_operator, current_operator_account.clone()),
+        (attacker, current_operator_account.clone()),
         (
             current_operator_roles_pda,
             current_operator_roles_account.clone(),
@@ -185,17 +142,14 @@ fn test_propose_malicious_operatorship_failure() {
             malicious_proposed_operator,
             malicious_proposed_operator_account.clone(),
         ),
-        (
-            malicious_proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }
 
 #[test]
@@ -205,10 +159,9 @@ fn test_propose_self_failure() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
     let proposed_operator = current_operator;
     let proposed_operator_account = current_operator_account.clone();
@@ -221,8 +174,8 @@ fn test_propose_self_failure() {
         its_root_account,
         current_operator_roles_pda,
         current_operator_roles_account,
-        _program_data,
-        _program_data_account,
+        _,
+        _,
     ) = init_its_service(
         &mollusk,
         payer,
@@ -239,30 +192,8 @@ fn test_propose_self_failure() {
             .expect("Failed to deserialize current operator roles");
     assert!(current_roles_data.roles.contains(Roles::OPERATOR));
 
-    let (proposal_pda, _bump) = RoleProposal::find_pda(
-        &its_root_pda,
-        &current_operator,
-        &proposed_operator,
-        &program_id,
-    );
-
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: current_operator_roles_pda,
-            resource_account: its_root_pda,
-            destination_user_account: proposed_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -271,17 +202,14 @@ fn test_propose_self_failure() {
         ),
         (its_root_pda, its_root_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }
 
 #[test]
@@ -291,29 +219,21 @@ fn test_propose_operatorship_missing_operator_role_failure() {
 
     let upgrade_authority = Pubkey::new_unique();
     let payer = upgrade_authority;
-    let payer_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let payer_account = new_default_account();
 
     let non_operator = Pubkey::new_unique();
-    let non_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let non_operator_account = new_default_account();
 
     let proposed_operator = Pubkey::new_unique();
-    let proposed_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let proposed_operator_account = new_default_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service with a proper operator first
-    let current_operator = Pubkey::new_unique();
-    let current_operator_account = Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID);
+    let (current_operator, current_operator_account) = new_test_account();
 
-    let (
-        its_root_pda,
-        its_root_account,
-        _current_operator_roles_pda,
-        _current_operator_roles_account,
-        _program_data,
-        _program_data_account,
-    ) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -344,45 +264,20 @@ fn test_propose_operatorship_missing_operator_role_failure() {
         rent_epoch: 0,
     };
 
-    let (proposal_pda, _bump) = RoleProposal::find_pda(
-        &its_root_pda,
-        &non_operator,
-        &proposed_operator,
-        &program_id,
-    );
-
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::ProposeOperatorship {
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            origin_user_account: non_operator,
-            origin_roles_account: non_operator_roles_pda,
-            resource_account: its_root_pda,
-            destination_user_account: proposed_operator,
-            proposal_account: proposal_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::ProposeOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (non_operator, non_operator_account.clone()),
         (non_operator_roles_pda, non_operator_roles_account),
         (its_root_pda, its_root_account.clone()),
         (proposed_operator, proposed_operator_account.clone()),
-        (
-            proposal_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
-        ),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(solana_axelar_its::state::RolesError::MissingOperatorRole)
             .into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }
