@@ -355,4 +355,10 @@ pub mod solana_axelar_its {
     ) -> Result<()> {
         instructions::transfer_interchain_token_mintership_handler(ctx)
     }
+
+    pub fn propose_interchain_token_mintership(
+        ctx: Context<ProposeInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::propose_token_manager_mintership_handler(ctx)
+    }
 }

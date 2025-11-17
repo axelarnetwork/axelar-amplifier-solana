@@ -12,3 +12,6 @@ pub use interchain_transfer::*;
 
 pub mod transfer_interchain_token_mintership;
 pub use transfer_interchain_token_mintership::*;
+
+pub mod propose_interchain_token_mintership;
+pub use propose_interchain_token_mintership::*;
