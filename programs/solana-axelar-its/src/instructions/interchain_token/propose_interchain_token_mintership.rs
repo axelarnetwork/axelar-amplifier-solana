@@ -45,6 +45,7 @@ pub struct ProposeInterchainTokenMintership<'info> {
             &token_manager_account.token_id,
         ],
         bump = token_manager_account.bump,
+        // todo: do we need this?
         constraint = token_manager_account.ty == Type::NativeInterchainToken @ ItsError::InvalidTokenManagerType,
 
     )]
