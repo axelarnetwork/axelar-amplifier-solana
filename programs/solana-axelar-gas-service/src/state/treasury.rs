@@ -12,4 +12,8 @@ pub struct Treasury {
 
 impl Treasury {
     pub const SEED_PREFIX: &'static [u8] = b"gas-service";
+
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+    }
 }

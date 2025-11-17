@@ -12,6 +12,7 @@ pub mod utils;
 
 pub use errors::*;
 use instructions::*;
+pub use state::*;
 
 use anchor_lang::prelude::*;
 use program_utils::ensure_single_feature;
