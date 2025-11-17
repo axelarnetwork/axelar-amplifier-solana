@@ -666,3 +666,88 @@ pub fn handover_mint_authority_helper(
         .process_and_validate_instruction(&ix, &accounts, &checks);
     (result, ctx.mollusk)
 }
+
+pub struct TransferInterchainTokenMintershipContext {
+    pub mollusk: Mollusk,
+    pub payer: (Pubkey, Account),
+    pub its_root_pda: (Pubkey, Account),
+    pub sender_user_account: (Pubkey, Account),
+    pub sender_roles_account: (Pubkey, Account),
+    pub token_manager_account: (Pubkey, Account),
+    pub destination_user_account: (Pubkey, Account),
+    pub destination_roles_account: (Pubkey, Account),
+}
+
+impl TransferInterchainTokenMintershipContext {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        mollusk: Mollusk,
+        payer: (Pubkey, Account),
+        its_root_pda: (Pubkey, Account),
+        sender_user_account: (Pubkey, Account),
+        sender_roles_account: (Pubkey, Account),
+        token_manager_account: (Pubkey, Account),
+        destination_user_account: (Pubkey, Account),
+    ) -> Self {
+        let (destination_roles_pda, _) =
+            UserRoles::find_pda(&token_manager_account.0, &destination_user_account.0);
+
+        Self {
+            mollusk,
+            payer,
+            its_root_pda,
+            sender_user_account,
+            sender_roles_account,
+            token_manager_account,
+            destination_user_account,
+            destination_roles_account: (destination_roles_pda, new_empty_account()),
+        }
+    }
+
+    pub fn with_custom_destination_roles_account(
+        mut self,
+        destination_roles_account: Account,
+    ) -> Self {
+        self.destination_roles_account.1 = destination_roles_account;
+        self
+    }
+}
+
+pub fn transfer_interchain_token_mintership_helper(
+    ctx: TransferInterchainTokenMintershipContext,
+    checks: Vec<Check>,
+) -> (InstructionResult, Mollusk) {
+    let program_id = solana_axelar_its::id();
+
+    let ix = Instruction {
+        program_id,
+        accounts: solana_axelar_its::accounts::TransferInterchainTokenMintership {
+            its_root_pda: ctx.its_root_pda.0,
+            system_program: solana_sdk::system_program::ID,
+            payer: ctx.payer.0,
+            sender_user_account: ctx.sender_user_account.0,
+            sender_roles_account: ctx.sender_roles_account.0,
+            token_manager_account: ctx.token_manager_account.0,
+            destination_user_account: ctx.destination_user_account.0,
+            destination_roles_account: ctx.destination_roles_account.0,
+        }
+        .to_account_metas(None),
+        data: solana_axelar_its::instruction::TransferInterchainTokenMintership {}.data(),
+    };
+
+    let accounts = vec![
+        ctx.its_root_pda,
+        keyed_account_for_system_program(),
+        ctx.payer,
+        ctx.sender_user_account,
+        ctx.sender_roles_account,
+        ctx.token_manager_account,
+        ctx.destination_user_account,
+        ctx.destination_roles_account,
+    ];
+
+    let result = ctx
+        .mollusk
+        .process_and_validate_instruction(&ix, &accounts, &checks);
+    (result, ctx.mollusk)
+}

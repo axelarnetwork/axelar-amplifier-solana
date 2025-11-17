@@ -2,22 +2,18 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::state::{Roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
-    new_empty_account, new_test_account, DeployInterchainTokenContext,
+    new_test_account, transfer_interchain_token_mintership_helper, DeployInterchainTokenContext,
+    TransferInterchainTokenMintershipContext,
 };
-use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::pubkey::Pubkey,
-};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn test_transfer_interchain_token_mintership_success() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -99,26 +95,11 @@ fn test_transfer_interchain_token_mintership_success() {
     let (new_minter_token_roles_pda, new_minter_token_roles_pda_bump) =
         UserRoles::find_pda(&token_manager_pda, &new_minter);
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferInterchainTokenMintership {
-            its_root_pda,
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            sender_user_account: current_minter,
-            sender_roles_account: current_minter_roles_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: new_minter,
-            destination_roles_account: new_minter_token_roles_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferInterchainTokenMintership {}.data(),
-    };
-
-    let accounts = vec![
-        (its_root_pda, its_root_account.clone()),
-        keyed_account_for_system_program(),
+    // Test transfer interchain token mintership using the fixture
+    let transfer_ctx = TransferInterchainTokenMintershipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
+        (its_root_pda, its_root_account.clone()),
         (current_minter, current_minter_account.clone()),
         (
             current_minter_roles_pda,
@@ -126,10 +107,10 @@ fn test_transfer_interchain_token_mintership_success() {
         ),
         (token_manager_pda, token_manager_account.clone()),
         (new_minter, new_minter_account.clone()),
-        (new_minter_token_roles_pda, new_empty_account()),
-    ];
+    );
 
-    let result = mollusk.process_instruction(&ix, &accounts);
+    let (result, _) =
+        transfer_interchain_token_mintership_helper(transfer_ctx, vec![Check::success()]);
 
     assert!(result.program_result.is_ok());
 
@@ -165,7 +146,6 @@ fn test_transfer_interchain_token_mintership_success() {
 
 #[test]
 fn test_reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -239,50 +219,32 @@ fn test_reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
         "Current minter should have MINTER role for token manager"
     );
 
-    let (new_minter_token_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &new_minter);
-
     let malicious_minter = Pubkey::new_unique();
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferInterchainTokenMintership {
-            its_root_pda,
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            sender_user_account: malicious_minter,
-            sender_roles_account: current_minter_roles_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: new_minter,
-            destination_roles_account: new_minter_token_roles_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferInterchainTokenMintership {}.data(),
-    };
-
-    let accounts = vec![
-        (its_root_pda, its_root_account.clone()),
-        keyed_account_for_system_program(),
+    // Test transfer with unauthorized minter using the fixture
+    let transfer_ctx = TransferInterchainTokenMintershipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
-        (malicious_minter, current_minter_account.clone()),
+        (its_root_pda, its_root_account.clone()),
+        (malicious_minter, current_minter_account.clone()), // Using malicious_minter instead of current_minter
         (
             current_minter_roles_pda,
             current_minter_token_roles_account.clone(),
         ),
         (token_manager_pda, token_manager_account.clone()),
         (new_minter, new_minter_account.clone()),
-        (new_minter_token_roles_pda, new_empty_account()),
-    ];
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = transfer_interchain_token_mintership_helper(transfer_ctx, checks);
+    assert!(result.program_result.is_err());
 }
 
 #[test]
 fn test_reject_transfer_interchain_token_mintership_without_minter_role() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -348,63 +310,47 @@ fn test_reject_transfer_interchain_token_mintership_without_minter_role() {
         .get_account(&current_minter_roles_pda)
         .expect("Current minter token roles account should exist");
 
-    // Remove MINTER role from current minter account
-    let mut current_minter_token_roles_account_clone = current_minter_token_roles_account.clone();
-
     let mut current_minter_token_roles =
-        UserRoles::try_deserialize(&mut current_minter_token_roles_account_clone.data.as_ref())
-            .expect("Failed to deserialize minter roles");
-    current_minter_token_roles.roles = Roles::empty();
+        UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
+            .expect("Failed to deserialize current minter token roles");
+    assert!(
+        current_minter_token_roles.roles.contains(Roles::MINTER),
+        "Current minter should have MINTER role for token manager"
+    );
 
-    let mut new_data = Vec::new();
-    new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
+    // Remove the MINTER role from current_minter to test failure
+    current_minter_token_roles.roles.remove(Roles::MINTER);
+    let mut serialized_data = Vec::new();
     current_minter_token_roles
-        .serialize(&mut new_data)
-        .expect("Failed to serialize");
-    current_minter_token_roles_account_clone.data = new_data;
+        .serialize(&mut serialized_data)
+        .expect("Failed to serialize current minter token roles");
 
-    let (new_minter_token_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &new_minter);
+    // Create modified account with updated data
+    let mut modified_account = current_minter_token_roles_account.clone();
+    modified_account.data = [UserRoles::DISCRIMINATOR.to_vec(), serialized_data].concat();
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferInterchainTokenMintership {
-            its_root_pda,
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            sender_user_account: current_minter,
-            sender_roles_account: current_minter_roles_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: new_minter,
-            destination_roles_account: new_minter_token_roles_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferInterchainTokenMintership {}.data(),
-    };
-
-    let accounts = vec![
-        (its_root_pda, its_root_account.clone()),
-        keyed_account_for_system_program(),
+    // Test transfer without minter role using the fixture
+    let transfer_ctx = TransferInterchainTokenMintershipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
+        (its_root_pda, its_root_account.clone()),
         (current_minter, current_minter_account.clone()),
-        (
-            current_minter_roles_pda,
-            current_minter_token_roles_account_clone,
-        ),
+        (current_minter_roles_pda, modified_account),
         (token_manager_pda, token_manager_account.clone()),
         (new_minter, new_minter_account.clone()),
-        (new_minter_token_roles_pda, new_empty_account()),
-    ];
+    );
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(RolesError::MissingMinterRole).into(),
+        anchor_lang::error::Error::from(solana_axelar_its::state::RolesError::MissingMinterRole)
+            .into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = transfer_interchain_token_mintership_helper(transfer_ctx, checks);
+    assert!(result.program_result.is_err());
 }
 
 #[test]
 fn test_reject_transfer_interchain_token_mintership_same_sender_destination() {
-    let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -469,42 +415,33 @@ fn test_reject_transfer_interchain_token_mintership_same_sender_destination() {
         .get_account(&current_minter_roles_pda)
         .expect("Current minter token roles account should exist");
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferInterchainTokenMintership {
-            its_root_pda,
-            system_program: solana_sdk::system_program::ID,
-            payer,
-            sender_user_account: current_minter,
-            sender_roles_account: current_minter_roles_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: current_minter, // Same as sender
-            destination_roles_account: current_minter_roles_pda, // Same as sender
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferInterchainTokenMintership {}.data(),
-    };
+    let current_minter_token_roles =
+        UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
+            .expect("Failed to deserialize current minter token roles");
+    assert!(
+        current_minter_token_roles.roles.contains(Roles::MINTER),
+        "Current minter should have MINTER role for token manager"
+    );
 
-    let accounts = vec![
-        (its_root_pda, its_root_account.clone()),
-        keyed_account_for_system_program(),
+    // Test transfer to the same sender/destination using the fixture
+    let transfer_ctx = TransferInterchainTokenMintershipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
+        (its_root_pda, its_root_account.clone()),
         (current_minter, current_minter_account.clone()),
         (
             current_minter_roles_pda,
             current_minter_token_roles_account.clone(),
         ),
         (token_manager_pda, token_manager_account.clone()),
-        (current_minter, current_minter_account.clone()),
-        (
-            current_minter_roles_pda,
-            current_minter_token_roles_account.clone(),
-        ),
-    ];
+        (current_minter, current_minter_account.clone()), // Same as sender
+    )
+    .with_custom_destination_roles_account(current_minter_token_roles_account.clone());
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(solana_axelar_its::ItsError::InvalidArgument).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = transfer_interchain_token_mintership_helper(transfer_ctx, checks);
+    assert!(result.program_result.is_err());
 }
