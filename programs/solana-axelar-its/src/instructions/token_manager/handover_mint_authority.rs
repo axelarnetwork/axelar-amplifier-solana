@@ -50,7 +50,7 @@ pub struct HandoverMintAuthority<'info> {
     )]
     pub token_manager: Account<'info, TokenManager>,
 
-    /// User roles account for the payer (will receive MINTER role)
+    /// User roles account for the authority (will receive MINTER role)
     #[account(
         init_if_needed,
         payer = payer,
@@ -58,7 +58,7 @@ pub struct HandoverMintAuthority<'info> {
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager.key().as_ref(),
-            payer.key().as_ref(),
+            authority.key().as_ref(),
         ],
         bump,
     )]

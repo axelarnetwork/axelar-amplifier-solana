@@ -80,7 +80,8 @@ fn test_handover_mint_authority_success() {
         .unwrap()
         .clone();
 
-    let (minter_roles_pda, _) = UserRoles::find_pda(&register_result.token_manager_pda, &payer);
+    let (minter_roles_pda, _) =
+        UserRoles::find_pda(&register_result.token_manager_pda, &mint_authority);
 
     // Create the handover mint authority instruction
     let instruction_data = solana_axelar_its::instruction::HandoverMintAuthority { token_id };
