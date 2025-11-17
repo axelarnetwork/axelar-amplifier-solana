@@ -24,7 +24,7 @@ use solana_program::{program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], source_address: String, destination_address: Pubkey, amount: u64, data: Vec<u8>, message: Message, source_chain: String)]
+#[instruction(message: Message, source_chain: String, source_address: String, destination_address: Pubkey, token_id: [u8; 32], amount: u64, data: Vec<u8>)]
 pub struct ExecuteInterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -106,6 +106,8 @@ pub fn execute_interchain_transfer_handler<'info>(
     amount: u64,
     data: Vec<u8>,
 ) -> Result<()> {
+    msg!("ExecuteInterchainTransfer handler");
+
     if amount == 0 {
         return err!(ItsError::InvalidAmount);
     }
@@ -152,6 +154,8 @@ pub fn execute_interchain_transfer_handler<'info>(
         };
 
         // Validate anr decode payload data value
+
+        msg!("Got interchain transfer data, length: {}", data.len());
 
         let destination_payload = AxelarMessagePayload::decode(&data)?;
         let destination_accounts = destination_payload.account_meta();
