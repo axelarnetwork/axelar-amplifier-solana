@@ -361,4 +361,10 @@ pub mod solana_axelar_its {
     ) -> Result<()> {
         instructions::propose_token_manager_mintership_handler(ctx)
     }
+
+    pub fn accept_interchain_token_mintership(
+        ctx: Context<AcceptInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::accept_interchain_token_mintership_handler(ctx)
+    }
 }
