@@ -9,3 +9,6 @@ pub use mint_interchain_token::*;
 
 pub mod interchain_transfer;
 pub use interchain_transfer::*;
+
+pub mod transfer_interchain_token_mintership;
+pub use transfer_interchain_token_mintership::*;

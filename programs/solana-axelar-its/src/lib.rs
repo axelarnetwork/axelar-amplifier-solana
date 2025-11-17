@@ -349,4 +349,10 @@ pub mod solana_axelar_its {
     ) -> Result<()> {
         instructions::handover_mint_authority_handler(ctx, token_id)
     }
+
+    pub fn transfer_interchain_token_mintership(
+        ctx: Context<TransferInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::transfer_interchain_token_mintership_handler(ctx)
+    }
 }
