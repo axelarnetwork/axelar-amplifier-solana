@@ -25,10 +25,12 @@ runs:
 
     - uses: Swatinem/rust-cache@v2
       with:
-        cache-all-crates: false
+        cache-all-crates: true
         cache-on-failure: true
         cache-provider: ${{ inputs.rust-cache }}
         save-if: ${{ github.ref == 'refs/heads/main' }}
+        shared-key: rust-cache
+        prefix-key: v1
         key: ${{ inputs.cache-key }}
         workspaces: |
           .
