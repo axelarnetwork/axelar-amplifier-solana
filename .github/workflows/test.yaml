@@ -18,8 +18,8 @@ defaults:
 
 name: test
 jobs:
-  build-programs:
-    runs-on: blacksmith-16vcpu-ubuntu-2204
+  build-all-programs:
+    runs-on: blacksmith-32vcpu-ubuntu-2204
     name: build-all-programs
     steps:
       - uses: actions/checkout@v4
@@ -49,8 +49,8 @@ jobs:
           retention-days: 1
 
   test-programs:
-    needs: build-programs
-    runs-on: blacksmith-8vcpu-ubuntu-2204
+    needs: build-all-programs
+    runs-on: blacksmith-16vcpu-ubuntu-2204
     name: test-${{ matrix.program }}
     strategy:
       fail-fast: false
@@ -83,7 +83,7 @@ jobs:
         run: cargo test-sbf -p ${{ matrix.program }}
 
   test-auxiliary-crates:
-    runs-on: blacksmith-8vcpu-ubuntu-2204
+    runs-on: blacksmith-16vcpu-ubuntu-2204
     name: test-auxiliary-crates
     steps:
       - uses: actions/checkout@v4
