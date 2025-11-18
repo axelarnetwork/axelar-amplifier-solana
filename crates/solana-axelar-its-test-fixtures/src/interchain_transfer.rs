@@ -1,6 +1,7 @@
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::program::keyed_account_for_system_program;
+use mollusk_svm::result::Check;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
@@ -57,6 +58,7 @@ pub fn perform_interchain_transfer(
     destination_address: Vec<u8>,
     transfer_amount: u64,
     gas_value: u64,
+    checks: Vec<Check>,
 ) -> (InstructionResult, Mollusk) {
     let program_id = solana_axelar_its::ID;
     let (signing_pda, _) =
@@ -160,7 +162,7 @@ pub fn perform_interchain_transfer(
 
     (
         ctx.mollusk
-            .process_instruction(&instruction, &transfer_accounts),
+            .process_and_validate_instruction(&instruction, &transfer_accounts, &checks),
         ctx.mollusk,
     )
 }

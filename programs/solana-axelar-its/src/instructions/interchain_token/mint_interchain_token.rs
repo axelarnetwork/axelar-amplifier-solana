@@ -1,6 +1,6 @@
 use crate::{
     errors::ItsError,
-    state::{InterchainTokenService, TokenManager, UserRoles},
+    state::{InterchainTokenService, RolesError, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
@@ -50,7 +50,7 @@ pub struct MintInterchainToken<'info> {
             minter.key().as_ref(),
         ],
         bump = minter_roles_pda.bump,
-        constraint = minter_roles_pda.has_minter_role() @ ItsError::InvalidRole,
+        constraint = minter_roles_pda.has_minter_role() @ RolesError::MissingMinterRole,
     )]
     pub minter_roles_pda: Account<'info, UserRoles>,
 
