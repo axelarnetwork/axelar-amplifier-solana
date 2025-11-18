@@ -3,6 +3,7 @@ name = "solana-axelar-gateway-test-fixtures"
 version = "0.1.0"
 edition = "2021"
 description = "Test fixtures and utilities for solana-axelar-gateway"
+license.workspace = true
 
 [dependencies]
 anchor-lang.workspace = true
