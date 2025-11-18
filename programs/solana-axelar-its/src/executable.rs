@@ -1,6 +1,5 @@
 use anchor_lang::{prelude::*, InstructionData};
-#[allow(unused_imports)]
-use solana_axelar_gateway::executable::*;
+pub use solana_axelar_gateway::executable::*;
 
 pub use mpl_token_metadata::accounts::Metadata as TokenMetadata;
 
@@ -75,10 +74,10 @@ pub struct AxelarExecuteWithInterchainToken<'info> {
 impl<'info> anchor_lang::ToAccountMetas for AxelarExecuteWithInterchainToken<'info> {
     fn to_account_metas(&self, is_signer: Option<bool>) -> Vec<AccountMeta> {
         vec![
-            AccountMeta::new(self.token_program.key(), false),
+            AccountMeta::new_readonly(self.token_program.key(), false),
             AccountMeta::new(self.token_mint.key(), false),
             AccountMeta::new(self.destination_program_ata.key(), false),
-            AccountMeta::new(
+            AccountMeta::new_readonly(
                 self.interchain_transfer_execute.key(),
                 is_signer.unwrap_or(false),
             ),
@@ -95,4 +94,67 @@ impl<'info> anchor_lang::ToAccountInfos<'info> for AxelarExecuteWithInterchainTo
             self.destination_program_ata.clone(),
         ]
     }
+}
+
+/// NOTE: Keep in mind the outer accounts struct must not include:
+/// ```ignore
+/// #[instruction(message: Message, payload: Vec<u8>)]
+/// ```
+/// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
+// NOTE: This macro is necessary because Anchor currently does not support importing
+// accounts from other crates. Once Anchor supports this, we can remove this macro and
+// export the accounts directly from solana-axelar-gateway.
+// See: https://github.com/solana-foundation/anchor/issues/3811
+// It is also not possible to use the `cpi` module inside the gateway crate.
+#[macro_export]
+#[allow(clippy::crate_in_macro_def)]
+macro_rules! executable_with_interchain_token_accounts {
+    ($outer_struct:ident) => {
+    /// Accounts for executing an inbound Axelar GMP message.
+    /// NOTE: Keep in mind the outer accounts struct must not include:
+    /// ```ignore
+    /// #[instruction(message: Message, payload: Vec<u8>)]
+    /// ```
+    /// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
+    #[derive(Accounts)]
+    #[instruction(execute_payload: solana_axelar_its::executable::ExecuteWithInterchainTokenPayload,)]
+    pub struct AxelarExecuteWithInterchainTokenAccounts<'info> {
+	  	pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
+
+	    #[account(mint::token_program = token_program)]
+	    pub token_mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
+
+	    #[account(
+	        associated_token::mint = token_mint,
+            associated_token::authority = crate::ID,
+            associated_token::token_program = token_program,
+		)]
+	    pub destination_program_ata: AccountInfo<'info>,
+
+		#[account(
+			seeds = [solana_axelar_its::state::InterchainTransferExecute::SEED_PREFIX, crate::ID.as_ref()],
+            bump,
+            seeds::program = solana_axelar_its::ID,
+		)]
+	    pub interchain_transfer_execute: Signer<'info>,
+    }
+
+    impl<'info> solana_axelar_its::executable::HasAxelarExecutableWithInterchainToken<'info> for $outer_struct<'info> {
+        fn axelar_executable_with_interchain_token(&self) -> solana_axelar_its::executable::AxelarExecutableWithInterchainTokenAccountRefs<'_, 'info> {
+            (&self.its_executable).into()
+        }
+    }
+
+    impl<'a, 'info> From<&'a AxelarExecuteWithInterchainTokenAccounts<'info>> for solana_axelar_its::executable::AxelarExecutableWithInterchainTokenAccountRefs<'a, 'info> {
+        fn from(accounts: &'a AxelarExecuteWithInterchainTokenAccounts<'info>) -> Self {
+            Self {
+                token_program: &accounts.token_program,
+                token_mint: &accounts.token_mint.to_account_info(),
+                destination_program_ata: &accounts.destination_program_ata,
+                interchain_transfer_execute: &accounts.interchain_transfer_execute,
+            }
+        }
+    }
+
+    };
 }

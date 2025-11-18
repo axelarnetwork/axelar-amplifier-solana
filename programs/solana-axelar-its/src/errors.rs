@@ -36,6 +36,8 @@ pub enum ItsError {
     InvalidDestinationChain,
     #[msg("The destination address is invalid")]
     InvalidDestinationAddress,
+    #[msg("The destination address must be an executable")]
+    DestinationAddressNotExecutable,
     #[msg("The destination address account is invalid")]
     InvalidDestinationAddressAccount,
     #[msg("The token mint cannot have fixed zero supply")]

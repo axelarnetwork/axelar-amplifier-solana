@@ -325,7 +325,6 @@ pub fn validate_mint_extensions(
 }
 
 /// Creates a DeployInterchainToken instruction
-#[cfg(not(target_os = "solana"))]
 pub fn make_deploy_interchain_token_instruction(
     payer: Pubkey,
     deployer: Pubkey,

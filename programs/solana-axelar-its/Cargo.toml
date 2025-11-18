@@ -24,6 +24,7 @@ interchain-token-transfer-gmp.workspace = true
 [dev-dependencies]
 rand.workspace = true
 solana-program.workspace = true
+solana-axelar-memo.workspace = true
 solana-axelar-gas-service.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
 solana-axelar-its-test-fixtures.workspace = true
@@ -31,6 +32,7 @@ bincode.workspace = true
 solana-sdk-ids.workspace = true
 solana-sdk.workspace = true
 mollusk-svm.workspace = true
+mollusk-harness.workspace = true
 mollusk-test-utils.workspace = true
 mollusk-svm-programs-token.workspace = true
 hex.workspace = true
@@ -63,20 +65,24 @@ devnet-amplifier = [
 	"solana-axelar-gas-service/devnet-amplifier",
 	"solana-axelar-operators/devnet-amplifier",
 	"solana-axelar-gateway/devnet-amplifier",
+	"solana-axelar-memo/devnet-amplifier"
 ]
 stagenet = [
 	"solana-axelar-gas-service/stagenet",
 	"solana-axelar-operators/stagenet",
 	"solana-axelar-gateway/stagenet",
+	"solana-axelar-memo/stagenet"
 ]
 testnet = [
 	"solana-axelar-gas-service/testnet",
 	"solana-axelar-operators/testnet",
 	"solana-axelar-gateway/testnet",
+	"solana-axelar-memo/testnet"
 ]
 mainnet = [
 	"solana-axelar-gas-service/mainnet",
 	"solana-axelar-operators/mainnet",
 	"solana-axelar-gateway/mainnet",
+	"solana-axelar-memo/mainnet"
 ]
 default = ["devnet-amplifier"]

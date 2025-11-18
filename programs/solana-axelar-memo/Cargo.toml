@@ -9,6 +9,7 @@ edition.workspace = true
 
 [dependencies]
 anchor-lang.workspace = true
+anchor-spl.workspace = true
 program-utils.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 solana-axelar-its = { workspace = true, features = ["cpi"] }

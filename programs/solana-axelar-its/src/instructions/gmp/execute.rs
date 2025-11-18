@@ -1,4 +1,4 @@
-use crate::{errors::ItsError, state::InterchainTokenService};
+use crate::{errors::ItsError, state::InterchainTokenService, InterchainTransferExecute};
 use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::{
@@ -383,11 +383,29 @@ fn invoke_signed_with_its_root_pda(
 pub fn execute_interchain_transfer_extra_accounts(
     destination: Pubkey,
     destination_ata: Pubkey,
+    transfer_has_data: Option<bool>,
 ) -> Vec<AccountMeta> {
-    vec![
+    let mut accounts = vec![
         AccountMeta::new(destination, false),
         AccountMeta::new(destination_ata, false),
-    ]
+    ];
+
+    if transfer_has_data == Some(true) {
+        let interchain_transfer_execute = Pubkey::find_program_address(
+            &[
+                InterchainTransferExecute::SEED_PREFIX,
+                destination.key().as_ref(),
+            ],
+            &crate::ID,
+        )
+        .0;
+        accounts.push(AccountMeta::new_readonly(
+            interchain_transfer_execute,
+            false,
+        ));
+    }
+
+    accounts
 }
 
 /// Helper function to build the extra accounts needed for execute with LinkToken payload.

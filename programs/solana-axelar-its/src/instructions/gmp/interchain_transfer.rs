@@ -144,13 +144,13 @@ pub fn execute_interchain_transfer_handler<'info>(
         // Validate accounts
 
         if !ctx.accounts.destination.executable {
-            return err!(ItsError::InvalidDestinationAddress);
+            return err!(ItsError::DestinationAddressNotExecutable);
         }
 
         let Some(interchain_transfer_execute) = ctx.accounts.interchain_transfer_execute.as_ref()
         else {
             // TODO better error
-            return err!(ItsError::InvalidAccountData);
+            return err!(ItsError::AccountNotProvided);
         };
 
         // Validate anr decode payload data value
