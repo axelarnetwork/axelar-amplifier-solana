@@ -4220,6 +4220,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "mollusk-harness"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "anchor-lang",
+ "anchor-spl",
+ "axelar-solana-encoding",
+ "bincode",
+ "hex",
+ "interchain-token-transfer-gmp",
+ "libsecp256k1",
+ "mollusk-svm 0.5.1",
+ "mollusk-svm-programs-token",
+ "mollusk-test-utils",
+ "rand 0.8.5",
+ "solana-axelar-gas-service",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-its",
+ "solana-axelar-its-test-fixtures",
+ "solana-axelar-operators",
+ "solana-program",
+ "solana-sdk",
+ "solana-sdk-ids",
+]
+
+[[package]]
 name = "mollusk-svm"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6614,6 +6641,7 @@ dependencies = [
  "hex",
  "interchain-token-transfer-gmp",
  "libsecp256k1",
+ "mollusk-harness",
  "mollusk-svm 0.5.1",
  "mollusk-svm-programs-token",
  "mollusk-test-utils",
@@ -6624,6 +6652,7 @@ dependencies = [
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its-test-fixtures",
+ "solana-axelar-memo",
  "solana-axelar-operators",
  "solana-program",
  "solana-sdk",
@@ -6655,6 +6684,7 @@ name = "solana-axelar-memo"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
+ "anchor-spl",
  "axelar-solana-encoding",
  "bincode",
  "hex",

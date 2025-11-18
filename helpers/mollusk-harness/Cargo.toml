@@ -1,0 +1,39 @@
+[package]
+name = "mollusk-harness"
+version = "0.1.0"
+edition = "2021"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang.workspace = true
+anchor-spl.workspace = true
+solana-sdk.workspace = true
+solana-sdk-ids.workspace = true
+solana-program.workspace = true
+
+rand.workspace = true
+bincode.workspace = true
+hex.workspace = true
+libsecp256k1.workspace = true
+alloy-primitives.workspace = true
+
+mollusk-svm.workspace = true
+mollusk-svm-programs-token.workspace = true
+
+mollusk-test-utils.workspace = true
+axelar-solana-encoding.workspace = true
+interchain-token-transfer-gmp.workspace = true
+
+solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
+solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint"] }
+solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint"] }
+solana-axelar-its = { workspace = true, features = ["cpi", "no-entrypoint"] }
+
+# temp
+solana-axelar-gateway-test-fixtures.workspace = true
+solana-axelar-its-test-fixtures.workspace = true

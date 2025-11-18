@@ -206,7 +206,8 @@ evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 governance-gmp = { path = "helpers/governance-gmp" }
 interchain-token-transfer-gmp = { path = "helpers/interchain-token-transfer-gmp" }
 program-utils = { path = "helpers/program-utils", default-features = false }
-mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
+mollusk-harness = { path = "helpers/mollusk-harness" }
+mollusk-test-utils = { path = "helpers/mollusk-test-utils" }
 
 [workspace.metadata.cargo-machete]
 ignored = ["num-traits"]
