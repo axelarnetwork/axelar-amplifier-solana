@@ -53,25 +53,6 @@ pub struct InterchainTokenDeploymentStarted {
 
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct DeployRemoteInterchainTokenApproval {
-    pub minter: Pubkey,
-    pub deployer: Pubkey,
-    pub token_id: [u8; 32],
-    pub destination_chain: String,
-    pub destination_minter: Vec<u8>,
-}
-
-#[event]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RevokeDeployRemoteInterchainTokenApproval {
-    pub minter: Pubkey,
-    pub deployer: Pubkey,
-    pub token_id: [u8; 32],
-    pub destination_chain: String,
-}
-
-#[event]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenMetadataRegistered {
     pub token_address: Pubkey,
     pub decimals: u8,

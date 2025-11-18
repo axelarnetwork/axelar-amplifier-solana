@@ -1,6 +1,6 @@
 # This workflow creates the PR that will trigger the new release and update the versions of the packages.
 # It's triggered manually once the team is ready to push a new release.
-name: Create Release PR
+name: "Release Step 3: Create Release PR (create-release-pr.yaml)"
 
 on:
   workflow_dispatch:
