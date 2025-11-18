@@ -7,7 +7,6 @@ use solana_axelar_gateway::{
     state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
     ID as GATEWAY_PROGRAM_ID,
 };
-use solana_axelar_gateway::{CommandType, U256};
 use solana_axelar_gateway::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, call_contract_helper, create_message_merkle_tree, create_verifier_info,
@@ -16,7 +15,7 @@ use solana_axelar_gateway_test_fixtures::{
     setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
 };
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::U256;
+use solana_axelar_std::{CommandType, U256};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -929,4 +928,139 @@ fn test_fails_when_verifying_invalid_signature() {
         "Verifying invalid signature should fail, but got: {:?}",
         verify_result.program_result
     );
+}
+
+#[test]
+fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
+    // Step 1: Setup gateway with real signers
+    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
+        setup_test_with_real_signers();
+
+    // Step 2: Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(!init_result.program_result.is_err());
+
+    // Step 3: Create messages and payload merkle root for message approval
+    let verifier_set_merkle_root = setup.verifier_set_hash;
+    let (_messages, _message_leaves, _message_merkle_tree, payload_merkle_root) =
+        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+
+    // Step 4: Initialize payload verification session with APPROVE MESSAGES command type
+    let command_type = CommandType::ApproveMessages;
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(
+            &setup,
+            &init_result,
+            payload_merkle_root,
+            command_type,
+        );
+    assert!(!session_result.program_result.is_err());
+
+    // Step 5: Get existing accounts
+    let gateway_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let verification_session_account = session_result
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Step 6: Sign the payload with both signers to complete the session
+    // First signer
+    let verifier_info_1 = create_verifier_info(
+        &secret_key_1,
+        payload_merkle_root,
+        verifier_leaves.first().unwrap(),
+        0, // Position 0
+        &verifier_merkle_tree,
+        command_type, // Using ApproveMessages command type for signing
+    );
+
+    let verify_result_1 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_1,
+        verification_session_pda,
+        gateway_account.clone(),
+        verification_session_account.clone(),
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account.clone(),
+    );
+
+    assert!(!verify_result_1.program_result.is_err());
+
+    // Get updated verification session after first signature
+    let updated_verification_account_after_first = verify_result_1
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    // Second signer
+    let verifier_info_2 = create_verifier_info(
+        &secret_key_2,
+        payload_merkle_root,
+        #[allow(clippy::indexing_slicing)]
+        &verifier_leaves[1],
+        1, // Position 1
+        &verifier_merkle_tree,
+        command_type, // Using ApproveMessages command type for signing
+    );
+
+    let verify_result_2 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_2,
+        verification_session_pda,
+        gateway_account,
+        updated_verification_account_after_first,
+        setup.verifier_set_tracker_pda,
+        verifier_set_tracker_account,
+    );
+
+    assert!(!verify_result_2.program_result.is_err());
+
+    // Step 7: Verify the session is complete and valid
+    let final_verification_account = verify_result_2
+        .resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .unwrap()
+        .1
+        .clone();
+
+    let final_verification_session = SignatureVerificationSessionData::try_deserialize(
+        &mut final_verification_account.data.as_slice(),
+    )
+    .unwrap();
+
+    assert!(final_verification_session.signature_verification.is_valid(),);
+
+    // try to use approve message payload_merkle_root for rotate_signers: should fail
+    let rotate_result = rotate_signers_helper(
+        &setup,
+        payload_merkle_root, // Using the same payload_merkle_root as new_verifier_set_hash
+        verification_session_pda,
+        verify_result_2,
+    );
+
+    assert!(rotate_result.program_result.is_err(),);
 }

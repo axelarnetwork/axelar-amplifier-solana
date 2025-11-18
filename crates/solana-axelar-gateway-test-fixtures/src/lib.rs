@@ -3,8 +3,9 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
+use anchor_lang::AccountDeserialize;
 use anchor_lang::{
-    prelude::UpgradeableLoaderState, AccountDeserialize, InstructionData, ToAccountMetas,
+    prelude::UpgradeableLoaderState, solana_program, InstructionData, ToAccountMetas,
 };
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
@@ -15,18 +16,11 @@ use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
     ID as GATEWAY_PROGRAM_ID,
 };
-<<<<<<< HEAD
-use solana_axelar_gateway::{IncomingMessage, Message};
-use solana_axelar_std::execute_data::Payload;
-use solana_axelar_std::hasher::{Hasher, LeafHash};
+use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
+use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    CrossChainId, MerklizedMessage, MessageLeaf, Messages, Signature, SigningVerifierSetInfo,
-    VerifierSetLeaf, U256,
-=======
-use solana_axelar_gateway::{
-    CommandType, CrossChainId, IncomingMessage, Message, MessageLeaf,
-    SignatureVerificationSessionData, SigningVerifierSetInfo, VerifierSetLeaf,
->>>>>>> ac0c73fc (fix: issue 148)
+    CommandType, CrossChainId, MerklizedMessage, Message, MessageLeaf, Signature,
+    SigningVerifierSetInfo, VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
 use solana_sdk::{
@@ -561,12 +555,8 @@ pub fn create_verifier_info(
     payload_merkle_root: [u8; 32],
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
-<<<<<<< HEAD
     verifier_merkle_tree: &MerkleTree,
-=======
-    verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
     command_type: CommandType,
->>>>>>> ac0c73fc (fix: issue 148)
 ) -> SigningVerifierSetInfo {
     let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
@@ -583,20 +573,12 @@ pub fn create_verifier_info(
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
 
-<<<<<<< HEAD
     SigningVerifierSetInfo {
         signature,
         leaf: *verifier_leaf,
         merkle_proof: merkle_proof_bytes,
-    }
-=======
-    SigningVerifierSetInfo::new(
-        signature_array,
-        *verifier_leaf,
-        merkle_proof_bytes,
         command_type,
-    )
->>>>>>> ac0c73fc (fix: issue 148)
+    }
 }
 
 pub fn call_contract_helper(
