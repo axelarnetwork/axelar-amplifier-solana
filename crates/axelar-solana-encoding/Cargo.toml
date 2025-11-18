@@ -2,6 +2,8 @@
 name = "axelar-solana-encoding"
 version = "0.1.0"
 edition = "2021"
+description = "Encoding and hashing utilities for Axelar Solana integration"
+license.workspace = true
 
 [lints]
 workspace = true
