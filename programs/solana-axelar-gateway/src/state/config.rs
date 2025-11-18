@@ -1,5 +1,6 @@
-use crate::{GatewayError, U256};
+use crate::GatewayError;
 use anchor_lang::prelude::*;
+use solana_axelar_std::U256;
 
 /// Timestamp alias for when the last signer rotation happened
 pub type Timestamp = u64;
@@ -50,13 +51,11 @@ impl GatewayConfig {
     }
 }
 
-pub type VerifierSetHash = [u8; 32];
-
 /// Represents an initial verifier set with its hash and PDA
 #[derive(Debug, Clone, PartialEq, Eq, AnchorSerialize, AnchorDeserialize)]
 pub struct InitialVerifierSet {
     /// The hash of the verifier set
-    pub hash: VerifierSetHash,
+    pub hash: [u8; 32],
     /// The PDA for the verifier set tracker
     pub pda: Pubkey,
 }

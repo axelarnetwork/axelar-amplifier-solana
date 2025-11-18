@@ -1,11 +1,12 @@
-use crate::U128;
-use crate::{GatewayError, PublicKey, VecBuf, VerifierSetHash};
+use crate::GatewayError;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use bitvec::prelude::*;
-use bytemuck::{Pod, Zeroable};
-use udigest::{encoding::EncodeValue, Digestable};
+use solana_axelar_std::hasher::LeafHash;
+use solana_axelar_std::{
+    EcdsaRecoverableSignature, MerkleProof, Secp256k1Pubkey, SigningVerifierSetInfo,
+    VerifierSetLeaf, U128,
+};
 
 /// This PDA tracks that all the signatures for a given payload get verified
 #[account(zero_copy)]
@@ -59,9 +60,8 @@ impl SignatureVerificationSessionData {
         self.check_slot_is_done(&verifier_info.leaf)?;
 
         // Check: Merkle proof
-        let merkle_proof =
-            rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&verifier_info.merkle_proof)
-                .map_err(|_err| GatewayError::InvalidMerkleProof)?;
+        let merkle_proof = MerkleProof::from_bytes(&verifier_info.merkle_proof)
+            .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
         let leaf_hash = verifier_info.leaf.hash();
 
@@ -75,14 +75,9 @@ impl SignatureVerificationSessionData {
         }
 
         // Check: Digital signature
-        let pubkey_bytes = match verifier_info.leaf.signer_pubkey {
-            PublicKey::Secp256k1(key) => key,
-            PublicKey::Ed25519(_) => return err!(GatewayError::UnsupportedSignatureScheme),
-        };
-
         if !Self::verify_ecdsa_signature(
-            &pubkey_bytes,
-            &verifier_info.signature,
+            &verifier_info.leaf.signer_pubkey.0,
+            &verifier_info.signature.0,
             &payload_merkle_root,
         ) {
             return err!(GatewayError::SignatureVerificationFailed);
@@ -110,8 +105,8 @@ impl SignatureVerificationSessionData {
     }
 
     pub fn verify_ecdsa_signature(
-        pubkey: &axelar_solana_encoding::types::pubkey::Secp256k1Pubkey,
-        signature: &axelar_solana_encoding::types::pubkey::EcdsaRecoverableSignature,
+        pubkey: &Secp256k1Pubkey,
+        signature: &EcdsaRecoverableSignature,
         message: &[u8; 32],
     ) -> bool {
         // Hash the prefixed message to get a 32-byte digest
@@ -219,8 +214,8 @@ impl SignatureVerificationSessionData {
 }
 
 /// Controls the signature verification session for a given payload.
-#[repr(C)]
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Pod, Zeroable)]
+#[zero_copy]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct SignatureVerification {
     /// Accumulated signer threshold required to validate the payload.
     ///
@@ -246,86 +241,12 @@ pub struct SignatureVerification {
     /// signing verifier set.
     /// This data is later used when rotating signers to figure out which
     /// verifier set was the one that actually performed the validation.
-    pub signing_verifier_set_hash: VerifierSetHash,
+    pub signing_verifier_set_hash: [u8; 32],
 }
 
 impl SignatureVerification {
     pub fn is_valid(&self) -> bool {
         self.accumulated_threshold == U128::MAX
-    }
-}
-
-pub type Signature = [u8; 65];
-
-#[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
-pub struct SigningVerifierSetInfo {
-    pub signature: Signature,
-    pub leaf: VerifierSetLeaf,
-    pub merkle_proof: Vec<u8>,
-}
-
-impl SigningVerifierSetInfo {
-    pub fn new(signature: Signature, leaf: VerifierSetLeaf, merkle_proof: Vec<u8>) -> Self {
-        SigningVerifierSetInfo {
-            signature,
-            leaf,
-            merkle_proof,
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug, AnchorSerialize, AnchorDeserialize)]
-pub struct VerifierSetLeaf {
-    /// The nonce value from the associated `VerifierSet`.
-    pub nonce: u64,
-
-    /// The quorum value from the associated `VerifierSet`.
-    pub quorum: u128,
-
-    /// The public key of the verifier.
-    pub signer_pubkey: PublicKey,
-
-    /// The weight assigned to the verifier, representing their voting power or
-    /// authority.
-    pub signer_weight: u128,
-
-    /// The position of this leaf within the Merkle tree.
-    pub position: u16,
-
-    /// The total number of leaves in the Merkle tree, representing the size of
-    /// the verifier set.
-    pub set_size: u16,
-
-    /// A domain separator used to ensure the uniqueness of hashes across
-    /// different contexts.
-    pub domain_separator: [u8; 32],
-}
-
-impl VerifierSetLeaf {
-    pub fn hash(&self) -> [u8; 32] {
-        let mut buffer = VecBuf(vec![]);
-        self.unambiguously_encode(EncodeValue::new(&mut buffer));
-        solana_program::keccak::hash(&buffer.0).to_bytes()
-    }
-
-    pub fn new(
-        nonce: u64,
-        quorum: u128,
-        signer_pubkey: PublicKey,
-        signer_weight: u128,
-        position: u16,
-        set_size: u16,
-        domain_separator: [u8; 32],
-    ) -> Self {
-        Self {
-            nonce,
-            quorum,
-            signer_pubkey,
-            signer_weight,
-            position,
-            set_size,
-            domain_separator,
-        }
     }
 }
 

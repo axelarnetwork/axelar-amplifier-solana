@@ -1,5 +1,5 @@
-use crate::{VerifierSetHash, U256};
 use anchor_lang::prelude::*;
+use solana_axelar_std::{VerifierSetHash, U256};
 
 /// Ever-incrementing counter for keeping track of the sequence of signer sets
 pub type Epoch = U256;
@@ -15,7 +15,7 @@ pub struct VerifierSetTracker {
     /// The epoch associated with this verifier set
     pub epoch: Epoch,
     /// The verifier set hash
-    pub verifier_set_hash: VerifierSetHash,
+    pub verifier_set_hash: [u8; 32],
 }
 
 impl VerifierSetTracker {
