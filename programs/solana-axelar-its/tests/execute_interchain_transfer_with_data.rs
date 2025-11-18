@@ -3,6 +3,7 @@
 
 use anchor_lang::prelude::AccountMeta;
 use mollusk_harness::{ItsTestHarness, TestHarness};
+use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
 
@@ -66,12 +67,21 @@ fn test_execute_interchain_transfer() {
 fn test_execute_interchain_transfer_with_data() {
     let mut its_harness = ItsTestHarness::new();
 
+    // Init memo
+
     // Add memo program to the harness context
     its_harness.ctx.mollusk.add_program(
         &solana_axelar_memo::ID,
         "solana_axelar_memo",
         &solana_sdk_ids::bpf_loader_upgradeable::ID,
     );
+
+    its_harness.ctx.process_and_validate_instruction(
+        &solana_axelar_memo::make_init_ix(its_harness.payer),
+        &[Check::success()],
+    );
+
+    // Transfer
 
     let token_id = its_harness.ensure_test_interchain_token();
     let source_chain = "ethereum";
@@ -98,6 +108,8 @@ fn test_execute_interchain_transfer_with_data() {
 
     its_harness.ensure_trusted_chain(source_chain);
 
+    // Execute transfer
+
     its_harness.execute_gmp_transfer(
         token_id,
         source_chain,
@@ -106,6 +118,8 @@ fn test_execute_interchain_transfer_with_data() {
         transfer_amount,
         Some((data, memo_accounts)),
     );
+
+    // Assert transfer
 
     let token_mint =
         solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
@@ -116,5 +130,7 @@ fn test_execute_interchain_transfer_with_data() {
     assert_eq!(destination_ata_data.owner, receiver);
     assert!(destination_ata_data.is_initialized());
 
-    // TODO verify memo called + logs + etc
+    // Assert memo execution
+
+    // TODO
 }

@@ -1,7 +1,10 @@
 use crate::{
     errors::ItsError,
     events::InterchainTransferReceived,
-    executable::{AxelarExecuteWithInterchainToken, ExecuteWithInterchainTokenPayload},
+    executable::{
+        builder::AxelarExecuteWithInterchainToken, AxelarExecuteWithInterchainTokenInstruction,
+        AxelarExecuteWithInterchainTokenPayload,
+    },
     state::{
         current_flow_epoch, token_manager, FlowDirection, InterchainTokenService,
         InterchainTransferExecute, TokenManager,
@@ -153,7 +156,7 @@ pub fn execute_interchain_transfer_handler<'info>(
             return err!(ItsError::AccountNotProvided);
         };
 
-        // Validate anr decode payload data value
+        // Validate and decode payload data value
 
         msg!("Got interchain transfer data, length: {}", data.len());
 
@@ -163,6 +166,10 @@ pub fn execute_interchain_transfer_handler<'info>(
         if destination_accounts.len() > ctx.remaining_accounts.len() {
             return Err(ProgramError::NotEnoughAccountKeys.into());
         }
+
+        // Remove accounts from the final data sent to the destination program
+        // TODO optimize: avoid cloning the data?
+        let destination_data = destination_payload.payload_without_accounts().to_vec();
 
         // Prepare instruction to invoke
 
@@ -175,15 +182,17 @@ pub fn execute_interchain_transfer_handler<'info>(
         .to_account_metas(Some(true));
         ix_accounts.extend(destination_accounts);
 
-        let ix_data = ExecuteWithInterchainTokenPayload {
-            command_id: message.command_id(),
-            source_chain,
-            source_address: source_address_bytes,
-            destination_address,
-            token_id,
-            token_mint: ctx.accounts.token_mint.key(),
-            amount: transferred_amount,
-            data,
+        let ix_data = AxelarExecuteWithInterchainTokenInstruction {
+            execute_payload: AxelarExecuteWithInterchainTokenPayload {
+                command_id: message.command_id(),
+                source_chain,
+                source_address: source_address_bytes,
+                destination_address,
+                token_id,
+                token_mint: ctx.accounts.token_mint.key(),
+                amount: transferred_amount,
+                data: destination_data,
+            },
         };
 
         let ix = solana_program::instruction::Instruction {
@@ -204,14 +213,12 @@ pub fn execute_interchain_transfer_handler<'info>(
         let (_, axelar_transfer_execute_bump) =
             InterchainTransferExecute::find_pda(ctx.accounts.destination.key);
 
-        msg!(&format!("ix {ix:?}"));
-        msg!(&format!("account_infos {account_infos:?}"));
-
         // Invoke the destination program
 
         solana_program::program::invoke_signed(
             &ix,
             &account_infos,
+            // Sign with the interchain transfer execute PDA
             &[&[
                 InterchainTransferExecute::SEED_PREFIX,
                 ctx.accounts.destination.key().as_ref(),

@@ -596,7 +596,7 @@ impl ItsTestHarness {
         self.ctx
             .process_and_validate_instruction_chain(&instruction_checks);
 
-        solana_sdk::msg!("[TEST] Messages approved.");
+        solana_sdk::msg!("Messages approved on gateway.");
     }
 
     pub fn ensure_its_initialized(&mut self) {
@@ -747,6 +747,15 @@ impl ItsTestHarness {
                     .build(),
             ],
         )]);
+
+        let token_manager: solana_axelar_its::TokenManager = self
+            .get_account_as(&token_manager_pda)
+            .expect("token manager account should exist");
+
+        solana_sdk::msg!(
+            "Deployed interchain token mint: {}",
+            token_manager.token_address,
+        );
 
         token_id
     }
