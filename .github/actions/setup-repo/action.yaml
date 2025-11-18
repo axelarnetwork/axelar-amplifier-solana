@@ -26,6 +26,8 @@ runs:
         cache: false
         # Preserve RUSTFLAGS from .cargo/config.toml
         rustflags: ""
+        # Install required components
+        components: clippy, rustfmt
 
     - name: Cache Rust dependencies
       uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
