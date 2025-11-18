@@ -5514,6 +5514,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
 
 [[package]]
+name = "relayer-discovery"
+version = "0.0.0"
+dependencies = [
+ "anchor-lang",
+ "program-utils",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+]
+
+[[package]]
+name = "relayer-discovery-test-fixtures"
+version = "0.1.1"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "libsecp256k1",
+ "mollusk-svm 0.5.1",
+ "relayer-discovery",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-sdk",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.11.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6660,6 +6688,23 @@ dependencies = [
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
+ "solana-sdk",
+]
+
+[[package]]
+name = "solana-axelar-memo-discoverable"
+version = "0.1.1"
+dependencies = [
+ "anchor-lang",
+ "axelar-solana-encoding",
+ "bincode",
+ "hex",
+ "mollusk-svm 0.5.1",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-program",
  "solana-sdk",
 ]
 

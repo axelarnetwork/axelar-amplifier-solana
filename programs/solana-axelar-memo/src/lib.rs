@@ -6,7 +6,7 @@ pub use instructions::*;
 pub mod state;
 pub use state::*;
 
-use solana_axelar_gateway::executable::{ExecutablePayloadEncodingScheme, Message};
+use solana_axelar_gateway::executable::Message;
 
 use program_utils::ensure_single_feature;
 
@@ -46,9 +46,8 @@ pub mod memo {
         ctx: Context<Execute>,
         message: Message,
         payload: Vec<u8>,
-        encoding_scheme: ExecutablePayloadEncodingScheme,
     ) -> Result<()> {
-        instructions::execute_handler(ctx, message, payload, encoding_scheme)
+        instructions::execute_handler(ctx, message, payload)
     }
 
     pub fn execute_with_interchain_token(_ctx: Context<Execute>) -> Result<()> {

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use solana_axelar_gateway::{executable::*, executable_accounts};
 
-executable_accounts!(Execute);
+executable_accounts!();
 
 use crate::Counter;
 
@@ -19,9 +19,8 @@ pub fn execute_handler(
     ctx: Context<Execute>,
     message: Message,
     payload: Vec<u8>,
-    encoding_scheme: solana_axelar_gateway::executable::ExecutablePayloadEncodingScheme,
 ) -> Result<()> {
-    validate_message(ctx.accounts, message, &payload, encoding_scheme)?;
+    validate_message_raw(&(&ctx.accounts.executable).into(), message, &payload)?;
 
     msg!("Payload size: {}", payload.len());
     let memo = std::str::from_utf8(&payload).map_err(|err| {

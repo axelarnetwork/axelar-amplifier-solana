@@ -104,7 +104,7 @@ pub const EXECUTE_PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
 // It is also not possible to use the `cpi` module inside the gateway crate.
 #[macro_export]
 macro_rules! executable_accounts {
-    ($outer_struct:ident) => {
+    () => {
     /// Accounts for executing an inbound Axelar GMP message.
     /// NOTE: Keep in mind the outer accounts struct must not include:
     /// ```ignore
@@ -147,12 +147,6 @@ macro_rules! executable_accounts {
 
         pub axelar_gateway_program:
             Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,
-    }
-
-    impl<'info> solana_axelar_gateway::executable::HasAxelarExecutable<'info> for $outer_struct<'info> {
-        fn axelar_executable(&self) -> solana_axelar_gateway::executable::AxelarExecutableAccountRefs<'_, 'info> {
-            (&self.executable).into()
-        }
     }
 
     impl<'a, 'info> From<&'a AxelarExecuteAccounts<'info>> for solana_axelar_gateway::executable::AxelarExecutableAccountRefs<'a, 'info> {
