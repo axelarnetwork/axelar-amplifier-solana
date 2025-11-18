@@ -29,17 +29,16 @@ jobs:
       - name: Setup repo (no Foundry)
         uses: ./.github/actions/setup-repo
         with:
-          rust-cache: "buildjet"
           skip-foundry: "true"
 
       - name: Build all Solana programs
         run: |
           # Extract package names from release-plz.toml and build each one
           PROGRAMS=$(grep -A 4 '^\[\[package\]\]' release-plz.toml | grep '^name = ' | sed 's/name = "\(.*\)"/\1/')
-          
+
           echo "Building programs from release-plz.toml:"
           echo "$PROGRAMS"
-          
+
           for program in $PROGRAMS; do
             echo "Building $program..."
             cargo build-sbf --manifest-path programs/$program/Cargo.toml
@@ -74,7 +73,6 @@ jobs:
       - name: Setup repo
         uses: ./.github/actions/setup-repo
         with:
-          rust-cache: "buildjet"
           cache-key: ${{ matrix.program }}
 
       - name: Download program artifacts
@@ -97,7 +95,7 @@ jobs:
       - name: Setup repo
         uses: ./.github/actions/setup-repo
         with:
-          rust-cache: "buildjet"
+          cache-key: "auxiliary-crates"
 
       - name: cargo test auxiliary crates
         run: |
