@@ -75,13 +75,6 @@ pub fn transfer_interchain_token_mintership_handler(
     let sender_roles = &mut ctx.accounts.sender_roles_account;
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
-    // Validate that source and destination accounts are different
-    if ctx.accounts.sender_user_account.key() == ctx.accounts.destination_user_account.key() {
-        msg!("Source and destination accounts are the same");
-        return Err(ItsError::InvalidArgument.into());
-    }
-
-    // Remove MINTER role from sender user
     sender_roles.roles.remove(Roles::MINTER);
 
     // Add MINTER role to destination user
