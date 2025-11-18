@@ -3,7 +3,6 @@
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
-use solana_axelar_gateway::CommandType;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
@@ -13,8 +12,8 @@ use solana_axelar_gateway_test_fixtures::{
 };
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
-use solana_axelar_std::MerkleTree;
 use solana_axelar_std::{hasher::LeafHash, CrossChainId, Message, MessageLeaf};
+use solana_axelar_std::{CommandType, MerkleTree};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
