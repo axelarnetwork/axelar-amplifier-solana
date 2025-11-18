@@ -2,7 +2,7 @@ use crate::Payload;
 use anchor_lang::prelude::*;
 use solana_axelar_gateway::{executable::*, executable_accounts};
 
-executable_accounts!(Execute);
+executable_accounts!();
 
 use crate::Counter;
 
@@ -37,7 +37,7 @@ pub fn execute_handler(ctx: Context<Execute>, payload: Payload, message: Message
 
     // Validate the message with the gateway.
     validate_message_raw(
-        &ctx.accounts.axelar_executable(),
+        &(&ctx.accounts.executable).into(),
         message,
         payload_bytes.as_slice(),
     )?;
