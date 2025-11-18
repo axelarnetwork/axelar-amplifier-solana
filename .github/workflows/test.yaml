@@ -67,11 +67,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup repo (no Foundry)
+      - name: Setup repo
         uses: ./.github/actions/setup-repo
         with:
           rust-cache: "buildjet"
-          skip-foundry: "true"
+          cache-key: ${{ matrix.program }}
 
       - name: Download program artifacts
         uses: actions/download-artifact@v4
