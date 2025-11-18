@@ -32,6 +32,8 @@ pub enum ItsError {
     TrustedChainAlreadySet,
     #[msg("The chain is not set as trusted")]
     TrustedChainNotSet,
+    #[msg("The source address is invalid")]
+    InvalidSourceAddress,
     #[msg("The destination chain name is invalid")]
     InvalidDestinationChain,
     #[msg("The destination address is invalid")]

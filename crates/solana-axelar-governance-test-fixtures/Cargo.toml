@@ -6,6 +6,7 @@ repository.workspace = true
 homepage.workspace = true
 license.workspace = true
 edition.workspace = true
+description = "Test fixtures and utilities for solana-axelar-governance"
 
 [dependencies]
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
