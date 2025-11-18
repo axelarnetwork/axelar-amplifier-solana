@@ -6,7 +6,7 @@ use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, Gover
 use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 use solana_axelar_gateway::{executable::*, executable_accounts};
 
-executable_accounts!(ProcessGmp);
+executable_accounts!();
 
 #[derive(Accounts)]
 pub struct ProcessGmp<'info> {
@@ -54,7 +54,7 @@ pub fn process_gmp_handler(
     // to avoid copying Message + it's a cheaper check
     ensure_authorized_gmp_command(&ctx.accounts.governance_config, &message)?;
 
-    validate_message_raw(&ctx.accounts.axelar_executable(), message, &payload)?;
+    validate_message_raw(&(&ctx.accounts.executable).into(), message, &payload)?;
 
     let (cmd_payload, _, _, proposal_hash) = calculate_gmp_context(payload)?;
 

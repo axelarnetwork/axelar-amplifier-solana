@@ -237,8 +237,7 @@ fn execute() {
 
     let execute_instruction_data = solana_axelar_memo::instruction::Execute {
         message: message.clone(),
-        payload: test_payload.payload_without_accounts().to_vec(),
-        encoding_scheme,
+        payload: test_payload,
     }
     .data();
 

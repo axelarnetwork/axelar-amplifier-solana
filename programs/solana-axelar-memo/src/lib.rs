@@ -52,13 +52,8 @@ pub mod memo {
         instructions::init_handler(ctx)
     }
 
-    pub fn execute(
-        ctx: Context<Execute>,
-        message: Message,
-        payload: Vec<u8>,
-        encoding_scheme: ExecutablePayloadEncodingScheme,
-    ) -> Result<()> {
-        instructions::execute_handler(ctx, message, payload, encoding_scheme)
+    pub fn execute(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
+        instructions::execute_handler(ctx, message, payload)
     }
 
     pub fn execute_with_interchain_token(
