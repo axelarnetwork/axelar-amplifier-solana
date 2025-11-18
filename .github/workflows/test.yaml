@@ -19,7 +19,7 @@ defaults:
 name: test
 jobs:
   build-all-programs:
-    runs-on: blacksmith-64vcpu-ubuntu-2204
+    runs-on: blacksmith-32vcpu-ubuntu-2204
     name: build-all-programs
     steps:
       - uses: actions/checkout@v4
