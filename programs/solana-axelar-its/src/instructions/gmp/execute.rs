@@ -2,13 +2,12 @@ use crate::{errors::ItsError, state::InterchainTokenService};
 use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::{
-    executable::{validate_message_raw, HasAxelarExecutable},
-    executable_accounts, Message,
+    Message, executable::validate_message_raw, executable_accounts
 };
 use solana_program::instruction::AccountMeta;
 use solana_program::instruction::Instruction;
 
-executable_accounts!(Execute);
+executable_accounts!();
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -66,9 +65,8 @@ pub fn execute_handler<'info>(
         msg!("Unsupported GMP payload");
         return err!(ItsError::InvalidInstructionData);
     };
-
     // Validate the GMP message
-    validate_message_raw(&ctx.accounts.axelar_executable(), message.clone(), &payload)?;
+    validate_message_raw(&(&ctx.accounts.executable).into(), message.clone(), &payload)?;
 
     if !ctx
         .accounts

@@ -30,13 +30,8 @@ fn test_execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
     let (counter_pda, _counter_pda_bump) = Counter::get_pda();
-    let encoding_scheme = ExecutablePayloadEncodingScheme::AbiEncoding;
-    let test_payload = ExecutablePayload::new(
-        memo_string.as_bytes(),
-        &[AccountMeta::new(counter_pda, false)],
-        encoding_scheme,
-    );
-    let test_payload_hash: [u8; 32] = test_payload.hash().unwrap();
+    let test_payload = Vec::from(memo_string.as_bytes());
+    let test_payload_hash: [u8; 32] = solana_sdk::keccak::hash(test_payload.as_slice()).to_bytes();
 
     // Step 1: Setup test with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
@@ -240,8 +235,7 @@ fn test_execute() {
 
     let execute_instruction_data = solana_axelar_memo::instruction::Execute {
         message: message.clone(),
-        payload: test_payload.payload_without_accounts().to_vec(),
-        encoding_scheme,
+        payload: test_payload,
     }
     .data();
 
@@ -312,7 +306,7 @@ fn test_execute() {
     let execute_result = setup
         .mollusk
         .process_instruction(&execute_instruction, &execute_accounts);
-
+    
     assert!(
         !execute_result.program_result.is_err(),
         "Execute instruction should succeed: {:?}",
