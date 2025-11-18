@@ -1,14 +1,13 @@
 use crate::{
-    errors::ItsError,
-    events::{InterchainTokenDeployed, TokenManagerDeployed},
-    instructions::validate_mint_extensions,
-    seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    errors::ItsError, events::{InterchainTokenDeployed, TokenManagerDeployed}, gmp::GMPAccounts, instructions::{gmp::*, validate_mint_extensions}, seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED}, state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles}
+
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
 use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
+use solana_axelar_gateway::Message;
+use interchain_token_transfer_gmp::{GMPPayload, DeployInterchainToken};  
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -21,11 +20,12 @@ pub struct ExecuteDeployInterchainToken<'info> {
 
     pub system_program: Program<'info, System>,
 
+    pub executable: AxelarExecuteAccounts<'info>,
+
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused @ ItsError::Paused,
-        signer // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -117,12 +117,21 @@ pub struct ExecuteDeployInterchainToken<'info> {
 
 pub fn execute_deploy_interchain_token_handler(
     ctx: Context<ExecuteDeployInterchainToken>,
-    token_id: [u8; 32],
-    name: String,
-    symbol: String,
-    decimals: u8,
-    minter: Vec<u8>,
+    message: Message,
+    payload: Vec<u8>,
 ) -> Result<()> {
+    let (payload, _) = validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, payload)?;
+    let GMPPayload::DeployInterchainToken(deploy) = payload
+    else {
+        msg!("Unsupported GMP payload");
+        return err!(ItsError::InvalidInstructionData);
+    };
+    let token_id = deploy.token_id.0;
+    let name = deploy.name;
+    let symbol = deploy.symbol;
+    let decimals = deploy.decimals;
+    let minter = deploy.minter.to_vec();
+
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
     {
