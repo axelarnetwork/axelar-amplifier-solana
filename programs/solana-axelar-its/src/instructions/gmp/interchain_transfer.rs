@@ -86,7 +86,7 @@ pub struct ExecuteInterchainTransfer<'info> {
 pub fn execute_interchain_transfer_handler(
     mut ctx: Context<ExecuteInterchainTransfer>,
     token_id: [u8; 32],
-    source_address: String,
+    source_address: Vec<u8>,
     destination_address: Pubkey,
     amount: u64,
     data: Vec<u8>,
@@ -116,7 +116,7 @@ pub fn execute_interchain_transfer_handler(
         command_id: message.command_id(),
         token_id,
         source_chain,
-        source_address: source_address.as_bytes().to_vec(),
+        source_address,
         destination_address,
         destination_token_account,
         amount: transferred_amount,

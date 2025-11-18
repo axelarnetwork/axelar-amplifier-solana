@@ -2,6 +2,8 @@
 name = "evm-contracts-test-suite"
 version = "0.1.0"
 edition = "2021"
+description = "Test suite for EVM contract interactions"
+license.workspace = true
 
 [dependencies]
 anyhow.workspace = true

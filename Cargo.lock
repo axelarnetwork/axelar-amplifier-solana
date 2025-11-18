@@ -905,22 +905,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
-name = "axelar-solana-encoding"
-version = "0.1.0"
-dependencies = [
- "arrayref",
- "borsh 1.5.7",
- "bs58",
- "hex",
- "rand 0.8.5",
- "rs_merkle",
- "sha3",
- "solana-program",
- "thiserror 1.0.69",
- "udigest",
-]
-
-[[package]]
 name = "backtrace"
 version = "0.3.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6516,7 +6500,7 @@ name = "solana-axelar-gas-service"
 version = "0.1.1"
 dependencies = [
  "anchor-lang",
- "borsh 1.5.7",
+ "borsh 0.10.4",
  "bytemuck",
  "mollusk-svm 0.5.1",
  "mollusk-test-utils",
@@ -6533,9 +6517,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "anchor-lang",
- "axelar-solana-encoding",
  "bitvec",
- "bnum",
  "bytemuck",
  "evm-contracts-rs",
  "evm-contracts-test-suite",
@@ -6548,10 +6530,10 @@ dependencies = [
  "rand 0.8.5",
  "rstest",
  "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-std",
  "solana-sdk",
  "test-log",
  "tokio",
- "udigest",
 ]
 
 [[package]]
@@ -6559,12 +6541,12 @@ name = "solana-axelar-gateway-test-fixtures"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "axelar-solana-encoding",
  "bincode",
  "libsecp256k1",
  "mollusk-svm 0.5.1",
  "rand 0.8.5",
  "solana-axelar-gateway",
+ "solana-axelar-std",
  "solana-sdk",
 ]
 
@@ -6652,7 +6634,6 @@ name = "solana-axelar-memo"
 version = "0.1.1"
 dependencies = [
  "anchor-lang",
- "axelar-solana-encoding",
  "bincode",
  "hex",
  "mollusk-svm 0.5.1",
@@ -6660,6 +6641,7 @@ dependencies = [
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
+ "solana-axelar-std",
  "solana-sdk",
 ]
 
@@ -6672,6 +6654,24 @@ dependencies = [
  "program-utils",
  "solana-sdk",
  "solana-sdk-ids",
+]
+
+[[package]]
+name = "solana-axelar-std"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "anchor-lang",
+ "arrayref",
+ "bnum",
+ "borsh 0.10.4",
+ "bytemuck",
+ "hex",
+ "rand 0.8.5",
+ "rs_merkle",
+ "solana-keccak-hasher",
+ "thiserror 1.0.69",
+ "udigest",
 ]
 
 [[package]]

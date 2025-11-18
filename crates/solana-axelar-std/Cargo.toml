@@ -1,0 +1,29 @@
+[package]
+name = "solana-axelar-std"
+version = "0.1.0"
+edition = "2021"
+description = "Primitive types, encoding and hashing utilities for Axelar Solana integration"
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+alloy-primitives.workspace = true
+arrayref.workspace = true
+hex.workspace = true
+rs_merkle.workspace = true
+udigest.workspace = true
+thiserror.workspace = true
+borsh.workspace = true
+anchor-lang = {workspace = true, optional = true }
+solana-keccak-hasher.workspace = true
+bytemuck.workspace = true
+bnum.workspace = true
+
+[dev-dependencies]
+rand.workspace = true
+
+[features]
+default = []
+anchor = ["dep:anchor-lang"]

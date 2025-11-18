@@ -3,7 +3,6 @@
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use solana_axelar_gateway::seed_prefixes::VERIFIER_SET_TRACKER_SEED;
-use solana_axelar_gateway::U256;
 use solana_axelar_gateway::{
     state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
     ID as GATEWAY_PROGRAM_ID,
@@ -15,6 +14,8 @@ use solana_axelar_gateway_test_fixtures::{
     mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
     setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
 };
+use solana_axelar_std::hasher::LeafHash;
+use solana_axelar_std::U256;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,

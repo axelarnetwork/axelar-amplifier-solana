@@ -2,6 +2,8 @@
 name = "evm-contracts-rs"
 version = "0.1.0"
 edition = "2021"
+description = "Rust bindings for EVM contracts"
+license.workspace = true
 
 [dependencies]
 ethers.workspace = true
