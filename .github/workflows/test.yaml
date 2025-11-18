@@ -85,6 +85,7 @@ jobs:
         run: cargo test-sbf -p ${{ matrix.program }}
 
   test-auxiliary-crates:
+    needs: build-all-programs
     runs-on: blacksmith-16vcpu-ubuntu-2204
     name: test-auxiliary-crates
     steps:
