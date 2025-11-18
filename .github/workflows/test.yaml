@@ -18,8 +18,39 @@ defaults:
 
 name: test
 jobs:
-  test:
+  build-programs:
     runs-on: blacksmith-16vcpu-ubuntu-2204
+    name: build-all-programs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup repo (no Foundry)
+        uses: ./.github/actions/setup-repo
+        with:
+          rust-cache: "buildjet"
+          skip-foundry: "true"
+
+      - name: Build all Solana programs
+        run: |
+          cargo build-sbf --manifest-path programs/solana-axelar-gateway/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-gas-service/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-governance/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-its/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-memo/Cargo.toml
+          cargo build-sbf --manifest-path programs/solana-axelar-operators/Cargo.toml
+
+      - name: Upload program artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solana-programs
+          path: target/deploy/*.so
+          retention-days: 1
+
+  test-programs:
+    needs: build-programs
+    runs-on: blacksmith-8vcpu-ubuntu-2204
     name: test-${{ matrix.program }}
     strategy:
       fail-fast: false
@@ -35,40 +66,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0
 
-      - name: Setup repo
+      - name: Setup repo (no Foundry)
         uses: ./.github/actions/setup-repo
         with:
           rust-cache: "buildjet"
-          cache-key: ${{ matrix.program }}
+          skip-foundry: "true"
 
-      - name: cargo build-sbf all programs
-        run: |
-          cargo build-sbf --manifest-path programs/solana-axelar-gateway/Cargo.toml
-          cargo build-sbf --manifest-path programs/solana-axelar-gas-service/Cargo.toml
-          cargo build-sbf --manifest-path programs/solana-axelar-governance/Cargo.toml
-          cargo build-sbf --manifest-path programs/solana-axelar-its/Cargo.toml
-          cargo build-sbf --manifest-path programs/solana-axelar-memo/Cargo.toml
-          cargo build-sbf --manifest-path programs/solana-axelar-operators/Cargo.toml
+      - name: Download program artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: solana-programs
+          path: target/deploy
 
-      - name: cargo test-sbf ${{ matrix.program }}
+      - name: Test ${{ matrix.program }}
         run: cargo test-sbf -p ${{ matrix.program }}
 
   test-auxiliary-crates:
-    runs-on: blacksmith-16vcpu-ubuntu-2204
+    runs-on: blacksmith-8vcpu-ubuntu-2204
     name: test-auxiliary-crates
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0
 
       - name: Setup repo
         uses: ./.github/actions/setup-repo
         with:
           rust-cache: "buildjet"
-          cache-key: auxiliary
 
       - name: cargo test auxiliary crates
         run: |

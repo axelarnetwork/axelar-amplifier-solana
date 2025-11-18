@@ -9,6 +9,10 @@ inputs:
     description: "additional cache key suffix for parallel jobs"
     required: false
     default: ""
+  skip-foundry:
+    description: "skip foundry installation and build"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -31,11 +35,13 @@ runs:
 
     # we rely on foundry for some specific tests
     - name: Install Foundry
+      if: ${{ inputs.skip-foundry != 'true' }}
       uses: foundry-rs/foundry-toolchain@v1
       with:
         version: v1.0.0
 
     - name: Run Forge build
+      if: ${{ inputs.skip-foundry != 'true' }}
       shell: bash
       run: |
         cd evm-contracts
