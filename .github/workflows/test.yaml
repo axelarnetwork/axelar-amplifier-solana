@@ -39,6 +39,7 @@ jobs:
       - name: Setup repo (no Foundry)
         uses: ./.github/actions/setup-repo
         with:
+          cache-key: ${{ matrix.program }}
           skip-foundry: "true"
 
       - name: Build ${{ matrix.program }}
