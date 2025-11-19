@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.program }}
-          path: target/deploy/${{ matrix.program }}.so
+          path: target/deploy/*.so
           retention-days: 1
 
   test-programs:
