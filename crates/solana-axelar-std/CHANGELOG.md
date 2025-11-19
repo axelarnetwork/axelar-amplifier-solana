@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0]
 
+### 🚜 Refactor
+
+- Move encoding and gateway commons to `solana-axelar-std` ([#78](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/78)) - ([5236503](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/52365037f9957ef9871100643f6d61ba0304fd9e))
+
+### Contributors
+
+* @rista404
+
+## [0.1.0]
+
 ### ⛰️ Features
 
 - *(gateway)* Improving Signature Verification Session PDA Addresses ([#292](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/292)) - ([8687fb9](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/8687fb90a8563f91d26cc2b40a60345b3c619a48))
