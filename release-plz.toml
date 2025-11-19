@@ -26,6 +26,36 @@ Changes:
 {% endfor -%}
 """
 
+# Helper crates that need to be published first
+[[package]]
+name = "solana-axelar-std"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "program-utils"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "governance-gmp"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "interchain-token-transfer-gmp"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+# Solana programs
 [[package]]
 name = "solana-axelar-gas-service"
 changelog_path = "CHANGELOG.md"
