@@ -4,6 +4,7 @@ use crate::{
     instructions::validate_mint_extensions,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    utils::truncate_utf8,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
@@ -123,12 +124,12 @@ pub fn execute_deploy_interchain_token_handler(
     decimals: u8,
     minter: Vec<u8>,
 ) -> Result<()> {
-    if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
-        || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
-    {
-        msg!("Name and/or symbol length too long");
-        return err!(ItsError::InvalidArgument);
-    }
+    // Truncate name and symbol for incoming deployments
+    // to prevent metadata CPI failure
+    let mut truncated_name = name;
+    let mut truncated_symbol = symbol;
+    truncate_utf8(&mut truncated_name, mpl_token_metadata::MAX_NAME_LENGTH);
+    truncate_utf8(&mut truncated_symbol, mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
     match (
         minter.is_empty(),
@@ -156,8 +157,8 @@ pub fn execute_deploy_interchain_token_handler(
     process_inbound_deploy(
         ctx.accounts,
         token_id,
-        &name,
-        &symbol,
+        &truncated_name,
+        &truncated_symbol,
         0,
         ctx.bumps.token_manager_pda,
         ctx.bumps.minter_roles_pda,
@@ -184,8 +185,8 @@ pub fn execute_deploy_interchain_token_handler(
             .as_ref()
             .map(anchor_lang::Key::key)
             .unwrap_or_default(),
-        name,
-        symbol,
+        name: truncated_name,
+        symbol: truncated_symbol,
         decimals,
     });
 
