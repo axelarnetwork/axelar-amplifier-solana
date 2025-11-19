@@ -231,7 +231,7 @@ impl ItsTestHarness {
                 payer: self.payer,
                 owner: self.operator,
                 registry,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
             }
             .to_account_metas(None),
             data: solana_axelar_operators::instruction::Initialize {}.data(),
@@ -244,7 +244,7 @@ impl ItsTestHarness {
                 operator_to_add: self.operator,
                 registry,
                 operator_account,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
             }
             .to_account_metas(None),
             data: solana_axelar_operators::instruction::AddOperator {}.data(),
@@ -290,7 +290,7 @@ impl ItsTestHarness {
                 payer: self.payer,
                 operator: self.operator,
                 operator_pda: operator_account,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
                 treasury,
             }
             .to_account_metas(None),
@@ -401,7 +401,7 @@ impl ItsTestHarness {
             accounts: solana_axelar_gateway::accounts::InitializeConfig {
                 payer: self.payer,
                 upgrade_authority: self.operator,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
                 program_data,
                 gateway_root_pda,
                 verifier_set_tracker_pda,
@@ -482,7 +482,7 @@ impl ItsTestHarness {
                 gateway_root_pda: self.gateway.root,
                 verifier_set_tracker_pda: self.gateway.verifier_set_tracker,
                 verification_session_account,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
             }
             .to_account_metas(None),
             data: solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
@@ -568,7 +568,7 @@ impl ItsTestHarness {
                         funder: self.payer,
                         verification_session_account,
                         incoming_message_pda,
-                        system_program: solana_sdk::system_program::ID,
+                        system_program: solana_sdk_ids::system_program::ID,
                         event_authority,
                         program: solana_axelar_gateway::ID,
                     }
@@ -624,7 +624,7 @@ impl ItsTestHarness {
                 payer: self.operator,
                 program_data,
                 its_root_pda,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
                 operator: self.operator,
                 user_roles_account: user_roles_pda,
             }
@@ -673,7 +673,7 @@ impl ItsTestHarness {
                 program_data: Some(program_data),
                 user_roles: None,
                 its_root_pda: self.its_root,
-                system_program: solana_sdk::system_program::ID,
+                system_program: solana_sdk_ids::system_program::ID,
                 // Event authority
                 event_authority,
                 // The current program account
@@ -852,7 +852,7 @@ impl ItsTestHarness {
         let mut accounts = solana_axelar_its::accounts::Execute {
             executable,
             payer: self.payer,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             its_root_pda: self.its_root,
             token_mint,
             token_manager_pda,
