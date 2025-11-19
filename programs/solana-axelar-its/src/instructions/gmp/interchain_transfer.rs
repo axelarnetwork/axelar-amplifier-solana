@@ -165,6 +165,21 @@ pub fn execute_interchain_transfer_handler<'info>(
             return Err(ProgramError::NotEnoughAccountKeys.into());
         }
 
+        let remaining_metas = ctx
+            .remaining_accounts
+            .iter()
+            .map(|ai| AccountMeta {
+                pubkey: ai.key(),
+                is_signer: ai.is_signer,
+                is_writable: ai.is_writable,
+            })
+            .collect::<Vec<_>>();
+
+        if !destination_accounts.eq(&remaining_metas) {
+            msg!("Provided executable accounts do not match the payload specified accounts");
+            return err!(ItsError::InvalidAccountData);
+        }
+
         // Remove accounts from the final data sent to the destination program
         // TODO optimize: can we avoid cloning the data?
         let destination_data = destination_payload.payload_without_accounts().to_vec();
