@@ -1,8 +1,6 @@
 use anchor_lang::{prelude::*, InstructionData};
 pub use solana_axelar_gateway::executable::*;
 
-pub use mpl_token_metadata::accounts::Metadata as TokenMetadata;
-
 //
 // Instruction
 //
@@ -12,12 +10,27 @@ pub use mpl_token_metadata::accounts::Metadata as TokenMetadata;
 ///
 /// Useful for when the execute instruction has a different name in the program.
 /// # Example
+/// ```ignore
+/// use anchor_lang::prelude::*;
+/// use solana_axelar_its::executable::*;
+///
+/// declare_id!("YourProgramId11111111111111111111111111111");
+///
+/// #[program]
+/// pub mod your_program {
+///     use super::*;
+///
+///     #[instruction(discriminator = ITS_EXECUTE_IX_DISC)]
+///     pub fn receive_interchain_token(
+///         ctx: Context<ReceiveToken>,
+///         execute_payload: AxelarExecuteWithInterchainTokenPayload,
+///     ) -> Result<()> {
+///         // Your handling logic
+///         Ok(())
+///     }
+/// }
 /// ```
 pub const ITS_EXECUTE_IX_DISC: &[u8; 8] = &[251, 218, 49, 130, 208, 58, 231, 44];
-
-/// The index of the first account that is expected to be passed to the
-/// destination program.
-pub const ITS_EXECUTE_PROGRAM_ACCOUNTS_START_INDEX: usize = 5;
 
 #[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct AxelarExecuteWithInterchainTokenPayload {
@@ -27,8 +40,6 @@ pub struct AxelarExecuteWithInterchainTokenPayload {
     pub source_chain: String,
     /// The source address of the token transfer.
     pub source_address: Vec<u8>,
-    /// The destination program
-    pub destination_address: Pubkey,
     /// The token ID.
     pub token_id: [u8; 32],
     /// The token mint address.
@@ -53,28 +64,34 @@ impl InstructionData for AxelarExecuteWithInterchainTokenInstruction {}
 // Accounts
 //
 
-/// NOTE: Keep in mind the outer accounts struct must not include:
+/// Macro to generate accounts for execute with interchain token.
+/// Usage:
 /// ```ignore
-/// #[instruction(message: Message, payload: Vec<u8>)]
+/// use anchor_lang::prelude::*;
+/// use solana_axelar_its::{executable::*, executable_with_interchain_token_accounts};
+///
+/// executable_with_interchain_token_accounts!(ExecuteWithInterchainToken);
+///
+/// #[derive(Accounts)]
+/// pub struct ExecuteWithInterchainToken<'info> {
+///     pub its_executable: AxelarExecuteWithInterchainTokenAccounts<'info>,
+///
+///     // Your program accounts here
+/// }
+///
+/// pub fn execute_with_interchain_token_handler(ctx: Context<ExecuteWithInterchainToken>, execute_payload: AxelarExecuteWithInterchainTokenPayload) -> Result<()> {
+///     // Your handling logic here
+///     Ok(())
+/// }
 /// ```
-/// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
-// NOTE: This macro is necessary because Anchor currently does not support importing
-// accounts from other crates. Once Anchor supports this, we can remove this macro and
-// export the accounts directly from solana-axelar-gateway.
-// See: https://github.com/solana-foundation/anchor/issues/3811
-// It is also not possible to use the `cpi` module inside the gateway crate.
+// NOTE: the `crate::ID` is used to refer to the current program ID in the macro.
+// By checking the `interchain_transfer_execute` we verify the integrity of the caller.
 #[macro_export]
 #[allow(clippy::crate_in_macro_def)]
 macro_rules! executable_with_interchain_token_accounts {
     ($outer_struct:ident) => {
-    /// Accounts for executing an inbound Axelar GMP message.
-    /// NOTE: Keep in mind the outer accounts struct must not include:
-    /// ```ignore
-    /// #[instruction(message: Message, payload: Vec<u8>)]
-    /// ```
-    /// attribute due to [a bug](https://github.com/solana-foundation/anchor/issues/2942) in Anchor.
+    /// Accounts for executing an inbound Axelar .
     #[derive(Accounts)]
-    // #[instruction(execute_payload: solana_axelar_its::executable::AxelarExecuteWithInterchainTokenPayload)]
     pub struct AxelarExecuteWithInterchainTokenAccounts<'info> {
 	  	pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
 
@@ -99,10 +116,10 @@ macro_rules! executable_with_interchain_token_accounts {
     };
 }
 
+/// Builder for AxelarExecuteWithInterchainToken instruction accounts.
 pub mod builder {
     use super::*;
 
-    // TODO add mpl_metadata account for token mint
     pub struct AxelarExecuteWithInterchainToken<'info> {
         pub token_program: AccountInfo<'info>,
         pub token_mint: AccountInfo<'info>,

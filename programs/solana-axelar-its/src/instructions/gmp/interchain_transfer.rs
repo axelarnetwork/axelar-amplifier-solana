@@ -168,7 +168,7 @@ pub fn execute_interchain_transfer_handler<'info>(
         }
 
         // Remove accounts from the final data sent to the destination program
-        // TODO optimize: avoid cloning the data?
+        // TODO optimize: can we avoid cloning the data?
         let destination_data = destination_payload.payload_without_accounts().to_vec();
 
         // Prepare instruction to invoke
@@ -187,7 +187,6 @@ pub fn execute_interchain_transfer_handler<'info>(
                 command_id: message.command_id(),
                 source_chain,
                 source_address: source_address_bytes,
-                destination_address,
                 token_id,
                 token_mint: ctx.accounts.token_mint.key(),
                 amount: transferred_amount,
