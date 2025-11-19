@@ -163,7 +163,6 @@ pub fn interchain_transfer_handler(
         return err!(ItsError::InvalidDestinationAddress);
     }
 
-    // TODO check security implications of the checks here
     // Determine the source address based on whether this is a CPI or direct call
     // If it is a CPI, use the caller program id as the source address
     // otherwise use the user's address
