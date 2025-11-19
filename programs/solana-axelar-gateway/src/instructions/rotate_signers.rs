@@ -1,3 +1,4 @@
+use crate::CommandType;
 use crate::{
     GatewayConfig, GatewayError, SignatureVerificationSessionData, VerifierSetRotatedEvent,
     VerifierSetTracker,
@@ -22,6 +23,7 @@ pub struct RotateSigners<'info> {
             SignatureVerificationSessionData::SEED_PREFIX,
             // New verifier set merkle root is used directly as the payload hash.
             &new_verifier_set_merkle_root,
+            &[CommandType::RotateSigners as u8],
             verification_session_account.load()?.signature_verification
             .signing_verifier_set_hash.as_ref(),
         ],
