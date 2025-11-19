@@ -13,7 +13,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # In case there is a "stable" default toolchain cached, we need to uninstall that to ensure all steps use the expected toolchain
     - name: Remove stable toolchain
       shell: bash
       run: rustup toolchain uninstall "stable" || true
@@ -22,11 +21,8 @@ runs:
       id: rust
       uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
       with:
-        # Use Blacksmith cache instead of default Swatinem
         cache: false
-        # Preserve RUSTFLAGS from .cargo/config.toml
         rustflags: ""
-        # Install required components
         components: clippy, rustfmt
 
     - name: Cache Rust dependencies
@@ -44,7 +40,6 @@ runs:
         echo "Cache hit for key: ${{ steps.cache.outputs.cache-matched-key }}"
         cat /home/runner/.cargo/.crates.toml || true
 
-    # we rely on foundry for some specific tests
     - name: Install Foundry
       if: ${{ inputs.skip-foundry != 'true' }}
       uses: foundry-rs/foundry-toolchain@v1
