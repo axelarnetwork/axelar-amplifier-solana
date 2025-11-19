@@ -1,8 +1,9 @@
 use crate::{
-    verification_session::SignatureVerificationSessionData, CommandType, GatewayConfig,
-    GatewayError, VerifierSetTracker,
+    verification_session::SignatureVerificationSessionData, GatewayConfig, GatewayError,
+    VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
+use solana_axelar_std::CommandType;
 
 #[derive(Accounts)]
 #[instruction(merkle_root: [u8; 32], command_type: CommandType)]
