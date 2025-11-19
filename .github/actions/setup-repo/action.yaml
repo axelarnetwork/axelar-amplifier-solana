@@ -2,7 +2,7 @@ name: "Setup Repo Action"
 description: "A reusable composite action that setups rust and other common tasks"
 inputs:
   cache-key:
-    description: "Cache namespace (e.g., test-programs, auxiliary-crates)"
+    description: "Cache namespace"
     required: false
     default: ""
   skip-foundry:
