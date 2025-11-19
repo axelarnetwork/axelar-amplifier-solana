@@ -80,6 +80,14 @@ fn test_execute_interchain_transfer_with_data() {
         &solana_axelar_memo::make_init_ix(its_harness.payer),
         &[Check::success()],
     );
+    let counter_pda = solana_axelar_memo::Counter::get_pda().0;
+    let counter_account: solana_axelar_memo::Counter = its_harness
+        .get_account_as(&counter_pda)
+        .expect("counter account should exist");
+    assert_eq!(
+        counter_account.counter, 0,
+        "counter should have default value"
+    );
 
     // Transfer
 
@@ -95,7 +103,6 @@ fn test_execute_interchain_transfer_with_data() {
     #[allow(clippy::non_ascii_literal)]
     let memo_string = "🫆🫆🫆".as_bytes().to_vec();
     // Custom accounts
-    let counter_pda = solana_axelar_memo::Counter::get_pda().0;
     let memo_accounts = vec![AccountMeta::new(counter_pda, false)];
     // Payload encoding
     let data = ExecutablePayload::new(
@@ -132,5 +139,11 @@ fn test_execute_interchain_transfer_with_data() {
 
     // Assert memo execution
 
-    // TODO
+    let counter_account: solana_axelar_memo::Counter = its_harness
+        .get_account_as(&counter_pda)
+        .expect("counter account should exist");
+    assert_eq!(
+        counter_account.counter, 1,
+        "counter should have been incremented"
+    );
 }

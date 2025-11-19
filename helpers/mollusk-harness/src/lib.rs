@@ -8,7 +8,10 @@ use anchor_spl::{
 };
 use axelar_solana_encoding::hasher::{MerkleTree, SolanaSyscallHasher};
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer, ReceiveFromHub};
-use mollusk_svm::{result::Check, MolluskContext};
+use mollusk_svm::{
+    result::{Check, InstructionResult},
+    MolluskContext,
+};
 use mollusk_test_utils::system_account_with_lamports;
 use mollusk_test_utils::{create_program_data_account, get_event_authority_and_program_accounts};
 use rand::Rng;
@@ -785,7 +788,7 @@ impl ItsTestHarness {
         source_chain: &str,
         payload: GMPPayload,
         extra_accounts: Vec<AccountMeta>,
-    ) {
+    ) -> InstructionResult {
         let encoded_payload = payload.encode();
         let payload_hash = solana_sdk::keccak::hashv(&[&encoded_payload]).to_bytes();
 
@@ -874,7 +877,7 @@ impl ItsTestHarness {
         };
 
         self.ctx
-            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])])
     }
 
     pub fn execute_gmp_transfer(
@@ -885,7 +888,7 @@ impl ItsTestHarness {
         destination_address: Pubkey,
         amount: u64,
         data: Option<(Vec<u8>, Vec<AccountMeta>)>,
-    ) {
+    ) -> InstructionResult {
         let has_data = data.is_some();
 
         let transfer_payload = InterchainTransfer {
@@ -932,6 +935,6 @@ impl ItsTestHarness {
             source_chain,
             transfer_payload_wrapped,
             extra_accounts,
-        );
+        )
     }
 }
