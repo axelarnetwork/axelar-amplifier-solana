@@ -8,7 +8,7 @@ license.workspace = true
 [dependencies]
 anchor-lang.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
-axelar-solana-encoding.workspace = true
+solana-axelar-std.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 libsecp256k1.workspace = true

@@ -1,13 +1,10 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use axelar_solana_encoding::hasher::MerkleTree;
-use axelar_solana_encoding::hasher::SolanaSyscallHasher;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
-use solana_axelar_gateway::{CrossChainId, Message, MessageLeaf};
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
@@ -15,6 +12,8 @@ use solana_axelar_gateway_test_fixtures::{
 };
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
+use solana_axelar_std::MerkleTree;
+use solana_axelar_std::{hasher::LeafHash, CrossChainId, Message, MessageLeaf};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -77,12 +76,9 @@ fn test_execute() {
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
-        .iter()
-        .map(solana_axelar_gateway::MessageLeaf::hash)
-        .collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
 
-    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 
     // Step 4: Initialize payload verification session
