@@ -93,24 +93,24 @@ macro_rules! executable_with_interchain_token_accounts {
     /// Accounts for executing an inbound Axelar .
     #[derive(Accounts)]
     pub struct AxelarExecuteWithInterchainTokenAccounts<'info> {
-	  	pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
+      	pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
 
-	    #[account(mint::token_program = token_program)]
-	    pub token_mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
+        #[account(mint::token_program = token_program)]
+        pub token_mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
 
-	    #[account(
-	        associated_token::mint = token_mint,
+        #[account(
+            associated_token::mint = token_mint,
             associated_token::authority = crate::ID,
             associated_token::token_program = token_program,
-		)]
-	    pub destination_program_ata: InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>,
+        )]
+        pub destination_program_ata: InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>,
 
-		#[account(
-			seeds = [solana_axelar_its::state::InterchainTransferExecute::SEED_PREFIX, crate::ID.as_ref()],
+        #[account(
+            seeds = [solana_axelar_its::state::InterchainTransferExecute::SEED_PREFIX, crate::ID.as_ref()],
             bump,
             seeds::program = solana_axelar_its::ID,
-		)]
-	    pub interchain_transfer_execute: Signer<'info>,
+        )]
+        pub interchain_transfer_execute: Signer<'info>,
     }
 
     };
