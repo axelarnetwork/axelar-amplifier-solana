@@ -18,9 +18,19 @@ defaults:
 
 name: test
 jobs:
-  build-all-programs:
+  build-programs:
     runs-on: blacksmith-32vcpu-ubuntu-2204
-    name: build-all-programs
+    name: build-${{ matrix.program }}
+    strategy:
+      fail-fast: false
+      matrix:
+        program:
+          - solana-axelar-gateway
+          - solana-axelar-gas-service
+          - solana-axelar-governance
+          - solana-axelar-its
+          - solana-axelar-memo
+          - solana-axelar-operators
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,28 +41,18 @@ jobs:
         with:
           skip-foundry: "true"
 
-      - name: Build all Solana programs
-        run: |
-          # Extract package names from release-plz.toml and build each one
-          PROGRAMS=$(grep -A 4 '^\[\[package\]\]' release-plz.toml | grep '^name = ' | sed 's/name = "\(.*\)"/\1/')
+      - name: Build ${{ matrix.program }}
+        run: cargo build-sbf --manifest-path programs/${{ matrix.program }}/Cargo.toml
 
-          echo "Building programs from release-plz.toml:"
-          echo "$PROGRAMS"
-
-          for program in $PROGRAMS; do
-            echo "Building $program..."
-            cargo build-sbf --manifest-path programs/$program/Cargo.toml
-          done
-
-      - name: Upload program artifacts
+      - name: Upload ${{ matrix.program }} artifact
         uses: actions/upload-artifact@v4
         with:
-          name: solana-programs
-          path: target/deploy/*.so
+          name: ${{ matrix.program }}
+          path: target/deploy/${{ matrix.program }}.so
           retention-days: 1
 
   test-programs:
-    needs: build-all-programs
+    needs: build-programs
     runs-on: blacksmith-32vcpu-ubuntu-2204
     name: test-${{ matrix.program }}
     strategy:
@@ -75,17 +75,17 @@ jobs:
         with:
           cache-key: ${{ matrix.program }}
 
-      - name: Download program artifacts
+      - name: Download all program artifacts
         uses: actions/download-artifact@v4
         with:
-          name: solana-programs
           path: target/deploy
+          merge-multiple: true
 
       - name: Test ${{ matrix.program }}
         run: cargo test-sbf -p ${{ matrix.program }}
 
   test-auxiliary-crates:
-    needs: build-all-programs
+    needs: build-programs
     runs-on: blacksmith-16vcpu-ubuntu-2204
     name: test-auxiliary-crates
     steps:
