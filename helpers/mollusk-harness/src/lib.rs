@@ -6,7 +6,6 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address_with_program_id},
     token_2022::spl_token_2022,
 };
-use axelar_solana_encoding::hasher::{MerkleTree, SolanaSyscallHasher};
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer, ReceiveFromHub};
 use mollusk_svm::{
     result::{Check, InstructionResult},
@@ -23,6 +22,9 @@ use solana_axelar_its::{
     InterchainTokenService,
 };
 use solana_axelar_its_test_fixtures::initialize_mollusk_with_programs;
+use solana_axelar_std::{
+    hasher::LeafHash, MerkleTree, MessageLeaf, PublicKey, VerifierSetLeaf, U256,
+};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
@@ -30,7 +32,7 @@ use solana_sdk::{
 // Gateway
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, Message, MessageLeaf, PublicKey, VerifierSetLeaf, VerifierSetTracker, U256,
+    GatewayConfig, Message, VerifierSetTracker,
 };
 
 pub trait TestHarness {
@@ -177,7 +179,7 @@ pub struct GatewayHarnessInfo {
     pub signers: Vec<libsecp256k1::SecretKey>,
     pub verifier_set_tracker: Pubkey,
     pub verifier_set_leaves: Vec<VerifierSetLeaf>,
-    pub verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    pub verifier_merkle_tree: MerkleTree,
 }
 
 impl Default for ItsTestHarness {
@@ -202,7 +204,7 @@ impl ItsTestHarness {
                 signers: vec![],
                 verifier_set_tracker: Pubkey::new_from_array([0u8; 32]),
                 verifier_set_leaves: vec![],
-                verifier_merkle_tree: MerkleTree::<SolanaSyscallHasher>::new(),
+                verifier_merkle_tree: MerkleTree::new(),
             },
             its_root: Pubkey::new_from_array([0u8; 32]),
         };
@@ -333,24 +335,24 @@ impl ItsTestHarness {
         // Create verifier set
         let quorum_threshold = 100;
         let verifier_leaves = vec![
-            VerifierSetLeaf::new(
-                0,
-                quorum_threshold,
-                PublicKey::Secp256k1(compressed_pubkey_1),
-                50,
-                0,
-                2,
+            VerifierSetLeaf {
+                nonce: 0,
+                quorum: quorum_threshold,
+                signer_pubkey: PublicKey(compressed_pubkey_1),
+                signer_weight: 50,
+                position: 0,
+                set_size: 2,
                 domain_separator,
-            ),
-            VerifierSetLeaf::new(
-                0,
-                quorum_threshold,
-                PublicKey::Secp256k1(compressed_pubkey_2),
-                50,
-                1,
-                2,
+            },
+            VerifierSetLeaf {
+                nonce: 0,
+                quorum: quorum_threshold,
+                signer_pubkey: PublicKey(compressed_pubkey_2),
+                signer_weight: 50,
+                position: 1,
+                set_size: 2,
                 domain_separator,
-            ),
+            },
         ];
 
         self.gateway
@@ -360,11 +362,9 @@ impl ItsTestHarness {
         // Calculate the verifier set hash
         let verifier_leaf_hashes: Vec<[u8; 32]> = verifier_leaves
             .iter()
-            .map(solana_axelar_gateway::VerifierSetLeaf::hash)
+            .map(solana_axelar_std::VerifierSetLeaf::hash)
             .collect();
-        let verifier_merkle_tree = axelar_solana_encoding::hasher::MerkleTree::<
-            axelar_solana_encoding::hasher::SolanaSyscallHasher,
-        >::from_leaves(&verifier_leaf_hashes);
+        let verifier_merkle_tree = MerkleTree::from_leaves(&verifier_leaf_hashes);
 
         self.gateway.verifier_merkle_tree = verifier_merkle_tree.clone();
 
@@ -452,11 +452,10 @@ impl ItsTestHarness {
 
         let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
             .iter()
-            .map(solana_axelar_gateway::MessageLeaf::hash)
+            .map(solana_axelar_std::MessageLeaf::hash)
             .collect();
 
-        let message_merkle_tree =
-            MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+        let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
 
         let payload_merkle_root = message_merkle_tree.root().unwrap();
 
@@ -549,7 +548,7 @@ impl ItsTestHarness {
                 let message_proof = message_merkle_tree.proof(&[position]);
                 let message_proof_bytes = message_proof.to_bytes();
 
-                let merklized_message = solana_axelar_gateway::MerklizedMessage {
+                let merklized_message = solana_axelar_std::MerklizedMessage {
                     leaf: message_leaves[position].clone(),
                     proof: message_proof_bytes,
                 };
@@ -805,7 +804,7 @@ impl ItsTestHarness {
             .expect("its config should exist");
 
         let message = solana_axelar_gateway::Message {
-            cc_id: solana_axelar_gateway::CrossChainId {
+            cc_id: solana_axelar_std::CrossChainId {
                 chain: source_chain.to_owned(),
                 id: rand_message_id,
             },

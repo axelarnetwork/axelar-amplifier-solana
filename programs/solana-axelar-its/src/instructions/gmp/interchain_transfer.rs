@@ -27,7 +27,7 @@ use solana_program::{program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(message: Message, source_chain: String, source_address: String, destination_address: Pubkey, token_id: [u8; 32], amount: u64, data: Vec<u8>)]
+#[instruction(message: Message, source_chain: String, source_address: Vec<u8>, destination_address: Pubkey, token_id: [u8; 32], amount: u64, data: Vec<u8>)]
 pub struct ExecuteInterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -103,7 +103,7 @@ pub fn execute_interchain_transfer_handler<'info>(
     mut ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
     message: Message,
     source_chain: String,
-    source_address: String,
+    source_address: Vec<u8>,
     destination_address: Pubkey,
     token_id: [u8; 32],
     amount: u64,
@@ -130,13 +130,11 @@ pub fn execute_interchain_transfer_handler<'info>(
         solana_program::keccak::hash(data.as_ref()).0
     };
 
-    let source_address_bytes = source_address.as_bytes().to_vec();
-
     emit_cpi!(InterchainTransferReceived {
         command_id: message.command_id(),
         token_id,
         source_chain: source_chain.clone(),
-        source_address: source_address_bytes.clone(),
+        source_address: source_address.clone(),
         destination_address,
         destination_token_account,
         amount: transferred_amount,
@@ -186,7 +184,7 @@ pub fn execute_interchain_transfer_handler<'info>(
             execute_payload: AxelarExecuteWithInterchainTokenPayload {
                 command_id: message.command_id(),
                 source_chain,
-                source_address: source_address_bytes,
+                source_address,
                 token_id,
                 token_mint: ctx.accounts.token_mint.key(),
                 amount: transferred_amount,

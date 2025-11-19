@@ -26,7 +26,7 @@ mollusk-svm.workspace = true
 mollusk-svm-programs-token.workspace = true
 
 mollusk-test-utils.workspace = true
-axelar-solana-encoding.workspace = true
+solana-axelar-std.workspace = true
 interchain-token-transfer-gmp.workspace = true
 
 solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }

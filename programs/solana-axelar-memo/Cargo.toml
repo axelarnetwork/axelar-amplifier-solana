@@ -6,6 +6,7 @@ repository.workspace = true
 homepage.workspace = true
 license.workspace = true
 edition.workspace = true
+description = "Axelar Memo Anchor program for Solana"
 
 [dependencies]
 anchor-lang.workspace = true
@@ -19,7 +20,7 @@ solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 bincode.workspace = true
-axelar-solana-encoding.workspace = true
+solana-axelar-std.workspace = true
 hex.workspace = true
 
 [lints]

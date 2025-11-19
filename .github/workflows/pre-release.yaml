@@ -1,5 +1,5 @@
 # Workflow to fetch the latest commit hash on the main branch and upload artifacts to CF storage.
-name: Build and upload pre-release
+name: "Release Step 1: Build & Upload Programs (pre-release.yaml)"
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   solana-program-names:
     name: Get all Solana programs
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-32vcpu-ubuntu-2204
     outputs:
       releases: ${{ steps.prepare-release.outputs.releases }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}

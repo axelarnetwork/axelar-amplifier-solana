@@ -252,7 +252,7 @@ pub mod solana_axelar_its {
         ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
         message: solana_axelar_gateway::Message,
         source_chain: String,
-        source_address: String,
+        source_address: Vec<u8>,
         destination_address: Pubkey,
         token_id: [u8; 32],
         amount: u64,
