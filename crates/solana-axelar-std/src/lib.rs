@@ -27,3 +27,6 @@ pub use error::EncodingError;
 pub mod execute_data;
 
 pub mod merkle;
+
+pub mod command_type;
+pub use command_type::*;

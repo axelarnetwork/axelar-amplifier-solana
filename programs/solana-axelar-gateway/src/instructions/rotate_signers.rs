@@ -1,10 +1,10 @@
-use crate::CommandType;
 use crate::{
     GatewayConfig, GatewayError, SignatureVerificationSessionData, VerifierSetRotatedEvent,
     VerifierSetTracker,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
+use solana_axelar_std::CommandType;
 use solana_axelar_std::U256;
 
 #[derive(Accounts)]
