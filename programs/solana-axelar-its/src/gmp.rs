@@ -103,8 +103,12 @@ pub fn process_outbound(
     // Call contract instruction
 
     // NOTE: this could be calculated at compile time
-    let (_, signing_pda_bump) =
+    let (expected_signing_pda, signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &crate::ID);
+
+    if expected_signing_pda != *gmp_accounts.call_contract_signing_pda.key {
+        return Err(ItsError::InvalidAccountData.into());
+    }
 
     let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
 
