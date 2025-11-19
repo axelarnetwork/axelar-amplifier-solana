@@ -128,6 +128,9 @@ sol! {
 
 }
 
+/// Converts a `u8` value to a `U256` by placing the value in the least significant limb
+/// (little-endian order) and zero-extending the rest. This is suitable for representing
+/// small message type IDs as `U256` values, as required by the message format.
 const fn u8_to_u256(x: u8) -> U256 {
     U256::from_limbs([x as u64, 0, 0, 0])
 }

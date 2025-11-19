@@ -42,6 +42,8 @@ pub enum ItsError {
     DestinationAddressNotExecutable,
     #[msg("The destination address account is invalid")]
     InvalidDestinationAddressAccount,
+    #[msg("The interchain transfer PDA is required for transfers with data")]
+    InterchainTransferExecutePdaMissing,
     #[msg("The token mint cannot have fixed zero supply")]
     ZeroSupplyToken,
     #[msg("The mint extension is not compatible with the TokenManager type")]

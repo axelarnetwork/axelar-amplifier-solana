@@ -88,12 +88,12 @@ pub struct ExecuteInterchainTransfer<'info> {
     pub system_program: Program<'info, System>,
 
     #[account(
-		seeds = [
-			InterchainTransferExecute::SEED_PREFIX,
-			destination.key().as_ref(),
-		],
-		bump,
-	)]
+        seeds = [
+            InterchainTransferExecute::SEED_PREFIX,
+            destination.key().as_ref(),
+        ],
+        bump,
+    )]
     pub interchain_transfer_execute: Option<UncheckedAccount<'info>>,
 }
 
@@ -150,8 +150,7 @@ pub fn execute_interchain_transfer_handler<'info>(
 
         let Some(interchain_transfer_execute) = ctx.accounts.interchain_transfer_execute.as_ref()
         else {
-            // TODO better error
-            return err!(ItsError::AccountNotProvided);
+            return err!(ItsError::InterchainTransferExecutePdaMissing);
         };
 
         // Validate and decode payload data value
@@ -161,7 +160,7 @@ pub fn execute_interchain_transfer_handler<'info>(
         let destination_payload = AxelarMessagePayload::decode(&data)?;
         let destination_accounts = destination_payload.account_meta();
 
-        if destination_accounts.len() > ctx.remaining_accounts.len() {
+        if destination_accounts.len() != ctx.remaining_accounts.len() {
             return Err(ProgramError::NotEnoughAccountKeys.into());
         }
 
@@ -181,7 +180,6 @@ pub fn execute_interchain_transfer_handler<'info>(
         }
 
         // Remove accounts from the final data sent to the destination program
-        // TODO optimize: can we avoid cloning the data?
         let destination_data = destination_payload.payload_without_accounts().to_vec();
 
         // Prepare instruction to invoke

@@ -390,10 +390,7 @@ pub fn execute_interchain_transfer_extra_accounts(
 
     if transfer_has_data == Some(true) {
         let interchain_transfer_execute = Pubkey::find_program_address(
-            &[
-                InterchainTransferExecute::SEED_PREFIX,
-                destination.key().as_ref(),
-            ],
+            &[InterchainTransferExecute::SEED_PREFIX, destination.as_ref()],
             &crate::ID,
         )
         .0;

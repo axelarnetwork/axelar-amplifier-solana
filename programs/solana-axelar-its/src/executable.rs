@@ -90,7 +90,7 @@ impl InstructionData for AxelarExecuteWithInterchainTokenInstruction {}
 #[allow(clippy::crate_in_macro_def)]
 macro_rules! executable_with_interchain_token_accounts {
     ($outer_struct:ident) => {
-    /// Accounts for executing an inbound Axelar .
+    /// Accounts for executing a destination program with an interchain token.
     #[derive(Accounts)]
     pub struct AxelarExecuteWithInterchainTokenAccounts<'info> {
       	pub token_program: Interface<'info, anchor_spl::token_interface::TokenInterface>,
