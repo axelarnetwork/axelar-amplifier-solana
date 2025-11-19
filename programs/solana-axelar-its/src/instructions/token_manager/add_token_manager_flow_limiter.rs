@@ -1,4 +1,7 @@
-use crate::state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles};
+use crate::{
+    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    ItsError,
+};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
