@@ -22,7 +22,7 @@ use solana_program::{program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], source_address: String, destination_address: Pubkey, amount: u64, data: Vec<u8>, message: Message, source_chain: String)]
+#[instruction(token_id: [u8; 32], source_address: Vec<u8>, destination_address: Pubkey, amount: u64, data: Vec<u8>, message: Message, source_chain: String)]
 pub struct ExecuteInterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
