@@ -7,6 +7,7 @@ use solana_axelar_gateway::{
     state::VerifierSetTracker, verification_session::SignatureVerification, GatewayConfig,
     ID as GATEWAY_PROGRAM_ID,
 };
+use solana_axelar_gateway::{CommandType, U256};
 use solana_axelar_gateway::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, call_contract_helper, create_message_merkle_tree, create_verifier_info,
@@ -83,8 +84,10 @@ fn test_initialize_payload_verification_session() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
+    let command_type = CommandType::ApproveMessages;
+
     let (result, verification_session_pda) =
-        initialize_payload_verification_session(&setup, &init_result);
+        initialize_payload_verification_session(&setup, &init_result, command_type);
 
     assert!(
         !result.program_result.is_err(),
@@ -106,7 +109,8 @@ fn test_initialize_payload_verification_session() {
     .unwrap();
 
     let mut expected_verification_account =
-        SignatureVerificationSessionData::new(SignatureVerification::default(), 255);
+        SignatureVerificationSessionData::new(SignatureVerification::default(), 254);
+
     expected_verification_account
         .signature_verification
         .signing_verifier_set_hash = setup.verifier_set_hash;
@@ -126,9 +130,9 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 
     // Step 3: Create messages and payload merkle root
     let verifier_set_merkle_root = setup.verifier_set_hash;
-    let messages = default_messages();
-    let (message_leaves, message_merkle_tree, payload_merkle_root) =
-        create_message_merkle_tree(setup.domain_separator, &messages);
+    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
+        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    let command_type = CommandType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
@@ -136,6 +140,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
             &setup,
             &init_result,
             payload_merkle_root,
+            command_type,
         );
     assert!(!session_result.program_result.is_err());
 
@@ -172,6 +177,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
+        command_type,
     );
 
     // Execute the first verify_signature instruction using helper
@@ -209,6 +215,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         &verifier_leaves[1],
         1, // Position 1
         &verifier_merkle_tree,
+        command_type,
     );
 
     // Execute the second verify_signature instruction using helper
@@ -327,6 +334,7 @@ fn test_rotate_signers() {
     // Step 4: Create rotation payload hash (what current verifiers need to sign)
     // New verifier set hash is used directly as the payload hash for rotation
     let rotation_payload_hash = new_verifier_set_hash;
+    let command_type = CommandType::RotateSigners;
 
     // Step 5: Initialize payload verification session (for the rotation)
     let (session_result, verification_session_pda) =
@@ -334,6 +342,7 @@ fn test_rotate_signers() {
             &setup,
             &init_result,
             new_verifier_set_hash,
+            command_type,
         );
     assert!(!session_result.program_result.is_err());
 
@@ -371,6 +380,7 @@ fn test_rotate_signers() {
         verifier_leaves.first().unwrap(),
         0,
         &verifier_merkle_tree,
+        command_type,
     );
 
     let verify_result_1 = verify_signature_helper(
@@ -403,6 +413,7 @@ fn test_rotate_signers() {
         &verifier_leaves[1],
         1,
         &verifier_merkle_tree,
+        command_type,
     );
 
     let verify_result_2 = verify_signature_helper(
@@ -656,11 +667,14 @@ fn test_fails_when_verifier_submits_signature_twice() {
     let messages = default_messages();
     let (_, _, payload_merkle_root) = create_message_merkle_tree(setup.domain_separator, &messages);
 
+    let command_type = CommandType::ApproveMessages;
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
             &init_result,
             payload_merkle_root,
+            command_type,
         );
     assert!(!session_result.program_result.is_err());
 
@@ -670,6 +684,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
         verifier_leaves.first().unwrap(),
         0,
         &verifier_merkle_tree,
+        command_type,
     );
 
     // First signature verification should succeed
@@ -752,12 +767,15 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
     let (message_leaves, message_merkle_tree, payload_merkle_root) =
         create_message_merkle_tree(setup.domain_separator, &messages);
 
+    let command_type = CommandType::ApproveMessages;
+
     // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
             &init_result,
             payload_merkle_root,
+            command_type,
         );
     assert!(!session_result.program_result.is_err());
 
@@ -793,6 +811,7 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
         verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
+        command_type,
     );
 
     let verify_result_1 = verify_signature_helper(
@@ -843,12 +862,15 @@ fn test_fails_when_verifying_invalid_signature() {
     let (_, _message_merkle_tree, payload_merkle_root) =
         create_message_merkle_tree(setup.domain_separator, &messages);
 
+    let command_type = CommandType::ApproveMessages;
+
     // Step 4: Initialize payload verification session with the correct payload root
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
             &init_result,
             payload_merkle_root,
+            command_type,
         );
     assert!(!session_result.program_result.is_err());
 
@@ -887,6 +909,7 @@ fn test_fails_when_verifying_invalid_signature() {
         verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
+        command_type,
     );
 
     // Step 7: Try to verify the invalid signature against the correct payload root
