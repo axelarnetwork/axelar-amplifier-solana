@@ -1,5 +1,5 @@
 use crate::{errors::ItsError, state::InterchainTokenService, instructions::gmp::*};
-use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
+use anchor_lang::{prelude::*, solana_program, Key};
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::{
     Message, executable::validate_message_raw,
@@ -13,6 +13,9 @@ pub fn validate_message<'info>(
     message: Message,
     payload: Vec<u8>,
 ) -> Result<(GMPPayload, String)> {
+    // Validate the GMP message
+    validate_message_raw(&executable.into(), message.clone(), &payload)?;
+
     use GMPPayload::ReceiveFromHub;
     // Verify that the message comes from the trusted Axelar ITS Hub
     if message.source_address != its_root_pda.its_hub_address {
@@ -27,8 +30,6 @@ pub fn validate_message<'info>(
         msg!("Unsupported GMP payload");
         return err!(ItsError::InvalidInstructionData);
     };
-    // Validate the GMP message
-    validate_message_raw(&executable.into(), message.clone(), &payload)?;
 
     if !its_root_pda
         .is_trusted_chain(&inner_msg.source_chain)
@@ -153,63 +154,11 @@ fn cpi_execute_interchain_transfer<'info>(
 
     let data = transfer.data;
 
-    let instruction_data = crate::instruction::ExecuteInterchainTransfer {
-        token_id,
-        source_address,
-        destination_address,
-        amount,
-        data: data.to_vec(),
-        message,
-        source_chain: source_chain.to_owned(),
-    };
-
     let mut remaining = ctx.remaining_accounts.iter();
     let destination = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let destination_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
 
-    let transfer_instruction = Instruction {
-        program_id: crate::id(),
-        accounts: crate::accounts::ExecuteInterchainTransfer {
-            payer: ctx.accounts.payer.key(),
-            its_root_pda: ctx.accounts.its_root_pda.key(),
-            destination: destination.key(),
-            destination_ata: destination_ata.key(),
-            token_mint: ctx.accounts.token_mint.key(),
-            token_manager_pda: ctx.accounts.token_manager_pda.key(),
-            token_manager_ata: ctx.accounts.token_manager_ata.key(),
-            token_program: ctx.accounts.token_program.key(),
-            associated_token_program: ctx.accounts.associated_token_program.key(),
-            system_program: ctx.accounts.system_program.key(),
-            event_authority: ctx.accounts.event_authority.key(),
-            program: ctx.accounts.program.key(),
-        }
-        .to_account_metas(None),
-        data: instruction_data.data(),
-    };
-
-    let account_infos =
-        crate::__cpi_client_accounts_execute_interchain_transfer::ExecuteInterchainTransfer {
-            payer: ctx.accounts.payer.to_account_info(),
-            its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
-            destination: destination.to_account_info(),
-            destination_ata: destination_ata.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
-            token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            event_authority: ctx.accounts.event_authority.to_account_info(),
-            program: ctx.accounts.program.to_account_info(),
-        }
-        .to_account_infos();
-
-    // Invoke the instruction with ITS root PDA as signer
-    invoke_signed_with_its_root_pda(
-        &transfer_instruction,
-        &account_infos,
-        ctx.accounts.its_root_pda.bump,
-    )
+    Ok(())
 }
 
 fn cpi_execute_link_token<'info>(
@@ -231,65 +180,12 @@ fn cpi_execute_link_token<'info>(
 
     let link_params = payload.link_params.to_vec(); // Vec<u8>
 
-    // Create the instruction data using Anchor's InstructionData trait
-    let instruction_data = crate::instruction::ExecuteLinkToken {
-        token_id,
-        destination_token_address,
-        token_manager_type,
-        link_params,
-    };
-
     let mut remaining = ctx.remaining_accounts.iter();
     let deployer = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let minter = remaining.next();
     let minter_roles_pda = remaining.next();
 
-    let accounts = crate::accounts::ExecuteLinkToken {
-        payer: ctx.accounts.payer.key(),
-        deployer: deployer.key(),
-        system_program: ctx.accounts.system_program.key(),
-        its_root_pda: ctx.accounts.its_root_pda.key(),
-        token_manager_pda: ctx.accounts.token_manager_pda.key(),
-        token_mint: ctx.accounts.token_mint.key(),
-        token_manager_ata: ctx.accounts.token_manager_ata.key(),
-        token_program: ctx.accounts.token_program.key(),
-        associated_token_program: ctx.accounts.associated_token_program.key(),
-        operator: minter.map(Key::key), // Use minter as operator
-        operator_roles_pda: minter_roles_pda.map(Key::key),
-        // for event cpi
-        event_authority: ctx.accounts.event_authority.key(),
-        program: ctx.accounts.program.key(),
-    };
-
-    // Create the instruction
-    let link_instruction = Instruction {
-        program_id: crate::id(),
-        accounts: accounts.to_account_metas(None),
-        data: instruction_data.data(),
-    };
-
-    let account_infos = crate::__cpi_client_accounts_execute_link_token::ExecuteLinkToken {
-        payer: ctx.accounts.payer.to_account_info(),
-        deployer: deployer.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-        its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
-        token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
-        token_mint: ctx.accounts.token_mint.to_account_info(),
-        token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
-        token_program: ctx.accounts.token_program.to_account_info(),
-        associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-        operator: minter.cloned(),
-        operator_roles_pda: minter_roles_pda.cloned(),
-        event_authority: ctx.accounts.event_authority.to_account_info(),
-        program: ctx.accounts.program.to_account_info(),
-    }
-    .to_account_infos();
-
-    invoke_signed_with_its_root_pda(
-        &link_instruction,
-        &account_infos,
-        ctx.accounts.its_root_pda.bump,
-    )
+    Ok(())
 }
 
 fn cpi_execute_deploy_interchain_token<'info>(
@@ -303,15 +199,6 @@ fn cpi_execute_deploy_interchain_token<'info>(
     let decimals = deploy.decimals;
     let minter = deploy.minter;
 
-    // Create the instruction data using Anchor's InstructionData trait
-    let instruction_data = crate::instruction::ExecuteDeployInterchainToken {
-        token_id,
-        name,
-        symbol,
-        decimals,
-        minter: minter.to_vec(),
-    };
-
     let mut remaining = ctx.remaining_accounts.iter();
     let deployer_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let deployer = remaining.next().ok_or(ItsError::AccountNotProvided)?;
@@ -321,61 +208,7 @@ fn cpi_execute_deploy_interchain_token<'info>(
     let minter = remaining.next();
     let minter_roles_pda = remaining.next();
 
-    // Build the accounts using Anchor's generated accounts struct
-    let accounts = crate::accounts::ExecuteDeployInterchainToken {
-        payer: ctx.accounts.payer.key(),
-        deployer: deployer.key(),
-        deployer_ata: deployer_ata.key(),
-        system_program: ctx.accounts.system_program.key(),
-        its_root_pda: ctx.accounts.its_root_pda.key(),
-        token_manager_pda: ctx.accounts.token_manager_pda.key(),
-        token_mint: ctx.accounts.token_mint.key(),
-        token_manager_ata: ctx.accounts.token_manager_ata.key(),
-        token_program: ctx.accounts.token_program.key(),
-        associated_token_program: ctx.accounts.associated_token_program.key(),
-        sysvar_instructions: sysvar_instructions.key(),
-        mpl_token_metadata_program: mpl_token_metadata_program.key(),
-        mpl_token_metadata_account: mpl_token_metadata_account.key(),
-        minter: minter.map(Key::key),
-        minter_roles_pda: minter_roles_pda.map(Key::key),
-        event_authority: ctx.accounts.event_authority.key(),
-        program: ctx.accounts.program.key(),
-    };
-
-    // Create the instruction
-    let deploy_instruction = Instruction {
-        program_id: crate::id(),
-        accounts: accounts.to_account_metas(None),
-        data: instruction_data.data(),
-    };
-
-    let account_infos = crate::__cpi_client_accounts_execute_deploy_interchain_token::ExecuteDeployInterchainToken {
-		payer: ctx.accounts.payer.to_account_info(),
-		deployer: deployer.to_account_info(),
-		system_program: ctx.accounts.system_program.to_account_info(),
-		its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
-		token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
-		token_mint: ctx.accounts.token_mint.to_account_info(),
-		token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
-		token_program: ctx.accounts.token_program.to_account_info(),
-		associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-		sysvar_instructions: sysvar_instructions.to_account_info(),
-		mpl_token_metadata_program: mpl_token_metadata_program.to_account_info(),
-		mpl_token_metadata_account: mpl_token_metadata_account.to_account_info(),
-		deployer_ata: deployer_ata.to_account_info(),
-		minter: minter
-			.cloned(),
-		minter_roles_pda: minter_roles_pda
-			.cloned(),
-		event_authority: ctx.accounts.event_authority.to_account_info(),
-		program: ctx.accounts.program.to_account_info(),
-	}.to_account_infos();
-
-    invoke_signed_with_its_root_pda(
-        &deploy_instruction,
-        &account_infos,
-        ctx.accounts.its_root_pda.bump,
-    )
+    Ok(())
 }
 
 fn invoke_signed_with_its_root_pda(

@@ -21,3 +21,6 @@ pub use propose_operatorship::*;
 
 pub mod accept_operatorship;
 pub use accept_operatorship::*;
+
+pub mod register_discovery_transaction;
+pub use register_discovery_transaction::*;

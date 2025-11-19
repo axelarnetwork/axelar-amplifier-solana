@@ -38,6 +38,17 @@ impl TokenManager {
         )
     }
 
+    pub fn find_token_mint_pda(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                crate::seed_prefixes::INTERCHAIN_TOKEN_SEED,
+                its_root_pda.as_ref(),
+                &token_id,
+            ],
+            &crate::id(),
+        )
+    }
+
     /// Initializes a `TokenManager` account with given values.
     pub fn init_account(
         account: &mut Account<Self>,

@@ -1,7 +1,7 @@
 use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
-    instructions::validate_mint_extensions,
+    instructions::{gmp::*, validate_mint_extensions},
     state::{token_manager, InterchainTokenService, Roles, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
@@ -9,6 +9,8 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
+use solana_axelar_gateway::Message;
+use interchain_token_transfer_gmp::GMPPayload::LinkToken;  
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -26,11 +28,12 @@ pub struct ExecuteLinkToken<'info> {
 
     pub system_program: Program<'info, System>,
 
+    pub executable: AxelarExecuteAccounts<'info>,
+
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused @ ItsError::Paused,
-        signer, // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -81,11 +84,31 @@ pub struct ExecuteLinkToken<'info> {
 
 pub fn execute_link_token_handler(
     ctx: Context<ExecuteLinkToken>,
-    token_id: [u8; 32],
-    destination_token_address: [u8; 32],
-    token_manager_type: u8,
-    link_params: Vec<u8>,
+    message: Message,
+    payload: Vec<u8>,
 ) -> Result<()> {
+    let (payload, _) = validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, payload)?;
+    let LinkToken(payload) = payload
+    else {
+        msg!("Unsupported GMP payload");
+        return err!(ItsError::InvalidInstructionData);
+    };
+    let token_id = payload.token_id.0;
+
+    let destination_token_address: [u8; 32] = payload
+        .destination_token_address
+        .as_ref()
+        .try_into()
+        .map_err(|_| ItsError::InvalidAccountData)?;
+
+    let token_manager_type: u8 = payload
+        .token_manager_type
+        .try_into()
+        .map_err(|_| ItsError::ArithmeticOverflow)?; // U256 to u8
+
+    let link_params = payload.link_params.to_vec(); // Vec<u8>
+
+
     let token_manager_type: token_manager::Type = token_manager_type
         .try_into()
         .map_err(|_| ItsError::InvalidInstructionData)?;

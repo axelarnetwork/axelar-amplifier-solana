@@ -1,9 +1,8 @@
 use crate::{
-    errors::ItsError,
-    events::InterchainTransferReceived,
-    state::{
-        current_flow_epoch, token_manager, FlowDirection, InterchainTokenService, TokenManager,
+    errors::ItsError, events::InterchainTransferReceived, instructions::validate_message, state::{
+        FlowDirection, InterchainTokenService, TokenManager, current_flow_epoch, token_manager
     },
+    instructions::gmp::*,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
@@ -19,6 +18,7 @@ use anchor_spl::{
 };
 use solana_axelar_gateway::Message;
 use solana_program::{program_option::COption, program_pack::Pack};
+use interchain_token_transfer_gmp::GMPPayload::InterchainTransfer;  
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -27,11 +27,12 @@ pub struct ExecuteInterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
+    pub executable: AxelarExecuteAccounts<'info>,
+
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused @ ItsError::Paused,
-        signer, // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -85,14 +86,32 @@ pub struct ExecuteInterchainTransfer<'info> {
 #[allow(clippy::unimplemented)]
 pub fn execute_interchain_transfer_handler(
     mut ctx: Context<ExecuteInterchainTransfer>,
-    token_id: [u8; 32],
-    source_address: String,
-    destination_address: Pubkey,
-    amount: u64,
-    data: Vec<u8>,
     message: Message,
-    source_chain: String,
+    payload: Vec<u8>,
 ) -> Result<()> {
+    let (payload, source_chain) = validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message.clone(), payload)?;
+    let InterchainTransfer(transfer) = payload
+    else {
+        msg!("Unsupported GMP payload");
+        return err!(ItsError::InvalidInstructionData);
+    };
+    let token_id = transfer.token_id.0;
+    let source_address = String::from_utf8(transfer.source_address.to_vec())
+        .map_err(|_| ItsError::InvalidInstructionData)?;
+
+    let destination_address: [u8; 32] = transfer
+        .destination_address
+        .as_ref()
+        .try_into()
+        .map_err(|_| ItsError::InvalidAccountData)?;
+    let destination_address = Pubkey::new_from_array(destination_address);
+
+    let amount: u64 = transfer
+        .amount
+        .try_into()
+        .map_err(|_| ItsError::ArithmeticOverflow)?;
+
+    let data = transfer.data;
     if amount == 0 {
         return err!(ItsError::InvalidAmount);
     }

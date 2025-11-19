@@ -6645,6 +6645,7 @@ dependencies = [
  "mollusk-test-utils",
  "mpl-token-metadata",
  "program-utils",
+ "relayer-discovery",
  "solana-axelar-gas-service",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",

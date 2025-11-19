@@ -219,52 +219,35 @@ pub mod solana_axelar_its {
 
     pub fn execute_deploy_interchain_token(
         ctx: Context<ExecuteDeployInterchainToken>,
-        token_id: [u8; 32],
-        name: String,
-        symbol: String,
-        decimals: u8,
-        minter: Vec<u8>,
+        message: solana_axelar_gateway::Message,
+        payload: Vec<u8>,
     ) -> Result<()> {
         instructions::execute_deploy_interchain_token_handler(
-            ctx, token_id, name, symbol, decimals, minter,
+            ctx, message, payload,
         )
     }
 
     pub fn execute_link_token(
         ctx: Context<ExecuteLinkToken>,
-        token_id: [u8; 32],
-        destination_token_address: [u8; 32],
-        token_manager_type: u8,
-        link_params: Vec<u8>,
+        message: solana_axelar_gateway::Message,
+        payload: Vec<u8>,
     ) -> Result<()> {
         instructions::execute_link_token_handler(
             ctx,
-            token_id,
-            destination_token_address,
-            token_manager_type,
-            link_params,
+            message,
+            payload,
         )
     }
 
     pub fn execute_interchain_transfer(
         ctx: Context<ExecuteInterchainTransfer>,
-        token_id: [u8; 32],
-        source_address: String,
-        destination_address: Pubkey,
-        amount: u64,
-        data: Vec<u8>,
         message: solana_axelar_gateway::Message,
-        source_chain: String,
+        payload: Vec<u8>,
     ) -> Result<()> {
         instructions::execute_interchain_transfer_handler(
             ctx,
-            token_id,
-            source_address,
-            destination_address,
-            amount,
-            data,
             message,
-            source_chain,
+            payload,
         )
     }
 
@@ -341,5 +324,13 @@ pub mod solana_axelar_its {
 
     pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
         instructions::mint_interchain_token_handler(ctx, amount)
+    }
+
+    pub fn register_discovery_transaction(ctx: Context<RegisterDiscoveryTransaction>) -> Result<()> {
+        instructions::register_discovery_transaction(ctx)
+    }
+
+    pub fn get_transaction(ctx: Context<GetTransaction>, message: solana_axelar_gateway::Message, payload: Vec<u8>) -> Result<relayer_discovery::structs::RelayerTransaction> {
+        instructions::get_transaction_handler(ctx, message, payload)
     }
 }

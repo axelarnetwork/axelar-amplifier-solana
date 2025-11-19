@@ -1,5 +1,5 @@
 use crate::{
-    errors::ItsError, events::{InterchainTokenDeployed, TokenManagerDeployed}, gmp::GMPAccounts, instructions::{gmp::*, validate_mint_extensions}, seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED}, state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles}
+    errors::ItsError, events::{InterchainTokenDeployed, TokenManagerDeployed}, instructions::{gmp::*, validate_mint_extensions}, seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED}, state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles}
 
 };
 use anchor_lang::prelude::*;
@@ -7,16 +7,14 @@ use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
 use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 use solana_axelar_gateway::Message;
-use interchain_token_transfer_gmp::{GMPPayload, DeployInterchainToken};  
+use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};  
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], name: String, symbol: String, decimals: u8)]
+#[instruction(message: Message, payload: Vec<u8>)]
 pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
-    pub deployer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 
@@ -36,7 +34,7 @@ pub struct ExecuteDeployInterchainToken<'info> {
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
-            &token_id
+            &decode_payload(&payload).token_id.0
         ],
         bump
     )]
@@ -45,14 +43,14 @@ pub struct ExecuteDeployInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        mint::decimals = decimals,
+        mint::decimals = decode_payload(&payload).decimals,
         mint::authority = token_manager_pda,
         mint::freeze_authority = token_manager_pda,
         mint::token_program = token_program,
         seeds = [
             INTERCHAIN_TOKEN_SEED,
             its_root_pda.key().as_ref(),
-            &token_id
+            &decode_payload(&payload).token_id.0
         ],
         bump,
     )]
@@ -88,15 +86,6 @@ pub struct ExecuteDeployInterchainToken<'info> {
         seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
     )]
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
-
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = token_mint,
-        associated_token::authority = deployer,
-        associated_token::token_program = token_program
-    )]
-    pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
 
     // Optional accounts
     pub minter: Option<UncheckedAccount<'info>>,
@@ -167,7 +156,6 @@ pub fn execute_deploy_interchain_token_handler(
         token_id,
         &name,
         &symbol,
-        0,
         ctx.bumps.token_manager_pda,
         ctx.bumps.minter_roles_pda,
     )?;
@@ -201,19 +189,28 @@ pub fn execute_deploy_interchain_token_handler(
     Ok(())
 }
 
-pub fn process_inbound_deploy(
+fn decode_payload(payload: &Vec<u8>) -> DeployInterchainToken {
+    let GMPPayload::ReceiveFromHub(inner_msg) =
+        GMPPayload::decode(payload).unwrap()
+    else {
+        panic!("Unsupported GMP payload");
+    };
+    let GMPPayload::DeployInterchainToken(deploy) = GMPPayload::decode(&inner_msg.payload).unwrap()
+    else {
+        panic!("Unsupported GMP payload");
+    };
+
+    deploy
+}
+
+fn process_inbound_deploy(
     ctx: &mut ExecuteDeployInterchainToken,
     token_id: [u8; 32],
     name: &str,
     symbol: &str,
-    initial_supply: u64,
     token_manager_pda_bump: u8,
     minter_roles_pda_bump: Option<u8>,
 ) -> Result<()> {
-    // setup_mint
-    if initial_supply > 0 {
-        mint_initial_supply(ctx, token_id, initial_supply, token_manager_pda_bump)?;
-    }
 
     // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
@@ -243,41 +240,6 @@ pub fn process_inbound_deploy(
             minter_roles_pda_bump.ok_or(ItsError::MinterRolesPdaBumpNotProvided)?;
         minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
     }
-
-    Ok(())
-}
-
-fn mint_initial_supply<'info>(
-    accounts: &ExecuteDeployInterchainToken<'info>,
-    token_id: [u8; 32],
-    initial_supply: u64,
-    token_manager_bump: u8,
-) -> Result<()> {
-    use anchor_spl::token_interface;
-
-    let cpi_accounts = token_interface::MintTo {
-        mint: accounts.token_mint.to_account_info(),
-        to: accounts.deployer_ata.to_account_info(),
-        authority: accounts.token_manager_pda.to_account_info(),
-    };
-
-    // Create signer seeds with proper lifetimes
-    let its_root_key = accounts.its_root_pda.key();
-    let bump_seed = [token_manager_bump];
-    let signer_seeds: &[&[&[u8]]] = &[&[
-        TOKEN_MANAGER_SEED,
-        its_root_key.as_ref(),
-        token_id.as_ref(),
-        &bump_seed,
-    ]];
-
-    let cpi_context = CpiContext::new_with_signer(
-        accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
-
-    token_interface::mint_to(cpi_context, initial_supply)?;
 
     Ok(())
 }
