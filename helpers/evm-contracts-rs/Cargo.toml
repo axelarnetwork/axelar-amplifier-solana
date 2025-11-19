@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Rust bindings for EVM contracts"
 license.workspace = true
+publish = false
 
 [dependencies]
 ethers.workspace = true
