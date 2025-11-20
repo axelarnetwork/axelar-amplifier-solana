@@ -204,8 +204,8 @@ fn cpi_execute_link_token<'info>(
     };
 
     let mut remaining = ctx.remaining_accounts.iter();
-    let minter = remaining.next();
-    let minter_roles_pda = remaining.next();
+    let operator = remaining.next();
+    let operator_roles_pda = remaining.next();
 
     let accounts = crate::accounts::ExecuteLinkToken {
         payer: ctx.accounts.payer.key(),
@@ -216,8 +216,8 @@ fn cpi_execute_link_token<'info>(
         token_manager_ata: ctx.accounts.token_manager_ata.key(),
         token_program: ctx.accounts.token_program.key(),
         associated_token_program: ctx.accounts.associated_token_program.key(),
-        operator: minter.map(Key::key), // Use minter as operator
-        operator_roles_pda: minter_roles_pda.map(Key::key),
+        operator: operator.map(Key::key),
+        operator_roles_pda: operator_roles_pda.map(Key::key),
         // for event cpi
         event_authority: ctx.accounts.event_authority.key(),
         program: ctx.accounts.program.key(),
@@ -239,8 +239,8 @@ fn cpi_execute_link_token<'info>(
         token_manager_ata: ctx.accounts.token_manager_ata.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
         associated_token_program: ctx.accounts.associated_token_program.to_account_info(),
-        operator: minter.cloned(),
-        operator_roles_pda: minter_roles_pda.cloned(),
+        operator: operator.cloned(),
+        operator_roles_pda: operator_roles_pda.cloned(),
         event_authority: ctx.accounts.event_authority.to_account_info(),
         program: ctx.accounts.program.to_account_info(),
     }
