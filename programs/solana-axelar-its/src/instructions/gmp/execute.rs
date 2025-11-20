@@ -277,8 +277,6 @@ fn cpi_execute_deploy_interchain_token<'info>(
     };
 
     let mut remaining = ctx.remaining_accounts.iter();
-    let deployer_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
-    let deployer = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let sysvar_instructions = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let mpl_token_metadata_program = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let mpl_token_metadata_account = remaining.next().ok_or(ItsError::AccountNotProvided)?;
@@ -288,8 +286,6 @@ fn cpi_execute_deploy_interchain_token<'info>(
     // Build the accounts using Anchor's generated accounts struct
     let accounts = crate::accounts::ExecuteDeployInterchainToken {
         payer: ctx.accounts.payer.key(),
-        deployer: deployer.key(),
-        deployer_ata: deployer_ata.key(),
         system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -315,7 +311,6 @@ fn cpi_execute_deploy_interchain_token<'info>(
 
     let account_infos = crate::__cpi_client_accounts_execute_deploy_interchain_token::ExecuteDeployInterchainToken {
 		payer: ctx.accounts.payer.to_account_info(),
-		deployer: deployer.to_account_info(),
 		system_program: ctx.accounts.system_program.to_account_info(),
 		its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
 		token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -326,7 +321,6 @@ fn cpi_execute_deploy_interchain_token<'info>(
 		sysvar_instructions: sysvar_instructions.to_account_info(),
 		mpl_token_metadata_program: mpl_token_metadata_program.to_account_info(),
 		mpl_token_metadata_account: mpl_token_metadata_account.to_account_info(),
-		deployer_ata: deployer_ata.to_account_info(),
 		minter: minter
 			.cloned(),
 		minter_roles_pda: minter_roles_pda
@@ -402,8 +396,6 @@ pub fn execute_link_token_extra_accounts(
 /// ```ignore
 /// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
 /// accounts.extend(execute_deploy_interchain_token_extra_accounts(
-///     deployer_ata,
-///     deployer,
 ///     sysvar_instructions,
 ///     mpl_token_metadata_program,
 ///     mpl_token_metadata_account,
@@ -412,8 +404,6 @@ pub fn execute_link_token_extra_accounts(
 /// ));
 /// ```
 pub fn execute_deploy_interchain_token_extra_accounts(
-    deployer_ata: Pubkey,
-    deployer: Pubkey,
     sysvar_instructions: Pubkey,
     mpl_token_metadata_program: Pubkey,
     mpl_token_metadata_account: Pubkey,
@@ -421,8 +411,6 @@ pub fn execute_deploy_interchain_token_extra_accounts(
     minter_roles_pda: Option<Pubkey>,
 ) -> Vec<AccountMeta> {
     let mut accounts = vec![
-        AccountMeta::new(deployer_ata, false),
-        AccountMeta::new(deployer, false),
         AccountMeta::new_readonly(sysvar_instructions, false),
         AccountMeta::new_readonly(mpl_token_metadata_program, false),
         AccountMeta::new(mpl_token_metadata_account, false),

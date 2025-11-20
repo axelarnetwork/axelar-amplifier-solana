@@ -25,9 +25,8 @@ use solana_axelar_its_test_fixtures::{
     execute_its_instruction, get_token_mint_pda, init_its_service_with_ethereum_trusted,
     initialize_mollusk_with_programs, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
 };
-use solana_program::program_pack::{IsInitialized, Pack};
+use solana_program::program_pack::Pack;
 use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
-use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
 fn test_execute_deploy_interchain_token_success() {
@@ -117,11 +116,6 @@ fn test_execute_deploy_interchain_token_success() {
         &token_mint_pda,
         &spl_token_2022::id(),
     );
-    let deployer_ata = get_associated_token_address_with_program_id(
-        &payer,
-        &token_mint_pda,
-        &spl_token_2022::id(),
-    );
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
     // Step 11: Execute using helper function
@@ -146,7 +140,6 @@ fn test_execute_deploy_interchain_token_success() {
             (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
-            (deployer_ata, new_empty_account()),
             (payer, payer_account.clone()),
             (
                 solana_sdk::sysvar::instructions::ID,
@@ -170,11 +163,7 @@ fn test_execute_deploy_interchain_token_success() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -210,14 +199,6 @@ fn test_execute_deploy_interchain_token_success() {
     let metadata_symbol = metadata.symbol.trim_end_matches('\0');
     assert_eq!(metadata_name, name);
     assert_eq!(metadata_symbol, symbol);
-
-    let deployer_ata_account = test_result.result.get_account(&deployer_ata).unwrap();
-    let deployer_ata_data =
-        StateWithExtensions::<Token2022Account>::unpack(&deployer_ata_account.data).unwrap();
-    assert_eq!(deployer_ata_data.base.mint, token_mint_pda);
-    assert_eq!(deployer_ata_data.base.owner, payer);
-    assert_eq!(deployer_ata_data.base.amount, 0);
-    assert!(deployer_ata_data.base.is_initialized());
 }
 
 #[test]
@@ -309,11 +290,6 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
         &token_mint_pda,
         &spl_token_2022::id(),
     );
-    let deployer_ata = get_associated_token_address_with_program_id(
-        &payer,
-        &token_mint_pda,
-        &spl_token_2022::id(),
-    );
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
     // Step 11: Execute using helper function
@@ -338,7 +314,6 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
             (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
-            (deployer_ata, new_empty_account()),
             (payer, payer_account), // deployer is also payer
             (
                 solana_sdk::sysvar::instructions::ID,
@@ -362,11 +337,7 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -471,11 +442,6 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
         &token_mint_pda,
         &spl_token_2022::id(),
     );
-    let deployer_ata = get_associated_token_address_with_program_id(
-        &payer,
-        &token_mint_pda,
-        &spl_token_2022::id(),
-    );
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
     // Step 11: Execute using helper function
@@ -500,7 +466,6 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
             (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![
-            (deployer_ata, new_empty_account()),
             (payer, payer_account), // deployer is also payer
             (
                 solana_sdk::sysvar::instructions::ID,
@@ -524,11 +489,7 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 

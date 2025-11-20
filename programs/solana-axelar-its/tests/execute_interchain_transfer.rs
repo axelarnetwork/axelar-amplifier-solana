@@ -180,11 +180,7 @@ fn test_execute_interchain_transfer_success() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -492,11 +488,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -780,11 +772,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -1072,11 +1060,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 

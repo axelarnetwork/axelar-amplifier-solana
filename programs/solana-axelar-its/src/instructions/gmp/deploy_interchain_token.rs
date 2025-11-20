@@ -18,8 +18,6 @@ pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    pub deployer: Signer<'info>,
-
     pub system_program: Program<'info, System>,
 
     #[account(
@@ -90,15 +88,6 @@ pub struct ExecuteDeployInterchainToken<'info> {
     )]
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = token_mint,
-        associated_token::authority = deployer,
-        associated_token::token_program = token_program
-    )]
-    pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
-
     // Optional accounts
     pub minter: Option<UncheckedAccount<'info>>,
 
@@ -159,7 +148,6 @@ pub fn execute_deploy_interchain_token_handler(
         token_id,
         &truncated_name,
         &truncated_symbol,
-        0,
         ctx.bumps.token_manager_pda,
         ctx.bumps.minter_roles_pda,
     )?;
@@ -198,15 +186,9 @@ pub fn process_inbound_deploy(
     token_id: [u8; 32],
     name: &str,
     symbol: &str,
-    initial_supply: u64,
     token_manager_pda_bump: u8,
     minter_roles_pda_bump: Option<u8>,
 ) -> Result<()> {
-    // setup_mint
-    if initial_supply > 0 {
-        mint_initial_supply(ctx, token_id, initial_supply, token_manager_pda_bump)?;
-    }
-
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
 
     validate_mint_extensions(
@@ -233,41 +215,6 @@ pub fn process_inbound_deploy(
             minter_roles_pda_bump.ok_or(ItsError::MinterRolesPdaBumpNotProvided)?;
         minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
     }
-
-    Ok(())
-}
-
-fn mint_initial_supply<'info>(
-    accounts: &ExecuteDeployInterchainToken<'info>,
-    token_id: [u8; 32],
-    initial_supply: u64,
-    token_manager_bump: u8,
-) -> Result<()> {
-    use anchor_spl::token_interface;
-
-    let cpi_accounts = token_interface::MintTo {
-        mint: accounts.token_mint.to_account_info(),
-        to: accounts.deployer_ata.to_account_info(),
-        authority: accounts.token_manager_pda.to_account_info(),
-    };
-
-    // Create signer seeds with proper lifetimes
-    let its_root_key = accounts.its_root_pda.key();
-    let bump_seed = [token_manager_bump];
-    let signer_seeds: &[&[&[u8]]] = &[&[
-        TOKEN_MANAGER_SEED,
-        its_root_key.as_ref(),
-        token_id.as_ref(),
-        &bump_seed,
-    ]];
-
-    let cpi_context = CpiContext::new_with_signer(
-        accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
-
-    token_interface::mint_to(cpi_context, initial_supply)?;
 
     Ok(())
 }
