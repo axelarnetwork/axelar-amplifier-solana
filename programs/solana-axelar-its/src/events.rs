@@ -14,14 +14,6 @@ pub struct TrustedChainRemoved {
 
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct InterchainTokenIdClaimed {
-    pub token_id: [u8; 32],
-    pub deployer: Pubkey,
-    pub salt: [u8; 32],
-}
-
-#[event]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InterchainTokenDeployed {
     pub token_id: [u8; 32],
     pub token_address: Pubkey,

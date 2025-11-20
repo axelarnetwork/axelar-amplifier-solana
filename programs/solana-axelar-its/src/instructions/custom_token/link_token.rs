@@ -1,6 +1,6 @@
 use crate::{
     errors::ItsError,
-    events::{InterchainTokenIdClaimed, LinkTokenStarted},
+    events::LinkTokenStarted,
     gmp::*,
     state::{
         token_manager::{TokenManager, Type},
@@ -124,13 +124,6 @@ pub fn link_token_handler(
     // Derive the token ID using the same logic as the existing implementation
     let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
-
-    // Emit InterchainTokenIdClaimed event
-    emit_cpi!(InterchainTokenIdClaimed {
-        token_id,
-        deployer: ctx.accounts.deployer.key(),
-        salt: deploy_salt,
-    });
 
     // Emit LinkTokenStarted event
     emit_cpi!(LinkTokenStarted {
