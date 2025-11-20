@@ -3,9 +3,9 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
+use anchor_lang::AccountDeserialize;
 use anchor_lang::{
-    prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
-    ToAccountMetas,
+    prelude::UpgradeableLoaderState, solana_program, InstructionData, ToAccountMetas,
 };
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
@@ -16,11 +16,11 @@ use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
     ID as GATEWAY_PROGRAM_ID,
 };
-use solana_axelar_gateway::{IncomingMessage, Message};
+use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    CrossChainId, MerklizedMessage, MessageLeaf, Signature, SigningVerifierSetInfo,
-    VerifierSetLeaf, U256,
+    CommandType, CrossChainId, MerklizedMessage, Message, MessageLeaf, Signature,
+    SigningVerifierSetInfo, VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
 use solana_sdk::{
@@ -338,6 +338,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
 pub fn initialize_payload_verification_session(
     setup: &TestSetup,
     init_result: &InstructionResult,
+    command_type: CommandType,
 ) -> (InstructionResult, Pubkey) {
     let initialized_gateway_account = init_result
         .resulting_accounts
@@ -358,18 +359,18 @@ pub fn initialize_payload_verification_session(
     let merkle_root = [3u8; 32];
     let signing_verifier_set_hash = setup.verifier_set_hash;
 
-    let (verification_session_pda, _verification_bump) = Pubkey::find_program_address(
-        &[
-            seed_prefixes::SIGNATURE_VERIFICATION_SEED,
-            &merkle_root,
-            &signing_verifier_set_hash,
-        ],
-        &GATEWAY_PROGRAM_ID,
+    let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
+        &merkle_root,
+        command_type,
+        &signing_verifier_set_hash,
     );
 
     let instruction_data =
-        solana_axelar_gateway::instruction::InitializePayloadVerificationSession { merkle_root }
-            .data();
+        solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
+            merkle_root,
+            command_type,
+        }
+        .data();
 
     let accounts = vec![
         (
@@ -460,6 +461,7 @@ pub fn initialize_payload_verification_session_with_root(
     setup: &TestSetup,
     init_result: &InstructionResult,
     payload_merkle_root: [u8; 32],
+    command_type: CommandType,
 ) -> (InstructionResult, Pubkey) {
     let initialized_gateway_account = init_result
         .resulting_accounts
@@ -479,18 +481,16 @@ pub fn initialize_payload_verification_session_with_root(
 
     let signing_verifier_set_hash = setup.verifier_set_hash;
 
-    let (verification_session_pda, _) = Pubkey::find_program_address(
-        &[
-            seed_prefixes::SIGNATURE_VERIFICATION_SEED,
-            &payload_merkle_root,
-            &signing_verifier_set_hash,
-        ],
-        &GATEWAY_PROGRAM_ID,
+    let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
+        &payload_merkle_root,
+        command_type,
+        &signing_verifier_set_hash,
     );
 
     let instruction_data =
         solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
+            command_type,
         }
         .data();
 
@@ -556,6 +556,7 @@ pub fn create_verifier_info(
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
     verifier_merkle_tree: &MerkleTree,
+    command_type: CommandType,
 ) -> SigningVerifierSetInfo {
     let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
@@ -576,6 +577,7 @@ pub fn create_verifier_info(
         signature,
         leaf: *verifier_leaf,
         merkle_proof: merkle_proof_bytes,
+        command_type,
     }
 }
 
@@ -1108,7 +1110,12 @@ pub fn approve_messages_on_gateway(
         setup_message_merkle_tree_from_messages(setup, messages);
 
     let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
+        initialize_payload_verification_session_with_root(
+            setup,
+            &init_result,
+            payload_merkle_root,
+            CommandType::ApproveMessages,
+        );
     assert!(
         !session_result.program_result.is_err(),
         "Failed to initialize verification session"
@@ -1144,6 +1151,7 @@ pub fn approve_messages_on_gateway(
         &verifier_leaves[0],
         0,
         &verifier_merkle_tree,
+        CommandType::ApproveMessages,
     );
 
     let verify_result_1 = verify_signature_helper(
@@ -1171,6 +1179,7 @@ pub fn approve_messages_on_gateway(
         &verifier_leaves[1],
         1,
         &verifier_merkle_tree,
+        CommandType::ApproveMessages,
     );
 
     let verify_result_2 = verify_signature_helper(

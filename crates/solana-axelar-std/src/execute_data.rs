@@ -8,7 +8,7 @@ use crate::{
     hasher::{Hasher, VecBuf},
     message::{MerklizedMessage, MessageLeaf, Messages},
     verifier_set::{self, verifier_set_hash, SigningVerifierSetInfo},
-    EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
+    CommandType, EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
 };
 
 /// Represents the complete set of execution data required for verification and
@@ -83,6 +83,11 @@ pub fn encode(
     domain_separator: [u8; 32],
     payload: Payload,
 ) -> Result<Vec<u8>, EncodingError> {
+    let command_type = match payload {
+        Payload::Messages(_) => CommandType::ApproveMessages,
+        Payload::NewVerifierSet(_) => CommandType::RotateSigners,
+    };
+
     let leaves = verifier_set::merkle_tree_leaves(signing_verifier_set, &domain_separator)?
         .collect::<Vec<_>>();
     let signer_merkle_tree = merkle_tree::<Hasher, VerifierSetLeaf>(leaves.iter());
@@ -101,6 +106,7 @@ pub fn encode(
                     signature: *signature,
                     leaf,
                     merkle_proof: merkle_proof.to_bytes(),
+                    command_type,
                 });
             }
             None

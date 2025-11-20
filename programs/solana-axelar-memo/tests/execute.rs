@@ -12,8 +12,8 @@ use solana_axelar_gateway_test_fixtures::{
 };
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
-use solana_axelar_std::MerkleTree;
 use solana_axelar_std::{hasher::LeafHash, CrossChainId, Message, MessageLeaf};
+use solana_axelar_std::{CommandType, MerkleTree};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -80,6 +80,7 @@ fn test_execute() {
 
     let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
     let payload_merkle_root = message_merkle_tree.root().unwrap();
+    let command_type = CommandType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
@@ -87,6 +88,7 @@ fn test_execute() {
             &setup,
             &init_result,
             payload_merkle_root,
+            command_type,
         );
 
     let gateway_root_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
@@ -106,6 +108,7 @@ fn test_execute() {
         &verifier_leaves[0],
         0, // Position 0
         &verifier_merkle_tree,
+        command_type,
     );
 
     let verify_result_1 = verify_signature_helper(
@@ -129,6 +132,7 @@ fn test_execute() {
         &verifier_leaves[1],
         1, // Position 1
         &verifier_merkle_tree,
+        command_type,
     );
 
     let verify_result_2 = verify_signature_helper(
