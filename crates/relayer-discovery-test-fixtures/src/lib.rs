@@ -48,7 +48,7 @@ pub enum RelayerDiscoveryFixtureError {
     #[error("relayer discovery failed to parse a transaction")]
     ConvertError(ConvertError),
     #[error("execution of final transaction failed")]
-    ExecuteFailed(Vec<Instruction>, ProgramResult),
+    ExecuteFailed(Vec<Instruction>, Vec<(Pubkey, Account)>, ProgramResult),
 }
 
 impl From<ParsePubkeyError> for RelayerDiscoveryFixtureError {
@@ -343,6 +343,7 @@ impl RelayerDiscoveryTestFixture {
                                 _ => {
                                     return Err(RelayerDiscoveryFixtureError::ExecuteFailed(
                                         instructions,
+                                        accounts,
                                         result.program_result,
                                     ));
                                 }

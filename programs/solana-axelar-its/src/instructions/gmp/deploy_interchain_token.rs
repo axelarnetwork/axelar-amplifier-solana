@@ -11,7 +11,7 @@ use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(message: Message, payload: Vec<u8>)]
+#[instruction(payload: Vec<u8>)]
 pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -106,8 +106,8 @@ pub struct ExecuteDeployInterchainToken<'info> {
 
 pub fn execute_deploy_interchain_token_handler(
     ctx: Context<ExecuteDeployInterchainToken>,
-    message: Message,
     payload: Vec<u8>,
+    message: Message,
 ) -> Result<()> {
     let (payload, _) = validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, payload)?;
     let GMPPayload::DeployInterchainToken(deploy) = payload

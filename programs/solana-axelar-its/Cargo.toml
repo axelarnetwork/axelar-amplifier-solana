@@ -35,6 +35,7 @@ mollusk-svm.workspace = true
 mollusk-test-utils.workspace = true
 mollusk-svm-programs-token.workspace = true
 hex.workspace = true
+relayer-discovery-test-fixtures.workspace = true
 
 [package.metadata.cargo-machete]
 ignored = ["anchor-spl", "bytemuck", "solana-axelar-gas-service", "solana-axelar-operators"]

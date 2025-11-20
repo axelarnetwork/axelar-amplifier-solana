@@ -27,7 +27,7 @@ pub fn register_discovery_transaction(
     Ok(())
 }
 
-fn relayer_transaction() -> RelayerTransaction {
+pub fn relayer_transaction() -> RelayerTransaction {
     RelayerTransaction::Discovery(RelayerInstruction {
         // We want the relayer to call this program.
         program_id: crate::ID,

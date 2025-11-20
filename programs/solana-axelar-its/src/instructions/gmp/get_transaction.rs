@@ -44,6 +44,7 @@ pub fn get_transaction_handler(
 }
 
 fn deploy_interchain_token_transaction(message: Message, deploy: DeployInterchainToken) -> Result<RelayerTransaction> {
+    let program_id = crate::ID;
     let token_id = deploy.token_id.0;
     let minter = deploy.minter.to_vec();
     
@@ -61,7 +62,16 @@ fn deploy_interchain_token_transaction(message: Message, deploy: DeployInterchai
     let mpl_token_metadata = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID;
     let mpl_token_metadata_account = Metadata::find_pda(&token_mint_pda).0;
     let minter_accounts = if minter.is_empty() {
-        vec![]
+        vec![
+            RelayerAccount::Account {
+                pubkey: program_id,
+                is_writable: false
+            },
+            RelayerAccount::Account {
+                pubkey: program_id,
+                is_writable: false
+            },
+        ]
     } else {
         let minter = Pubkey::try_from(minter).map_err(|_| ItsError::MinterConversionFailed)?;
         let minter_roles = UserRoles::find_pda(&token_manager_pda, &minter).0;
@@ -72,26 +82,28 @@ fn deploy_interchain_token_transaction(message: Message, deploy: DeployInterchai
             },
             RelayerAccount::Account {
                 pubkey: minter_roles,
-                is_writable: false
+                is_writable: true
             },
         ]
     };
+    
+    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &program_id);
     
     Ok(RelayerTransaction::Final(
         // A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
         // And only if it is not initialized prepend a transaction that initializes it. Then we could omit the `payer` and `system_program` accounts from the actual execute instruction.
         vec![RelayerInstruction {
             // We want this program to be the entrypoint.
-            program_id: crate::id(),
+            program_id,
             // The accounts needed.
             accounts: [
                 vec![
                     // payer, need to do testing to figure out the amount needed here.
-                    RelayerAccount::Payer(1000),
+                    RelayerAccount::Payer(1000000000),
                     // system_program,
                     RelayerAccount::Account {
                         pubkey: system_program::ID,
-                        is_writable: true,
+                        is_writable: false,
                     },
                 ],
                 // executable
@@ -135,16 +147,20 @@ fn deploy_interchain_token_transaction(message: Message, deploy: DeployInterchai
                     },
                 ],
                 minter_accounts,
+                vec![
+                    RelayerAccount::Account { pubkey: event_authority, is_writable: false },
+                    RelayerAccount::Account { pubkey: program_id, is_writable: false },
+                ]
             ]
             .concat(),
             // The data needed.
             data: vec![
                 // The discriminator
-                RelayerData::Bytes(Vec::from(instruction::DeployInterchainToken::DISCRIMINATOR)),
-                // The message, which is needed for the gateway.
-                RelayerData::Message,
+                RelayerData::Bytes(Vec::from(instruction::ExecuteDeployInterchainToken::DISCRIMINATOR)),
                 // We want to prefix the payload with the length as it is decoded into a `Vec<u8>`.
                 RelayerData::Payload,
+                // The message, which is needed for the gateway.
+                RelayerData::Message,
             ],
         }],
     ))

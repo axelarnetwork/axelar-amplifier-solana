@@ -219,11 +219,11 @@ pub mod solana_axelar_its {
 
     pub fn execute_deploy_interchain_token(
         ctx: Context<ExecuteDeployInterchainToken>,
-        message: solana_axelar_gateway::Message,
         payload: Vec<u8>,
+        message: solana_axelar_gateway::Message,
     ) -> Result<()> {
         instructions::execute_deploy_interchain_token_handler(
-            ctx, message, payload,
+            ctx, payload, message
         )
     }
 
