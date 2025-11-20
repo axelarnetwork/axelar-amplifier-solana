@@ -207,10 +207,8 @@ pub fn process_inbound_deploy(
         mint_initial_supply(ctx, token_id, initial_supply, token_manager_pda_bump)?;
     }
 
-    // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
 
-    // super::token_manager::deploy(...)
     validate_mint_extensions(
         Type::NativeInterchainToken,
         &ctx.token_mint.to_account_info(),
