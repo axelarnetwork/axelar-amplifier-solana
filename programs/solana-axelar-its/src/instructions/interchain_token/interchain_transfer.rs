@@ -1,6 +1,7 @@
 use crate::get_fee_and_decimals;
 use crate::get_mint_decimals;
 use crate::gmp::*;
+use crate::seed_prefixes::INTERCHAIN_TRANSFER_SEED;
 use crate::state::{token_manager, FlowDirection};
 use crate::{
     errors::ItsError,
@@ -151,7 +152,7 @@ pub fn interchain_transfer_handler(
     amount: u64,
     gas_value: u64,
     caller_program_id: Option<Pubkey>,
-    caller_pda_seeds: Option<Vec<Vec<u8>>>,
+    caller_pda_bump: Option<u8>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
     msg!("Instruction: InterchainTransfer");
@@ -166,17 +167,19 @@ pub fn interchain_transfer_handler(
     // Determine the source address based on whether this is a CPI or direct call
     // If it is a CPI, use the caller program id as the source address
     // otherwise use the user's address
-    let source_address = match (caller_program_id, caller_pda_seeds) {
-        (Some(source_id), Some(pda_seeds)) => {
+    let source_address = match (caller_program_id, caller_pda_bump) {
+        (Some(source_id), Some(pda_bump)) => {
             // NOTE: we don't check the owner of the PDA here,
             // as it could be owned by the system program (uninitialized account)
             // what's important is that the PDA is derived correctly
             // and that it's a signer
 
-            // Validate that the PDA can be derived using the provided seeds
-            let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
-            let (expected_pda, _bump) =
-                solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
+            // Validate that the PDA can be derived using the provided bump
+            let expected_pda = Pubkey::create_program_address(
+                &[INTERCHAIN_TRANSFER_SEED, &[pda_bump]],
+                &source_id,
+            )
+            .map_err(|_| ItsError::InvalidInterchainTransferSigningPdaBump)?;
 
             if expected_pda != *ctx.accounts.authority.key {
                 msg!(
