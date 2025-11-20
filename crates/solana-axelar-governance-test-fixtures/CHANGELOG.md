@@ -23,6 +23,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Contributors
 
+* @interoplabs-ci
+* @nbayindirli
+* @rista404
+
+## [0.1.1]
+
+### 🐛 Bug Fixes
+
+- *(programs)* Add remaining missing 'description' to all Cargo.tomls ([#93](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/93)) - ([1688be4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/1688be4a5c407af122511ef527a89e0ff4d29f73))
+
+### 🚜 Refactor
+
+- Rm legacy programs and crates ([#62](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/62)) - ([3080fba](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/3080fba040d4ab84feff583e6ed92989068b3f9a))
+
+### ⚙️ Miscellaneous Tasks
+
+- Rename test fixtures to legacy ([#57](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/57)) - ([18222fa](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/18222fabeb7b538fbd20c3ead7510c91b1aff544))
+
+### Contributors
+
 * @nbayindirli
 * @interoplabs-ci
 * @rista404
