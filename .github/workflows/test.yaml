@@ -18,19 +18,93 @@ defaults:
 
 name: test
 jobs:
-  test:
-    runs-on: blacksmith-8vcpu-ubuntu-2204
-    name: test
+  build-programs:
+    runs-on: blacksmith-32vcpu-ubuntu-2204
+    name: build-${{ matrix.program }}
+    strategy:
+      fail-fast: false
+      matrix:
+        program:
+          - solana-axelar-gateway
+          - solana-axelar-gas-service
+          - solana-axelar-governance
+          - solana-axelar-its
+          - solana-axelar-memo
+          - solana-axelar-operators
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          fetch-depth: 0
+
+      - name: Setup repo (no Foundry)
+        uses: ./.github/actions/setup-repo
+        with:
+          cache-key: ${{ matrix.program }}
+          skip-foundry: "true"
+
+      - name: Build ${{ matrix.program }}
+        run: cargo build-sbf --manifest-path programs/${{ matrix.program }}/Cargo.toml
+
+      - name: Upload ${{ matrix.program }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.program }}
+          path: target/deploy/*.so
+          retention-days: 1
+
+  test-programs:
+    needs: build-programs
+    runs-on: blacksmith-32vcpu-ubuntu-2204
+    name: test-${{ matrix.program }}
+    strategy:
+      fail-fast: false
+      matrix:
+        program:
+          - solana-axelar-gateway
+          - solana-axelar-gas-service
+          - solana-axelar-governance
+          - solana-axelar-its
+          - solana-axelar-memo
+          - solana-axelar-operators
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Setup repo
         uses: ./.github/actions/setup-repo
         with:
-          rust-cache: "buildjet"
+          cache-key: ${{ matrix.program }}
 
-      - name: cargo xtask test
-        run: cargo xtask test
+      - name: Download all program artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: target/deploy
+          merge-multiple: true
+
+      - name: Test ${{ matrix.program }}
+        run: cargo test-sbf -p ${{ matrix.program }}
+
+  test-auxiliary-crates:
+    needs: build-programs
+    runs-on: blacksmith-16vcpu-ubuntu-2204
+    name: test-auxiliary-crates
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup repo
+        uses: ./.github/actions/setup-repo
+        with:
+          cache-key: "auxiliary-crates"
+
+      - name: cargo test auxiliary crates
+        run: |
+          cargo test --workspace \
+            --exclude solana-axelar-gateway \
+            --exclude solana-axelar-gas-service \
+            --exclude solana-axelar-governance \
+            --exclude solana-axelar-its \
+            --exclude solana-axelar-memo \
+            --exclude solana-axelar-operators
