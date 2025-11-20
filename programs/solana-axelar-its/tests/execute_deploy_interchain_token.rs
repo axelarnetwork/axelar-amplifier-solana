@@ -9,6 +9,8 @@ use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
+use mpl_token_metadata::MAX_NAME_LENGTH;
+use mpl_token_metadata::MAX_SYMBOL_LENGTH;
 use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
@@ -219,7 +221,8 @@ fn test_execute_deploy_interchain_token_success() {
 }
 
 #[test]
-fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
+#[allow(clippy::string_slice)]
+fn test_execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -253,7 +256,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     let salt = [1u8; 32];
     let token_id = interchain_token_id(&payer, &salt);
     let name = "Test Token ".repeat(10).trim_end().to_owned(); // large name, should revert
-    let symbol = "TEST".to_owned();
+    let symbol = "TEST".repeat(10).to_owned();
     let decimals = 9u8;
 
     let deploy_payload = DeployInterchainToken {
@@ -367,12 +370,15 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
         token_manager_account: None,
     };
 
-    let checks = vec![Check::err(
-        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
-    )];
+    let checks = vec![Check::success()];
     let test_result = execute_its_instruction(context, params, accounts_config, checks);
 
-    assert!(test_result.result.program_result.is_err());
+    let created_metadata_account = test_result.result.get_account(&metadata_account).unwrap();
+    let created_metadata_account = Metadata::from_bytes(&created_metadata_account.data)
+        .expect("should be valid metadata account");
+
+    assert_eq!(created_metadata_account.name, name[..MAX_NAME_LENGTH]);
+    assert_eq!(created_metadata_account.symbol, symbol[..MAX_SYMBOL_LENGTH]);
 }
 
 #[test]

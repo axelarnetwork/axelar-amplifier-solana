@@ -129,15 +129,15 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
     fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
-            gateway_root_pda: self.gateway_root_pda.to_account_info(),
-            gateway_program: self.gateway_program.to_account_info(),
-            gas_treasury: self.gas_treasury.to_account_info(),
-            gas_service: self.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_hub_address: self.its_root_pda.its_hub_address.clone(),
+            gateway_program: self.gateway_program.to_account_info(),
+            gateway_root_pda: self.gateway_root_pda.to_account_info(),
+            gateway_event_authority: self.gateway_event_authority.to_account_info(),
             call_contract_signing_pda: self.signing_pda.to_account_info(),
             its_program: self.program.to_account_info(),
-            gateway_event_authority: self.gateway_event_authority.to_account_info(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
+            gas_service: self.gas_service.to_account_info(),
+            gas_treasury: self.gas_treasury.to_account_info(),
             gas_event_authority: self.gas_event_authority.to_account_info(),
         }
     }
