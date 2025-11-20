@@ -27,7 +27,7 @@ pub struct AxelarExecutableAccountRefs<'a, 'info> {
     pub gateway_root_pda: &'a AccountLoader<'info, solana_axelar_gateway::state::GatewayConfig>,
     pub axelar_gateway_program:
         &'a Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,
-    pub event_authority: &'a SystemAccount<'info>,
+    pub event_authority: &'a AccountInfo<'info>,
 }
 
 /// Trait that must be implemented by account structs that contain Axelar executable accounts.
@@ -143,7 +143,7 @@ macro_rules! executable_accounts {
             bump,
             seeds::program = solana_axelar_gateway::ID,
         )]
-        pub event_authority: SystemAccount<'info>,
+        pub event_authority: AccountInfo<'info>,
 
         pub axelar_gateway_program:
             Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,
