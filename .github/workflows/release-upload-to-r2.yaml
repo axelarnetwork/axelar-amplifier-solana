@@ -37,12 +37,20 @@ jobs:
         run: |
           name="${{ github.event.inputs.program-name }}"
           version="${{ github.event.inputs.version }}"
-          cargo_toml="programs/$name/Cargo.toml"
 
-          if [ ! -f "$cargo_toml" ]; then
-            echo "Program not found at programs/$name"
+          # Check multiple possible locations for the package
+          if [ -f "programs/$name/Cargo.toml" ]; then
+            cargo_toml="programs/$name/Cargo.toml"
+          elif [ -f "crates/$name/Cargo.toml" ]; then
+            cargo_toml="crates/$name/Cargo.toml"
+          elif [ -f "helpers/$name/Cargo.toml" ]; then
+            cargo_toml="helpers/$name/Cargo.toml"
+          else
+            echo "Package not found at programs/$name, crates/$name, or helpers/$name"
             exit 1
           fi
+
+          echo "Found package at: $cargo_toml"
 
           if [ -z "$version" ]; then
             echo "No version provided. Detecting version from Cargo.toml..."
