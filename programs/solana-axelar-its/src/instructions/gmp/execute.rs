@@ -204,13 +204,11 @@ fn cpi_execute_link_token<'info>(
     };
 
     let mut remaining = ctx.remaining_accounts.iter();
-    let deployer = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let minter = remaining.next();
     let minter_roles_pda = remaining.next();
 
     let accounts = crate::accounts::ExecuteLinkToken {
         payer: ctx.accounts.payer.key(),
-        deployer: deployer.key(),
         system_program: ctx.accounts.system_program.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -234,7 +232,6 @@ fn cpi_execute_link_token<'info>(
 
     let account_infos = crate::__cpi_client_accounts_execute_link_token::ExecuteLinkToken {
         payer: ctx.accounts.payer.to_account_info(),
-        deployer: deployer.to_account_info(),
         system_program: ctx.accounts.system_program.to_account_info(),
         its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
         token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -370,14 +367,13 @@ pub fn execute_interchain_transfer_extra_accounts(
 /// Usage:
 /// ```ignore
 /// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
-/// accounts.extend(execute_link_token_extra_accounts(deployer, minter, minter_roles_pda));
+/// accounts.extend(execute_link_token_extra_accounts(minter, minter_roles_pda));
 /// ```
 pub fn execute_link_token_extra_accounts(
-    deployer: Pubkey,
     operator: Option<Pubkey>,
     operator_roles_pda: Option<Pubkey>,
 ) -> Vec<AccountMeta> {
-    let mut accounts = vec![AccountMeta::new(deployer, false)];
+    let mut accounts = Vec::with_capacity(2);
 
     if let Some(key) = operator {
         accounts.push(AccountMeta::new(key, false));
