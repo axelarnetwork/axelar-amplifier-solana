@@ -1,6 +1,7 @@
 use crate::{
     events::FlowLimitSet,
     state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    ItsError,
 };
 use anchor_lang::prelude::*;
 
@@ -38,6 +39,7 @@ pub struct SetFlowLimit<'info> {
             &token_manager_pda.token_id
         ],
         bump = token_manager_pda.bump,
+        constraint = token_manager_pda.flow_slot.flow_limit != flow_limit @ ItsError::InvalidArgument,
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
