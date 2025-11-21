@@ -184,13 +184,14 @@ pub fn execute_interchain_transfer_handler<'info>(
 
         // Prepare instruction to invoke
 
-        let mut ix_accounts = AxelarExecuteWithInterchainToken {
+        let accounts = AxelarExecuteWithInterchainToken {
             token_program: ctx.accounts.token_program.to_account_info(),
             token_mint: ctx.accounts.token_mint.to_account_info(),
             destination_program_ata: ctx.accounts.destination_ata.to_account_info(),
             interchain_transfer_execute: interchain_transfer_execute.to_account_info(),
-        }
-        .to_account_metas(Some(true));
+        };
+
+        let mut ix_accounts = accounts.to_account_metas(Some(true));
         ix_accounts.extend(destination_accounts);
 
         let ix_data = AxelarExecuteWithInterchainTokenInstruction {
@@ -211,13 +212,7 @@ pub fn execute_interchain_transfer_handler<'info>(
             data: ix_data.data(),
         };
 
-        let mut account_infos = AxelarExecuteWithInterchainToken {
-            token_program: ctx.accounts.token_program.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            destination_program_ata: ctx.accounts.destination_ata.to_account_info(),
-            interchain_transfer_execute: interchain_transfer_execute.to_account_info(),
-        }
-        .to_account_infos();
+        let mut account_infos = accounts.to_account_infos();
         account_infos.extend(ctx.remaining_accounts.iter().cloned());
 
         let (_, axelar_transfer_execute_bump) =
