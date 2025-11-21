@@ -12,3 +12,6 @@ pub use emit_memo::*;
 
 pub mod send_interchain_transfer;
 pub use send_interchain_transfer::*;
+
+pub mod execute_with_interchain_token;
+pub use execute_with_interchain_token::*;

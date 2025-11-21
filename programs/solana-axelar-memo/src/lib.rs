@@ -7,6 +7,7 @@ pub mod state;
 pub use state::*;
 
 use solana_axelar_gateway::executable::{ExecutablePayloadEncodingScheme, Message};
+use solana_axelar_its::executable::AxelarExecuteWithInterchainTokenPayload;
 
 use program_utils::ensure_single_feature;
 
@@ -26,6 +27,8 @@ declare_id!("mem1111111111111111111111111111111111111111");
 
 #[program]
 pub mod memo {
+    use solana_axelar_its::executable::AxelarExecuteWithInterchainTokenPayload;
+
     use super::*;
 
     /// Send a memo message cross-chain via Axelar
@@ -51,8 +54,11 @@ pub mod memo {
         instructions::execute_handler(ctx, message, payload, encoding_scheme)
     }
 
-    pub fn execute_with_interchain_token(_ctx: Context<Execute>) -> Result<()> {
-        Ok(())
+    pub fn execute_with_interchain_token(
+        ctx: Context<ExecuteWithInterchainToken>,
+        execute_payload: AxelarExecuteWithInterchainTokenPayload,
+    ) -> Result<()> {
+        instructions::execute_with_interchain_token_handler(ctx, execute_payload)
     }
 
     pub fn emit_memo(ctx: Context<EmitMemo>, message: String) -> Result<()> {

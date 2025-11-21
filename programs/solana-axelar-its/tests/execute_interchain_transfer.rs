@@ -297,6 +297,7 @@ fn test_execute_interchain_transfer_success() {
         extra_account_metas: interchain_transfer_extra_accounts(
             destination_ata,
             destination_pubkey,
+            None,
         ),
         token_manager_account: Some(token_manager_account_after_deploy.clone()),
     };
@@ -609,6 +610,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
         extra_account_metas: interchain_transfer_extra_accounts(
             destination_ata,
             destination_pubkey,
+            None,
         ),
         token_manager_account: Some(token_manager_account_after_deploy.clone()),
     };
@@ -901,6 +903,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
         extra_account_metas: interchain_transfer_extra_accounts(
             destination_ata,
             destination_pubkey,
+            None,
         ),
         token_manager_account: Some(token_manager_account_after_deploy.clone()),
     };
@@ -1189,6 +1192,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
         extra_account_metas: interchain_transfer_extra_accounts(
             destination_ata,
             destination_pubkey,
+            None,
         ),
         token_manager_account: Some(token_manager_account_after_deploy.clone()),
     };

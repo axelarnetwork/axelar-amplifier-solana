@@ -197,6 +197,11 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
+crate = "mollusk-harness"
+expression = "MIT"
+license-files = []
+
+[[licenses.clarify]]
 crate = "evm-contracts-rs"
 expression = "MIT"
 license-files = []
