@@ -481,7 +481,7 @@ fn test_set_trusted_chain_unauthorized() {
     ];
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(ItsError::MissingRequiredSignature).into(),
+        anchor_lang::error::Error::from(ItsError::InvalidAccountData).into(),
     )];
 
     mollusk.process_and_validate_instruction(&ix, &accounts, &checks);

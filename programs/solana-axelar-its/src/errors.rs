@@ -60,4 +60,6 @@ pub enum ItsError {
     MissingRequiredSignature,
     #[msg("Not enough account keys")]
     NotEnoughAccountKeys,
+    #[msg("Invalid bump for the PDA used to sign interchain transfer")]
+    InvalidInterchainTransferSigningPdaBump,
 }

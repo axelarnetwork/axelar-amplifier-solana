@@ -1,6 +1,7 @@
 use crate::get_fee_and_decimals;
 use crate::get_mint_decimals;
 use crate::gmp::*;
+use crate::seed_prefixes::INTERCHAIN_TRANSFER_SEED;
 use crate::state::{token_manager, FlowDirection};
 use crate::{
     errors::ItsError,
@@ -128,15 +129,15 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
     fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
-            gateway_root_pda: self.gateway_root_pda.to_account_info(),
-            gateway_program: self.gateway_program.to_account_info(),
-            gas_treasury: self.gas_treasury.to_account_info(),
-            gas_service: self.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_hub_address: self.its_root_pda.its_hub_address.clone(),
+            gateway_program: self.gateway_program.to_account_info(),
+            gateway_root_pda: self.gateway_root_pda.to_account_info(),
+            gateway_event_authority: self.gateway_event_authority.to_account_info(),
             call_contract_signing_pda: self.signing_pda.to_account_info(),
             its_program: self.program.to_account_info(),
-            gateway_event_authority: self.gateway_event_authority.to_account_info(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
+            gas_service: self.gas_service.to_account_info(),
+            gas_treasury: self.gas_treasury.to_account_info(),
             gas_event_authority: self.gas_event_authority.to_account_info(),
         }
     }
@@ -151,7 +152,7 @@ pub fn interchain_transfer_handler(
     amount: u64,
     gas_value: u64,
     caller_program_id: Option<Pubkey>,
-    caller_pda_seeds: Option<Vec<Vec<u8>>>,
+    caller_pda_bump: Option<u8>,
     data: Option<Vec<u8>>,
 ) -> Result<()> {
     msg!("Instruction: InterchainTransfer");
@@ -163,21 +164,22 @@ pub fn interchain_transfer_handler(
         return err!(ItsError::InvalidDestinationAddress);
     }
 
-    // TODO check security implications of the checks here
     // Determine the source address based on whether this is a CPI or direct call
     // If it is a CPI, use the caller program id as the source address
     // otherwise use the user's address
-    let source_address = match (caller_program_id, caller_pda_seeds) {
-        (Some(source_id), Some(pda_seeds)) => {
+    let source_address = match (caller_program_id, caller_pda_bump) {
+        (Some(source_id), Some(pda_bump)) => {
             // NOTE: we don't check the owner of the PDA here,
             // as it could be owned by the system program (uninitialized account)
             // what's important is that the PDA is derived correctly
             // and that it's a signer
 
-            // Validate that the PDA can be derived using the provided seeds
-            let seeds_refs: Vec<&[u8]> = pda_seeds.iter().map(std::vec::Vec::as_slice).collect();
-            let (expected_pda, _bump) =
-                solana_program::pubkey::Pubkey::find_program_address(&seeds_refs, &source_id);
+            // Validate that the PDA can be derived using the provided bump
+            let expected_pda = Pubkey::create_program_address(
+                &[INTERCHAIN_TRANSFER_SEED, &[pda_bump]],
+                &source_id,
+            )
+            .map_err(|_| ItsError::InvalidInterchainTransferSigningPdaBump)?;
 
             if expected_pda != *ctx.accounts.authority.key {
                 msg!(
@@ -323,11 +325,7 @@ fn transfer_with_fee_to(
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        &[],
-    );
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
 
     token_interface::transfer_checked_with_fee(cpi_context, amount, decimals, fee)?;
 
@@ -344,11 +342,7 @@ fn transfer_to(ctx: &Context<InterchainTransfer>, amount: u64, decimals: u8) -> 
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        &[],
-    );
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
 
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
 
@@ -364,11 +358,7 @@ fn burn_from_source(ctx: &Context<InterchainTransfer>, amount: u64) -> Result<()
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        &[],
-    );
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
 
     token_interface::burn(cpi_context, amount)?;
 

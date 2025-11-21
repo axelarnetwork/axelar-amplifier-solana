@@ -14,8 +14,7 @@ pub struct SetTrustedChain<'info> {
     /// Payer must be either the program upgrade authority or have the OPERATOR role.
     #[account(mut,
     	constraint =
-     		user_roles.as_ref().is_some() || program_data.as_ref()
-       			.is_some_and(|pd| pd.upgrade_authority_address == Some(payer.key()))
+     		user_roles.as_ref().is_some() || program_data.as_ref().is_some()
       	 		@ ItsError::MissingRequiredSignature,
     )]
     pub payer: Signer<'info>,

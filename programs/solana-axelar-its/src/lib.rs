@@ -90,6 +90,9 @@ pub mod seed_prefixes {
 
     /// The seed prefix for deriving the interchain transfer execute signing PDA
     pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] = b"interchain-transfer-execute";
+
+    /// The seed prefix for deriving the interchain transfer signinng PDA
+    pub const INTERCHAIN_TRANSFER_SEED: &[u8] = b"interchain-transfer";
 }
 
 #[program]
@@ -276,7 +279,7 @@ pub mod solana_axelar_its {
         amount: u64,
         gas_value: u64,
         source_id: Option<Pubkey>,
-        pda_seeds: Option<Vec<Vec<u8>>>,
+        pda_bump: Option<u8>,
         data: Option<Vec<u8>>,
     ) -> Result<()> {
         instructions::interchain_transfer_handler(
@@ -287,7 +290,7 @@ pub mod solana_axelar_its {
             amount,
             gas_value,
             source_id,
-            pda_seeds,
+            pda_bump,
             data,
         )
     }

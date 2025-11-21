@@ -5,7 +5,6 @@ use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gas_service::state::Treasury;
 use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
-use solana_axelar_its::accounts::GasServiceAccounts;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
@@ -142,11 +141,9 @@ pub fn deploy_remote_interchain_token_helper(
             token_manager_pda: ctx.token_manager.0,
             gateway_root_pda,
             gateway_program: solana_axelar_gateway::ID,
-            gas_service_accounts: GasServiceAccounts {
-                gas_service: solana_axelar_gas_service::ID,
-                gas_treasury,
-                gas_event_authority,
-            },
+            gas_service: solana_axelar_gas_service::ID,
+            gas_treasury,
+            gas_event_authority,
             system_program: solana_sdk::system_program::ID,
             its_root_pda: ctx.its_root.0,
             call_contract_signing_pda,
