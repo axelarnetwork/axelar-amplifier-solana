@@ -5146,7 +5146,7 @@ dependencies = [
 
 [[package]]
 name = "program-utils"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "mpl-token-metadata",
  "solana-program",
@@ -6497,7 +6497,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-gas-service"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anchor-lang",
  "borsh 0.10.4",
@@ -6512,7 +6512,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-gateway"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -6552,7 +6552,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-governance"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
@@ -6571,7 +6571,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-governance-test-fixtures"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anchor-lang",
  "bincode",
@@ -6584,7 +6584,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-its"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "alloy-primitives",
  "anchor-lang",
@@ -6612,7 +6612,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-its-test-fixtures"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -6631,7 +6631,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-memo"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anchor-lang",
  "bincode",
@@ -6647,7 +6647,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-operators"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anchor-lang",
  "mollusk-svm 0.5.1",
@@ -6658,7 +6658,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-std"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "alloy-primitives",
  "anchor-lang",
@@ -11790,7 +11790,7 @@ checksum = "32ac00cd3f8ec9c1d33fb3e7958a82df6989c42d747bd326c822b1d625283547"
 
 [[package]]
 name = "xtask"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "clap",
  "color-eyre",
