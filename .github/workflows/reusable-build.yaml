@@ -82,7 +82,7 @@ jobs:
               echo "Building $program (library: $library_name)..."
               cargo build-sbf --manifest-path programs/$program/Cargo.toml
             else
-              echo "Skipping $program (not a Solana program"
+              echo "Skipping $program (not a Solana program)"
             fi
           done
 
