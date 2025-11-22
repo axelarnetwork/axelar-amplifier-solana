@@ -1,9 +1,10 @@
 [package]
 name = "governance-gmp"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Governance GMP message encoding and decoding for Axelar"
 license.workspace = true
+publish = false
 
 [dependencies]
 alloy-primitives.workspace = true

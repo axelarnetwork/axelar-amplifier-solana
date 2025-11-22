@@ -7,6 +7,7 @@ homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "Test fixtures and utilities for solana-axelar-its"
+publish = false
 
 [dependencies]
 solana-axelar-gas-service = { workspace = true, features = ["no-entrypoint"] }
