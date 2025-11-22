@@ -96,7 +96,7 @@ fn main() -> eyre::Result<()> {
                 let manifest_path = path.join("Cargo.toml");
 
                 if let Some(ref net) = network {
-                    println!("Building with network feature: {}", net);
+                    println!("Building with network feature: {net}");
                     cmd!(
                         sh,
                         "cargo build-sbf --manifest-path {manifest_path} --features {net} --no-default-features"
@@ -229,9 +229,9 @@ fn main() -> eyre::Result<()> {
 
                     // Preserve the original format (with or without solana_program:: prefix)
                     let new_line = if old_line.trim().starts_with("solana_program::") {
-                        format!("solana_program::declare_id!(\"{}\");", new_id)
+                        format!("solana_program::declare_id!(\"{new_id}\");")
                     } else {
-                        format!("declare_id!(\"{}\");", new_id)
+                        format!("declare_id!(\"{new_id}\");")
                     };
 
                     let updated_content = lib_content.replace(old_line, &new_line);
