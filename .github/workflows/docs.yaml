@@ -20,9 +20,9 @@ defaults:
 
 name: docs
 jobs:
-  doc:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
-    name: doc
+  docs:
+    runs-on: blacksmith-8vcpu-ubuntu-2204
+    name: docs
     steps:
       - uses: actions/checkout@v4
         with:

@@ -5,9 +5,14 @@ use crate::{
     state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
-use anchor_lang::prelude::*;
-use anchor_spl::token_2022::{spl_token_2022::extension::BaseStateWithExtensions, Token2022};
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::{prelude::*, InstructionData};
+use anchor_spl::token_2022::{
+    spl_token_2022::{self, extension::BaseStateWithExtensions},
+    Token2022,
+};
 use anchor_spl::{
+    associated_token::get_associated_token_address_with_program_id,
     associated_token::AssociatedToken,
     token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
 };
@@ -317,4 +322,71 @@ pub fn validate_mint_extensions(
     }
 
     Ok(())
+}
+
+/// Creates a DeployInterchainToken instruction
+pub fn make_deploy_interchain_token_instruction(
+    payer: Pubkey,
+    deployer: Pubkey,
+    salt: [u8; 32],
+    name: String,
+    symbol: String,
+    decimals: u8,
+    initial_supply: u64,
+    minter: Option<Pubkey>,
+) -> (Instruction, crate::accounts::DeployInterchainToken) {
+    let its_root = InterchainTokenService::find_pda().0;
+
+    let token_id = crate::utils::interchain_token_id(&deployer, &salt);
+    let token_manager_pda = crate::TokenManager::find_pda(token_id, its_root).0;
+    let token_mint = crate::TokenManager::find_token_mint(token_id, its_root).0;
+    let mpl_token_metadata_account = crate::TokenManager::find_token_metadata(token_id, its_root).0;
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &token_mint,
+        &spl_token_2022::ID,
+    );
+    let deployer_ata =
+        get_associated_token_address_with_program_id(&deployer, &token_mint, &spl_token_2022::ID);
+    let minter_roles_pda =
+        minter.map(|minter_key| crate::UserRoles::find_pda(&token_manager_pda, &minter_key).0);
+
+    let (event_authority, _bump) =
+        Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+
+    let accounts = crate::accounts::DeployInterchainToken {
+        payer,
+        deployer,
+        system_program: anchor_lang::system_program::ID,
+        its_root_pda: its_root,
+        token_manager_pda,
+        token_mint,
+        token_manager_ata,
+        token_program: anchor_spl::token_2022::spl_token_2022::ID,
+        associated_token_program: anchor_spl::associated_token::spl_associated_token_account::ID,
+        sysvar_instructions: anchor_lang::solana_program::sysvar::instructions::id(),
+        mpl_token_metadata_program: mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
+        mpl_token_metadata_account,
+        deployer_ata,
+        minter,
+        minter_roles_pda,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::DeployInterchainToken {
+                salt,
+                name,
+                symbol,
+                decimals,
+                initial_supply,
+            }
+            .data(),
+        },
+        accounts,
+    )
 }
