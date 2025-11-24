@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use bitvec::prelude::*;
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::CommandType;
+use solana_axelar_std::PayloadType;
 use solana_axelar_std::{
     EcdsaRecoverableSignature, MerkleProof, Secp256k1Pubkey, SigningVerifierSetInfo,
     VerifierSetLeaf, U128,
@@ -27,7 +27,7 @@ impl SignatureVerificationSessionData {
 
     pub fn find_pda(
         payload_merkle_root: &[u8; 32],
-        command_type: CommandType,
+        command_type: PayloadType,
         signing_verifier_set_hash: &[u8; 32],
     ) -> (Pubkey, u8) {
         Pubkey::find_program_address(

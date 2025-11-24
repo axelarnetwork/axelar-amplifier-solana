@@ -5,7 +5,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::{CommandType, MerklizedMessage};
+use solana_axelar_std::{PayloadType, MerklizedMessage};
 use std::str::FromStr;
 
 #[derive(Accounts)]
@@ -25,7 +25,7 @@ pub struct ApproveMessage<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             payload_merkle_root.as_ref(),
-            &[CommandType::ApproveMessages as u8],
+            &[PayloadType::ApproveMessages as u8],
             verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref()
         ],
         bump = verification_session_account.load()?.bump,

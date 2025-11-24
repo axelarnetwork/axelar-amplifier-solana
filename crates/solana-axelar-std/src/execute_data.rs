@@ -8,7 +8,7 @@ use crate::{
     hasher::{Hasher, VecBuf},
     message::{MerklizedMessage, MessageLeaf, Messages},
     verifier_set::{self, verifier_set_hash, SigningVerifierSetInfo},
-    CommandType, EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
+    EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
 };
 
 /// Represents the complete set of execution data required for verification and
@@ -43,6 +43,21 @@ pub enum Payload {
 
     /// Represents an updated verifier set for system consensus.
     NewVerifierSet(VerifierSet),
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
+pub enum PayloadType {
+    ApproveMessages = 0,
+    RotateSigners = 1,
 }
 
 /// Represents the payload data in a Merkle tree structure.
@@ -84,18 +99,17 @@ pub fn encode(
     payload: Payload,
 ) -> Result<Vec<u8>, EncodingError> {
     let command_type = match payload {
-        Payload::Messages(_) => CommandType::ApproveMessages,
-        Payload::NewVerifierSet(_) => CommandType::RotateSigners,
+        Payload::Messages(_) => PayloadType::ApproveMessages,
+        Payload::NewVerifierSet(_) => PayloadType::RotateSigners,
     };
 
+    // Verifier Set Merkle Tree
     let leaves = verifier_set::merkle_tree_leaves(signing_verifier_set, &domain_separator)?
         .collect::<Vec<_>>();
     let signer_merkle_tree = merkle_tree::<Hasher, VerifierSetLeaf>(leaves.iter());
     let signing_verifier_set_merkle_root = signer_merkle_tree
         .root()
         .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)?;
-    let (payload_merkle_root, payload_items) =
-        hash_payload_internal::<Hasher>(payload, domain_separator)?;
 
     let signing_verifier_set_leaves = leaves
         .into_iter()
@@ -112,6 +126,11 @@ pub fn encode(
             None
         })
         .collect::<Vec<_>>();
+
+    // Payload Merkle Tree
+    let (payload_merkle_root, payload_items) =
+        hash_payload_internal::<Hasher>(payload, domain_separator)?;
+
     let execute_data = ExecuteData {
         signing_verifier_set_merkle_root,
         signing_verifier_set_leaves,

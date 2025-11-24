@@ -13,7 +13,7 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_axelar_std::{hasher::LeafHash, CrossChainId, Message, MessageLeaf};
-use solana_axelar_std::{CommandType, MerkleTree};
+use solana_axelar_std::{PayloadType, MerkleTree};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -80,7 +80,7 @@ fn test_execute() {
 
     let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
     let payload_merkle_root = message_merkle_tree.root().unwrap();
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
