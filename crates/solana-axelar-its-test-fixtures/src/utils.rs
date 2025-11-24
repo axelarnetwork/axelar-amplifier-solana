@@ -111,34 +111,19 @@ pub fn create_sysvar_instructions_data() -> Vec<u8> {
 
 pub fn initialize_mollusk_with_programs() -> Mollusk {
     let program_id = solana_axelar_its::id();
+
+    // ITS
     let mut mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
+    // Operators
+
     mollusk.add_program(
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        "../../programs/solana-axelar-its/tests/mpl_token_metadata",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
-
-    let spl_token_elf = mollusk_svm_programs_token::token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token::ID,
-        spl_token_elf,
+        &solana_axelar_operators::ID,
+        "../../target/deploy/solana_axelar_operators",
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
-    let token_2022_elf = mollusk_svm_programs_token::token2022::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &spl_token_2022::ID,
-        token_2022_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
-
-    let associated_token_elf = mollusk_svm_programs_token::associated_token::ELF;
-    mollusk.add_program_with_elf_and_loader(
-        &anchor_spl::associated_token::ID,
-        associated_token_elf,
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
+    // Gas Service
 
     mollusk.add_program(
         &solana_axelar_gas_service::ID,
@@ -146,10 +131,35 @@ pub fn initialize_mollusk_with_programs() -> Mollusk {
         &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
+    // Gateway
+
     mollusk.add_program(
         &solana_axelar_gateway::ID,
         "../../target/deploy/solana_axelar_gateway",
         &solana_sdk::bpf_loader_upgradeable::ID,
+    );
+
+    // Token Programs
+
+    mollusk.add_program_with_elf_and_loader(
+        &spl_token::ID,
+        mollusk_svm_programs_token::token::ELF,
+        &solana_sdk::bpf_loader_upgradeable::ID,
+    );
+    mollusk.add_program_with_elf_and_loader(
+        &spl_token_2022::ID,
+        mollusk_svm_programs_token::token2022::ELF,
+        &solana_sdk::bpf_loader_upgradeable::ID,
+    );
+    mollusk.add_program_with_elf_and_loader(
+        &anchor_spl::associated_token::ID,
+        mollusk_svm_programs_token::associated_token::ELF,
+        &solana_sdk::bpf_loader_upgradeable::ID,
+    );
+    mollusk.add_program(
+        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
+        "../../programs/solana-axelar-its/tests/mpl_token_metadata",
+        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     mollusk
@@ -170,18 +180,9 @@ pub fn setup_operator(
     );
 
     // Derive the registry PDA
-    let (registry, _bump) = Pubkey::find_program_address(
-        &[solana_axelar_operators::OperatorRegistry::SEED_PREFIX],
-        &program_id,
-    );
+    let (registry, _bump) = solana_axelar_operators::OperatorRegistry::find_pda();
     // Derive the operator PDA
-    let (operator_pda, _bump) = Pubkey::find_program_address(
-        &[
-            solana_axelar_operators::OperatorAccount::SEED_PREFIX,
-            operator.as_ref(),
-        ],
-        &program_id,
-    );
+    let (operator_pda, _bump) = solana_axelar_operators::OperatorAccount::find_pda(&operator);
 
     // Initialize the registry instruction
     let ix1 = Instruction {
