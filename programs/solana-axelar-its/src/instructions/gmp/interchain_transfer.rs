@@ -4,6 +4,7 @@ use crate::{
     },
     instructions::gmp::*,
 };
+use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use anchor_spl::{
@@ -18,11 +19,18 @@ use anchor_spl::{
 };
 use solana_axelar_gateway::Message;
 use solana_program::{program_option::COption, program_pack::Pack};
-use interchain_token_transfer_gmp::GMPPayload::InterchainTransfer;  
+use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};  
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], source_address: String, destination_address: Pubkey, amount: u64, data: Vec<u8>, message: Message, source_chain: String)]
+#[instruction(
+    token_id: [u8; 32],
+    source_address: Vec<u8>,
+    destination_address: Pubkey,
+    amount: u64,
+    data: Vec<u8>,
+    source_chain: String,
+)]
 pub struct ExecuteInterchainTransfer<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -85,33 +93,32 @@ pub struct ExecuteInterchainTransfer<'info> {
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::unimplemented)]
 pub fn execute_interchain_transfer_handler(
-    mut ctx: Context<ExecuteInterchainTransfer>,
+    mut ctx: Context<ExecuteInterchainTransfer>,        
+    token_id: [u8; 32],
+    source_address: Vec<u8>,
+    destination_address: Pubkey,
+    amount: u64,
+    data: Vec<u8>,
+    source_chain: String,
     message: Message,
-    payload: Vec<u8>,
 ) -> Result<()> {
-    let (payload, source_chain) = validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message.clone(), payload)?;
-    let InterchainTransfer(transfer) = payload
-    else {
-        msg!("Unsupported GMP payload");
-        return err!(ItsError::InvalidInstructionData);
+    let transfer = InterchainTransfer { 
+        selector: InterchainTransfer::MESSAGE_TYPE_ID
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        token_id: token_id.into(), 
+        source_address: Bytes::from(source_address.clone()),
+        destination_address: Bytes::from(destination_address.clone().to_bytes()),
+        amount: amount
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        data: Bytes::from(data.clone()), 
     };
-    let token_id = transfer.token_id.0;
-    let source_address = String::from_utf8(transfer.source_address.to_vec())
+    validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message.clone(), GMPPayload::InterchainTransfer(transfer), source_chain.clone())?;
+    
+    let source_address = String::from_utf8(source_address)
         .map_err(|_| ItsError::InvalidInstructionData)?;
 
-    let destination_address: [u8; 32] = transfer
-        .destination_address
-        .as_ref()
-        .try_into()
-        .map_err(|_| ItsError::InvalidAccountData)?;
-    let destination_address = Pubkey::new_from_array(destination_address);
-
-    let amount: u64 = transfer
-        .amount
-        .try_into()
-        .map_err(|_| ItsError::ArithmeticOverflow)?;
-
-    let data = transfer.data;
     if amount == 0 {
         return err!(ItsError::InvalidAmount);
     }

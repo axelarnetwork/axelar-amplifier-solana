@@ -12,8 +12,6 @@ pub enum ItsError {
     InvalidInstructionData,
     #[msg("Invalid Metaplex data account")]
     InvalidMetaplexDataAccount,
-    #[msg("Failed to convert minter bytes to pubkey")]
-    MinterConversionFailed,
     #[msg("Minter account not provided")]
     MinterNotProvided,
     #[msg("Minter roles pda not provided")]

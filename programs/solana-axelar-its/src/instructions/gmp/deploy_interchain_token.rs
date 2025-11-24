@@ -2,6 +2,7 @@ use crate::{
     errors::ItsError, events::{InterchainTokenDeployed, TokenManagerDeployed}, instructions::{gmp::*, validate_mint_extensions}, seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED}, state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles}
 
 };
+use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
 use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
@@ -11,7 +12,14 @@ use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(payload: Vec<u8>)]
+#[instruction(
+    token_id: [u8; 32],
+    name: String,
+    symbol: String,
+    decimals: u8,
+    minter: Vec<u8>,
+    source_chain: String,
+)]
 pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -34,7 +42,7 @@ pub struct ExecuteDeployInterchainToken<'info> {
         seeds = [
             TOKEN_MANAGER_SEED,
             its_root_pda.key().as_ref(),
-            &decode_payload(&payload).token_id.0
+            &token_id
         ],
         bump
     )]
@@ -43,14 +51,14 @@ pub struct ExecuteDeployInterchainToken<'info> {
     #[account(
         init,
         payer = payer,
-        mint::decimals = decode_payload(&payload).decimals,
+        mint::decimals = decimals,
         mint::authority = token_manager_pda,
         mint::freeze_authority = token_manager_pda,
         mint::token_program = token_program,
         seeds = [
             INTERCHAIN_TOKEN_SEED,
             its_root_pda.key().as_ref(),
-            &decode_payload(&payload).token_id.0
+            &token_id
         ],
         bump,
     )]
@@ -106,20 +114,26 @@ pub struct ExecuteDeployInterchainToken<'info> {
 
 pub fn execute_deploy_interchain_token_handler(
     ctx: Context<ExecuteDeployInterchainToken>,
-    payload: Vec<u8>,
+    token_id: [u8; 32],
+    name: String,
+    symbol: String,
+    decimals: u8,
+    minter: Vec<u8>,
+    source_chain: String,
     message: Message,
 ) -> Result<()> {
-    let (payload, _) = validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, payload)?;
-    let GMPPayload::DeployInterchainToken(deploy) = payload
-    else {
-        msg!("Unsupported GMP payload");
-        return err!(ItsError::InvalidInstructionData);
+    let deploy = DeployInterchainToken { 
+        selector: DeployInterchainToken::MESSAGE_TYPE_ID
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        token_id: token_id.into(), 
+        name: name.clone(), 
+        symbol: symbol.clone(), 
+        decimals, 
+        minter: Bytes::from(minter.clone()),
     };
-    let token_id = deploy.token_id.0;
-    let name = deploy.name;
-    let symbol = deploy.symbol;
-    let decimals = deploy.decimals;
-    let minter = deploy.minter.to_vec();
+    let inner_payload = GMPPayload::DeployInterchainToken(deploy);
+    validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, inner_payload, source_chain)?;
 
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
@@ -187,20 +201,6 @@ pub fn execute_deploy_interchain_token_handler(
     });
 
     Ok(())
-}
-
-fn decode_payload(payload: &Vec<u8>) -> DeployInterchainToken {
-    let GMPPayload::ReceiveFromHub(inner_msg) =
-        GMPPayload::decode(payload).unwrap()
-    else {
-        panic!("Unsupported GMP payload");
-    };
-    let GMPPayload::DeployInterchainToken(deploy) = GMPPayload::decode(&inner_msg.payload).unwrap()
-    else {
-        panic!("Unsupported GMP payload");
-    };
-
-    deploy
 }
 
 fn process_inbound_deploy(

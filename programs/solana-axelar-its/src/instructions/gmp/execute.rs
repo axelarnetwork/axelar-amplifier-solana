@@ -1,6 +1,8 @@
 use crate::{errors::ItsError, state::InterchainTokenService, instructions::gmp::*};
 use anchor_lang::{prelude::*, solana_program, Key};
 use interchain_token_transfer_gmp::GMPPayload;
+use interchain_token_transfer_gmp::ReceiveFromHub;
+use interchain_token_transfer_gmp::SendToHub;
 use solana_axelar_gateway::{
     Message, executable::validate_message_raw,
 };
@@ -11,38 +13,32 @@ pub fn validate_message<'info>(
     executable: &AxelarExecuteAccounts<'info>,
     its_root_pda: &Account<'info, InterchainTokenService>,
     message: Message,
-    payload: Vec<u8>,
-) -> Result<(GMPPayload, String)> {
+    inner_payload: GMPPayload,
+    source_chain: String
+) -> Result<()> {
+    let payload = GMPPayload::ReceiveFromHub(ReceiveFromHub {
+        selector: ReceiveFromHub::MESSAGE_TYPE_ID
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        source_chain: source_chain.clone(),
+        payload: inner_payload.encode().into(),
+    }).encode();
     // Validate the GMP message
     validate_message_raw(&executable.into(), message.clone(), &payload)?;
 
-    use GMPPayload::ReceiveFromHub;
     // Verify that the message comes from the trusted Axelar ITS Hub
     if message.source_address != its_root_pda.its_hub_address {
         msg!("Untrusted source address: {}", message.source_address);
         return err!(ItsError::InvalidInstructionData);
     }
 
-    // Execute can only be called with ReceiveFromHub payload at the top level
-    let ReceiveFromHub(inner_msg) =
-        GMPPayload::decode(&payload).map_err(|_err| ItsError::InvalidInstructionData)?
-    else {
-        msg!("Unsupported GMP payload");
-        return err!(ItsError::InvalidInstructionData);
-    };
-
     if !its_root_pda
-        .is_trusted_chain(&inner_msg.source_chain)
+        .is_trusted_chain(&source_chain)
     {
         return err!(ItsError::UntrustedSourceChain);
     }
 
-    let payload =
-        GMPPayload::decode(&inner_msg.payload).map_err(|_err| ItsError::InvalidInstructionData)?;
-
-    let source_chain = inner_msg.source_chain;
-
-    Ok((payload, source_chain))
+    Ok(())
 }
 
 

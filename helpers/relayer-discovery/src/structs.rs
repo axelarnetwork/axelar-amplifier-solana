@@ -17,6 +17,15 @@ pub enum RelayerData {
     /// The command id. Can also be abtained by using the `Message`, but it is added as an option for convenience.
     CommandId,
 }
+
+impl RelayerData {
+    /// Serialize some input params.
+    pub fn from_serializable<T: AnchorSerialize>(data: T) -> Result<RelayerData> {
+        let mut result = Vec::with_capacity(256);
+        data.serialize(&mut result)?;
+        Ok(RelayerData::Bytes(result))
+    }
+}
 #[derive(Debug, Eq, PartialEq, Clone, AnchorDeserialize, AnchorSerialize)]
 /// This can be used to specify an account that the relayer will pass to the executable. This can be converted to an `AccountMeta` by the relayer.
 pub enum RelayerAccount {

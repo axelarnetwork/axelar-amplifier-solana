@@ -360,7 +360,7 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::from(minter), // Empty bytes for no minter
+        minter: alloy_primitives::Bytes::from(minter.clone()), // Empty bytes for no minter
     };
 
     let receive_from_hub_payload = ReceiveFromHub {
@@ -403,16 +403,6 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
                 lamports: 1,
                 data: vec![],
                 owner: solana_sdk::bpf_loader_upgradeable::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-        (
-            solana_sdk::system_program::ID,
-            Account {
-                lamports: 0,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
                 executable: true,
                 rent_epoch: 0,
             },

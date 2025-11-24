@@ -2,9 +2,9 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::AccountDeserialize;
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas, accounts::program, system_program};
 use anchor_spl::{
-    associated_token::get_associated_token_address_with_program_id,
+    associated_token::{get_associated_token_address_with_program_id, spl_associated_token_account::instruction},
     token_2022::spl_token_2022::{self},
 };
 use interchain_token_transfer_gmp::{
@@ -12,30 +12,27 @@ use interchain_token_transfer_gmp::{
 };
 use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
+use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsError};
+use solana_axelar_its::{ItsError, accounts::AxelarExecuteAccounts, state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_sysvar_instructions_data, deploy_interchain_token_extra_accounts,
-    execute_its_instruction, get_token_mint_pda, init_its_service_with_ethereum_trusted,
-    initialize_mollusk_with_programs, interchain_transfer_extra_accounts, new_empty_account,
-    new_test_account, ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams,
+    ExecuteTestAccounts, ExecuteTestContext, ExecuteTestParams, create_sysvar_instructions_data, deploy_interchain_token_extra_accounts, execute_its_instruction, get_token_mint_pda, init_its_relayer_transaction, init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs, interchain_transfer_extra_accounts, new_empty_account, new_test_account
 };
 use solana_program::program_pack::{IsInitialized, Pack};
-use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
+use solana_sdk::{account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
 fn test_execute_interchain_transfer_success() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let mut fixture = RelayerDiscoveryTestFixture::new();
 
     // Step 2: Initialize gateway
-    let init_result = initialize_gateway(&setup);
+    let init_result = initialize_gateway(&fixture.setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
@@ -44,7 +41,7 @@ fn test_execute_interchain_transfer_success() {
     // Step 3: Add ITS program to mollusk
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
-    setup.mollusk = mollusk;
+    fixture.setup.mollusk = mollusk;
 
     // Step 4: Initialize ITS service
     let (payer, payer_account) = new_test_account();
@@ -54,7 +51,7 @@ fn test_execute_interchain_transfer_success() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &setup.mollusk,
+        &fixture.setup.mollusk,
         payer,
         &payer_account,
         payer,
@@ -62,6 +59,12 @@ fn test_execute_interchain_transfer_success() {
         &operator_account,
         chain_name.clone(),
         its_hub_address.clone(),
+    );
+
+    let (its_relayer_transaction_pda, its_relayer_transaction_account) = init_its_relayer_transaction(
+        &fixture.setup.mollusk,
+        payer,
+        &payer_account,
     );
 
     // Step 5: First deploy a token using helper function with new mollusk
@@ -105,20 +108,6 @@ fn test_execute_interchain_transfer_success() {
     // Override the source_address to match its_hub_address
     deploy_message.source_address = its_hub_address.clone();
 
-    // Approve deploy message on gateway
-    let deploy_incoming_messages = approve_messages_on_gateway(
-        &setup,
-        vec![deploy_message.clone()],
-        init_result.clone(),
-        &secret_key_1,
-        &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
-    );
-
-    let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
-        &deploy_incoming_messages[0];
-
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (token_mint_pda, _) = get_token_mint_pda(token_id);
     let token_manager_ata = get_associated_token_address_with_program_id(
@@ -126,77 +115,55 @@ fn test_execute_interchain_transfer_success() {
         &token_mint_pda,
         &spl_token_2022::id(),
     );
-    let deployer_ata = get_associated_token_address_with_program_id(
-        &payer,
-        &token_mint_pda,
-        &spl_token_2022::id(),
-    );
-    let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
-    // Use new mollusk for deploy execution with helper function
-    let deploy_mollusk = initialize_mollusk_with_programs();
-    let deploy_context = ExecuteTestContext {
-        mollusk: deploy_mollusk,
-        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
-        its_root: (its_root_pda, its_root_account.clone()),
-        payer: (payer, payer_account.clone()),
-    };
-
-    let deploy_params = ExecuteTestParams {
-        message: deploy_message.clone(),
-        payload: deploy_encoded_payload,
-        token_id,
-        incoming_message_pda: *deploy_incoming_message_pda,
-        incoming_message_account_data: deploy_incoming_message_account_data.clone(),
-    };
-
-    let deploy_accounts_config = ExecuteTestAccounts {
-        core_accounts: vec![
-            (token_mint_pda, new_empty_account()),
-            (token_manager_ata, new_empty_account()),
-        ],
-        extra_accounts: vec![
-            (deployer_ata, new_empty_account()),
-            (payer, payer_account.clone()),
-            (
-                solana_sdk::sysvar::instructions::ID,
-                Account {
-                    lamports: 1_000_000_000,
-                    data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
-                    executable: false,
-                    rent_epoch: 0,
-                },
-            ),
-            (
-                mpl_token_metadata::ID,
-                Account {
-                    lamports: 1,
-                    data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
-                    executable: true,
-                    rent_epoch: 0,
-                },
-            ),
-            (metadata_account, new_empty_account()),
-        ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
+    let deployer_execute_accounts = vec![
+        (its_root_pda, its_root_account.clone()), 
+        (its_relayer_transaction_pda, its_relayer_transaction_account.clone()),
+        (
+            solana_sdk::sysvar::instructions::ID,
+            Account {
+                lamports: 1_000_000_000,
+                data: create_sysvar_instructions_data(),
+                owner: solana_program::sysvar::id(),
+                executable: false,
+                rent_epoch: 0,
+            },
         ),
-        token_manager_account: None,
-    };
+        (
+            mpl_token_metadata::ID,
+            Account {
+                lamports: 1,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            solana_sdk::system_program::ID,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: solana_sdk::native_loader::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        mollusk_svm_programs_token::token2022::keyed_account(),
+        mollusk_svm_programs_token::associated_token::keyed_account(),
+        mollusk_svm::program::keyed_account_for_system_program(),
+    ];
 
-    let deploy_result = execute_its_instruction(
-        deploy_context,
-        deploy_params,
-        deploy_accounts_config,
-        vec![mollusk_svm::result::Check::success()],
+    let deploy_result = fixture.approve_and_execute(&deploy_message, deploy_encoded_payload.clone(), deployer_execute_accounts);
+    assert!(
+        deploy_result.is_ok(),
+        "Execute instruction should succeed: {:?}",
+        deploy_result,
     );
+    let deploy_result = deploy_result.unwrap();
 
     // Verify deploy success
-    assert!(deploy_result.result.program_result.is_ok());
+    assert!(deploy_result.program_result.is_ok());
 
     // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 1_000_000u64;
@@ -235,83 +202,68 @@ fn test_execute_interchain_transfer_success() {
     );
     transfer_message.source_address = its_hub_address;
 
-    let transfer_incoming_messages = approve_messages_on_gateway(
-        &setup,
-        vec![transfer_message.clone()],
-        init_result.clone(),
-        &secret_key_1,
-        &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
-    );
-
-    let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
-        &transfer_incoming_messages[0];
-
     let destination_ata = get_associated_token_address_with_program_id(
         &destination_pubkey,
         &token_mint_pda,
         &spl_token_2022::id(),
     );
-
-    // Get updated accounts from deploy result
+        // Get updated accounts from deploy result
     let token_manager_account_after_deploy = deploy_result
-        .result
         .get_account(&token_manager_pda)
         .unwrap();
     let token_mint_account_after_deploy =
-        deploy_result.result.get_account(&token_mint_pda).unwrap();
+        deploy_result.get_account(&token_mint_pda).unwrap();
     let token_manager_ata_after_deploy = deploy_result
-        .result
         .get_account(&token_manager_ata)
         .unwrap();
-    let deployer_ata_account_after_deploy =
-        deploy_result.result.get_account(&deployer_ata).unwrap();
 
-    // Use new mollusk for transfer execution with helper function
-    let transfer_mollusk = initialize_mollusk_with_programs();
-    let transfer_context = ExecuteTestContext {
-        mollusk: transfer_mollusk,
-        gateway_root: (gateway_root_pda, gateway_root_pda_account.clone()),
-        its_root: (its_root_pda, its_root_account.clone()),
-        payer: (payer, payer_account.clone()),
-    };
-
-    let transfer_params = ExecuteTestParams {
-        message: transfer_message.clone(),
-        payload: transfer_encoded_payload,
-        token_id,
-        incoming_message_pda: *transfer_incoming_message_pda,
-        incoming_message_account_data: transfer_incoming_message_account_data.clone(),
-    };
-
-    let transfer_accounts_config = ExecuteTestAccounts {
-        core_accounts: vec![
-            (token_mint_pda, token_mint_account_after_deploy.clone()),
-            (token_manager_ata, token_manager_ata_after_deploy.clone()),
-        ],
-        extra_accounts: vec![
-            (destination_pubkey, payer_account.clone()),
-            (destination_ata, deployer_ata_account_after_deploy.clone()),
-        ],
-        extra_account_metas: interchain_transfer_extra_accounts(
-            destination_ata,
-            destination_pubkey,
+    let transfer_execute_accounts = vec![
+        (its_root_pda, its_root_account.clone()), 
+        (its_relayer_transaction_pda, its_relayer_transaction_account.clone()),
+        (gateway_root_pda, gateway_root_pda_account.clone()),
+        (
+            solana_sdk::sysvar::instructions::ID,
+            Account {
+                lamports: 0,
+                data: create_sysvar_instructions_data(),
+                owner: solana_program::sysvar::id(),
+                executable: false,
+                rent_epoch: 0,
+            },
         ),
-        token_manager_account: Some(token_manager_account_after_deploy.clone()),
-    };
+        (
+            mpl_token_metadata::ID,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                executable: true,
+                rent_epoch: 0,
+            },
+        ),
+        mollusk_svm_programs_token::token2022::keyed_account(),
+        mollusk_svm_programs_token::associated_token::keyed_account(),
+        mollusk_svm::program::keyed_account_for_system_program(),
+        (token_mint_pda, token_mint_account_after_deploy.clone()),
+        (token_manager_ata, token_manager_ata_after_deploy.clone()),
+        (destination_pubkey, payer_account.clone()),
+        (token_manager_pda, token_manager_account_after_deploy.clone()),
+        (payer, payer_account.clone())
+    ];
+    
+    let transfer_result = fixture.approve_and_execute(&transfer_message, transfer_encoded_payload.clone(), transfer_execute_accounts.clone());
 
-    let transfer_result = execute_its_instruction(
-        transfer_context,
-        transfer_params,
-        transfer_accounts_config,
-        vec![mollusk_svm::result::Check::success()],
+    assert!(
+        transfer_result.is_ok(),
+        "Execute instruction should succeed: {:?}, {:?}",
+        transfer_result,
+        transfer_message.command_id(),
     );
+    let transfer_result = transfer_result.unwrap();
 
-    assert!(transfer_result.result.program_result.is_ok());
+    assert!(transfer_result.program_result.is_ok());
 
     let token_manager_account = transfer_result
-        .result
         .get_account(&token_manager_pda)
         .unwrap();
     let token_manager =
@@ -320,7 +272,6 @@ fn test_execute_interchain_transfer_success() {
 
     // Verify that the destination got their tokens
     let destination_ata_account_after = transfer_result
-        .result
         .get_account(&destination_ata)
         .unwrap();
     let destination_ata_data =
@@ -332,7 +283,7 @@ fn test_execute_interchain_transfer_success() {
     assert_eq!(destination_ata_data.base.owner, destination_pubkey,);
     assert!(destination_ata_data.base.is_initialized());
 
-    let token_mint_account_after = transfer_result.result.get_account(&token_mint_pda).unwrap();
+    let token_mint_account_after = transfer_result.get_account(&token_mint_pda).unwrap();
     let token_mint_after =
         spl_token_2022::state::Mint::unpack(&token_mint_account_after.data).unwrap();
 
