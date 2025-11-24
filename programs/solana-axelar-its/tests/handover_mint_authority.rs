@@ -275,7 +275,8 @@ fn test_handover_mint_authority_not_mint_authority() {
     );
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+        anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintMintMintAuthority)
+            .into(),
     )];
 
     // This should fail because fake_authority is not the mint authority

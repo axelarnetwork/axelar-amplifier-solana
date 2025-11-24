@@ -3,14 +3,9 @@ use crate::{
     ItsError,
 };
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::{
-    token_2022::spl_token_2022::{
-        extension::StateWithExtensions,
-        instruction::{set_authority, AuthorityType},
-        state::Mint,
-    },
-    token_interface::TokenInterface,
+    token_2022::spl_token_2022::instruction::AuthorityType,
+    token_interface::{Mint, TokenInterface},
 };
 
 #[derive(Accounts)]
@@ -26,9 +21,12 @@ pub struct HandoverMintAuthority<'info> {
     /// The token mint account
     #[account(
         mut,
-        constraint = mint.key() == token_manager.token_address @ ItsError::TokenMintTokenManagerMissmatch,
+        mint::authority = authority,
+        mint::token_program = token_program,
+        constraint = mint.key() == token_manager.token_address
+            @ ItsError::TokenMintTokenManagerMissmatch,
     )]
-    pub mint: UncheckedAccount<'info>,
+    pub mint: InterfaceAccount<'info, Mint>,
 
     /// The ITS root PDA
     #[account(
@@ -45,7 +43,9 @@ pub struct HandoverMintAuthority<'info> {
             &token_id,
         ],
         bump = token_manager.bump,
-        constraint = token_manager.ty == Type::MintBurn || token_manager.ty == Type::MintBurnFrom
+        // Ensure the token manager type is mintable
+        constraint = token_manager.ty == Type::MintBurn
+            || token_manager.ty == Type::MintBurnFrom
             @ ItsError::InvalidTokenManagerType,
     )]
     pub token_manager: Account<'info, TokenManager>,
@@ -65,6 +65,7 @@ pub struct HandoverMintAuthority<'info> {
     pub minter_roles: Account<'info, UserRoles>,
 
     pub token_program: Interface<'info, TokenInterface>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -78,56 +79,31 @@ pub fn handover_mint_authority_handler(
     let authority = &ctx.accounts.authority;
     let token_manager = &ctx.accounts.token_manager;
     let minter_roles = &mut ctx.accounts.minter_roles;
-    let token_program = &ctx.accounts.token_program;
 
-    // Validate that token_program owns the mint account
-    if token_program.key() != *mint.owner {
-        return err!(ItsError::InvalidTokenManagerType);
-    }
+    // The given authority is the mint authority. Transfer it to the TokenManager
 
-    // Check the current mint authority
-    let maybe_mint_authority = {
-        let mint_data = mint.try_borrow_data()?;
-        let mint_state = StateWithExtensions::<Mint>::unpack(&mint_data)?;
-        mint_state.base.mint_authority
-    };
+    let cpi_context = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        anchor_spl::token_interface::SetAuthority {
+            current_authority: authority.to_account_info(),
+            account_or_mint: mint.to_account_info(),
+        },
+    );
 
-    match maybe_mint_authority {
-        COption::None => {
-            msg!("Cannot hand over mint authority of a TokenManager for non-mintable token");
-            err!(ItsError::InvalidArgument)
-        }
-        COption::Some(mint_authority) if mint_authority == authority.key() => {
-            // The given authority is the mint authority. Transfer it to the TokenManager
+    anchor_spl::token_interface::set_authority(
+        cpi_context,
+        AuthorityType::MintTokens,
+        Some(token_manager.key()),
+    )?;
 
-            let authority_transfer_ix = set_authority(
-                token_program.key,
-                mint.key,
-                Some(token_manager.to_account_info().key),
-                AuthorityType::MintTokens,
-                authority.key,
-                &[],
-            )?;
+    // Setup minter role for the payer
+    minter_roles.roles.insert(Roles::MINTER);
+    minter_roles.bump = ctx.bumps.minter_roles;
 
-            anchor_lang::solana_program::program::invoke(
-                &authority_transfer_ix,
-                &[mint.to_account_info(), authority.to_account_info()],
-            )?;
+    msg!(
+        "Transferred mint authority to token manager and granted MINTER role to {}",
+        authority.key()
+    );
 
-            // Setup minter role for the payer
-            minter_roles.roles.insert(Roles::MINTER);
-            minter_roles.bump = ctx.bumps.minter_roles;
-
-            msg!(
-                "Transferred mint authority to token manager and granted MINTER role to {}",
-                authority.key()
-            );
-
-            Ok(())
-        }
-        COption::Some(_) => {
-            msg!("Signer is not the mint authority");
-            err!(ItsError::InvalidArgument)
-        }
-    }
+    Ok(())
 }
