@@ -15,7 +15,7 @@ use solana_axelar_gateway_test_fixtures::{
     setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
 };
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::{CommandType, U256};
+use solana_axelar_std::{PayloadType, U256};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -83,7 +83,7 @@ fn test_initialize_payload_verification_session() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
 
     let (result, verification_session_pda) =
         initialize_payload_verification_session(&setup, &init_result, command_type);
@@ -131,7 +131,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     let verifier_set_merkle_root = setup.verifier_set_hash;
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
         setup_message_merkle_tree(&setup, verifier_set_merkle_root);
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
@@ -333,7 +333,7 @@ fn test_rotate_signers() {
     // Step 4: Create rotation payload hash (what current verifiers need to sign)
     // New verifier set hash is used directly as the payload hash for rotation
     let rotation_payload_hash = new_verifier_set_hash;
-    let command_type = CommandType::RotateSigners;
+    let command_type = PayloadType::RotateSigners;
 
     // Step 5: Initialize payload verification session (for the rotation)
     let (session_result, verification_session_pda) =
@@ -666,7 +666,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
     let messages = default_messages();
     let (_, _, payload_merkle_root) = create_message_merkle_tree(setup.domain_separator, &messages);
 
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
 
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
@@ -766,7 +766,7 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
     let (message_leaves, message_merkle_tree, payload_merkle_root) =
         create_message_merkle_tree(setup.domain_separator, &messages);
 
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
     let (session_result, verification_session_pda) =
@@ -861,7 +861,7 @@ fn test_fails_when_verifying_invalid_signature() {
     let (_, _message_merkle_tree, payload_merkle_root) =
         create_message_merkle_tree(setup.domain_separator, &messages);
 
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session with the correct payload root
     let (session_result, verification_session_pda) =
@@ -946,7 +946,7 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
         setup_message_merkle_tree(&setup, verifier_set_merkle_root);
 
     // Step 4: Initialize payload verification session with APPROVE MESSAGES command type
-    let command_type = CommandType::ApproveMessages;
+    let command_type = PayloadType::ApproveMessages;
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
@@ -1052,7 +1052,7 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
     )
     .unwrap();
 
-    assert!(final_verification_session.signature_verification.is_valid(),);
+    assert!(final_verification_session.signature_verification.is_valid());
 
     // try to use approve message payload_merkle_root for rotate_signers: should fail
     let rotate_result = rotate_signers_helper(

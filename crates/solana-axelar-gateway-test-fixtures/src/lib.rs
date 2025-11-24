@@ -19,7 +19,7 @@ use solana_axelar_gateway::{
 use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    CommandType, CrossChainId, MerklizedMessage, Message, MessageLeaf, Signature,
+    CrossChainId, MerklizedMessage, Message, MessageLeaf, PayloadType, Signature,
     SigningVerifierSetInfo, VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
@@ -338,7 +338,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
 pub fn initialize_payload_verification_session(
     setup: &TestSetup,
     init_result: &InstructionResult,
-    command_type: CommandType,
+    command_type: PayloadType,
 ) -> (InstructionResult, Pubkey) {
     let initialized_gateway_account = init_result
         .resulting_accounts
@@ -461,7 +461,7 @@ pub fn initialize_payload_verification_session_with_root(
     setup: &TestSetup,
     init_result: &InstructionResult,
     payload_merkle_root: [u8; 32],
-    command_type: CommandType,
+    command_type: PayloadType,
 ) -> (InstructionResult, Pubkey) {
     let initialized_gateway_account = init_result
         .resulting_accounts
@@ -556,7 +556,7 @@ pub fn create_verifier_info(
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
     verifier_merkle_tree: &MerkleTree,
-    command_type: CommandType,
+    command_type: PayloadType,
 ) -> SigningVerifierSetInfo {
     let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
@@ -1107,7 +1107,7 @@ pub fn approve_messages_on_gateway(
             setup,
             &init_result,
             payload_merkle_root,
-            CommandType::ApproveMessages,
+            PayloadType::ApproveMessages,
         );
     assert!(
         !session_result.program_result.is_err(),
@@ -1144,7 +1144,7 @@ pub fn approve_messages_on_gateway(
         &verifier_leaves[0],
         0,
         &verifier_merkle_tree,
-        CommandType::ApproveMessages,
+        PayloadType::ApproveMessages,
     );
 
     let verify_result_1 = verify_signature_helper(
@@ -1172,7 +1172,7 @@ pub fn approve_messages_on_gateway(
         &verifier_leaves[1],
         1,
         &verifier_merkle_tree,
-        CommandType::ApproveMessages,
+        PayloadType::ApproveMessages,
     );
 
     let verify_result_2 = verify_signature_helper(

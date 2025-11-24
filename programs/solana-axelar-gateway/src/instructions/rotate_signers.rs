@@ -4,7 +4,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use solana_axelar_std::CommandType;
+use solana_axelar_std::PayloadType;
 use solana_axelar_std::U256;
 
 #[derive(Accounts)]
@@ -23,7 +23,7 @@ pub struct RotateSigners<'info> {
             SignatureVerificationSessionData::SEED_PREFIX,
             // New verifier set merkle root is used directly as the payload hash.
             &new_verifier_set_merkle_root,
-            &[CommandType::RotateSigners as u8],
+            &[PayloadType::RotateSigners as u8],
             verification_session_account.load()?.signature_verification
             .signing_verifier_set_hash.as_ref(),
         ],

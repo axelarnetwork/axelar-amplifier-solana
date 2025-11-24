@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use udigest::Digestable;
 
-use crate::{hasher::LeafHash, CommandType, EncodingError, PublicKey, Signature};
+use crate::{hasher::LeafHash, EncodingError, PayloadType, PublicKey, Signature};
 
 /// Represents a set of verifiers, each with an associated weight, and a quorum
 /// value.
@@ -94,7 +94,7 @@ pub struct SigningVerifierSetInfo {
 
     /// The command type indicating what the signed message is for
     /// MessageApproval or SignerRotation
-    pub command_type: CommandType,
+    pub command_type: PayloadType,
 }
 
 /// Generates the Merkle root hash for a given verifier set.
