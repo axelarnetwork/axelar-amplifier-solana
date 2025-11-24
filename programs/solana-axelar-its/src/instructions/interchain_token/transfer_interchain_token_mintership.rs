@@ -6,6 +6,10 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct TransferInterchainTokenMintership<'info> {
+    /// Payer for transaction fees and account creation
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
     /// The ITS root PDA
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
@@ -13,11 +17,16 @@ pub struct TransferInterchainTokenMintership<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
-    pub system_program: Program<'info, System>,
-
-    /// Payer for transaction fees and account creation
-    #[account(mut)]
-    pub payer: Signer<'info>,
+    /// The TokenManager account (resource account for this operation)
+    #[account(
+        seeds = [
+            TokenManager::SEED_PREFIX,
+            its_root_pda.key().as_ref(),
+            &token_manager_account.token_id,
+        ],
+        bump = token_manager_account.bump,
+    )]
+    pub token_manager_account: Account<'info, TokenManager>,
 
     /// Sender user account (signer who currently has MINTER role)
     pub sender_user_account: Signer<'info>,
@@ -31,24 +40,15 @@ pub struct TransferInterchainTokenMintership<'info> {
             sender_user_account.key().as_ref(),
         ],
         bump = sender_roles_account.bump,
-        constraint = sender_roles_account.roles.contains(Roles::MINTER) @ RolesError::MissingMinterRole,
+        constraint = sender_roles_account.roles.contains(Roles::MINTER)
+            @ RolesError::MissingMinterRole,
     )]
     pub sender_roles_account: Account<'info, UserRoles>,
 
-    /// The TokenManager account (resource account for this operation)
-    #[account(
-        seeds = [
-            TokenManager::SEED_PREFIX,
-            its_root_pda.key().as_ref(),
-            &token_manager_account.token_id,
-        ],
-        bump = token_manager_account.bump,
-    )]
-    pub token_manager_account: Account<'info, TokenManager>,
-
     /// Destination user account (will receive MINTER role)
     #[account(
-        constraint = destination_user_account.key() != sender_user_account.key() @ ItsError::InvalidArgument,
+        constraint = destination_user_account.key() != sender_user_account.key()
+            @ ItsError::InvalidArgument,
     )]
     pub destination_user_account: AccountInfo<'info>,
 
@@ -65,6 +65,8 @@ pub struct TransferInterchainTokenMintership<'info> {
         bump,
     )]
     pub destination_roles_account: Account<'info, UserRoles>,
+
+    pub system_program: Program<'info, System>,
 }
 
 pub fn transfer_interchain_token_mintership_handler(
@@ -75,6 +77,7 @@ pub fn transfer_interchain_token_mintership_handler(
     let sender_roles = &mut ctx.accounts.sender_roles_account;
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
+    // Remove MINTER role from sender user
     sender_roles.roles.remove(Roles::MINTER);
 
     // Add MINTER role to destination user
