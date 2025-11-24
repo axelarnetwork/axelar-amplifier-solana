@@ -12,6 +12,7 @@ pub mod utils;
 
 pub use errors::*;
 use instructions::*;
+pub use state::*;
 
 use anchor_lang::prelude::*;
 use program_utils::ensure_single_feature;
@@ -89,7 +90,8 @@ pub mod seed_prefixes {
     pub const FLOW_SLOT_SEED: &[u8] = b"flow-slot";
 
     /// The seed prefix for deriving the interchain transfer execute signing PDA
-    pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] = b"interchain-transfer-execute";
+    pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] =
+        state::InterchainTransferExecute::SEED_PREFIX;
 }
 
 #[program]
@@ -246,25 +248,25 @@ pub mod solana_axelar_its {
         )
     }
 
-    pub fn execute_interchain_transfer(
-        ctx: Context<ExecuteInterchainTransfer>,
-        token_id: [u8; 32],
-        source_address: Vec<u8>,
-        destination_address: Pubkey,
-        amount: u64,
-        data: Vec<u8>,
+    pub fn execute_interchain_transfer<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
         message: solana_axelar_gateway::Message,
         source_chain: String,
+        source_address: Vec<u8>,
+        destination_address: Pubkey,
+        token_id: [u8; 32],
+        amount: u64,
+        data: Vec<u8>,
     ) -> Result<()> {
         instructions::execute_interchain_transfer_handler(
             ctx,
-            token_id,
-            source_address,
-            destination_address,
-            amount,
-            data,
             message,
             source_chain,
+            source_address,
+            destination_address,
+            token_id,
+            amount,
+            data,
         )
     }
 
@@ -341,5 +343,30 @@ pub mod solana_axelar_its {
 
     pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
         instructions::mint_interchain_token_handler(ctx, amount)
+    }
+
+    pub fn handover_mint_authority(
+        ctx: Context<HandoverMintAuthority>,
+        token_id: [u8; 32],
+    ) -> Result<()> {
+        instructions::handover_mint_authority_handler(ctx, token_id)
+    }
+
+    pub fn transfer_interchain_token_mintership(
+        ctx: Context<TransferInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::transfer_interchain_token_mintership_handler(ctx)
+    }
+
+    pub fn propose_interchain_token_mintership(
+        ctx: Context<ProposeInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::propose_token_manager_mintership_handler(ctx)
+    }
+
+    pub fn accept_interchain_token_mintership(
+        ctx: Context<AcceptInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::accept_interchain_token_mintership_handler(ctx)
     }
 }

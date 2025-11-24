@@ -38,8 +38,12 @@ pub enum ItsError {
     InvalidDestinationChain,
     #[msg("The destination address is invalid")]
     InvalidDestinationAddress,
+    #[msg("The destination address must be an executable")]
+    DestinationAddressNotExecutable,
     #[msg("The destination address account is invalid")]
     InvalidDestinationAddressAccount,
+    #[msg("The interchain transfer PDA is required for transfers with data")]
+    InterchainTransferExecutePdaMissing,
     #[msg("The token mint cannot have fixed zero supply")]
     ZeroSupplyToken,
     #[msg("The mint extension is not compatible with the TokenManager type")]
@@ -60,4 +64,6 @@ pub enum ItsError {
     MissingRequiredSignature,
     #[msg("Not enough account keys")]
     NotEnoughAccountKeys,
+    #[msg("Invalid token manager type")]
+    InvalidTokenManagerType,
 }
