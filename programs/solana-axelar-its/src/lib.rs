@@ -344,4 +344,29 @@ pub mod solana_axelar_its {
     pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
         instructions::mint_interchain_token_handler(ctx, amount)
     }
+
+    pub fn handover_mint_authority(
+        ctx: Context<HandoverMintAuthority>,
+        token_id: [u8; 32],
+    ) -> Result<()> {
+        instructions::handover_mint_authority_handler(ctx, token_id)
+    }
+
+    pub fn transfer_interchain_token_mintership(
+        ctx: Context<TransferInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::transfer_interchain_token_mintership_handler(ctx)
+    }
+
+    pub fn propose_interchain_token_mintership(
+        ctx: Context<ProposeInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::propose_token_manager_mintership_handler(ctx)
+    }
+
+    pub fn accept_interchain_token_mintership(
+        ctx: Context<AcceptInterchainTokenMintership>,
+    ) -> Result<()> {
+        instructions::accept_interchain_token_mintership_handler(ctx)
+    }
 }

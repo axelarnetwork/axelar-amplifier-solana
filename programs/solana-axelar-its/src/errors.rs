@@ -64,4 +64,6 @@ pub enum ItsError {
     MissingRequiredSignature,
     #[msg("Not enough account keys")]
     NotEnoughAccountKeys,
+    #[msg("Invalid token manager type")]
+    InvalidTokenManagerType,
 }
