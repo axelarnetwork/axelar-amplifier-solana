@@ -27,14 +27,14 @@ impl SignatureVerificationSessionData {
 
     pub fn find_pda(
         payload_merkle_root: &[u8; 32],
-        command_type: PayloadType,
+        payload_type: PayloadType,
         signing_verifier_set_hash: &[u8; 32],
     ) -> (Pubkey, u8) {
         Pubkey::find_program_address(
             &[
                 Self::SEED_PREFIX,
                 payload_merkle_root,
-                &[command_type as u8],
+                &[payload_type as u8],
                 signing_verifier_set_hash,
             ],
             &crate::ID,
