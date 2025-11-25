@@ -1,5 +1,6 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
+//! TEMPORARY: Test file using the new test harness. The tests will be split up into multiple files as the harness gets adopted.
 
 use anchor_lang::prelude::AccountMeta;
 use anchor_spl::token_2022;
