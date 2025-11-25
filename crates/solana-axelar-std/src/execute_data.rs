@@ -98,7 +98,7 @@ pub fn encode(
     domain_separator: [u8; 32],
     payload: Payload,
 ) -> Result<Vec<u8>, EncodingError> {
-    let command_type = match payload {
+    let payload_type = match payload {
         Payload::Messages(_) => PayloadType::ApproveMessages,
         Payload::NewVerifierSet(_) => PayloadType::RotateSigners,
     };
@@ -120,7 +120,7 @@ pub fn encode(
                     signature: *signature,
                     leaf,
                     merkle_proof: merkle_proof.to_bytes(),
-                    command_type,
+                    payload_type,
                 });
             }
             None

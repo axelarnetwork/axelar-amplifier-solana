@@ -338,7 +338,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
 pub fn initialize_payload_verification_session(
     setup: &TestSetup,
     init_result: &InstructionResult,
-    command_type: PayloadType,
+    payload_type: PayloadType,
 ) -> (InstructionResult, Pubkey) {
     let initialized_gateway_account = init_result
         .resulting_accounts
@@ -361,14 +361,14 @@ pub fn initialize_payload_verification_session(
 
     let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
         &merkle_root,
-        command_type,
+        payload_type,
         &signing_verifier_set_hash,
     );
 
     let instruction_data =
         solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
             merkle_root,
-            command_type,
+            payload_type,
         }
         .data();
 
@@ -461,7 +461,7 @@ pub fn initialize_payload_verification_session_with_root(
     setup: &TestSetup,
     init_result: &InstructionResult,
     payload_merkle_root: [u8; 32],
-    command_type: PayloadType,
+    payload_type: PayloadType,
 ) -> (InstructionResult, Pubkey) {
     let initialized_gateway_account = init_result
         .resulting_accounts
@@ -483,14 +483,14 @@ pub fn initialize_payload_verification_session_with_root(
 
     let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
         &payload_merkle_root,
-        command_type,
+        payload_type,
         &signing_verifier_set_hash,
     );
 
     let instruction_data =
         solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
-            command_type,
+            payload_type,
         }
         .data();
 
@@ -556,7 +556,7 @@ pub fn create_verifier_info(
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
     verifier_merkle_tree: &MerkleTree,
-    command_type: PayloadType,
+    payload_type: PayloadType,
 ) -> SigningVerifierSetInfo {
     let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
@@ -577,7 +577,7 @@ pub fn create_verifier_info(
         signature,
         leaf: *verifier_leaf,
         merkle_proof: merkle_proof_bytes,
-        command_type,
+        payload_type,
     }
 }
 

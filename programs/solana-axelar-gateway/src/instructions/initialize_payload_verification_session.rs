@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 use solana_axelar_std::PayloadType;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32], command_type: PayloadType)]
+#[instruction(merkle_root: [u8; 32], payload_type: PayloadType)]
 pub struct InitializePayloadVerificationSession<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -24,7 +24,7 @@ pub struct InitializePayloadVerificationSession<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             merkle_root.as_ref(),
-            &[command_type as u8],
+            &[payload_type as u8],
             verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref(),
         ],
         bump
@@ -46,7 +46,7 @@ pub struct InitializePayloadVerificationSession<'info> {
 pub fn initialize_payload_verification_session_handler(
     ctx: Context<InitializePayloadVerificationSession>,
     _merkle_root: [u8; 32],
-    _command_type: PayloadType,
+    _payload_type: PayloadType,
 ) -> Result<()> {
     let verification_session_account =
         &mut ctx.accounts.verification_session_account.load_init()?;

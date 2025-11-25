@@ -23,7 +23,7 @@ pub struct VerifySignature<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             merkle_root.as_ref(),
-            &[verifier_info.command_type as u8],
+            &[verifier_info.payload_type as u8],
             verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref(),
         ],
         bump = verification_session_account.load()?.bump

@@ -85,12 +85,12 @@ pub mod solana_axelar_gateway {
     pub fn initialize_payload_verification_session(
         ctx: Context<InitializePayloadVerificationSession>,
         merkle_root: [u8; 32],
-        command_type: solana_axelar_std::PayloadType,
+        payload_type: solana_axelar_std::PayloadType,
     ) -> Result<()> {
         instructions::initialize_payload_verification_session_handler(
             ctx,
             merkle_root,
-            command_type,
+            payload_type,
         )
     }
 
