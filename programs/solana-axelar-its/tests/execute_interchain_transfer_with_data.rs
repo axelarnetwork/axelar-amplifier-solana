@@ -27,8 +27,49 @@ fn test_init_gives_user_role_to_operator() {
 fn test_local_deploy_interchain_token() {
     let its_harness = ItsTestHarness::new();
 
-    its_harness.ensure_test_interchain_token();
+    let _token_id = its_harness.ensure_test_interchain_token();
 }
+
+#[test]
+fn test_mint_interchain_tokens() {
+    let its_harness = ItsTestHarness::new();
+
+    // Token
+    let token_id = its_harness.ensure_test_interchain_token();
+    let token_mint =
+        solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
+    let mint_amount = 1_000_000u64;
+
+    // Receiver
+    let receiver = its_harness.get_new_wallet();
+    let (receiver_ata, _) =
+        its_harness.get_or_create_ata_2022_account(its_harness.payer, receiver, token_mint);
+
+    // Mint
+    its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, receiver_ata);
+}
+
+// Outbound transfers
+
+#[test]
+fn test_user_interchain_transfer() {
+    let its_harness = ItsTestHarness::new();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    let token_mint = its_harness.token_mint_for_id(token_id);
+
+    let mint_amount = 500_000u64;
+    let sender = its_harness.get_new_wallet();
+    let sender_ata = its_harness
+        .get_or_create_ata_2022_account(its_harness.payer, sender, token_mint)
+        .0;
+
+    its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, sender_ata);
+
+    let _receiver_ata = its_harness.get_ata_2022_address(sender, token_mint);
+}
+
+// Inbound transfers
 
 #[test]
 fn test_execute_interchain_transfer() {

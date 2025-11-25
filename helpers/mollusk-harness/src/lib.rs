@@ -18,6 +18,7 @@ use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
         execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
+        make_mint_interchain_token_instruction,
     },
     InterchainTokenService,
 };
@@ -75,6 +76,14 @@ pub trait TestHarness {
         T::try_deserialize(&mut account.data.as_slice()).ok()
     }
 
+    fn get_ata_2022_address(&self, wallet: Pubkey, token_mint: Pubkey) -> Pubkey {
+        get_associated_token_address_with_program_id(
+            &wallet,
+            &token_mint,
+            &anchor_spl::token_2022::spl_token_2022::ID,
+        )
+    }
+
     fn get_ata_2022_data(
         &self,
         wallet: Pubkey,
@@ -97,6 +106,42 @@ pub trait TestHarness {
                 &ata.data,
             ).expect("must be correct");
         ata.base
+    }
+
+    fn get_or_create_ata_2022_account(
+        &self,
+        payer: Pubkey,
+        wallet: Pubkey,
+        token_mint: Pubkey,
+    ) -> (Pubkey, spl_token_2022::state::Account) {
+        let ata = get_associated_token_address_with_program_id(
+            &wallet,
+            &token_mint,
+            &anchor_spl::token_2022::spl_token_2022::ID,
+        );
+
+        if !self.account_exists(&ata) {
+            let create_ata_ix =
+                associated_token::spl_associated_token_account::instruction::create_associated_token_account(
+                    &payer,
+                    &wallet,
+                    &token_mint,
+                    &anchor_spl::token_2022::spl_token_2022::ID,
+                );
+
+            self.ctx()
+                .process_and_validate_instruction(&create_ata_ix, &[Check::success()]);
+
+            msg!(
+                "Created ATA account for wallet: {}, mint: {}",
+                wallet,
+                token_mint
+            );
+        }
+
+        let ata_data = self.get_ata_2022_data(wallet, token_mint);
+
+        (ata, ata_data)
     }
 
     fn get_new_wallet(&self) -> Pubkey {
@@ -666,6 +711,11 @@ impl ItsTestHarness {
         self.its_root = its_root_pda;
     }
 
+    /// Shortcut function to get the token mint for a given token ID.
+    pub fn token_mint_for_id(&self, token_id: [u8; 32]) -> Pubkey {
+        solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0
+    }
+
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
         self.ensure_its_initialized();
 
@@ -774,6 +824,7 @@ impl ItsTestHarness {
         token_id
     }
 
+    #[must_use]
     pub fn ensure_test_interchain_token(&self) -> [u8; 32] {
         let salt = [1u8; 32];
         let name = "Test Token".to_owned();
@@ -791,6 +842,71 @@ impl ItsTestHarness {
             initial_supply,
             minter,
         )
+    }
+
+    pub fn ensure_mint_interchain_token(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        minter: Pubkey,
+        destination_account: Pubkey,
+        token_program: Pubkey,
+    ) {
+        // Check balance before minting
+        let dest: Option<anchor_spl::token_interface::TokenAccount> =
+            self.get_account_as(&destination_account);
+        let balance = dest.map_or(0u64, |a| a.amount);
+
+        let (ix, _) = make_mint_interchain_token_instruction(
+            token_id,
+            amount,
+            minter,
+            destination_account,
+            token_program,
+        );
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+
+        // Check balance after minting
+        let dest: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&destination_account)
+            .expect("destination account should exist after minting");
+        let new_balance = dest.amount;
+
+        // Ensure balance increased by minted amount
+        assert_eq!(
+            new_balance,
+            balance + amount,
+            "destination account balance should increase by minted amount"
+        );
+
+        msg!(
+            "Minted {} tokens of ID {} to account {}. Balance = {} -> {}",
+            amount,
+            hex::encode(token_id),
+            destination_account,
+            balance,
+            new_balance,
+        );
+    }
+
+    pub fn ensure_mint_test_interchain_token(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        destination_account: Pubkey,
+    ) {
+        let minter = self.operator;
+        let token_program = spl_token_2022::ID;
+
+        self.ensure_mint_interchain_token(
+            token_id,
+            amount,
+            minter,
+            destination_account,
+            token_program,
+        );
     }
 
     pub fn execute_gmp(
