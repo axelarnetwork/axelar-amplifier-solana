@@ -558,9 +558,15 @@ pub fn create_verifier_info(
     verifier_merkle_tree: &MerkleTree,
     payload_type: PayloadType,
 ) -> SigningVerifierSetInfo {
-    let hashed_message =
-        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
+    let signed_message =
+        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash_payload_type(
+            payload_type,
             &payload_merkle_root,
+        );
+
+    let hashed_message =
+        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash_offchain(
+            &signed_message,
         );
 
     let message = libsecp256k1::Message::parse(&hashed_message);
@@ -1102,12 +1108,14 @@ pub fn approve_messages_on_gateway(
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
         setup_message_merkle_tree_from_messages(setup, messages);
 
+    let payload_type = PayloadType::ApproveMessages;
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             setup,
             &init_result,
             payload_merkle_root,
-            PayloadType::ApproveMessages,
+            payload_type,
         );
     assert!(
         !session_result.program_result.is_err(),
