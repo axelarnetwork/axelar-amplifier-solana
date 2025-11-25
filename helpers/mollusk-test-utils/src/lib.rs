@@ -48,3 +48,7 @@ pub fn get_event_authority_and_program_accounts(program_id: &Pubkey) -> (Pubkey,
 
     (event_authority, event_authority_account, program_account)
 }
+
+pub fn system_account_with_lamports(lamports: u64) -> Account {
+    Account::new(lamports, 0, &solana_sdk_ids::system_program::id())
+}

@@ -65,9 +65,14 @@ fn main() -> eyre::Result<()> {
             if only_sbf {
                 return Ok(());
             }
-            // test the other crates
-            for (normal_crate, ..) in auxiliary_crates {
-                cmd!(sh, "cargo test -p {normal_crate}").run()?;
+
+            let auxiliary_args = auxiliary_crates
+                .iter()
+                .flat_map(|(crate_name, _)| ["-p", crate_name])
+                .collect::<Vec<_>>();
+
+            if !auxiliary_args.is_empty() {
+                cmd!(sh, "cargo test {auxiliary_args...}").run()?;
             }
         }
         Commands::Build { network } => {

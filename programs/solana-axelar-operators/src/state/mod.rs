@@ -14,6 +14,10 @@ pub struct OperatorRegistry {
 
 impl OperatorRegistry {
     pub const SEED_PREFIX: &'static [u8] = b"operator_registry";
+
+    pub fn find_pda() -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+    }
 }
 
 /// Individual operator account - holds operator pubkey
@@ -28,4 +32,8 @@ pub struct OperatorAccount {
 
 impl OperatorAccount {
     pub const SEED_PREFIX: &'static [u8] = b"operator";
+
+    pub fn find_pda(operator: &Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(&[Self::SEED_PREFIX, operator.as_ref()], &crate::ID)
+    }
 }

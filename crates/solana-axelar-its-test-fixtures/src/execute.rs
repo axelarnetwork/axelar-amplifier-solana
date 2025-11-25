@@ -191,6 +191,8 @@ pub fn execute_its_instruction(
     }
 }
 
+// TODO use the helpers below directly from the program crate
+
 /// Helper to create extra account metas for deploy interchain token
 pub fn deploy_interchain_token_extra_accounts(
     metadata_account: Pubkey,
@@ -213,9 +215,11 @@ pub fn link_token_extra_accounts() -> Vec<anchor_lang::solana_program::instructi
 pub fn interchain_transfer_extra_accounts(
     destination_token_account: Pubkey,
     destination: Pubkey,
+    transfer_has_data: Option<bool>,
 ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
     solana_axelar_its::instructions::gmp::execute::execute_interchain_transfer_extra_accounts(
         destination,
         destination_token_account,
+        transfer_has_data,
     )
 }

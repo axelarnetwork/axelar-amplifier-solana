@@ -5,29 +5,10 @@ use crate::{
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct AcceptTokenManagerOperatorship<'info> {
-    pub system_program: Program<'info, System>,
-
+pub struct AcceptInterchainTokenMintership<'info> {
     /// Payer for transaction fees
     #[account(mut)]
     pub payer: Signer<'info>,
-
-    /// Destination user account (the one accepting the operatorship role)
-    pub destination_user_account: Signer<'info>,
-
-    /// Destination user roles account (will receive OPERATOR role for this token manager)
-    #[account(
-        init_if_needed,
-        payer = payer,
-        space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
-        seeds = [
-            UserRoles::SEED_PREFIX,
-            token_manager_account.key().as_ref(),
-            destination_user_account.key().as_ref(),
-        ],
-        bump,
-    )]
-    pub destination_roles_account: Account<'info, UserRoles>,
 
     /// The ITS root PDA
     #[account(
@@ -47,7 +28,25 @@ pub struct AcceptTokenManagerOperatorship<'info> {
     )]
     pub token_manager_account: Account<'info, TokenManager>,
 
-    /// Origin user account (current operator who proposed the transfer)
+    /// Destination user account (the one accepting the mintership role)
+    pub destination_user_account: Signer<'info>,
+
+    /// Destination user roles account (will receive MINTER role for this token manager)
+    #[account(
+        init_if_needed,
+        payer = payer,
+        space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
+        seeds = [
+            UserRoles::SEED_PREFIX,
+            token_manager_account.key().as_ref(),
+            destination_user_account.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub destination_roles_account: Account<'info, UserRoles>,
+
+    /// Origin user account (current minter who proposed the transfer)
+    // Note: We shouldn't need this since its checked by the propose instruction
     #[account(
         mut,
         constraint = origin_user_account.key() != destination_user_account.key()
@@ -55,7 +54,7 @@ pub struct AcceptTokenManagerOperatorship<'info> {
     )]
     pub origin_user_account: AccountInfo<'info>,
 
-    /// Origin user roles account (current operator's roles for this token manager)
+    /// Origin user roles account (current minter's roles for this token manager)
     #[account(
         mut,
         seeds = [
@@ -64,8 +63,8 @@ pub struct AcceptTokenManagerOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR)
-            @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.roles.contains(Roles::MINTER)
+            @ RolesError::MissingMinterRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
@@ -79,37 +78,39 @@ pub struct AcceptTokenManagerOperatorship<'info> {
             destination_user_account.key().as_ref(),
         ],
         bump = proposal_account.bump,
-        constraint = proposal_account.roles.contains(Roles::OPERATOR)
-            @ RolesError::ProposalMissingOperatorRole,
-        // Note: should the balance be sent to payer or origin_user_account?
+        constraint = proposal_account.roles.contains(Roles::MINTER)
+            @ RolesError::ProposalMissingMinterRole,
+        // Return balance to origin user
         close = origin_user_account,
     )]
     pub proposal_account: Account<'info, RoleProposal>,
+
+    pub system_program: Program<'info, System>,
 }
 
-pub fn accept_token_manager_operatorship_handler(
-    ctx: Context<AcceptTokenManagerOperatorship>,
+pub fn accept_interchain_token_mintership_handler(
+    ctx: Context<AcceptInterchainTokenMintership>,
 ) -> Result<()> {
-    msg!("Instruction: AcceptTokenManagerOperatorship");
+    msg!("Instruction: AcceptInterchainTokenMintership");
 
     let origin_roles = &mut ctx.accounts.origin_roles_account;
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
-    // Remove OPERATOR role from origin user
-    origin_roles.roles.remove(Roles::OPERATOR);
+    // Remove MINTER role from origin user
+    origin_roles.roles.remove(Roles::MINTER);
 
-    // Add OPERATOR role to destination user
-    destination_roles.roles.insert(Roles::OPERATOR);
+    // Add MINTER role to destination user
+    destination_roles.roles.insert(Roles::MINTER);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(
-        "Token manager operatorship accepted for token_id {:?}: transferred from {} to {}",
+        "Interchain token mintership accepted for token_id {:?}: transferred from {} to {}",
         ctx.accounts.token_manager_account.token_id,
         ctx.accounts.origin_user_account.key(),
         ctx.accounts.destination_user_account.key()
     );
 
-    // Close if no remaining roles
+    // Close the origin roles account if no remaining roles
     if !origin_roles.has_roles() {
         anchor_lang::AccountsClose::close(
             &ctx.accounts.origin_roles_account,
