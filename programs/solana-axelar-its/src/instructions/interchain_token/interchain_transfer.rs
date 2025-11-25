@@ -10,7 +10,10 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
+use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::system_program;
+use anchor_lang::InstructionData;
+use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_interface::TokenInterface;
 use anchor_spl::token_interface::{Mint, TokenAccount};
 use interchain_token_transfer_gmp::GMPPayload;
@@ -395,4 +398,92 @@ fn track_token_flow(
         .add_flow(amount, direction)?;
 
     Ok(())
+}
+
+/// Creates an InterchainTransfer instruction
+pub fn make_interchain_transfer_instruction(
+    token_id: [u8; 32],
+    amount: u64,
+    token_program: Pubkey,
+    payer: Pubkey,
+    authority: Pubkey,
+    destination_chain: String,
+    destination_address: Vec<u8>,
+    gas_value: u64,
+    caller_program_id: Option<Pubkey>,
+    caller_pda_bump: Option<u8>,
+    data: Option<Vec<u8>>,
+) -> (Instruction, crate::accounts::InterchainTransfer) {
+    let its_root = InterchainTokenService::find_pda().0;
+
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root).0;
+    let token_mint = TokenManager::find_token_mint(token_id, its_root).0;
+
+    let authority_token_account =
+        get_associated_token_address_with_program_id(&authority, &token_mint, &token_program);
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &token_mint,
+        &token_program,
+    );
+
+    let gateway_root_pda = solana_axelar_gateway::GatewayConfig::find_pda().0;
+
+    let (signing_pda, _) = Pubkey::find_program_address(
+        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
+        &crate::ID,
+    );
+
+    let (gateway_event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+
+    let (gas_treasury, _) = Pubkey::find_program_address(
+        &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
+        &solana_axelar_gas_service::ID,
+    );
+
+    let (gas_event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+
+    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+
+    let accounts = crate::accounts::InterchainTransfer {
+        payer,
+        authority,
+        gateway_root_pda,
+        gateway_event_authority,
+        gateway_program: solana_axelar_gateway::ID,
+        signing_pda,
+        gas_treasury,
+        gas_service: solana_axelar_gas_service::ID,
+        gas_event_authority,
+        its_root_pda: its_root,
+        token_manager_pda,
+        token_program,
+        token_mint,
+        authority_token_account,
+        token_manager_ata,
+        system_program: anchor_lang::system_program::ID,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::InterchainTransfer {
+                token_id,
+                destination_chain,
+                destination_address,
+                amount,
+                gas_value,
+                source_id: caller_program_id,
+                pda_bump: caller_pda_bump,
+                data,
+            }
+            .data(),
+        },
+        accounts,
+    )
 }

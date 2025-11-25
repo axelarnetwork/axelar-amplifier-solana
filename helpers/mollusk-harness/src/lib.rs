@@ -1,4 +1,5 @@
 #![allow(clippy::indexing_slicing)]
+#![allow(clippy::too_many_arguments)]
 use std::collections::HashMap;
 
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
@@ -18,7 +19,7 @@ use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
         execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
-        make_mint_interchain_token_instruction,
+        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
     },
     InterchainTokenService,
 };
@@ -762,7 +763,6 @@ impl ItsTestHarness {
         );
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn ensure_deploy_local_interchain_token(
         &self,
         deployer: Pubkey,
@@ -907,6 +907,75 @@ impl ItsTestHarness {
             destination_account,
             token_program,
         );
+    }
+
+    // TODO support token with fees
+    pub fn ensure_outgoing_user_interchain_transfer(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        token_program: Pubkey,
+        payer: Pubkey,
+        authority: Pubkey,
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        gas_value: u64,
+    ) {
+        let token_mint = self.token_mint_for_id(token_id);
+
+        // Get balance before transfer
+        let authority_ata =
+            get_associated_token_address_with_program_id(&authority, &token_mint, &token_program);
+        let authority_ata_data: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&authority_ata)
+            .expect("authority ata should exist");
+
+        let balance_before = authority_ata_data.amount;
+
+        // Transfer
+
+        let (ix, _) = make_interchain_transfer_instruction(
+            token_id,
+            amount,
+            token_program,
+            payer,
+            authority,
+            destination_chain.clone(),
+            destination_address,
+            gas_value,
+            None,
+            None,
+            None,
+        );
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+
+        // Check balance after transfer
+
+        let authority_ata_data: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&authority_ata)
+            .expect("authority ata should exist");
+
+        let balance_after = authority_ata_data.amount;
+
+        assert_eq!(
+            balance_after,
+            balance_before - amount,
+            "authority ata balance should decrease by transfer amount"
+        );
+
+        msg!(
+			"Interchain transfer of {} tokens of ID {} from {} to destination chain '{}' initiated. Balance: {} -> {}",
+			amount,
+			hex::encode(token_id),
+			authority,
+			destination_chain,
+			balance_before,
+			balance_after,
+		);
+
+        // TODO check event emission
     }
 
     pub fn execute_gmp(

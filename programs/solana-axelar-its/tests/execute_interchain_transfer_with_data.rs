@@ -2,6 +2,7 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::prelude::AccountMeta;
+use anchor_spl::token_2022;
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
@@ -53,7 +54,7 @@ fn test_mint_interchain_tokens() {
 
 #[test]
 fn test_user_interchain_transfer() {
-    let its_harness = ItsTestHarness::new();
+    let mut its_harness = ItsTestHarness::new();
 
     let token_id = its_harness.ensure_test_interchain_token();
     let token_mint = its_harness.token_mint_for_id(token_id);
@@ -66,7 +67,23 @@ fn test_user_interchain_transfer() {
 
     its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, sender_ata);
 
-    let _receiver_ata = its_harness.get_ata_2022_address(sender, token_mint);
+    let transfer_amount = 300_000u64;
+    let destination_chain = "ethereum";
+    let destination_address = b"ethereum_address_456".to_vec();
+    let gas_value = 10_000u64;
+
+    its_harness.ensure_trusted_chain(destination_chain);
+
+    its_harness.ensure_outgoing_user_interchain_transfer(
+        token_id,
+        transfer_amount,
+        token_2022::ID,
+        its_harness.payer,
+        sender,
+        destination_chain.to_owned(),
+        destination_address,
+        gas_value,
+    );
 }
 
 // Inbound transfers
