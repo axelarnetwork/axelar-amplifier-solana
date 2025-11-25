@@ -46,7 +46,7 @@ pub struct TransferTokenManagerOperatorship<'info> {
     )]
     pub token_manager_account: Account<'info, TokenManager>,
 
-    /// Destination user account (will receive OPERATOR role)
+    /// CHECK: Destination user account (will receive OPERATOR role)
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]

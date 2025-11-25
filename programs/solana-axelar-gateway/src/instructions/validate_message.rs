@@ -9,11 +9,11 @@ use std::str::FromStr;
 #[event_cpi]
 #[instruction(message: Message)]
 pub struct ValidateMessage<'info> {
+    /// CHECK: message must be already approved
     #[account(
         mut,
         seeds = [IncomingMessage::SEED_PREFIX, message.command_id().as_ref()],
         bump = incoming_message_pda.load()?.bump,
-        // CHECK: message must be already approved
         constraint = incoming_message_pda.load()?.status.is_approved()
             @ GatewayError::MessageNotApproved,
         // CHECK: message hash must match
@@ -22,7 +22,7 @@ pub struct ValidateMessage<'info> {
     )]
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
-    /// The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
+    /// CHECK: The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
     #[account(
         signer,
         constraint = validate_caller_pda(&caller, &message, &incoming_message_pda)?

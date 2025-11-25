@@ -47,7 +47,7 @@ pub struct AcceptTokenManagerOperatorship<'info> {
     )]
     pub token_manager_account: Account<'info, TokenManager>,
 
-    /// Origin user account (current operator who proposed the transfer)
+    /// CHECK: Origin user account (current operator who proposed the transfer)
     #[account(
         mut,
         constraint = origin_user_account.key() != destination_user_account.key()

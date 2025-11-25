@@ -45,7 +45,7 @@ pub struct AcceptInterchainTokenMintership<'info> {
     )]
     pub destination_roles_account: Account<'info, UserRoles>,
 
-    /// Origin user account (current minter who proposed the transfer)
+    /// CHECK: Origin user account (current minter who proposed the transfer)
     // Note: We shouldn't need this since its checked by the propose instruction
     #[account(
         mut,

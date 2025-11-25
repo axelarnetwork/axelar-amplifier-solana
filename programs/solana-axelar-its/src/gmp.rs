@@ -41,7 +41,7 @@ pub struct GasServiceAccounts<'info> {
     /// The GMP gas service program account
     pub gas_service: Program<'info, solana_axelar_gas_service::program::SolanaAxelarGasService>,
 
-    /// Event authority for gas service
+    /// CHECK: Event authority for gas service
     #[account(
         seeds = [b"__event_authority"],
         bump,

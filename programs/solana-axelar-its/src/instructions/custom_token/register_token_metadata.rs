@@ -44,7 +44,7 @@ pub struct RegisterTokenMetadata<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
-    // Event authority accounts
+    /// CHECK: Event authority accounts
     #[account(
         seeds = [b"__event_authority"],
         bump,

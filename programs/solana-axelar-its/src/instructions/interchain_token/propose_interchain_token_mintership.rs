@@ -45,7 +45,7 @@ pub struct ProposeInterchainTokenMintership<'info> {
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
-    /// Destination user account (will receive MINTER role)
+    /// CHECK: Destination user account (will receive MINTER role)
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key()
             @ ItsError::InvalidArgument,

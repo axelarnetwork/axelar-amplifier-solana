@@ -36,7 +36,7 @@ pub struct AcceptOperatorship<'info> {
     )]
     pub resource_account: Account<'info, InterchainTokenService>,
 
-    /// Origin user account (current operator who proposed the transfer)
+    /// CHECK: Origin user account (current operator who proposed the transfer)
     #[account(
         mut,
         constraint = origin_user_account.key() != destination_user_account.key()
@@ -58,7 +58,7 @@ pub struct AcceptOperatorship<'info> {
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
-    /// Role proposal PDA for the destination user
+    /// CHECK: Role proposal PDA for the destination user
     #[account(
         mut,
         seeds = [

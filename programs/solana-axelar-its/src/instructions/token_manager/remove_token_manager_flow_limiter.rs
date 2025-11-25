@@ -42,7 +42,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
-    /// The user account from which the FLOW_LIMITER role will be removed
+    /// CHECK: The user account from which the FLOW_LIMITER role will be removed
     pub target_user_account: AccountInfo<'info>,
 
     /// Target user roles account (must exist and have FLOW_LIMITER role)
