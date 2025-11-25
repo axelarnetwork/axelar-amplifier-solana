@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 description = "Interchain token transfer GMP message encoding and decoding"
 license.workspace = true
-publish = false
 
 [dependencies]
 alloy-primitives.workspace = true
