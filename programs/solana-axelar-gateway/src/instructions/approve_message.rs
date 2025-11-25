@@ -5,7 +5,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::{PayloadType, MerklizedMessage};
+use solana_axelar_std::{MerklizedMessage, PayloadType};
 use std::str::FromStr;
 
 #[derive(Accounts)]
