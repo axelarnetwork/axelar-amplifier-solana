@@ -35,6 +35,18 @@ use solana_axelar_gateway::{
     GatewayConfig, Message, VerifierSetTracker,
 };
 
+macro_rules! msg {
+    () => {
+        solana_sdk::msg!("[mollusk-harness]");
+    };
+    ($msg:literal) => {
+        solana_sdk::msg!(concat!("[mollusk-harness] ", $msg));
+    };
+    ($fmt:literal, $($arg:tt)*) => {
+        solana_sdk::msg!(concat!("[mollusk-harness] ", $fmt), $($arg)*);
+    };
+}
+
 pub trait TestHarness {
     fn ctx(&self) -> &MolluskContext<HashMap<Pubkey, Account>>;
 
@@ -598,7 +610,7 @@ impl ItsTestHarness {
         self.ctx
             .process_and_validate_instruction_chain(&instruction_checks);
 
-        solana_sdk::msg!("Messages approved on gateway.");
+        msg!("Messages approved on gateway.");
     }
 
     pub fn ensure_its_initialized(&mut self) {
@@ -730,7 +742,7 @@ impl ItsTestHarness {
             minter,
         );
 
-        solana_sdk::msg!(
+        msg!(
             "Deploying interchain token with ID: {}",
             hex::encode(token_id),
         );
@@ -754,7 +766,7 @@ impl ItsTestHarness {
             .get_account_as(&token_manager_pda)
             .expect("token manager account should exist");
 
-        solana_sdk::msg!(
+        msg!(
             "Deployed interchain token mint: {}",
             token_manager.token_address,
         );
@@ -935,5 +947,38 @@ impl ItsTestHarness {
             transfer_payload_wrapped,
             extra_accounts,
         )
+    }
+
+    //
+    // Memo Program
+    //
+
+    pub fn ensure_memo_program_initialized(&mut self) {
+        let counter_pda = solana_axelar_memo::Counter::get_pda().0;
+        if self.account_exists(&counter_pda) {
+            return;
+        }
+
+        self.ctx.mollusk.add_program(
+            &solana_axelar_memo::ID,
+            "solana_axelar_memo",
+            &solana_sdk_ids::bpf_loader_upgradeable::ID,
+        );
+
+        self.ctx.process_and_validate_instruction(
+            &solana_axelar_memo::make_init_ix(self.payer),
+            &[Check::success()],
+        );
+
+        let counter_account: solana_axelar_memo::Counter = self
+            .get_account_as(&counter_pda)
+            .expect("counter account should exist");
+
+        assert_eq!(
+            counter_account.counter, 0,
+            "counter should have default value"
+        );
+
+        msg!("Memo program initialized.");
     }
 }

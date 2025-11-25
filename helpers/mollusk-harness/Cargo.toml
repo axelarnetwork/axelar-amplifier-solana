@@ -31,6 +31,7 @@ solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoin
 solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-its = { workspace = true, features = ["cpi", "no-entrypoint"] }
+solana-axelar-memo = { workspace = true, features = ["cpi", "no-entrypoint"] }
 
 # temp
 solana-axelar-gateway-test-fixtures.workspace = true

@@ -3,7 +3,6 @@
 
 use anchor_lang::prelude::AccountMeta;
 use mollusk_harness::{ItsTestHarness, TestHarness};
-use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
 
@@ -68,26 +67,8 @@ fn test_execute_interchain_transfer_with_data() {
     let mut its_harness = ItsTestHarness::new();
 
     // Init memo
-
-    // Add memo program to the harness context
-    its_harness.ctx.mollusk.add_program(
-        &solana_axelar_memo::ID,
-        "solana_axelar_memo",
-        &solana_sdk_ids::bpf_loader_upgradeable::ID,
-    );
-
-    its_harness.ctx.process_and_validate_instruction(
-        &solana_axelar_memo::make_init_ix(its_harness.payer),
-        &[Check::success()],
-    );
+    its_harness.ensure_memo_program_initialized();
     let counter_pda = solana_axelar_memo::Counter::get_pda().0;
-    let counter_account: solana_axelar_memo::Counter = its_harness
-        .get_account_as(&counter_pda)
-        .expect("counter account should exist");
-    assert_eq!(
-        counter_account.counter, 0,
-        "counter should have default value"
-    );
 
     // Transfer
 
