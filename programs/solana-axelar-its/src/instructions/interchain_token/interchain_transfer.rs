@@ -38,7 +38,7 @@ pub struct InterchainTransfer<'info> {
     //
     // Sender of the tokens
     //
-    /// The account that wants to transfer - can be a direct signer or program PDA
+    /// The authoriy over the token account sending the tokens
     pub authority: Signer<'info>,
 
     //
