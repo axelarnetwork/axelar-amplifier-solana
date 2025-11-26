@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/interchain-token-transfer-gmp-v0.1.0...interchain-token-transfer-gmp-v0.1.1)
+
+### ⛰️ Features
+
+- *(its)* Execute with interchain token (transfer with data) ([#96](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/96)) - ([537724f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/537724f441f4eb0c6f0f7860fe6db6eeb6ac9969))
+
+### 🐛 Bug Fixes
+
+- Release - ([c97d94a](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c97d94a510a92a95981ec080381e2550e3460f6f))
+
+### Contributors
+
+* @nbayindirli
+* @rista404
+
+## [0.1.4](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.3...solana-axelar-its-v0.1.4)
+
+### ⛰️ Features
+
+- *(its)* Add `handover_mint_authority` and token mintership transfer instructions ([#83](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/83)) - ([e3fb450](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/e3fb450d6b8ebe13544b511e909951b803599c3f))
+- *(its)* Execute with interchain token (transfer with data) ([#96](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/96)) - ([537724f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/537724f441f4eb0c6f0f7860fe6db6eeb6ac9969))
+
+### 🐛 Bug Fixes
+
+- Release - ([c97d94a](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c97d94a510a92a95981ec080381e2550e3460f6f))
+- Send its messages to Axelar chain (hub) ([#107](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/107)) - ([65d4594](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/65d4594d5af1edf1fc335a1c9bacbde219ea508d))
+
+### Contributors
+
+* @nbayindirli
+* @rista404
+* @MakisChristou
+
+## [0.1.4](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.1.3...solana-axelar-operators-v0.1.4)
+
+### ⛰️ Features
+
+- *(its)* Execute with interchain token (transfer with data) ([#96](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/96)) - ([537724f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/537724f441f4eb0c6f0f7860fe6db6eeb6ac9969))
+
+### 🐛 Bug Fixes
+
+- Release - ([c97d94a](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c97d94a510a92a95981ec080381e2550e3460f6f))
+
+### Contributors
+
+* @nbayindirli
+* @rista404
+
+## [0.1.4](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.1.3...solana-axelar-gas-service-v0.1.4)
+
+### ⛰️ Features
+
+- *(its)* Execute with interchain token (transfer with data) ([#96](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/96)) - ([537724f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/537724f441f4eb0c6f0f7860fe6db6eeb6ac9969))
+
+### 🐛 Bug Fixes
+
+- Release - ([c97d94a](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c97d94a510a92a95981ec080381e2550e3460f6f))
+
+### Contributors
+
+* @nbayindirli
+* @rista404
+
 ## [0.1.3](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.2...solana-axelar-its-v0.1.3)
 
 ### ⛰️ Features
