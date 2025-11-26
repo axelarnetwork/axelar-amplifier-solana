@@ -314,7 +314,7 @@ impl RelayerDiscoveryTestFixture {
                             // Add all accounts that are potentially empty.
                             for instruction in instructions.iter() {
                                 for account in instruction.accounts.iter() {
-                                    if accounts
+                                    if !accounts
                                         .iter()
                                         .any(|(existing, _)| existing == &account.pubkey)
                                         && !account.is_signer
