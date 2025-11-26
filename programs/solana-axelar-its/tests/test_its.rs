@@ -5,6 +5,7 @@
 use anchor_lang::prelude::AccountMeta;
 use anchor_spl::token_2022;
 use mollusk_harness::{ItsTestHarness, TestHarness};
+use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
 
@@ -40,9 +41,11 @@ fn test_mint_interchain_tokens() {
 fn test_user_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
+    // Create token
     let token_id = its_harness.ensure_test_interchain_token();
     let token_mint = its_harness.token_mint_for_id(token_id);
 
+    // Mint tokens to sender
     let mint_amount = 500_000u64;
     let sender = its_harness.get_new_wallet();
     let sender_ata = its_harness
@@ -51,6 +54,7 @@ fn test_user_interchain_transfer() {
 
     its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, sender_ata);
 
+    // Transfer
     let transfer_amount = 300_000u64;
     let destination_chain = "ethereum";
     let destination_address = b"ethereum_address_456".to_vec();
@@ -75,9 +79,11 @@ fn test_cpi_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 
+    // Create token
     let token_id = its_harness.ensure_test_interchain_token();
     let token_mint = its_harness.token_mint_for_id(token_id);
 
+    // Mint tokens to the CPI caller PDA
     let mint_amount = 500_000u64;
     let sender = solana_axelar_memo::Counter::get_pda().0;
     let sender_ata = its_harness
@@ -86,6 +92,7 @@ fn test_cpi_interchain_transfer() {
 
     its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, sender_ata);
 
+    // Transfer
     let transfer_amount = 300_000u64;
     let destination_chain = "ethereum";
     let destination_address = b"ethereum_address_456".to_vec();
@@ -112,6 +119,57 @@ fn test_cpi_interchain_transfer() {
         Some(caller_pda_seeds),
         None,
     );
+}
+
+#[test]
+fn test_cpi_interchain_transfer_invalid_pda_arguments() {
+    let mut its_harness = ItsTestHarness::new();
+    its_harness.ensure_memo_program_initialized();
+
+    // Create token
+    let token_id = its_harness.ensure_test_interchain_token();
+    let token_mint = its_harness.token_mint_for_id(token_id);
+
+    // Mint tokens to the CPI caller PDA
+    let mint_amount = 500_000u64;
+    let sender = solana_axelar_memo::Counter::get_pda().0;
+    let sender_ata = its_harness
+        .get_or_create_ata_2022_account(its_harness.payer, sender, token_mint)
+        .0;
+
+    its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, sender_ata);
+
+    // Transfer
+    let transfer_amount = 300_000u64;
+    let destination_chain = "ethereum";
+    let destination_address = b"ethereum_address_456".to_vec();
+    let gas_value = 10_000u64;
+    // CPI info
+    let caller_program_id = solana_axelar_memo::ID;
+    let caller_pda_seeds = vec![b"invalid_seed".to_vec()]; // invalid seeds!
+
+    its_harness.ensure_trusted_chain(destination_chain);
+
+    let (ix, _) = solana_axelar_its::instructions::make_interchain_transfer_instruction(
+        token_id,
+        transfer_amount,
+        token_2022::ID,
+        its_harness.payer,
+        sender,
+        destination_chain.to_owned(),
+        destination_address,
+        gas_value,
+        Some(caller_program_id),
+        Some(caller_pda_seeds),
+        None,
+    );
+
+    its_harness.ctx.process_and_validate_instruction_chain(&[(
+        &ix,
+        &[Check::err(
+            solana_axelar_its::ItsError::InvalidAccountData.into(),
+        )],
+    )]);
 }
 
 // Inbound transfers
