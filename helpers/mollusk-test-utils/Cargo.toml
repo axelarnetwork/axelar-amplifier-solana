@@ -2,6 +2,9 @@
 name = "mollusk-test-utils"
 version = "0.1.0"
 edition = "2021"
+description = "Testing utilities for mollusk-based Solana program tests"
+license.workspace = true
+publish = false
 
 [lints]
 workspace = true

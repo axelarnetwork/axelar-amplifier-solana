@@ -3,11 +3,13 @@ name = "solana-axelar-gateway-test-fixtures"
 version = "0.1.0"
 edition = "2021"
 description = "Test fixtures and utilities for solana-axelar-gateway"
+license.workspace = true
+publish = false
 
 [dependencies]
 anchor-lang.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
-axelar-solana-encoding.workspace = true
+solana-axelar-std.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 libsecp256k1.workspace = true

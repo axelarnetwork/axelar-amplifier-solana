@@ -69,7 +69,7 @@ pub fn process_outbound(
             selector: SendToHub::MESSAGE_TYPE_ID
                 .try_into()
                 .map_err(|_err| ItsError::ArithmeticOverflow)?,
-            destination_chain: destination_chain.clone(),
+            destination_chain,
             payload: payload.encode().into(),
         });
         wrapped.encode()
@@ -125,7 +125,7 @@ pub fn process_outbound(
 
     solana_axelar_gateway::cpi::call_contract(
         cpi_ctx,
-        destination_chain,
+        ITS_HUB_CHAIN_NAME.to_owned(),
         destination_address,
         payload,
         signing_pda_bump,

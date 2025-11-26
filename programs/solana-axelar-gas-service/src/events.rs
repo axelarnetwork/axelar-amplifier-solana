@@ -3,24 +3,9 @@
 //! All events have optional fields for SPL tokens, but SPL tokens
 //! are not currently supported.
 
-use anchor_lang::prelude::{
-    borsh, event, AnchorDeserialize, AnchorSerialize, Discriminator, Pubkey,
-};
+use anchor_lang::prelude::*;
 
 type MessageId = String;
-
-/// Event emitted by the Axelar Solana Gas service
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum GasServiceEvent {
-    /// Event when SOL was used to pay for a contract call
-    GasPaid(GasPaidEvent),
-    /// Event when SOL was added to fund an already emitted contract call
-    GasAdded(GasAddedEvent),
-    /// Event when SOL was refunded
-    GasRefunded(GasRefundedEvent),
-    /// Event when SOL was collected
-    GasCollected(GasCollectedEvent),
-}
 
 /// Represents the event emitted when gas is paid for a contract call.
 #[event]

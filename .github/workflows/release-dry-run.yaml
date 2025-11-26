@@ -45,8 +45,9 @@ jobs:
         id: prepare-matrix
         run: |
           if [ "${{ steps.dry-run.outputs.releases }}" == "[]" ]; then
-            echo "release-plz dry-run output contains an empty release list — exiting early."
-            exit 1
+            echo "release-plz dry-run output contains an empty release list — nothing to release."
+            echo "releases=[]" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           echo "releases=$(echo '${{ steps.dry-run.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT

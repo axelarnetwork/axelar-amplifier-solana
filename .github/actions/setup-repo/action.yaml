@@ -1,35 +1,53 @@
 name: "Setup Repo Action"
 description: "A reusable composite action that setups rust and other common tasks"
 inputs:
-  rust-cache:
-    description: "which cache to use for Rust"
+  cache-key:
+    description: "Cache namespace"
     required: false
-    default: "github"
+    default: ""
+  skip-foundry:
+    description: "skip foundry installation and build"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
   steps:
-    - name: Install stable
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: 1.86.0
-        components: rustc, rustfmt, rust-std, clippy, rustc-dev, rust-docs
+    - name: Remove stable toolchain
+      shell: bash
+      run: rustup toolchain uninstall "stable" || true
 
-    - uses: Swatinem/rust-cache@v2
+    - name: Setup Rust toolchain
+      id: rust
+      uses: actions-rust-lang/setup-rust-toolchain@fb51252c7ba57d633bc668f941da052e410add48 # v1
       with:
-        cache-all-crates: true
+        cache: false
+        rustflags: ""
+        components: clippy, rustfmt
+
+    - name: Cache Rust dependencies
+      uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
+      id: cache
+      with:
+        prefix-key: "${{ steps.rust.outputs.cachekey }}-rust"
+        shared-key: "${{ inputs.cache-key }}"
         cache-on-failure: true
-        cache-provider: ${{ inputs.rust-cache }}
-        workspaces: |
-          .
 
-    # we rely on foundry for some specific tests
+    - name: Log crates.toml on cache hit
+      if: steps.cache.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        echo "Cache hit for key: ${{ steps.cache.outputs.cache-matched-key }}"
+        cat /home/runner/.cargo/.crates.toml || true
+
     - name: Install Foundry
+      if: ${{ inputs.skip-foundry != 'true' }}
       uses: foundry-rs/foundry-toolchain@v1
       with:
         version: v1.0.0
 
     - name: Run Forge build
+      if: ${{ inputs.skip-foundry != 'true' }}
       shell: bash
       run: |
         cd evm-contracts

@@ -60,11 +60,7 @@ impl FlowState {
         // Calculate net flow: |new_flow - to_compare|
         // The flow limit is interpreted as a limit over the net amount of tokens
         // transferred from one chain to another within a six hours time window.
-        let net_flow = if new_flow >= to_compare {
-            new_flow - to_compare
-        } else {
-            to_compare - new_flow
-        };
+        let net_flow = new_flow.abs_diff(to_compare);
 
         // Check if net flow exceeds the limit
         if net_flow > flow_limit {

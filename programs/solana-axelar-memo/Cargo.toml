@@ -7,9 +7,11 @@ homepage.workspace = true
 license.workspace = true
 edition.workspace = true
 description = "Axelar Memo Anchor program for Solana"
+publish = false
 
 [dependencies]
 anchor-lang.workspace = true
+anchor-spl.workspace = true
 program-utils.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 solana-axelar-its = { workspace = true, features = ["cpi"] }
@@ -19,7 +21,7 @@ solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 bincode.workspace = true
-axelar-solana-encoding.workspace = true
+solana-axelar-std.workspace = true
 hex.workspace = true
 
 [lints]
@@ -61,3 +63,6 @@ mainnet = [
 	"solana-axelar-its/mainnet",
 ]
 default = ["devnet-amplifier"]
+
+[package.metadata.cargo-machete]
+ignored = ["anchor-spl"]

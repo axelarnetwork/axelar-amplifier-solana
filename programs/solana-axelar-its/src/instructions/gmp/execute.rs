@@ -1,4 +1,4 @@
-use crate::{errors::ItsError, state::InterchainTokenService};
+use crate::{errors::ItsError, state::InterchainTokenService, InterchainTransferExecute};
 use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
 use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::{
@@ -100,8 +100,6 @@ fn cpi_execute_interchain_transfer<'info>(
     source_chain: &str,
 ) -> Result<()> {
     let token_id = transfer.token_id.0;
-    let source_address = String::from_utf8(transfer.source_address.to_vec())
-        .map_err(|_| ItsError::InvalidInstructionData)?;
 
     let destination_address: [u8; 32] = transfer
         .destination_address
@@ -119,7 +117,7 @@ fn cpi_execute_interchain_transfer<'info>(
 
     let instruction_data = crate::instruction::ExecuteInterchainTransfer {
         token_id,
-        source_address,
+        source_address: transfer.source_address.to_vec(),
         destination_address,
         amount,
         data: data.to_vec(),
@@ -130,28 +128,41 @@ fn cpi_execute_interchain_transfer<'info>(
     let mut remaining = ctx.remaining_accounts.iter();
     let destination = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let destination_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    // Optional interchain transfer execute
+    let interchain_transfer_execute = remaining.next();
+
+    let custom_accounts: Vec<_> = remaining.cloned().collect();
+
+    let mut accounts = crate::accounts::ExecuteInterchainTransfer {
+        payer: ctx.accounts.payer.key(),
+        its_root_pda: ctx.accounts.its_root_pda.key(),
+        destination: destination.key(),
+        destination_ata: destination_ata.key(),
+        token_mint: ctx.accounts.token_mint.key(),
+        token_manager_pda: ctx.accounts.token_manager_pda.key(),
+        token_manager_ata: ctx.accounts.token_manager_ata.key(),
+        token_program: ctx.accounts.token_program.key(),
+        associated_token_program: ctx.accounts.associated_token_program.key(),
+        system_program: ctx.accounts.system_program.key(),
+        event_authority: ctx.accounts.event_authority.key(),
+        program: ctx.accounts.program.key(),
+        interchain_transfer_execute: interchain_transfer_execute.map(Key::key),
+    }
+    .to_account_metas(None);
+    // Optional destination program custom accounts
+    accounts.extend(
+        custom_accounts
+            .iter()
+            .flat_map(|a| a.to_account_metas(None)),
+    );
 
     let transfer_instruction = Instruction {
         program_id: crate::id(),
-        accounts: crate::accounts::ExecuteInterchainTransfer {
-            payer: ctx.accounts.payer.key(),
-            its_root_pda: ctx.accounts.its_root_pda.key(),
-            destination: destination.key(),
-            destination_ata: destination_ata.key(),
-            token_mint: ctx.accounts.token_mint.key(),
-            token_manager_pda: ctx.accounts.token_manager_pda.key(),
-            token_manager_ata: ctx.accounts.token_manager_ata.key(),
-            token_program: ctx.accounts.token_program.key(),
-            associated_token_program: ctx.accounts.associated_token_program.key(),
-            system_program: ctx.accounts.system_program.key(),
-            event_authority: ctx.accounts.event_authority.key(),
-            program: ctx.accounts.program.key(),
-        }
-        .to_account_metas(None),
+        accounts,
         data: instruction_data.data(),
     };
 
-    let account_infos =
+    let mut account_infos =
         crate::__cpi_client_accounts_execute_interchain_transfer::ExecuteInterchainTransfer {
             payer: ctx.accounts.payer.to_account_info(),
             its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
@@ -165,8 +176,12 @@ fn cpi_execute_interchain_transfer<'info>(
             system_program: ctx.accounts.system_program.to_account_info(),
             event_authority: ctx.accounts.event_authority.to_account_info(),
             program: ctx.accounts.program.to_account_info(),
+            interchain_transfer_execute: interchain_transfer_execute.cloned(),
         }
         .to_account_infos();
+
+    // Optional destination program custom accounts
+    account_infos.extend(custom_accounts);
 
     // Invoke the instruction with ITS root PDA as signer
     invoke_signed_with_its_root_pda(
@@ -364,11 +379,26 @@ fn invoke_signed_with_its_root_pda(
 pub fn execute_interchain_transfer_extra_accounts(
     destination: Pubkey,
     destination_ata: Pubkey,
+    transfer_has_data: Option<bool>,
 ) -> Vec<AccountMeta> {
-    vec![
+    let mut accounts = vec![
         AccountMeta::new(destination, false),
         AccountMeta::new(destination_ata, false),
-    ]
+    ];
+
+    if transfer_has_data == Some(true) {
+        let interchain_transfer_execute = Pubkey::find_program_address(
+            &[InterchainTransferExecute::SEED_PREFIX, destination.as_ref()],
+            &crate::ID,
+        )
+        .0;
+        accounts.push(AccountMeta::new_readonly(
+            interchain_transfer_execute,
+            false,
+        ));
+    }
+
+    accounts
 }
 
 /// Helper function to build the extra accounts needed for execute with LinkToken payload.
