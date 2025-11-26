@@ -253,8 +253,43 @@ fn process_inbound_deploy(
     Ok(())
 }
 
-fn create_token_metadata<'info>(
-    accounts: &ExecuteDeployInterchainToken<'info>,
+fn mint_initial_supply(
+    accounts: &ExecuteDeployInterchainToken<'_>,
+    token_id: [u8; 32],
+    initial_supply: u64,
+    token_manager_bump: u8,
+) -> Result<()> {
+    use anchor_spl::token_interface;
+
+    let cpi_accounts = token_interface::MintTo {
+        mint: accounts.token_mint.to_account_info(),
+        to: accounts.deployer_ata.to_account_info(),
+        authority: accounts.token_manager_pda.to_account_info(),
+    };
+
+    // Create signer seeds with proper lifetimes
+    let its_root_key = accounts.its_root_pda.key();
+    let bump_seed = [token_manager_bump];
+    let signer_seeds: &[&[&[u8]]] = &[&[
+        TOKEN_MANAGER_SEED,
+        its_root_key.as_ref(),
+        token_id.as_ref(),
+        &bump_seed,
+    ]];
+
+    let cpi_context = CpiContext::new_with_signer(
+        accounts.token_program.to_account_info(),
+        cpi_accounts,
+        signer_seeds,
+    );
+
+    token_interface::mint_to(cpi_context, initial_supply)?;
+
+    Ok(())
+}
+
+fn create_token_metadata(
+    accounts: &ExecuteDeployInterchainToken<'_>,
     name: &str,
     symbol: &str,
     token_id: [u8; 32],

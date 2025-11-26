@@ -50,7 +50,8 @@ pub struct AcceptTokenManagerOperatorship<'info> {
     /// Origin user account (current operator who proposed the transfer)
     #[account(
         mut,
-        constraint = origin_user_account.key() != destination_user_account.key() @ ItsError::InvalidArgument,
+        constraint = origin_user_account.key() != destination_user_account.key()
+            @ ItsError::InvalidArgument,
     )]
     pub origin_user_account: AccountInfo<'info>,
 
@@ -63,7 +64,8 @@ pub struct AcceptTokenManagerOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.roles.contains(Roles::OPERATOR)
+            @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
@@ -77,7 +79,8 @@ pub struct AcceptTokenManagerOperatorship<'info> {
             destination_user_account.key().as_ref(),
         ],
         bump = proposal_account.bump,
-        constraint = proposal_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = proposal_account.roles.contains(Roles::OPERATOR)
+            @ RolesError::ProposalMissingOperatorRole,
         // Note: should the balance be sent to payer or origin_user_account?
         close = origin_user_account,
     )]

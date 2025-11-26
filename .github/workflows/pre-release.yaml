@@ -11,7 +11,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   solana-program-names:
     name: Get all Solana programs
-    runs-on: blacksmith-2vcpu-ubuntu-2204
+    runs-on: blacksmith-32vcpu-ubuntu-2204
     outputs:
       releases: ${{ steps.prepare-release.outputs.releases }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}

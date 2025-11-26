@@ -1,16 +1,18 @@
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::indexing_slicing)]
+#![allow(clippy::too_many_lines)]
 
 use anchor_lang::prelude::thiserror;
 use anchor_lang::{AnchorDeserialize, Key};
 
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
+use solana_axelar_std::MerkleTree;
+use solana_axelar_std::{hasher::LeafHash, Message, MessageLeaf, VerifierSetLeaf};
 
 use libsecp256k1::SecretKey;
 use mollusk_svm::result::ProgramResult;
 use mollusk_svm::result::{Check, InstructionResult};
 use relayer_discovery::structs::RelayerTransaction;
 use relayer_discovery::{find_transaction_pda, ConvertError, RelayerDiscovery};
-use solana_axelar_gateway::{Message, MessageLeaf, VerifierSetLeaf};
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
@@ -28,11 +30,11 @@ pub struct RelayerDiscoveryTestFixture {
     /// This has the mollusk aslongside a lot of information about the gateway
     pub setup: TestSetup,
     /// The rest of the information is required to approve massages to the gateway
-    verifier_leaves: Vec<VerifierSetLeaf>,
-    verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
-    secret_key_1: SecretKey,
-    secret_key_2: SecretKey,
-    init_result: InstructionResult,
+    pub verifier_leaves: Vec<VerifierSetLeaf>,
+    pub verifier_merkle_tree: MerkleTree,
+    pub secret_key_1: SecretKey,
+    pub secret_key_2: SecretKey,
+    pub init_result: InstructionResult,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -120,8 +122,7 @@ impl RelayerDiscoveryTestFixture {
         let message_leaf_hashes: Vec<[u8; 32]> =
             message_leaves.iter().map(MessageLeaf::hash).collect();
 
-        let message_merkle_tree =
-            MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+        let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
         let payload_merkle_root = message_merkle_tree.root().unwrap();
 
         // Step 4: Initialize payload verification session
@@ -259,7 +260,7 @@ impl RelayerDiscoveryTestFixture {
                                     relayer_transaction =
                                         RelayerTransaction::deserialize(&mut buffer.as_slice())?;
                                 }
-                                _ => {
+                                ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
                                     return Err(
                                         RelayerDiscoveryFixtureError::DiscoveryInstructionFailed(
                                             instruction,
@@ -298,7 +299,8 @@ impl RelayerDiscoveryTestFixture {
                                 relayer_discovery.add_payer(account.0, amount);
                                 accounts.push(account);
                             }
-                            _ => {
+                            ConvertError::FailedMessageSerialization
+                            | ConvertError::FailedPayloadSerialization => {
                                 return Err(error.into());
                             }
                         },
@@ -314,28 +316,26 @@ impl RelayerDiscoveryTestFixture {
                     match instructions {
                         Ok(instructions) => {
                             // Add all accounts that are potentially empty.
-                            instructions.iter().for_each(|instruction| {
-                                instruction.accounts.iter().for_each(|account| {
-                                    if accounts
+                            for instruction in instructions.iter() {
+                                for account in instruction.accounts.iter() {
+                                    if !accounts
                                         .iter()
-                                        .find(|(existing, _)| existing == &account.pubkey)
-                                        .is_none()
+                                        .any(|(existing, _)| existing == &account.pubkey)
+                                        && !account.is_signer
                                     {
-                                        if !account.is_signer {
-                                            accounts.push((
-                                                account.pubkey,
-                                                Account {
-                                                    lamports: 0,
-                                                    data: vec![],
-                                                    owner: SYSTEM_PROGRAM_ID,
-                                                    executable: false,
-                                                    rent_epoch: 0,
-                                                },
-                                            ));
-                                        }
+                                        accounts.push((
+                                            account.pubkey,
+                                            Account {
+                                                lamports: 0,
+                                                data: vec![],
+                                                owner: SYSTEM_PROGRAM_ID,
+                                                executable: false,
+                                                rent_epoch: 0,
+                                            },
+                                        ));
                                     }
-                                })
-                            });
+                                }
+                            };
 
                             let instructions_with_checks: Vec<(&Instruction, &[Check])> =
                                 match &checks {
@@ -364,7 +364,7 @@ impl RelayerDiscoveryTestFixture {
                                 ProgramResult::Success => {
                                     return Ok(result);
                                 }
-                                _ => {
+                                ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
                                     return Err(RelayerDiscoveryFixtureError::ExecuteFailed(
                                         instructions,
                                         accounts,
@@ -402,7 +402,8 @@ impl RelayerDiscoveryTestFixture {
                                 relayer_discovery.add_payer(account.0, amount);
                                 accounts.push(account);
                             }
-                            _ => {
+                            ConvertError::FailedMessageSerialization
+                            | ConvertError::FailedPayloadSerialization => {
                                 return Err(error.into());
                             }
                         },
@@ -478,5 +479,11 @@ impl RelayerDiscoveryTestFixture {
         mut accounts: Vec<(Pubkey, Account)>,
     ) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
         self.approve_and_execute_with_checks(message, payload, accounts, None)
+    }
+}
+
+impl Default for RelayerDiscoveryTestFixture {
+    fn default() -> Self {
+        RelayerDiscoveryTestFixture::new()
     }
 }

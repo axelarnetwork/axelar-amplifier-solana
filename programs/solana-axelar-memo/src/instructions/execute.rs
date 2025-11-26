@@ -34,7 +34,7 @@ pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>
 }
 
 #[inline]
-fn log_memo(memo: &str) {
+pub fn log_memo(memo: &str) {
     // If memo is longer than 10 characters, log just the first character.
     let char_count = memo.chars().count();
     if char_count > 10 {

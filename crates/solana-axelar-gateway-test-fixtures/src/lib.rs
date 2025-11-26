@@ -7,7 +7,6 @@ use anchor_lang::{
     prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
     ToAccountMetas,
 };
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::seed_prefixes::{
@@ -15,11 +14,15 @@ use solana_axelar_gateway::seed_prefixes::{
 };
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    MerklizedMessage, PublicKey, ID as GATEWAY_PROGRAM_ID, U256,
+    ID as GATEWAY_PROGRAM_ID,
 };
-use solana_axelar_gateway::{
-    CrossChainId, IncomingMessage, Message, MessageLeaf, SigningVerifierSetInfo, VerifierSetLeaf,
+use solana_axelar_gateway::{IncomingMessage, Message};
+use solana_axelar_std::hasher::LeafHash;
+use solana_axelar_std::{
+    CrossChainId, MerklizedMessage, MessageLeaf, Signature, SigningVerifierSetInfo,
+    VerifierSetLeaf, U256,
 };
+use solana_axelar_std::{MerkleTree, PublicKey};
 use solana_sdk::{
     account::Account,
     instruction::{AccountMeta, Instruction},
@@ -136,7 +139,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
 pub fn setup_test_with_real_signers() -> (
     TestSetup,
     Vec<VerifierSetLeaf>,
-    MerkleTree<SolanaSyscallHasher>,
+    MerkleTree,
     SecretKey,
     SecretKey,
 ) {
@@ -160,34 +163,32 @@ pub fn setup_test_with_real_signers() -> (
 
     // Step 2: Create verifier set with your 2 real signers
     let quorum_threshold = 100;
+
     let verifier_leaves = vec![
-        VerifierSetLeaf::new(
-            0,
-            quorum_threshold,
-            PublicKey::Secp256k1(compressed_pubkey_1),
-            50,
-            0,
-            2,
+        VerifierSetLeaf {
+            nonce: 0,
+            quorum: quorum_threshold,
+            signer_pubkey: PublicKey(compressed_pubkey_1),
+            signer_weight: 50,
+            position: 0,
+            set_size: 2,
             domain_separator,
-        ),
-        VerifierSetLeaf::new(
-            0,
-            quorum_threshold,
-            PublicKey::Secp256k1(compressed_pubkey_2),
-            50,
-            1,
-            2,
+        },
+        VerifierSetLeaf {
+            nonce: 0,
+            quorum: quorum_threshold,
+            signer_pubkey: PublicKey(compressed_pubkey_2),
+            signer_weight: 50,
+            position: 1,
+            set_size: 2,
             domain_separator,
-        ),
+        },
     ];
 
     // Step 3: Calculate the REAL verifier set hash
-    let verifier_leaf_hashes: Vec<[u8; 32]> = verifier_leaves
-        .iter()
-        .map(solana_axelar_gateway::VerifierSetLeaf::hash)
-        .collect();
-    let verifier_merkle_tree =
-        MerkleTree::<SolanaSyscallHasher>::from_leaves(&verifier_leaf_hashes);
+    let verifier_leaf_hashes: Vec<[u8; 32]> =
+        verifier_leaves.iter().map(VerifierSetLeaf::hash).collect();
+    let verifier_merkle_tree = MerkleTree::from_leaves(&verifier_leaf_hashes);
     let verifier_set_hash = verifier_merkle_tree.root().unwrap();
 
     // Step 4: Derive PDAs with the REAL verifier set hash
@@ -554,7 +555,7 @@ pub fn create_verifier_info(
     payload_merkle_root: [u8; 32],
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
-    verifier_merkle_tree: &MerkleTree<SolanaSyscallHasher>,
+    verifier_merkle_tree: &MerkleTree,
 ) -> SigningVerifierSetInfo {
     let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
@@ -564,13 +565,18 @@ pub fn create_verifier_info(
     let message = libsecp256k1::Message::parse(&hashed_message);
     let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
     let mut signature_bytes = signature.serialize().to_vec();
-    signature_bytes.push(recovery_id.serialize() + 27);
+    signature_bytes.push(recovery_id.serialize());
     let signature_array: [u8; 65] = signature_bytes.try_into().unwrap();
+    let signature = Signature(signature_array);
 
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
 
-    SigningVerifierSetInfo::new(signature_array, *verifier_leaf, merkle_proof_bytes)
+    SigningVerifierSetInfo {
+        signature,
+        leaf: *verifier_leaf,
+        merkle_proof: merkle_proof_bytes,
+    }
 }
 
 pub fn call_contract_helper(
@@ -919,12 +925,7 @@ pub fn transfer_operatorship_helper(
 pub fn setup_message_merkle_tree(
     setup: &TestSetup,
     _verifier_set_merkle_root: [u8; 32],
-) -> (
-    Vec<Message>,
-    Vec<MessageLeaf>,
-    MerkleTree<SolanaSyscallHasher>,
-    [u8; 32],
-) {
+) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
     let messages = vec![
         create_test_message(
             "ethereum",
@@ -951,12 +952,9 @@ pub fn setup_message_merkle_tree(
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
-        .iter()
-        .map(solana_axelar_gateway::MessageLeaf::hash)
-        .collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
 
-    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
 
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 
@@ -970,7 +968,7 @@ pub fn setup_message_merkle_tree(
 
 pub fn approve_message_helper(
     setup: &TestSetup,
-    message_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    message_merkle_tree: MerkleTree,
     message_leaves: Vec<MessageLeaf>,
     messages: &[Message],
     payload_merkle_root: [u8; 32],
@@ -1104,7 +1102,7 @@ pub fn approve_messages_on_gateway(
     secret_key_1: &SecretKey,
     secret_key_2: &SecretKey,
     verifier_leaves: Vec<VerifierSetLeaf>,
-    verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    verifier_merkle_tree: MerkleTree,
 ) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
     let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
         setup_message_merkle_tree_from_messages(setup, messages);
@@ -1228,12 +1226,7 @@ pub fn approve_messages_on_gateway(
 pub fn setup_message_merkle_tree_from_messages(
     setup: &TestSetup,
     messages: Vec<Message>,
-) -> (
-    Vec<Message>,
-    Vec<MessageLeaf>,
-    MerkleTree<SolanaSyscallHasher>,
-    [u8; 32],
-) {
+) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
     let message_leaves: Vec<MessageLeaf> = messages
         .iter()
         .enumerate()
@@ -1245,12 +1238,9 @@ pub fn setup_message_merkle_tree_from_messages(
         })
         .collect();
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves
-        .iter()
-        .map(solana_axelar_gateway::MessageLeaf::hash)
-        .collect();
+    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
 
-    let message_merkle_tree = MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
 
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 

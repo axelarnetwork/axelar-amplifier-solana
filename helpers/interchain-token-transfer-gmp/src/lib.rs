@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
 pub use alloy_primitives;
+use alloy_primitives::U256;
 use alloy_sol_types::{sol, SolValue};
 
 /// The messages going through the Axelar Network between
@@ -127,12 +128,21 @@ sol! {
 
 }
 
+/// Converts a `u8` value to a `U256` by placing the value in the least significant limb
+/// (little-endian order) and zero-extending the rest. This is suitable for representing
+/// small message type IDs as `U256` values, as required by the message format.
+const fn u8_to_u256(x: u8) -> U256 {
+    U256::from_limbs([x as u64, 0, 0, 0])
+}
+
 impl InterchainTransfer {
     pub const MESSAGE_TYPE_ID: u8 = 0;
+    pub const MESSAGE_TYPE_ID_UINT: U256 = u8_to_u256(Self::MESSAGE_TYPE_ID);
 }
 
 impl DeployInterchainToken {
     pub const MESSAGE_TYPE_ID: u8 = 1;
+    pub const MESSAGE_TYPE_ID_UINT: U256 = u8_to_u256(Self::MESSAGE_TYPE_ID);
 }
 
 // Value 2 is the MESSAGE_TYPE_DEPLOY_TOKEN_MANAGER, which is now unsupported and therefore
@@ -140,18 +150,22 @@ impl DeployInterchainToken {
 
 impl SendToHub {
     pub const MESSAGE_TYPE_ID: u8 = 3;
+    pub const MESSAGE_TYPE_ID_UINT: U256 = u8_to_u256(Self::MESSAGE_TYPE_ID);
 }
 
 impl ReceiveFromHub {
     pub const MESSAGE_TYPE_ID: u8 = 4;
+    pub const MESSAGE_TYPE_ID_UINT: U256 = u8_to_u256(Self::MESSAGE_TYPE_ID);
 }
 
 impl LinkToken {
     pub const MESSAGE_TYPE_ID: u8 = 5;
+    pub const MESSAGE_TYPE_ID_UINT: U256 = u8_to_u256(Self::MESSAGE_TYPE_ID);
 }
 
 impl RegisterTokenMetadata {
     pub const MESSAGE_TYPE_ID: u8 = 6;
+    pub const MESSAGE_TYPE_ID_UINT: U256 = u8_to_u256(Self::MESSAGE_TYPE_ID);
 }
 
 impl GMPPayload {
