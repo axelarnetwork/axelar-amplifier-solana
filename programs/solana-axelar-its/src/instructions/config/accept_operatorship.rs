@@ -70,7 +70,7 @@ pub struct AcceptOperatorship<'info> {
         bump = proposal_account.bump,
         constraint = proposal_account.roles.contains(Roles::OPERATOR)
             @ RolesError::ProposalMissingOperatorRole,
-        // Note: should the balance be sent to payer or origin_user_account?
+        // Return balance to origin user (proposer)
         close = origin_user_account,
     )]
     pub proposal_account: Account<'info, RoleProposal>,
