@@ -13,35 +13,10 @@ jobs:
     runs-on: blacksmith-8vcpu-ubuntu-2204
 
     steps:
-      - name: Check if a branch is whitelisted and maintained
-        id: branch-check
-        run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          WHITELISTED_BRANCHES=("main" "releases/*")
-
-          IS_WHITELISTED=false
-          # Check the branch against the whitelist using wildcard matching
-          for BRANCH in "${WHITELISTED_BRANCHES[@]}"; do
-            if [[ "$BRANCH_NAME" == $BRANCH ]]; then
-              IS_WHITELISTED=true;
-              break;
-            fi
-          done
-
-          if [ "$IS_WHITELISTED" == true ]; then
-            echo "Branch is whitelisted: $BRANCH_NAME"
-          else
-            echo "Branch $BRANCH_NAME is not whitelisted."
-            exit 1
-          fi
-
-          echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ steps.branch-check.outputs.branch_name }}
           token: ${{ secrets.PAT_TOKEN }}
 
       - name: Run release-plz
