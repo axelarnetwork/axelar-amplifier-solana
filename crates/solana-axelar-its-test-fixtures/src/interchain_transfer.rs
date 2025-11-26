@@ -61,7 +61,7 @@ pub fn perform_interchain_transfer(
     checks: Vec<Check>,
 ) -> (InstructionResult, Mollusk) {
     let program_id = solana_axelar_its::ID;
-    let (signing_pda, _) =
+    let (call_contract_signing_pda, _) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &solana_axelar_its::ID);
 
     let (gas_event_authority, _, _) =
@@ -89,7 +89,7 @@ pub fn perform_interchain_transfer(
         gas_service: solana_axelar_gas_service::ID,
         gas_event_authority,
         system_program: solana_sdk::system_program::ID,
-        signing_pda,
+        call_contract_signing_pda,
         event_authority: its_event_authority,
         program: program_id,
     };
@@ -152,7 +152,7 @@ pub fn perform_interchain_transfer(
         ),
         keyed_account_for_system_program(),
         (
-            signing_pda,
+            call_contract_signing_pda,
             Account::new(0, 0, &solana_sdk::system_program::ID),
         ),
         (program_id, its_program_account.clone()),

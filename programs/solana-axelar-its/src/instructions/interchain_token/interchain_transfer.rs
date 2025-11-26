@@ -54,7 +54,7 @@ pub struct InterchainTransfer<'info> {
     pub gateway_program: Program<'info, SolanaAxelarGateway>,
 
     /// CHECK: signing PDA checked by gateway program
-    pub signing_pda: UncheckedAccount<'info>,
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     //
     // Gas Service
@@ -136,7 +136,7 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
             gateway_program: self.gateway_program.to_account_info(),
             gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
-            call_contract_signing_pda: self.signing_pda.to_account_info(),
+            call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
             its_program: self.program.to_account_info(),
             its_hub_address: self.its_root_pda.its_hub_address.clone(),
             gas_service: self.gas_service.to_account_info(),
@@ -429,7 +429,7 @@ pub fn make_interchain_transfer_instruction(
 
     let gateway_root_pda = solana_axelar_gateway::GatewayConfig::find_pda().0;
 
-    let (signing_pda, _) = Pubkey::find_program_address(
+    let (call_contract_signing_pda, _) = Pubkey::find_program_address(
         &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
         &crate::ID,
     );
@@ -453,7 +453,7 @@ pub fn make_interchain_transfer_instruction(
         gateway_root_pda,
         gateway_event_authority,
         gateway_program: solana_axelar_gateway::ID,
-        signing_pda,
+        call_contract_signing_pda,
         gas_treasury,
         gas_service: solana_axelar_gas_service::ID,
         gas_event_authority,
