@@ -9,7 +9,6 @@ edition.workspace = true
 
 [dependencies]
 anchor-lang.workspace = true
-solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"] }
 solana-axelar-std.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true

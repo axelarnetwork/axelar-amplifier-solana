@@ -105,7 +105,7 @@ fn test_execute() {
         source_address: "0x1234567890123456789012345678901234567890".to_string(),
         destination_chain: "solana".to_string(),
         destination_address: solana_axelar_memo_discoverable::id().to_string(), // This is crucial!
-        payload_hash: payload_hash,
+        payload_hash,
     };
 
     let result = fixture.approve_and_execute(

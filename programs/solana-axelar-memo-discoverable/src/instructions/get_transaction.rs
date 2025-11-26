@@ -28,7 +28,7 @@ pub fn get_transaction_handler(
                 relayer_discovery::executable_relayer_accounts(&command_id, &crate::id()),
                 // Followed by the accounts needed to modify storage of the executable.
                 vec![
-                    RelayerAccount::Payer(1000000000),
+                    RelayerAccount::Payer(1_000_000_000),
                     RelayerAccount::Account {
                         pubkey: counter_pda,
                         is_writable: true,

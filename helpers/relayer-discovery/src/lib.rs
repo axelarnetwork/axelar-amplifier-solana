@@ -80,7 +80,7 @@ pub enum ConvertedTransaction {
 impl RelayerDiscovery {
     /// Converts a `RelayerAccount` into an `AccountMeta` instance. Can return a `ConvertError` error if the relayer needs to upload the payload to a pda/add a payer.
     pub fn convert_account(
-        self: &Self,
+        &self,
         account: &RelayerAccount,
         used_payers: &mut Vec<usize>,
     ) -> Result<AccountMeta, ConvertError> {
@@ -120,7 +120,7 @@ impl RelayerDiscovery {
     }
 
     /// Converts a `RelayerData` struct into `Vec<u8>`. Can return `ConvertError` if serialization of `Message` fails.
-    pub fn convert_data(self: &Self, data: &RelayerData) -> Result<Vec<u8>, ConvertError> {
+    pub fn convert_data(&self, data: &RelayerData) -> Result<Vec<u8>, ConvertError> {
         match data {
             RelayerData::Bytes(bytes) => Ok(bytes.clone()),
             RelayerData::Message => {
@@ -144,7 +144,7 @@ impl RelayerDiscovery {
 
     /// Converts a whole `RelayerInstruction` to an `Instruction`. Can return a `ConvertError` in cases outlined in `convert_account` and `convert_data`.
     pub fn convert_instruction(
-        self: &Self,
+        &self,
         instruction: &RelayerInstruction,
     ) -> Result<Instruction, ConvertError> {
         let mut used_payers = vec![];
@@ -169,7 +169,7 @@ impl RelayerDiscovery {
 
     /// Converts a `RelayerTransaction` into a `ConvertedTransaction` that can be used to make RPC calls.
     pub fn convert_transaction(
-        self: &Self,
+        &self,
         transaction: &RelayerTransaction,
     ) -> Result<ConvertedTransaction, ConvertError> {
         match transaction {
@@ -223,8 +223,8 @@ pub fn executable_relayer_accounts(
     command_id: &[u8; 32],
     destination_address: &Pubkey,
 ) -> Vec<RelayerAccount> {
-    let incoming_message = IncomingMessage::find_pda(&command_id).0;
-    let signing_pda = IncomingMessage::find_signing_pda(&command_id, destination_address).0;
+    let incoming_message = IncomingMessage::find_pda(command_id).0;
+    let signing_pda = IncomingMessage::find_signing_pda(command_id, destination_address).0;
     let gateway_root_pda = GatewayConfig::find_pda().0;
     let event_authority =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID).0;

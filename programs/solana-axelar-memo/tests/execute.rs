@@ -1,7 +1,11 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+<<<<<<< HEAD
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
+=======
+use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+>>>>>>> cd7b9a92 (fix check)
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ValidateMessageSigner;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -14,9 +18,14 @@ use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_axelar_std::{CrossChainId, Message, Messages, Payload, PayloadType};
 use solana_sdk::{
+<<<<<<< HEAD
     account::Account,
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
+=======
+    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
+    system_program::ID as SYSTEM_PROGRAM_ID,
+>>>>>>> cd7b9a92 (fix check)
 };
 use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
