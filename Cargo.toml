@@ -206,6 +206,7 @@ program-utils = { version = "0.1.2", path = "helpers/program-utils", default-fea
 solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
 solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
 solana-axelar-its-test-fixtures = { path = "crates/solana-axelar-its-test-fixtures", default-features = false }
+relayer-discovery-test-fixtures = { path = "crates/relayer-discovery-test-fixtures"}
 evm-contracts-rs = { path = "helpers/evm-contracts-rs" }
 evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 mollusk-harness = { path = "helpers/mollusk-harness" }

@@ -5537,15 +5537,15 @@ dependencies = [
 
 [[package]]
 name = "relayer-discovery-test-fixtures"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "anchor-lang",
- "axelar-solana-encoding",
  "libsecp256k1",
  "mollusk-svm 0.5.1",
  "relayer-discovery",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-std",
  "solana-sdk",
  "thiserror 1.0.69",
 ]
@@ -6706,10 +6706,9 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-memo-discoverable"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "anchor-lang",
- "axelar-solana-encoding",
  "bincode",
  "hex",
  "mollusk-svm 0.5.1",
