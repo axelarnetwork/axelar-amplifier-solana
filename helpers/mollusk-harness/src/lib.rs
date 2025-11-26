@@ -20,6 +20,7 @@ use solana_axelar_its::{
     instructions::{
         execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
         make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
+        make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -83,6 +84,25 @@ pub trait TestHarness {
             &token_mint,
             &anchor_spl::token_2022::spl_token_2022::ID,
         )
+    }
+
+    /// For when we manually need to check rent exemption.
+    fn is_rent_exempt(&self, address: &Pubkey) -> bool {
+        let account = self
+            .get_account(address)
+            .expect("account must exist to check rent exemption");
+        self.ctx()
+            .mollusk
+            .sysvars
+            .rent
+            .is_exempt(account.lamports, account.data.len())
+    }
+
+    fn assert_rent_exempt(&self, address: &Pubkey) {
+        assert!(
+            self.is_rent_exempt(address),
+            "account {address} is not rent exempt",
+        );
     }
 
     fn get_ata_2022_data(
@@ -273,6 +293,11 @@ impl ItsTestHarness {
         harness.ensure_sysvar_instructions_account();
 
         harness
+    }
+
+    pub fn get_its_root(&self) -> InterchainTokenService {
+        self.get_account_as(&self.its_root)
+            .expect("ITS root account should exist")
     }
 
     pub fn ensure_operators_initialized(&self) {
@@ -718,49 +743,52 @@ impl ItsTestHarness {
     }
 
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
-        self.ensure_its_initialized();
+        let ix =
+            make_set_trusted_chain_instruction(self.operator, trusted_chain_name.to_owned(), false)
+                .0;
 
-        let program_data = self.ensure_program_data_account(
-            "solana_axelar_its",
-            &solana_axelar_its::ID,
-            self.operator,
+        self.ctx.process_and_validate_instruction(
+            &ix,
+            &[
+                Check::success(),
+                Check::account(&self.its_root).rent_exempt().build(),
+            ],
         );
 
-        let (event_authority, _, _) =
-            get_event_authority_and_program_accounts(&solana_axelar_its::ID);
-
-        let ix = Instruction {
-            program_id: solana_axelar_its::ID,
-            accounts: solana_axelar_its::accounts::SetTrustedChain {
-                payer: self.operator,
-                program_data: Some(program_data),
-                user_roles: None,
-                its_root_pda: self.its_root,
-                system_program: solana_sdk_ids::system_program::ID,
-                // Event authority
-                event_authority,
-                // The current program account
-                program: solana_axelar_its::ID,
-            }
-            .to_account_metas(None),
-            data: solana_axelar_its::instruction::SetTrustedChain {
-                chain_name: trusted_chain_name.to_owned(),
-            }
-            .data(),
-        };
-
-        self.ctx
-            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
-
-        let its: solana_axelar_its::InterchainTokenService = self
-            .get_account_as(&self.its_root)
-            .expect("ITS root account should exist");
+        let its = self.get_its_root();
 
         assert_eq!(its.trusted_chains.len(), 1, "must have one trusted chain");
         assert!(
             its.trusted_chains.iter().any(|x| x == trusted_chain_name),
             "must have the trusted chain added"
         );
+    }
+
+    pub fn ensure_transfer_operatorship(&mut self, new_operator: Pubkey) {
+        let ix = solana_axelar_its::instructions::make_transfer_operatorship_instruction(
+            self.payer,
+            self.operator,
+            new_operator,
+        )
+        .0;
+
+        self.ctx
+            .process_and_validate_instruction(&ix, &[Check::success()]);
+
+        let new_operator_account =
+            solana_axelar_its::UserRoles::find_pda(&self.its_root, &new_operator).0;
+
+        let its_roles: solana_axelar_its::UserRoles = self
+            .get_account_as(&new_operator_account)
+            .expect("new operator roles account should exist");
+
+        assert!(
+            its_roles.has_operator_role(),
+            "new operator must have operator role"
+        );
+
+        // Update operator
+        self.operator = new_operator;
     }
 
     pub fn ensure_deploy_local_interchain_token(

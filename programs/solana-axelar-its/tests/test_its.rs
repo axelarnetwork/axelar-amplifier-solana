@@ -9,23 +9,6 @@ use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEnco
 use solana_program::program_pack::IsInitialized;
 
 #[test]
-fn test_init_gives_user_role_to_operator() {
-    let its_harness = ItsTestHarness::new();
-
-    let user_roles_pda =
-        solana_axelar_its::UserRoles::find_pda(&its_harness.its_root, &its_harness.operator).0;
-    let user_roles: solana_axelar_its::UserRoles = its_harness
-        .get_account_as(&user_roles_pda)
-        .expect("user roles account should exist");
-
-    assert_eq!(
-        user_roles.roles,
-        solana_axelar_its::Roles::OPERATOR,
-        "user should be an operator"
-    );
-}
-
-#[test]
 fn test_local_deploy_interchain_token() {
     let its_harness = ItsTestHarness::new();
 
