@@ -95,14 +95,8 @@ pub fn send_interchain_transfer_handler(
         system_program: ctx.accounts.system_program.to_account_info(),
     };
 
-    let (_transfer_signing_pda, transfer_signing_pda_bump) = Pubkey::find_program_address(
-        &[solana_axelar_its::seed_prefixes::INTERCHAIN_TRANSFER_SEED],
-        &crate::ID,
-    );
-    let signer_seeds = &[
-        solana_axelar_its::seed_prefixes::INTERCHAIN_TRANSFER_SEED,
-        &[transfer_signing_pda_bump],
-    ];
+    let signer_seeds = &[Counter::SEED_PREFIX, &[ctx.accounts.counter.bump]];
+    let signer_seeds_arg: Vec<Vec<u8>> = signer_seeds.iter().map(|seed| seed.to_vec()).collect();
     let signer_seeds = &[&signer_seeds[..]];
 
     let cpi_ctx = CpiContext::new_with_signer(
@@ -119,7 +113,7 @@ pub fn send_interchain_transfer_handler(
         amount,
         gas_value,
         Some(crate::ID),
-        Some(transfer_signing_pda_bump),
+        Some(signer_seeds_arg),
         None,
     )?;
 

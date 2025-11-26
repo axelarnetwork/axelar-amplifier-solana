@@ -101,7 +101,7 @@ pub fn perform_interchain_transfer(
         amount: transfer_amount,
         gas_value,
         source_id: None,
-        pda_bump: None,
+        pda_seeds: None,
         data: None,
     };
 
