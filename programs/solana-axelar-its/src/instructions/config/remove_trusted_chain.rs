@@ -77,8 +77,6 @@ pub fn make_remove_trusted_chain_instruction(
     chain_name: String,
     use_operator_role: bool,
 ) -> (Instruction, crate::accounts::RemoveTrustedChain) {
-    use anchor_lang::solana_program::instruction::Instruction;
-
     let its_root_pda = InterchainTokenService::find_pda().0;
 
     let user_roles = use_operator_role.then(|| UserRoles::find_pda(&its_root_pda, &payer).0);
