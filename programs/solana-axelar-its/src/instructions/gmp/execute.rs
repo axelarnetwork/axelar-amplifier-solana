@@ -1,9 +1,7 @@
 use crate::{errors::ItsError, state::InterchainTokenService, InterchainTransferExecute};
 use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
 use interchain_token_transfer_gmp::GMPPayload;
-use solana_axelar_gateway::{
-    Message, executable::validate_message_raw, executable_accounts
-};
+use solana_axelar_gateway::{executable::validate_message_raw, executable_accounts, Message};
 use solana_program::instruction::AccountMeta;
 use solana_program::instruction::Instruction;
 
@@ -66,7 +64,11 @@ pub fn execute_handler<'info>(
         return err!(ItsError::InvalidInstructionData);
     };
     // Validate the GMP message
-    validate_message_raw(&(&ctx.accounts.executable).into(), message.clone(), &payload)?;
+    validate_message_raw(
+        &(&ctx.accounts.executable).into(),
+        message.clone(),
+        &payload,
+    )?;
 
     if !ctx
         .accounts

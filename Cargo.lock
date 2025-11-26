@@ -6716,6 +6716,7 @@ dependencies = [
  "relayer-discovery-test-fixtures",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-std",
  "solana-program",
  "solana-sdk",
 ]

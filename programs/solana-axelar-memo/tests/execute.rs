@@ -302,7 +302,7 @@ fn test_execute() {
     let execute_result = setup
         .mollusk
         .process_instruction(&execute_instruction, &execute_accounts);
-    
+
     assert!(
         !execute_result.program_result.is_err(),
         "Execute instruction should succeed: {:?}",
