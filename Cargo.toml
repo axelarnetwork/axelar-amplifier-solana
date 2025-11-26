@@ -198,9 +198,12 @@ solana-axelar-std = { version = "0.1.5", path = "crates/solana-axelar-std" }
 governance-gmp = { path = "helpers/governance-gmp" }
 
 # helper crates (not published - dev-dependencies only)
-solana-axelar-gateway-test-fixtures = { path = "helpers/solana-axelar-gateway-test-fixtures", default-features = false }
-solana-axelar-governance-test-fixtures = { path = "helpers/solana-axelar-governance-test-fixtures", default-features = false }
-solana-axelar-its-test-fixtures = { path = "helpers/solana-axelar-its-test-fixtures", default-features = false }
+solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
+solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
+solana-axelar-its-test-fixtures = { path = "crates/solana-axelar-its-test-fixtures", default-features = false }
+relayer-discovery-test-fixtures = { path = "crates/relayer-discovery-test-fixtures"}
+evm-contracts-rs = { path = "helpers/evm-contracts-rs" }
+evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 mollusk-harness = { path = "helpers/mollusk-harness" }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 # helper crates
@@ -209,14 +212,11 @@ axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 axelar-solana-gateway-test-fixtures = { path = "crates/axelar-solana-gateway-test-fixtures", default-features = false }
 axelar-solana-gateway-v2-test-fixtures = { path = "crates/axelar-solana-gateway-v2-test-fixtures", default-features = false }
 axelar-solana-governance-v2-test-fixtures = { path = "crates/axelar-solana-governance-v2-test-fixtures", default-features = false }
-relayer-discovery-test-fixtures = { path = "crates/relayer-discovery-test-fixtures", default-features = false }
 event-cpi = { path = "helpers/event-cpi" }
 event-cpi-macros = { path = "helpers/event-cpi-macros" }
 anchor-discriminators = { path = "helpers/anchor-discriminators" }
 anchor-discriminators-macros = { path = "helpers/anchor-discriminators-macros" }
 event-cpi-test-utils = { path = "helpers/event-cpi-test-utils" }
-evm-contracts-rs = { path = "helpers/evm-contracts-rs" }
-evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 interchain-token-transfer-gmp = { path = "helpers/interchain-token-transfer-gmp" }
 its-instruction-builder = { path = "helpers/its-instruction-builder", default-features = false }
 program-utils = { path = "helpers/program-utils", default-features = false }

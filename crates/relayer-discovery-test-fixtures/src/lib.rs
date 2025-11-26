@@ -3,7 +3,7 @@
 use anchor_lang::prelude::thiserror;
 use anchor_lang::{AnchorDeserialize, Key};
 
-use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
+use axelar_solana_std::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 
 use libsecp256k1::SecretKey;
 use mollusk_svm::result::InstructionResult;
