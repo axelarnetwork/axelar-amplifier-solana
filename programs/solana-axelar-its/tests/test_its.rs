@@ -70,6 +70,50 @@ fn test_user_interchain_transfer() {
     );
 }
 
+#[test]
+fn test_cpi_interchain_transfer() {
+    let mut its_harness = ItsTestHarness::new();
+    its_harness.ensure_memo_program_initialized();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    let token_mint = its_harness.token_mint_for_id(token_id);
+
+    let mint_amount = 500_000u64;
+    let sender = solana_axelar_memo::Counter::get_pda().0;
+    let sender_ata = its_harness
+        .get_or_create_ata_2022_account(its_harness.payer, sender, token_mint)
+        .0;
+
+    its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, sender_ata);
+
+    let transfer_amount = 300_000u64;
+    let destination_chain = "ethereum";
+    let destination_address = b"ethereum_address_456".to_vec();
+    let gas_value = 10_000u64;
+    // CPI info
+    let caller_program_id = solana_axelar_memo::ID;
+    let caller_pda_seeds = solana_axelar_memo::Counter::pda_seeds()
+        .iter()
+        .map(|s| s.to_vec())
+        .collect::<Vec<Vec<u8>>>();
+
+    its_harness.ensure_trusted_chain(destination_chain);
+
+    its_harness.ensure_outgoing_interchain_transfer(
+        token_id,
+        transfer_amount,
+        token_2022::ID,
+        its_harness.payer,
+        sender,
+        destination_chain.to_owned(),
+        destination_address,
+        gas_value,
+        Some(caller_program_id),
+        Some(caller_pda_seeds),
+        None,
+    );
+}
+
 // Inbound transfers
 
 #[test]

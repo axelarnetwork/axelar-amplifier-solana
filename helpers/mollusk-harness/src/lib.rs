@@ -938,7 +938,7 @@ impl ItsTestHarness {
     }
 
     // TODO support token with fees
-    pub fn ensure_outgoing_user_interchain_transfer(
+    pub fn ensure_outgoing_interchain_transfer(
         &self,
         token_id: [u8; 32],
         amount: u64,
@@ -948,6 +948,9 @@ impl ItsTestHarness {
         destination_chain: String,
         destination_address: Vec<u8>,
         gas_value: u64,
+        caller_program_id: Option<Pubkey>,
+        caller_pda_seeds: Option<Vec<Vec<u8>>>,
+        data: Option<Vec<u8>>,
     ) {
         let token_mint = self.token_mint_for_id(token_id);
 
@@ -971,9 +974,9 @@ impl ItsTestHarness {
             destination_chain.clone(),
             destination_address,
             gas_value,
-            None,
-            None,
-            None,
+            caller_program_id,
+            caller_pda_seeds,
+            data,
         );
 
         self.ctx
@@ -993,6 +996,13 @@ impl ItsTestHarness {
             "authority ata balance should decrease by transfer amount"
         );
 
+        if let Some(caller_program_id) = caller_program_id {
+            msg!(
+                "Interchain transfer called by program {}",
+                caller_program_id,
+            );
+        }
+
         msg!(
 			"Interchain transfer of {} tokens of ID {} from {} to destination chain '{}' initiated. Balance: {} -> {}",
 			amount,
@@ -1004,6 +1014,32 @@ impl ItsTestHarness {
 		);
 
         // TODO check event emission
+    }
+
+    pub fn ensure_outgoing_user_interchain_transfer(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        token_program: Pubkey,
+        payer: Pubkey,
+        authority: Pubkey,
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        gas_value: u64,
+    ) {
+        self.ensure_outgoing_interchain_transfer(
+            token_id,
+            amount,
+            token_program,
+            payer,
+            authority,
+            destination_chain,
+            destination_address,
+            gas_value,
+            None,
+            None,
+            None,
+        );
     }
 
     pub fn execute_gmp(

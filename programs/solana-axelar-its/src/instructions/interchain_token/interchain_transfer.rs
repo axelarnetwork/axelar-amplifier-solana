@@ -475,8 +475,8 @@ pub fn make_interchain_transfer_instruction(
                 destination_address,
                 amount,
                 gas_value,
-                source_id: caller_program_id,
-                pda_seeds: caller_pda_seeds,
+                caller_program_id,
+                caller_pda_seeds,
                 data,
             }
             .data(),

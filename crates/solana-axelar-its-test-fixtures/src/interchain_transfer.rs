@@ -100,8 +100,8 @@ pub fn perform_interchain_transfer(
         destination_address: destination_address.clone(),
         amount: transfer_amount,
         gas_value,
-        source_id: None,
-        pda_seeds: None,
+        caller_program_id: None,
+        caller_pda_seeds: None,
         data: None,
     };
 
