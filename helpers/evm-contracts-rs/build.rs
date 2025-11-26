@@ -94,7 +94,7 @@ fn main() {
 
     for (contract_name, path) in contracts {
         let mut output = output_dir.clone();
-        output.push(format!("{}.rs", contract_name));
+        output.push(format!("{contract_name}.rs"));
 
         Abigen::new(contract_name, path)
             .unwrap()

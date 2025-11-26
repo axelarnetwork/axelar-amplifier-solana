@@ -238,8 +238,8 @@ pub fn process_inbound_deploy(
     Ok(())
 }
 
-fn mint_initial_supply<'info>(
-    accounts: &ExecuteDeployInterchainToken<'info>,
+fn mint_initial_supply(
+    accounts: &ExecuteDeployInterchainToken<'_>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
@@ -273,8 +273,8 @@ fn mint_initial_supply<'info>(
     Ok(())
 }
 
-fn create_token_metadata<'info>(
-    accounts: &ExecuteDeployInterchainToken<'info>,
+fn create_token_metadata(
+    accounts: &ExecuteDeployInterchainToken<'_>,
     name: &str,
     symbol: &str,
     token_id: [u8; 32],

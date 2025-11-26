@@ -1,0 +1,94 @@
+name: Publish Missing Packages
+
+# One-off workflow to publish packages that weren't released due to dependency ordering issues.
+# The correct order is: its -> memo -> governance (based on their dependency chain)
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_its:
+        description: 'Publish solana-axelar-its'
+        required: true
+        default: true
+        type: boolean
+      publish_memo:
+        description: 'Publish solana-axelar-memo'
+        required: true
+        default: true
+        type: boolean
+      publish_governance:
+        description: 'Publish solana-axelar-governance'
+        required: true
+        default: true
+        type: boolean
+      dry_run:
+        description: 'Dry run (do not actually publish)'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-release (for dry-run check)
+        if: ${{ inputs.dry_run }}
+        run: cargo install cargo-release
+
+      # Step 1: Publish solana-axelar-its
+      - name: Publish solana-axelar-its (dry-run)
+        if: ${{ inputs.publish_its && inputs.dry_run }}
+        run: cargo publish -p solana-axelar-its --dry-run
+
+      - name: Publish solana-axelar-its
+        if: ${{ inputs.publish_its && !inputs.dry_run }}
+        run: cargo publish -p solana-axelar-its --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for its to be indexed on crates.io
+        if: ${{ inputs.publish_its && !inputs.dry_run }}
+        run: |
+          echo "Waiting 60 seconds for crates.io to index solana-axelar-its..."
+          sleep 60
+
+      # Step 2: Publish solana-axelar-memo (depends on its)
+      - name: Publish solana-axelar-memo (dry-run)
+        if: ${{ inputs.publish_memo && inputs.dry_run }}
+        run: cargo publish -p solana-axelar-memo --dry-run
+
+      - name: Publish solana-axelar-memo
+        if: ${{ inputs.publish_memo && !inputs.dry_run }}
+        run: cargo publish -p solana-axelar-memo --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for memo to be indexed on crates.io
+        if: ${{ inputs.publish_memo && !inputs.dry_run }}
+        run: |
+          echo "Waiting 60 seconds for crates.io to index solana-axelar-memo..."
+          sleep 60
+
+      # Step 3: Publish solana-axelar-governance (dev-depends on memo)
+      - name: Publish solana-axelar-governance (dry-run)
+        if: ${{ inputs.publish_governance && inputs.dry_run }}
+        run: cargo publish -p solana-axelar-governance --dry-run
+
+      - name: Publish solana-axelar-governance
+        if: ${{ inputs.publish_governance && !inputs.dry_run }}
+        run: cargo publish -p solana-axelar-governance --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Publish Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Action |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| solana-axelar-its | ${{ inputs.publish_its && (inputs.dry_run && 'dry-run' || 'published') || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| solana-axelar-memo | ${{ inputs.publish_memo && (inputs.dry_run && 'dry-run' || 'published') || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| solana-axelar-governance | ${{ inputs.publish_governance && (inputs.dry_run && 'dry-run' || 'published') || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+

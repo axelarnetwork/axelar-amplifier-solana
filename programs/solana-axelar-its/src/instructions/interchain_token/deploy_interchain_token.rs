@@ -234,8 +234,8 @@ pub fn deploy_interchain_token_handler(
     Ok(token_id)
 }
 
-fn mint_initial_supply<'info>(
-    accounts: &DeployInterchainToken<'info>,
+fn mint_initial_supply(
+    accounts: &DeployInterchainToken<'_>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
@@ -269,8 +269,8 @@ fn mint_initial_supply<'info>(
     Ok(())
 }
 
-fn create_token_metadata<'info>(
-    accounts: &DeployInterchainToken<'info>,
+fn create_token_metadata(
+    accounts: &DeployInterchainToken<'_>,
     name: String,
     symbol: String,
     token_id: [u8; 32],
