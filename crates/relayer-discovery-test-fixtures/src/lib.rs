@@ -1,4 +1,6 @@
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::indexing_slicing)]
+#![allow(clippy::too_many_lines)]
 
 use anchor_lang::prelude::thiserror;
 use anchor_lang::{AnchorDeserialize, Key};
@@ -28,11 +30,11 @@ pub struct RelayerDiscoveryTestFixture {
     /// This has the mollusk aslongside a lot of information about the gateway
     pub setup: TestSetup,
     /// The rest of the information is required to approve massages to the gateway
-    verifier_leaves: Vec<VerifierSetLeaf>,
-    verifier_merkle_tree: MerkleTree,
-    secret_key_1: SecretKey,
-    secret_key_2: SecretKey,
-    init_result: InstructionResult,
+    pub verifier_leaves: Vec<VerifierSetLeaf>,
+    pub verifier_merkle_tree: MerkleTree,
+    pub secret_key_1: SecretKey,
+    pub secret_key_2: SecretKey,
+    pub init_result: InstructionResult,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -254,7 +256,7 @@ impl RelayerDiscoveryTestFixture {
                                     relayer_transaction =
                                         RelayerTransaction::deserialize(&mut buffer.as_slice())?;
                                 }
-                                _ => {
+                                ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
                                     return Err(
                                         RelayerDiscoveryFixtureError::DiscoveryInstructionFailed(
                                             instruction,
@@ -293,7 +295,8 @@ impl RelayerDiscoveryTestFixture {
                                 relayer_discovery.add_payer(account.0, amount);
                                 accounts.push(account);
                             }
-                            _ => {
+                            ConvertError::FailedMessageSerialization
+                            | ConvertError::FailedPayloadSerialization => {
                                 return Err(error.into());
                             }
                         },
@@ -309,28 +312,26 @@ impl RelayerDiscoveryTestFixture {
                     match instructions {
                         Ok(instructions) => {
                             // Add all accounts that are potentially empty.
-                            instructions.iter().for_each(|instruction| {
-                                instruction.accounts.iter().for_each(|account| {
+                            for instruction in instructions.iter() {
+                                for account in instruction.accounts.iter() {
                                     if accounts
                                         .iter()
-                                        .find(|(existing, _)| existing == &account.pubkey)
-                                        .is_none()
+                                        .any(|(existing, _)| existing == &account.pubkey)
+                                        && !account.is_signer
                                     {
-                                        if !account.is_signer {
-                                            accounts.push((
-                                                account.pubkey,
-                                                Account {
-                                                    lamports: 0,
-                                                    data: vec![],
-                                                    owner: SYSTEM_PROGRAM_ID,
-                                                    executable: false,
-                                                    rent_epoch: 0,
-                                                },
-                                            ));
-                                        }
+                                        accounts.push((
+                                            account.pubkey,
+                                            Account {
+                                                lamports: 0,
+                                                data: vec![],
+                                                owner: SYSTEM_PROGRAM_ID,
+                                                executable: false,
+                                                rent_epoch: 0,
+                                            },
+                                        ));
                                     }
-                                })
-                            });
+                                }
+                            }
                             let result = self
                                 .setup
                                 .mollusk
@@ -339,7 +340,7 @@ impl RelayerDiscoveryTestFixture {
                                 ProgramResult::Success => {
                                     return Ok(result);
                                 }
-                                _ => {
+                                ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
                                     return Err(RelayerDiscoveryFixtureError::ExecuteFailed(
                                         instructions,
                                         result.program_result,
@@ -376,7 +377,8 @@ impl RelayerDiscoveryTestFixture {
                                 relayer_discovery.add_payer(account.0, amount);
                                 accounts.push(account);
                             }
-                            _ => {
+                            ConvertError::FailedMessageSerialization
+                            | ConvertError::FailedPayloadSerialization => {
                                 return Err(error.into());
                             }
                         },
@@ -407,5 +409,11 @@ impl RelayerDiscoveryTestFixture {
         let mut approval_result = self.approve(message);
         accounts.append(&mut approval_result.resulting_accounts);
         self.execute(message, payload, accounts)
+    }
+}
+
+impl Default for RelayerDiscoveryTestFixture {
+    fn default() -> Self {
+        RelayerDiscoveryTestFixture::new()
     }
 }

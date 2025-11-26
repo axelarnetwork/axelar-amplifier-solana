@@ -15,6 +15,6 @@ impl Counter {
     pub const SEED_PREFIX: &'static [u8] = b"counter";
 
     pub fn get_pda(storage_id: u64) -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[Self::SEED_PREFIX, &storage_id.to_le_bytes()], &crate::ID)
+        Pubkey::find_program_address(&[Self::SEED_PREFIX, &storage_id.to_ne_bytes()], &crate::ID)
     }
 }

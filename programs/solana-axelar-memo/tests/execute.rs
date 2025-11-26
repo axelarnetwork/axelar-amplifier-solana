@@ -1,7 +1,6 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -16,9 +15,7 @@ use solana_axelar_std::MerkleTree;
 use solana_axelar_std::{hasher::LeafHash, CrossChainId, Message, MessageLeaf};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
-    account::Account,
-    instruction::{AccountMeta, Instruction},
-    native_token::LAMPORTS_PER_SOL,
+    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
     system_program::ID as SYSTEM_PROGRAM_ID,
 };
 

@@ -5527,7 +5527,6 @@ name = "relayer-discovery"
 version = "0.0.0"
 dependencies = [
  "anchor-lang",
- "program-utils",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-program",
@@ -5543,7 +5542,6 @@ dependencies = [
  "libsecp256k1",
  "mollusk-svm 0.5.1",
  "relayer-discovery",
- "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-std",
  "solana-sdk",
