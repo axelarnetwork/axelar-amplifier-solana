@@ -49,16 +49,16 @@ macro_rules! transaction_pda_accounts {
             // needs to be mutable as the validate_message CPI
             // updates its state
             #[account(
-                	init,
-                    seeds = [relayer_discovery::TRANSACTION_PDA_SEED],
-                    bump,
-                    payer = payer,
-                    space = {
-                        let mut bytes = Vec::with_capacity(256);
-                        $transaction().serialize(&mut bytes)?;
-                        bytes.len()
-                    }
-                )]
+                                        	init,
+                                            seeds = [relayer_discovery::TRANSACTION_PDA_SEED],
+                                            bump,
+                                            payer = payer,
+                                            space = {
+                                                let mut bytes = Vec::with_capacity(256);
+                                                $transaction().serialize(&mut bytes)?;
+                                                bytes.len()
+                                            }
+                                        )]
             pub relayer_transaction: AccountInfo<'info>,
 
             pub system_program: Program<'info, System>,

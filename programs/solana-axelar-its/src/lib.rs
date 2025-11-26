@@ -228,7 +228,14 @@ pub mod solana_axelar_its {
         message: solana_axelar_gateway::Message,
     ) -> Result<()> {
         instructions::execute_deploy_interchain_token_handler(
-            ctx, token_id, name, symbol, decimals, minter, source_chain, message
+            ctx,
+            token_id,
+            name,
+            symbol,
+            decimals,
+            minter,
+            source_chain,
+            message,
         )
     }
 
@@ -351,11 +358,17 @@ pub mod solana_axelar_its {
         instructions::mint_interchain_token_handler(ctx, amount)
     }
 
-    pub fn register_discovery_transaction(ctx: Context<RegisterDiscoveryTransaction>) -> Result<()> {
+    pub fn register_discovery_transaction(
+        ctx: Context<RegisterDiscoveryTransaction>,
+    ) -> Result<()> {
         instructions::register_discovery_transaction(ctx)
     }
 
-    pub fn get_transaction(ctx: Context<GetTransaction>, message: solana_axelar_gateway::Message, payload: Vec<u8>) -> Result<relayer_discovery::structs::RelayerTransaction> {
+    pub fn get_transaction(
+        ctx: Context<GetTransaction>,
+        message: solana_axelar_gateway::Message,
+        payload: Vec<u8>,
+    ) -> Result<relayer_discovery::structs::RelayerTransaction> {
         instructions::get_transaction_handler(ctx, message, payload)
     }
 }

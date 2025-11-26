@@ -1,14 +1,17 @@
 use crate::{
-    errors::ItsError, events::{InterchainTokenDeployed, TokenManagerDeployed}, instructions::{gmp::*, validate_mint_extensions}, seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED}, state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles}
-
+    errors::ItsError,
+    events::{InterchainTokenDeployed, TokenManagerDeployed},
+    instructions::{gmp::*, validate_mint_extensions},
+    seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
+    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
 use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
+use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 use solana_axelar_gateway::Message;
-use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};  
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -122,18 +125,24 @@ pub fn execute_deploy_interchain_token_handler(
     source_chain: String,
     message: Message,
 ) -> Result<()> {
-    let deploy = DeployInterchainToken { 
+    let deploy = DeployInterchainToken {
         selector: DeployInterchainToken::MESSAGE_TYPE_ID
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_id: token_id.into(), 
-        name: name.clone(), 
-        symbol: symbol.clone(), 
-        decimals, 
+        token_id: token_id.into(),
+        name: name.clone(),
+        symbol: symbol.clone(),
+        decimals,
         minter: Bytes::from(minter.clone()),
     };
     let inner_payload = GMPPayload::DeployInterchainToken(deploy);
-    validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, inner_payload, source_chain)?;
+    validate_message(
+        &ctx.accounts.executable,
+        &ctx.accounts.its_root_pda,
+        message,
+        inner_payload,
+        source_chain,
+    )?;
 
     if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
         || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
@@ -211,7 +220,7 @@ fn process_inbound_deploy(
     token_manager_pda_bump: u8,
     minter_roles_pda_bump: Option<u8>,
 ) -> Result<()> {
-
+    
     // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
 

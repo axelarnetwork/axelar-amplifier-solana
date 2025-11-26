@@ -10,8 +10,8 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
+use interchain_token_transfer_gmp::{GMPPayload, LinkToken};
 use solana_axelar_gateway::Message;
-use interchain_token_transfer_gmp::{GMPPayload, LinkToken};  
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -85,7 +85,7 @@ pub struct ExecuteLinkToken<'info> {
 
 pub fn execute_link_token_handler(
     ctx: Context<ExecuteLinkToken>,
-	token_id: [u8; 32],
+    token_id: [u8; 32],
     token_manager_type: u8,
     source_token_address: Vec<u8>,
     destination_token_address: Vec<u8>,
@@ -93,19 +93,26 @@ pub fn execute_link_token_handler(
     source_chain: String,
     message: Message,
 ) -> Result<()> {
-    let link_token = LinkToken { 
+    let link_token = LinkToken {
         selector: LinkToken::MESSAGE_TYPE_ID
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_id: token_id.into(), 
-        token_manager_type: token_manager_type.clone()
+        token_id: token_id.into(),
+        token_manager_type: token_manager_type
+            .clone()
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
         source_token_address: Bytes::from(source_token_address.clone()),
         destination_token_address: Bytes::from(destination_token_address.clone()),
         link_params: Bytes::from(link_params.clone()),
     };
-    validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message, GMPPayload::LinkToken(link_token), source_chain)?;
+    validate_message(
+        &ctx.accounts.executable,
+        &ctx.accounts.its_root_pda,
+        message,
+        GMPPayload::LinkToken(link_token),
+        source_chain,
+    )?;
 
     let token_manager_type: token_manager::Type = token_manager_type
         .try_into()
@@ -114,7 +121,8 @@ pub fn execute_link_token_handler(
         return err!(ItsError::InvalidInstructionData);
     }
 
-    let token_address = Pubkey::new_from_array(destination_token_address
+    let token_address = Pubkey::new_from_array(
+        destination_token_address
             .try_into()
             .map_err(|_err| ItsError::InvalidAccountData)?,
     );

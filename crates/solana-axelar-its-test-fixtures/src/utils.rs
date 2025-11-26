@@ -493,8 +493,7 @@ pub fn init_its_relayer_transaction(
 ) -> (Pubkey, Account) {
     let program_id = solana_axelar_its::id();
 
-    let transaction_pda =
-        relayer_discovery::find_transaction_pda(&program_id).0;
+    let transaction_pda = relayer_discovery::find_transaction_pda(&program_id).0;
     let init_ix = solana_axelar_its::instruction::RegisterDiscoveryTransaction {};
     let init_accounts = solana_axelar_its::accounts::RegisterDiscoveryTransaction {
         transaction: solana_axelar_its::accounts::RelayerTransactionAccounts {
@@ -519,10 +518,7 @@ pub fn init_its_relayer_transaction(
                 rent_epoch: 0,
             },
         ),
-        (
-            payer,
-            payer_account.clone(),
-        ),
+        (payer, payer_account.clone()),
         (
             solana_sdk::system_program::ID,
             Account {
@@ -534,11 +530,13 @@ pub fn init_its_relayer_transaction(
             },
         ),
     ];
-    
+
     let relayer_transaction_length = {
         let mut bytes = Vec::with_capacity(256);
-        solana_axelar_its::instructions::relayer_transaction().serialize(&mut bytes).unwrap();
-        bytes.len()  
+        solana_axelar_its::instructions::relayer_transaction()
+            .serialize(&mut bytes)
+            .unwrap();
+        bytes.len()
     };
     let checks = vec![
         Check::success(),
@@ -547,7 +545,8 @@ pub fn init_its_relayer_transaction(
             .build(),
     ];
 
-    let result = mollusk.process_and_validate_instruction(&init_instruction, &init_accounts, &checks);
+    let result =
+        mollusk.process_and_validate_instruction(&init_instruction, &init_accounts, &checks);
 
     let transaction_account = result
         .get_account(&transaction_pda)

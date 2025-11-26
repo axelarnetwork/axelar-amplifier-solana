@@ -15,11 +15,7 @@ pub struct Execute<'info> {
     pub counter: Account<'info, Counter>,
 }
 
-pub fn execute_handler(
-    ctx: Context<Execute>,
-    message: Message,
-    payload: Vec<u8>,
-) -> Result<()> {
+pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
     validate_message_raw(&(&ctx.accounts.executable).into(), message, &payload)?;
 
     msg!("Payload size: {}", payload.len());

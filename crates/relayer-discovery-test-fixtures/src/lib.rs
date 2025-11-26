@@ -6,8 +6,8 @@ use anchor_lang::{AnchorDeserialize, Key};
 use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
 
 use libsecp256k1::SecretKey;
-use mollusk_svm::result::InstructionResult;
 use mollusk_svm::result::ProgramResult;
+use mollusk_svm::result::{Check, InstructionResult};
 use relayer_discovery::structs::RelayerTransaction;
 use relayer_discovery::{find_transaction_pda, ConvertError, RelayerDiscovery};
 use solana_axelar_gateway::{Message, MessageLeaf, VerifierSetLeaf};
@@ -49,6 +49,8 @@ pub enum RelayerDiscoveryFixtureError {
     ConvertError(ConvertError),
     #[error("execution of final transaction failed")]
     ExecuteFailed(Vec<Instruction>, Vec<(Pubkey, Account)>, ProgramResult),
+    #[error("checks length does not match discovered instructions length")]
+    ChecksInstructionsLengthMissmatch(usize, usize),
 }
 
 impl From<ParsePubkeyError> for RelayerDiscoveryFixtureError {
@@ -206,7 +208,7 @@ impl RelayerDiscoveryTestFixture {
         approve_result
     }
 
-    /// Execute a certain message.
+    /// Execute a certain message and perform some checks.
     /// Will add all the necesairy requested payers and a payload account if needed.
     ///
     /// # Arguments
@@ -214,15 +216,17 @@ impl RelayerDiscoveryTestFixture {
     /// * `message` - The message to be executed
     /// * `payload` - The incoming payload (its hash has to match `message.payload_hash`)
     /// * `accounts` - The accounts needed for execution, including the `incoming_message` as well as all the accouns that the executable should have initialized by this point.
+    /// * `checks` - The checks to execute for each instruction on the execution.
     ///
     /// # Returns
     ///
     /// Returns `Ok(InstructionResult)` if the execution was successful, if any error was encountered then `Err(RelayerDiscoveryFixtureError)` is returned.
-    pub fn execute(
+    pub fn execute_with_checks(
         &mut self,
         message: &Message,
         payload: Vec<u8>,
         mut accounts: Vec<(Pubkey, Account)>,
+        checks: Option<Vec<Vec<Check>>>,
     ) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
         let mut relayer_discovery = RelayerDiscovery {
             message: message.clone(),
@@ -332,10 +336,30 @@ impl RelayerDiscoveryTestFixture {
                                     }
                                 })
                             });
-                            let result = self
-                                .setup
-                                .mollusk
-                                .process_instruction_chain(&instructions, &accounts);
+
+                            let instructions_with_checks: Vec<(&Instruction, &[Check])> =
+                                match &checks {
+                                    Some(checks) => {
+                                        if checks.len() != instructions.len() {
+                                            return Err(RelayerDiscoveryFixtureError::ChecksInstructionsLengthMissmatch(checks.len(), instructions.len()));
+                                        }
+                                        instructions
+                                            .iter()
+                                            .zip(checks.iter())
+                                            .map(|(instruction, checks)| {
+                                                (instruction, checks.as_slice())
+                                            })
+                                            .collect()
+                                    }
+                                    None => instructions
+                                        .iter()
+                                        .map(|instruction| (instruction, &[] as &[Check]))
+                                        .collect(),
+                                };
+                            let result = self.setup.mollusk.process_and_validate_instruction_chain(
+                                instructions_with_checks.as_slice(),
+                                &accounts,
+                            );
                             match result.program_result {
                                 ProgramResult::Success => {
                                     return Ok(result);
@@ -388,6 +412,53 @@ impl RelayerDiscoveryTestFixture {
         }
     }
 
+    /// Execute a certain message.
+    /// Will add all the necesairy requested payers and a payload account if needed.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to be executed
+    /// * `payload` - The incoming payload (its hash has to match `message.payload_hash`)
+    /// * `accounts` - The accounts needed for execution, including the `incoming_message` as well as all the accouns that the executable should have initialized by this point.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(InstructionResult)` if the execution was successful, if any error was encountered then `Err(RelayerDiscoveryFixtureError)` is returned.
+    pub fn execute(
+        &mut self,
+        message: &Message,
+        payload: Vec<u8>,
+        accounts: Vec<(Pubkey, Account)>,
+    ) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
+        self.execute_with_checks(message, payload, accounts, None)
+    }
+
+    /// Approve and execute a certain message. Basically a chained `approve` and `execute`.
+    /// Will add all the necesairy requested payers and a payload account if needed.
+    /// Will also performed any supplied checks.
+    ///
+    /// # Arguments
+    ///
+    /// * `message` - The message to be executed
+    /// * `payload` - The incoming payload (its hash has to match `message.payload_hash`)
+    /// * `accounts` - The accounts needed for execution, which should be the accouns that the executable should have initialized by this point.
+    /// * `checks` - The checks to execute for each instruction on the execution.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(InstructionResult)` if the execution was successful, if any error was encountered then `Err(RelayerDiscoveryFixtureError)` is returned.
+    pub fn approve_and_execute_with_checks(
+        &mut self,
+        message: &Message,
+        payload: Vec<u8>,
+        mut accounts: Vec<(Pubkey, Account)>,
+        checks: Option<Vec<Vec<Check>>>,
+    ) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
+        let mut approval_result = self.approve(message);
+        accounts.append(&mut approval_result.resulting_accounts);
+        self.execute_with_checks(message, payload, accounts, checks)
+    }
+
     /// Approve and execute a certain message. Basically a chained `approve` and `execute`.
     /// Will add all the necesairy requested payers and a payload account if needed.
     ///
@@ -406,8 +477,6 @@ impl RelayerDiscoveryTestFixture {
         payload: Vec<u8>,
         mut accounts: Vec<(Pubkey, Account)>,
     ) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
-        let mut approval_result = self.approve(message);
-        accounts.append(&mut approval_result.resulting_accounts);
-        self.execute(message, payload, accounts)
+        self.approve_and_execute_with_checks(message, payload, accounts, None)
     }
 }

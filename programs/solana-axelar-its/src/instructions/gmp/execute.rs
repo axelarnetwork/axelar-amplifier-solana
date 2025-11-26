@@ -1,11 +1,9 @@
-use crate::{errors::ItsError, state::InterchainTokenService, instructions::gmp::*};
+use crate::{errors::ItsError, instructions::gmp::*, state::InterchainTokenService};
 use anchor_lang::{prelude::*, solana_program, Key};
 use interchain_token_transfer_gmp::GMPPayload;
 use interchain_token_transfer_gmp::ReceiveFromHub;
 use interchain_token_transfer_gmp::SendToHub;
-use solana_axelar_gateway::{
-    Message, executable::validate_message_raw,
-};
+use solana_axelar_gateway::{executable::validate_message_raw, Message};
 use solana_program::instruction::AccountMeta;
 use solana_program::instruction::Instruction;
 
@@ -14,7 +12,7 @@ pub fn validate_message<'info>(
     its_root_pda: &Account<'info, InterchainTokenService>,
     message: Message,
     inner_payload: GMPPayload,
-    source_chain: String
+    source_chain: String,
 ) -> Result<()> {
     let payload = GMPPayload::ReceiveFromHub(ReceiveFromHub {
         selector: ReceiveFromHub::MESSAGE_TYPE_ID
@@ -22,7 +20,8 @@ pub fn validate_message<'info>(
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
         source_chain: source_chain.clone(),
         payload: inner_payload.encode().into(),
-    }).encode();
+    })
+    .encode();
     // Validate the GMP message
     validate_message_raw(&executable.into(), message.clone(), &payload)?;
 
@@ -32,15 +31,12 @@ pub fn validate_message<'info>(
         return err!(ItsError::InvalidInstructionData);
     }
 
-    if !its_root_pda
-        .is_trusted_chain(&source_chain)
-    {
+    if !its_root_pda.is_trusted_chain(&source_chain) {
         return err!(ItsError::UntrustedSourceChain);
     }
 
     Ok(())
 }
-
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -99,7 +95,11 @@ pub fn execute_handler<'info>(
         return err!(ItsError::InvalidInstructionData);
     };
     // Validate the GMP message
-    validate_message_raw(&(&ctx.accounts.executable).into(), message.clone(), &payload)?;
+    validate_message_raw(
+        &(&ctx.accounts.executable).into(),
+        message.clone(),
+        &payload,
+    )?;
 
     if !ctx
         .accounts

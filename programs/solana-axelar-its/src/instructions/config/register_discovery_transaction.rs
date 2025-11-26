@@ -1,8 +1,10 @@
 #![allow(clippy::missing_asserts_for_indexing)]
 use crate::instruction::GetTransaction;
 use anchor_lang::prelude::*;
-use relayer_discovery::{structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTransaction}, transaction_pda_accounts};
-
+use relayer_discovery::{
+    structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTransaction},
+    transaction_pda_accounts,
+};
 
 transaction_pda_accounts!(relayer_transaction);
 
@@ -12,9 +14,7 @@ pub struct RegisterDiscoveryTransaction<'info> {
     transaction: RelayerTransactionAccounts<'info>,
 }
 
-pub fn register_discovery_transaction(
-    ctx: Context<RegisterDiscoveryTransaction>,
-) -> Result<()> {
+pub fn register_discovery_transaction(ctx: Context<RegisterDiscoveryTransaction>) -> Result<()> {
     relayer_transaction().serialize(
         &mut &mut ctx
             .accounts
@@ -32,12 +32,10 @@ pub fn relayer_transaction() -> RelayerTransaction {
         // We want the relayer to call this program.
         program_id: crate::ID,
         // No accounts are required for this.
-        accounts: vec![
-            RelayerAccount::Account { 
-                pubkey: crate::ID,
-                is_writable: false,
-            },
-        ],
+        accounts: vec![RelayerAccount::Account {
+            pubkey: crate::ID,
+            is_writable: false,
+        }],
         // The data we need to find the final transaction.
         data: vec![
             // We can easily get the discriminaator thankfully. Note that we need `instruction::GetTransaction` and not `instructions::GetTransaction`.

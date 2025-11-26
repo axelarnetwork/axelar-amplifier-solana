@@ -1,8 +1,11 @@
 use crate::{
-    errors::ItsError, events::InterchainTransferReceived, instructions::validate_message, state::{
-        FlowDirection, InterchainTokenService, TokenManager, current_flow_epoch, token_manager
-    },
+    errors::ItsError,
+    events::InterchainTransferReceived,
     instructions::gmp::*,
+    instructions::validate_message,
+    state::{
+        current_flow_epoch, token_manager, FlowDirection, InterchainTokenService, TokenManager,
+    },
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
@@ -17,9 +20,9 @@ use anchor_spl::{
     },
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
+use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};
 use solana_axelar_gateway::Message;
 use solana_program::{program_option::COption, program_pack::Pack};
-use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};  
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -93,7 +96,7 @@ pub struct ExecuteInterchainTransfer<'info> {
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::unimplemented)]
 pub fn execute_interchain_transfer_handler(
-    mut ctx: Context<ExecuteInterchainTransfer>,        
+    mut ctx: Context<ExecuteInterchainTransfer>,
     token_id: [u8; 32],
     source_address: Vec<u8>,
     destination_address: Pubkey,
@@ -102,22 +105,28 @@ pub fn execute_interchain_transfer_handler(
     source_chain: String,
     message: Message,
 ) -> Result<()> {
-    let transfer = InterchainTransfer { 
+    let transfer = InterchainTransfer {
         selector: InterchainTransfer::MESSAGE_TYPE_ID
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_id: token_id.into(), 
+        token_id: token_id.into(),
         source_address: Bytes::from(source_address.clone()),
         destination_address: Bytes::from(destination_address.clone().to_bytes()),
         amount: amount
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        data: Bytes::from(data.clone()), 
+        data: Bytes::from(data.clone()),
     };
-    validate_message(&ctx.accounts.executable, &ctx.accounts.its_root_pda, message.clone(), GMPPayload::InterchainTransfer(transfer), source_chain.clone())?;
-    
-    let source_address = String::from_utf8(source_address)
-        .map_err(|_| ItsError::InvalidInstructionData)?;
+    validate_message(
+        &ctx.accounts.executable,
+        &ctx.accounts.its_root_pda,
+        message.clone(),
+        GMPPayload::InterchainTransfer(transfer),
+        source_chain.clone(),
+    )?;
+
+    let source_address =
+        String::from_utf8(source_address).map_err(|_| ItsError::InvalidInstructionData)?;
 
     if amount == 0 {
         return err!(ItsError::InvalidAmount);

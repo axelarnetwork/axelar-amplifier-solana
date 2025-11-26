@@ -42,11 +42,7 @@ pub mod memo {
         instructions::init_handler(ctx)
     }
 
-    pub fn execute(
-        ctx: Context<Execute>,
-        message: Message,
-        payload: Vec<u8>,
-    ) -> Result<()> {
+    pub fn execute(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
         instructions::execute_handler(ctx, message, payload)
     }
 

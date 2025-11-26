@@ -2,18 +2,13 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::{
-    solana_program,
-    AccountDeserialize,
-};
+use anchor_lang::{solana_program, AccountDeserialize};
 use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
-use mollusk_svm::result::ProgramResult;
+use mollusk_svm::result::{Check, ProgramResult};
 use mpl_token_metadata::accounts::Metadata;
 use relayer_discovery_test_fixtures::{RelayerDiscoveryFixtureError, RelayerDiscoveryTestFixture};
-use solana_axelar_gateway_test_fixtures::{
-    create_test_message, initialize_gateway,
-};
+use solana_axelar_gateway_test_fixtures::{create_test_message, initialize_gateway};
 use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::init_its_relayer_transaction;
@@ -54,11 +49,8 @@ fn test_execute_deploy_interchain_token_success() {
         its_hub_address.clone(),
     );
 
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) = init_its_relayer_transaction(
-        &setup.mollusk,
-        payer,
-        &payer_account,
-    );
+    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
+        init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
 
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
@@ -98,8 +90,11 @@ fn test_execute_deploy_interchain_token_success() {
     message.source_address = its_hub_address.clone();
 
     let execute_accounts = vec![
-        (its_root_pda, its_root_account.clone()), 
-        (its_relayer_transaction_pda, its_relayer_transaction_account.clone()),
+        (its_root_pda, its_root_account.clone()),
+        (
+            its_relayer_transaction_pda,
+            its_relayer_transaction_account.clone(),
+        ),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -134,9 +129,10 @@ fn test_execute_deploy_interchain_token_success() {
         mollusk_svm_programs_token::associated_token::keyed_account(),
         mollusk_svm::program::keyed_account_for_system_program(),
     ];
-    
+
     // Step 10: Approve and execute
-    let test_result = fixture.approve_and_execute(&message, encoded_payload.clone(), execute_accounts);
+    let test_result =
+        fixture.approve_and_execute(&message, encoded_payload.clone(), execute_accounts);
 
     assert!(
         test_result.is_ok(),
@@ -151,7 +147,7 @@ fn test_execute_deploy_interchain_token_success() {
     let (token_mint_pda, _) = get_token_mint_pda(token_id);
 
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
-    
+
     assert!(
         test_result.program_result.is_ok(),
         "Execute instruction should succeed: {:?}",
@@ -211,11 +207,8 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
         its_hub_address.clone(),
     );
 
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) = init_its_relayer_transaction(
-        &setup.mollusk,
-        payer,
-        &payer_account,
-    );
+    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
+        init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
 
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
@@ -255,8 +248,11 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     message.source_address = its_hub_address.clone();
 
     let execute_accounts = vec![
-        (its_root_pda, its_root_account.clone()), 
-        (its_relayer_transaction_pda, its_relayer_transaction_account.clone()),
+        (its_root_pda, its_root_account.clone()),
+        (
+            its_relayer_transaction_pda,
+            its_relayer_transaction_account.clone(),
+        ),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -291,24 +287,20 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
         mollusk_svm_programs_token::associated_token::keyed_account(),
         mollusk_svm::program::keyed_account_for_system_program(),
     ];
-    
+
+    let checks = vec![Check::err(
+        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
+    )];
+
     // Step 10: Approve and execute
-    let test_result = fixture.approve_and_execute(&message, encoded_payload.clone(), execute_accounts);
-    
+    let test_result = fixture.approve_and_execute_with_checks(
+        &message,
+        encoded_payload.clone(),
+        execute_accounts,
+        Some(vec![checks]),
+    );
+
     assert!(test_result.is_err());
-    let Err(error) = test_result 
-    else {
-        panic!("execution expected to error");
-    };
-    let RelayerDiscoveryFixtureError::ExecuteFailed(_, _, result) = error 
-    else {
-        panic!("execution expected to error with ExecuteFailed");
-    };
-    let ProgramResult::Failure(error) = result 
-    else {
-        panic!("execution was not an error");
-    };
-    assert!(error == anchor_lang::error::Error::from(ItsError::InvalidArgument).into());
 }
 
 #[test]
@@ -340,11 +332,8 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
         its_hub_address.clone(),
     );
 
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) = init_its_relayer_transaction(
-        &setup.mollusk,
-        payer,
-        &payer_account,
-    );
+    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
+        init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
 
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
@@ -385,8 +374,11 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
     message.source_address = its_hub_address.clone();
 
     let execute_accounts = vec![
-        (its_root_pda, its_root_account.clone()), 
-        (its_relayer_transaction_pda, its_relayer_transaction_account.clone()),
+        (its_root_pda, its_root_account.clone()),
+        (
+            its_relayer_transaction_pda,
+            its_relayer_transaction_account.clone(),
+        ),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -411,9 +403,10 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
         mollusk_svm_programs_token::associated_token::keyed_account(),
         mollusk_svm::program::keyed_account_for_system_program(),
     ];
-    
+
     // Step 10: Approve and execute
-    let test_result = fixture.approve_and_execute(&message, encoded_payload.clone(), execute_accounts);
+    let test_result =
+        fixture.approve_and_execute(&message, encoded_payload.clone(), execute_accounts);
 
     assert!(
         test_result.is_ok(),
@@ -428,7 +421,7 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
     let (token_mint_pda, _) = get_token_mint_pda(token_id);
 
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
-    
+
     assert!(
         test_result.program_result.is_ok(),
         "Execute instruction should succeed: {:?}",
