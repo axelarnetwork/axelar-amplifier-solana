@@ -3,14 +3,14 @@
 use anchor_lang::prelude::thiserror;
 use anchor_lang::{AnchorDeserialize, Key};
 
-use axelar_solana_std::{hasher::SolanaSyscallHasher, rs_merkle::MerkleTree};
+use solana_axelar_std::MerkleTree;
+use solana_axelar_std::{hasher::LeafHash, Message, MessageLeaf, VerifierSetLeaf};
 
 use libsecp256k1::SecretKey;
 use mollusk_svm::result::InstructionResult;
 use mollusk_svm::result::ProgramResult;
 use relayer_discovery::structs::RelayerTransaction;
 use relayer_discovery::{find_transaction_pda, ConvertError, RelayerDiscovery};
-use solana_axelar_gateway::{Message, MessageLeaf, VerifierSetLeaf};
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, create_verifier_info, initialize_gateway,
     initialize_payload_verification_session_with_root, setup_test_with_real_signers,
@@ -29,7 +29,7 @@ pub struct RelayerDiscoveryTestFixture {
     pub setup: TestSetup,
     /// The rest of the information is required to approve massages to the gateway
     verifier_leaves: Vec<VerifierSetLeaf>,
-    verifier_merkle_tree: MerkleTree<SolanaSyscallHasher>,
+    verifier_merkle_tree: MerkleTree,
     secret_key_1: SecretKey,
     secret_key_2: SecretKey,
     init_result: InstructionResult,
@@ -118,8 +118,7 @@ impl RelayerDiscoveryTestFixture {
         let message_leaf_hashes: Vec<[u8; 32]> =
             message_leaves.iter().map(MessageLeaf::hash).collect();
 
-        let message_merkle_tree =
-            MerkleTree::<SolanaSyscallHasher>::from_leaves(&message_leaf_hashes);
+        let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
         let payload_merkle_root = message_merkle_tree.root().unwrap();
 
         // Step 4: Initialize payload verification session

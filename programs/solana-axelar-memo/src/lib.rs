@@ -13,7 +13,7 @@ pub use instructions::*;
 pub mod state;
 pub use state::*;
 
-use solana_axelar_gateway::executable::{ExecutablePayloadEncodingScheme, Message};
+use solana_axelar_gateway::executable::Message;
 use solana_axelar_its::executable::AxelarExecuteWithInterchainTokenPayload;
 
 use solana_axelar_std::ensure_single_feature;
