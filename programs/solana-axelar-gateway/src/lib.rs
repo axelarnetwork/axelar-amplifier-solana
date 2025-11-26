@@ -51,8 +51,8 @@ pub mod seed_prefixes {
     /// The seed prefix for deriving incoming message PDAs
     pub const INCOMING_MESSAGE_SEED: &[u8] = state::IncomingMessage::SEED_PREFIX;
     /// The seed prefix for deriving validate message signing PDAs
-    /// This corresponds to the hardcoded value in `axelar_message_primitives::destination_program_id::DestinationProgramId::signing_pda`
-    pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = b"gtw-validate-msg";
+    pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] =
+        state::IncomingMessage::VALIDATE_MESSAGE_SEED_PREFIX;
 }
 
 #[program]
