@@ -35,7 +35,7 @@ use solana_sdk::{
 // Gateway
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, Message, VerifierSetTracker,
+    GatewayConfig, IncomingMessage, Message, VerifierSetTracker,
 };
 
 macro_rules! msg {
@@ -1096,12 +1096,9 @@ impl ItsTestHarness {
         // TODO extract to helper
         let executable = solana_axelar_its::accounts::AxelarExecuteAccounts {
             incoming_message_pda,
-            signing_pda: Pubkey::create_program_address(
-                &[
-                    solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-                    message.command_id().as_ref(),
-                    &[incoming_message.signing_pda_bump],
-                ],
+            signing_pda: IncomingMessage::get_validate_signing_pda(
+                &message.command_id(),
+                incoming_message.signing_pda_bump,
                 &solana_axelar_its::ID,
             )
             .expect("valid signing PDA"),
