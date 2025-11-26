@@ -90,9 +90,7 @@ impl InterchainTokenService {
     /// Add a chain as trusted
     pub fn add_trusted_chain(&mut self, chain_name: String) {
         // Only add if not already present to avoid duplicates and not the hub
-        if !self.trusted_chains.iter().any(|chain| *chain == chain_name)
-            && chain_name != ITS_HUB_CHAIN_NAME
-        {
+        if !self.trusted_chains.contains(&chain_name) && chain_name != ITS_HUB_CHAIN_NAME {
             self.trusted_chains.push(chain_name);
         }
     }

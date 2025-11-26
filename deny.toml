@@ -182,11 +182,6 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "axelar-message-primitives"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
 crate = "solana-axelar-gateway-test-fixtures"
 expression = "MIT"
 license-files = []

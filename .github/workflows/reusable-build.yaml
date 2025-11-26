@@ -77,10 +77,17 @@ jobs:
           echo "$PROGRAMS"
 
           for program in $PROGRAMS; do
-            library_name=$(echo "$program" | tr '-' '_')
-            echo "Building $program (library: $library_name)..."
-            cargo build-sbf --manifest-path programs/$program/Cargo.toml
+            if [ -f "programs/$program/Cargo.toml" ]; then
+              library_name=$(echo "$program" | tr '-' '_')
+              echo "Building $program (library: $library_name)..."
+              cargo build-sbf --manifest-path programs/$program/Cargo.toml
+            else
+              echo "Skipping $program (not a Solana program)"
+            fi
           done
+
+          # Build memo for use in release testing
+          cargo build-sbf --manifest-path programs/solana-axelar-memo/Cargo.toml
 
           # Process in the deploy directory
           cd target/deploy

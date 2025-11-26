@@ -27,7 +27,35 @@ Changes:
 """
 
 [[package]]
-name = "solana-axelar-gas-service"
+name = "solana-axelar-std"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "program-utils"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "governance-gmp"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "interchain-token-transfer-gmp"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
+[[package]]
+name = "solana-axelar-operators"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
@@ -41,7 +69,7 @@ git_release_enable = true
 publish = true
 
 [[package]]
-name = "solana-axelar-governance"
+name = "solana-axelar-gas-service"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
@@ -55,18 +83,12 @@ git_release_enable = true
 publish = true
 
 [[package]]
-name = "solana-axelar-memo"
+name = "solana-axelar-governance"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
 publish = true
-
-[[package]]
-name = "solana-axelar-operators"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+publish_no_verify = true
 
 [changelog]
 header = """# Changelog

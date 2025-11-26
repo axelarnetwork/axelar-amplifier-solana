@@ -37,7 +37,7 @@ use solana_sdk::signer::Signer;
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
-fn test_interchain_transfer_mint_burn() {
+fn interchain_transfer_mint_burn() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
@@ -167,7 +167,7 @@ fn test_interchain_transfer_mint_burn() {
 }
 
 #[test]
-fn test_interchain_transfer_lock_unlock() {
+fn interchain_transfer_lock_unlock() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
@@ -328,7 +328,7 @@ fn test_interchain_transfer_lock_unlock() {
 }
 
 #[test]
-fn test_reject_interchain_transfer_with_invalid_token_id() {
+fn reject_interchain_transfer_with_invalid_token_id() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
@@ -485,7 +485,7 @@ fn test_reject_interchain_transfer_with_invalid_token_id() {
 }
 
 #[test]
-fn test_reject_interchain_transfer_if_sender_has_no_tokens() {
+fn reject_interchain_transfer_if_sender_has_no_tokens() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
@@ -640,7 +640,7 @@ fn test_reject_interchain_transfer_if_sender_has_no_tokens() {
 }
 
 #[test]
-fn test_reject_interchain_transfer_if_amount_is_0() {
+fn reject_interchain_transfer_if_amount_is_0() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
@@ -796,7 +796,7 @@ fn test_reject_interchain_transfer_if_amount_is_0() {
 }
 
 #[test]
-fn test_reject_interchain_transfer_if_destination_address_is_empty() {
+fn reject_interchain_transfer_if_destination_address_is_empty() {
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
