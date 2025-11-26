@@ -1,3 +1,5 @@
+//! Common Error type used within the encoding crate
+
 /// Common Error type used within the encoding crate.
 #[derive(Debug, thiserror::Error)]
 pub enum EncodingError {

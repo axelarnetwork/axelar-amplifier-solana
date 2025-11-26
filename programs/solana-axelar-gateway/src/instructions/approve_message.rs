@@ -1,11 +1,10 @@
 use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use crate::{
-    GatewayConfig, GatewayError, IncomingMessage, MessageApprovedEvent, MessageStatus,
-    SignatureVerificationSessionData,
+    GatewayConfig, GatewayError, IncomingMessage, MerklizedMessage, MessageApprovedEvent,
+    MessageStatus, SignatureVerificationSessionData,
 };
 use anchor_lang::prelude::*;
-use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::MerklizedMessage;
+use axelar_solana_encoding::{hasher::SolanaSyscallHasher, rs_merkle};
 use std::str::FromStr;
 
 #[derive(Accounts)]
@@ -62,7 +61,7 @@ pub fn approve_message_handler(
 
     let leaf_hash = merklized_message.leaf.hash();
     let message_hash = merklized_message.leaf.message.hash();
-    let proof = solana_axelar_std::MerkleProof::from_bytes(&merklized_message.proof)
+    let proof = rs_merkle::MerkleProof::<SolanaSyscallHasher>::from_bytes(&merklized_message.proof)
         .map_err(|_err| GatewayError::InvalidMerkleProof)?;
 
     // Check: leaf node is part of the payload merkle root

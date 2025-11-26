@@ -122,7 +122,7 @@ bincode = "1"
 bitflags = "2.6"
 bitvec = "1.0.1"
 bnum = { version = "0.10", features = ["serde"] }
-borsh = { version = "0.10.4" }
+borsh = { version = "1", features = ["derive"] }
 bs58 = "0.5.1"
 bytemuck = { version = "1", features = ["derive", "min_const_generics"] }
 cosmwasm-schema = "2"
@@ -162,7 +162,6 @@ solana-rpc-client-api = "~2.3"
 solana-test-validator = "~2.3"
 solana-transaction-status = "~2.3"
 solana-banks-interface = "~2.3"
-solana-keccak-hasher = "~2.2.1"
 spl-associated-token-account = "6.0.0"
 spl-pod = "0.4.0"
 spl-token = "6.0.0"
@@ -197,7 +196,8 @@ solana-axelar-governance = { path = "programs/solana-axelar-governance", default
 solana-axelar-its = { path = "programs/solana-axelar-its", default-features = false }
 
 # helper crates
-solana-axelar-std = { path = "crates/solana-axelar-std" }
+axelar-message-primitives = { path = "helpers/axelar-message-primitives" }
+axelar-solana-encoding = { path = "crates/axelar-solana-encoding" }
 solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
 solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
 solana-axelar-its-test-fixtures = { path = "crates/solana-axelar-its-test-fixtures", default-features = false }

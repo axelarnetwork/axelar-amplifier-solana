@@ -28,7 +28,6 @@ pub struct SendInterchainTransfer<'info> {
     #[account(mut)]
     pub gas_treasury: UncheckedAccount<'info>,
     pub gas_service: UncheckedAccount<'info>,
-    /// CHECK: checked by the gas service program
     pub gas_event_authority: UncheckedAccount<'info>,
 
     //

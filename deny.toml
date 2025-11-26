@@ -142,7 +142,7 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "solana-axelar-std"
+crate = "axelar-solana-encoding"
 expression = "MIT"
 license-files = []
 

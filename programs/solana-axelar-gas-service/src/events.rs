@@ -3,7 +3,9 @@
 //! All events have optional fields for SPL tokens, but SPL tokens
 //! are not currently supported.
 
-use anchor_lang::prelude::*;
+use anchor_lang::prelude::{
+    borsh, event, AnchorDeserialize, AnchorSerialize, Discriminator, Pubkey,
+};
 
 type MessageId = String;
 

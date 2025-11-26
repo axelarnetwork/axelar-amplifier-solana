@@ -1,5 +1,5 @@
+use crate::U256;
 use anchor_lang::prelude::*;
-use solana_axelar_std::U256;
 
 #[event]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

@@ -1,72 +1,42 @@
+//! This module provides cryptographic primitives and data structures to support
+//! encoding, hashing, and Merkle tree operations on sets of verifiers and
+//! payloads.
+//!
+//! # Overview
+//!
+//! This code includes functions for encoding and hashing structured data, such
+//! as verifier sets and message payloads.
+//! It provides Merkle tree-based encoding and proofs for verifiable payloads.
+//! The main functions include `encode`, `hash_payload`.
+//!
+//! # Usage
+//!
+//! - `encode` encodes `execute_data` components and constructs Merkle proofs
+//!   for payloads.
+//! - `hash_payload` generates a hash for payload data given a specific domain
+//!   and verifier set.
+
+use core::mem::size_of;
 use std::collections::BTreeMap;
 
-use borsh::{BorshDeserialize, BorshSerialize};
+use error::EncodingError;
+use hasher::{NativeHasher, VecBuf};
 use rs_merkle::MerkleTree;
+use types::payload::Payload;
+use types::pubkey::{PublicKey, Signature};
+use types::verifier_set::{verifier_set_hash, VerifierSet};
 use udigest::encoding::EncodeValue;
+pub use {borsh, rs_merkle};
 
-use crate::{
-    hasher::{Hasher, VecBuf},
-    message::{MerklizedMessage, MessageLeaf, Messages},
-    verifier_set::{self, verifier_set_hash, SigningVerifierSetInfo},
-    EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
+use crate::types::execute_data::{
+    ExecuteData, MerklizedMessage, MerklizedPayload, SigningVerifierSetInfo,
 };
+use crate::types::messages::MessageLeaf;
+use crate::types::verifier_set::VerifierSetLeaf;
 
-/// Represents the complete set of execution data required for verification and
-/// processing.
-///
-/// `ExecuteData` includes Merkle roots for the signing verifier set and the
-/// payload, as well as detailed information about each verifier's signature and
-/// the structure of the payload.
-#[derive(Debug, Eq, PartialEq, Clone, BorshSerialize, BorshDeserialize)]
-pub struct ExecuteData {
-    /// The Merkle root of the signing verifier set.
-    pub signing_verifier_set_merkle_root: [u8; 32],
-
-    /// A list of information about each verifier in the signing set, including
-    /// their signatures and Merkle proofs.
-    pub signing_verifier_set_leaves: Vec<SigningVerifierSetInfo>,
-
-    /// The Merkle root of the payload data.
-    pub payload_merkle_root: [u8; 32],
-
-    /// The payload items, which can either be new messages or a verifier set
-    /// rotation, each accompanied by their respective Merkle proofs.
-    pub payload_items: MerklizedPayload,
-}
-
-/// Represents the different types of payloads that can be processed within the
-/// system.
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Payload {
-    /// Encapsulates a collection of messages to be processed.
-    Messages(Messages),
-
-    /// Represents an updated verifier set for system consensus.
-    NewVerifierSet(VerifierSet),
-}
-
-/// Represents the payload data in a Merkle tree structure.
-///
-/// `MerklizedPayload` can either be a rotation of the verifier set or a
-/// collection of new messages, each accompanied by their respective Merkle
-/// proofs.
-#[derive(Debug, Eq, PartialEq, Clone, BorshSerialize, BorshDeserialize)]
-pub enum MerklizedPayload {
-    /// Indicates a rotation of the verifier set, providing the new Merkle root
-    /// of the verifier set.
-    VerifierSetRotation {
-        /// The Merkle root of the new verifier set after rotation.
-        new_verifier_set_merkle_root: [u8; 32],
-    },
-
-    /// Contains a list of new messages, each with its corresponding Merkle
-    /// proof.
-    NewMessages {
-        /// A vector of `MerklizedMessage` instances, each representing a
-        /// message and its proof.
-        messages: Vec<MerklizedMessage>,
-    },
-}
+pub mod error;
+pub mod hasher;
+pub mod types;
 
 /// Encodes `execute_data` components using a custom verifier set, signers, and
 /// a domain separator.
@@ -83,14 +53,13 @@ pub fn encode(
     domain_separator: [u8; 32],
     payload: Payload,
 ) -> Result<Vec<u8>, EncodingError> {
-    let leaves = verifier_set::merkle_tree_leaves(signing_verifier_set, &domain_separator)?
+    let leaves = types::verifier_set::merkle_tree_leaves(signing_verifier_set, &domain_separator)?
         .collect::<Vec<_>>();
-    let signer_merkle_tree = merkle_tree::<Hasher, VerifierSetLeaf>(leaves.iter());
+    let signer_merkle_tree = merkle_tree::<NativeHasher, VerifierSetLeaf>(leaves.iter());
     let signing_verifier_set_merkle_root = signer_merkle_tree
         .root()
         .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)?;
-    let (payload_merkle_root, payload_items) =
-        hash_payload_internal::<Hasher>(payload, domain_separator)?;
+    let (payload_merkle_root, payload_items) = hash_payload_internal(payload, domain_separator)?;
 
     let signing_verifier_set_leaves = leaves
         .into_iter()
@@ -154,26 +123,25 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
 /// # Errors
 /// - When the verifier set is empty
 /// - When the verifier set is too large
-pub fn hash_payload<T: rs_merkle::Hasher<Hash = [u8; 32]>>(
+pub fn hash_payload(
     domain_separator: &[u8; 32],
     payload: Payload,
-) -> Result<T::Hash, EncodingError> {
-    let (payload_hash, _merklesied_payload) =
-        hash_payload_internal::<T>(payload, *domain_separator)?;
+) -> Result<[u8; 32], EncodingError> {
+    let (payload_hash, _merklesied_payload) = hash_payload_internal(payload, *domain_separator)?;
     Ok(payload_hash)
 }
 
 /// Internal function for hashing payloads, which calculates the root and items
 /// for Merklized payloads, either messages or a new verifier set.
-fn hash_payload_internal<T: rs_merkle::Hasher<Hash = [u8; 32]>>(
+fn hash_payload_internal(
     payload: Payload,
     domain_separator: [u8; 32],
-) -> Result<(T::Hash, MerklizedPayload), EncodingError> {
+) -> Result<([u8; 32], MerklizedPayload), EncodingError> {
     let (payload_merkle_root, payload_items) = match payload {
         Payload::Messages(messages) => {
-            let leaves =
-                crate::message::merkle_tree_leaves(messages, domain_separator)?.collect::<Vec<_>>();
-            let messages_merkle_tree = merkle_tree::<T, MessageLeaf>(leaves.iter());
+            let leaves = types::messages::merkle_tree_leaves(messages, domain_separator)?
+                .collect::<Vec<_>>();
+            let messages_merkle_tree = merkle_tree::<NativeHasher, MessageLeaf>(leaves.iter());
             let messages_merkle_root = messages_merkle_tree
                 .root()
                 .ok_or(EncodingError::CannotMerklizeEmptyMessageSet)?;
@@ -194,7 +162,7 @@ fn hash_payload_internal<T: rs_merkle::Hasher<Hash = [u8; 32]>>(
         }
         Payload::NewVerifierSet(verifier_set) => {
             let new_verifier_set_merkle_root =
-                verifier_set_hash::<T>(&verifier_set, &domain_separator)?;
+                verifier_set_hash::<NativeHasher>(&verifier_set, &domain_separator)?;
             let payload = MerklizedPayload::VerifierSetRotation {
                 new_verifier_set_merkle_root,
             };
@@ -217,20 +185,25 @@ pub(crate) fn merkle_tree<'a, T: rs_merkle::Hasher, K: udigest::Digestable + 'a>
     MerkleTree::<T>::from_leaves(&leaves)
 }
 
+/// Trait for hashing leaves within a Merkle tree, implemented by types that can
+/// be digested.
+pub trait LeafHash: udigest::Digestable {
+    /// Returns a hashed representation of the implementing type.
+    fn hash<T: rs_merkle::Hasher>(&self) -> T::Hash {
+        let mut buffer = VecBuf(vec![]);
+        self.unambiguously_encode(EncodeValue::new(&mut buffer));
+        T::hash(&buffer.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CrossChainId, Message, Messages};
-    use crate::{ECDSA_RECOVERABLE_SIGNATURE_LEN, SECP256K1_COMPRESSED_PUBKEY_LEN};
+    use types::messages::{CrossChainId, Message, Messages};
 
     fn create_test_verifier_set(num_verifiers: usize) -> VerifierSet {
         let signers = (0..num_verifiers)
-            .map(|i| {
-                (
-                    PublicKey([u8::try_from(i).unwrap(); SECP256K1_COMPRESSED_PUBKEY_LEN]),
-                    1u128,
-                )
-            })
+            .map(|i| (PublicKey::Ed25519([u8::try_from(i).unwrap(); 32]), 1u128))
             .collect();
 
         VerifierSet {
@@ -244,7 +217,7 @@ mod tests {
         verifier_set
             .signers
             .keys()
-            .map(|pubkey| (*pubkey, Signature([0u8; ECDSA_RECOVERABLE_SIGNATURE_LEN])))
+            .map(|pubkey| (*pubkey, Signature::Ed25519([0u8; 64])))
             .collect()
     }
 
@@ -267,8 +240,8 @@ mod tests {
         let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
             .expect("encoding should succeed");
 
-        let execute_data: ExecuteData = borsh::BorshDeserialize::try_from_slice(&encoded)
-            .expect("deserialization should succeed");
+        let execute_data: ExecuteData =
+            borsh::from_slice(&encoded).expect("deserialization should succeed");
 
         let estimated_size = estimate_size(&execute_data);
 
@@ -315,8 +288,8 @@ mod tests {
         let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
             .expect("encoding should succeed");
 
-        let execute_data: ExecuteData = borsh::BorshDeserialize::try_from_slice(&encoded)
-            .expect("deserialization should succeed");
+        let execute_data: ExecuteData =
+            borsh::from_slice(&encoded).expect("deserialization should succeed");
 
         let estimated_size = estimate_size(&execute_data);
 
@@ -345,8 +318,8 @@ mod tests {
             let encoded = encode(&verifier_set, &signatures, domain_separator, payload)
                 .expect("encoding should succeed");
 
-            let execute_data: ExecuteData = borsh::BorshDeserialize::try_from_slice(&encoded)
-                .expect("deserialization should succeed");
+            let execute_data: ExecuteData =
+                borsh::from_slice(&encoded).expect("deserialization should succeed");
 
             let estimated_size = estimate_size(&execute_data);
 

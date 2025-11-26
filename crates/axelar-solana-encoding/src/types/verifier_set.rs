@@ -1,7 +1,17 @@
-use std::collections::BTreeMap;
-use udigest::Digestable;
+//! # Verifier Set Module
+//!
+//! This module defines the structures and functions related to managing and
+//! hashing verifier sets within Solana. It includes the `VerifierSet` struct,
+//! which represents a set of verifiers with associated weights, and the
+//! `VerifierSetLeaf` struct, which serves as a leaf node in a Merkle tree for
+//! verifier sets. The module also provides functions for constructing payload
+//! hashes and generating Merkle tree leaves from verifier sets.
 
-use crate::{hasher::LeafHash, EncodingError, PublicKey, Signature};
+use std::collections::BTreeMap;
+
+use super::pubkey::PublicKey;
+use crate::error::EncodingError;
+use crate::LeafHash;
 
 /// Represents a set of verifiers, each with an associated weight, and a quorum
 /// value.
@@ -27,72 +37,6 @@ pub struct VerifierSet {
     pub quorum: u128,
 }
 
-pub type VerifierSetHash = [u8; 32];
-
-#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
-)]
-pub struct VerifierSetLeaf {
-    /// The nonce value from the associated `VerifierSet`.
-    pub nonce: u64,
-
-    /// The quorum value from the associated `VerifierSet`.
-    pub quorum: u128,
-
-    /// The public key of the verifier.
-    pub signer_pubkey: PublicKey,
-
-    /// The weight assigned to the verifier, representing their voting power or
-    /// authority.
-    pub signer_weight: u128,
-
-    /// The position of this leaf within the Merkle tree.
-    pub position: u16,
-
-    /// The total number of leaves in the Merkle tree, representing the size of
-    /// the verifier set.
-    pub set_size: u16,
-
-    /// A domain separator used to ensure the uniqueness of hashes across
-    /// different contexts.
-    pub domain_separator: [u8; 32],
-}
-
-impl LeafHash for VerifierSetLeaf {}
-
-/// Contains information about a single verifier within the signing verifier
-/// set.
-///
-/// This struct holds the verifier's signature, their corresponding leaf in the
-/// verifier set Merkle tree, and the Merkle proof needed to verify their
-/// inclusion in the set.
-#[derive(Debug, Eq, PartialEq, Clone)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
-)]
-pub struct SigningVerifierSetInfo {
-    /// The signature provided by the verifier.
-    pub signature: Signature,
-
-    /// The leaf node representing the verifier in the Merkle tree.
-    pub leaf: VerifierSetLeaf,
-
-    /// The Merkle proof demonstrating the verifier's inclusion in the signing
-    /// verifier set.
-    pub merkle_proof: Vec<u8>,
-}
-
 /// Generates the Merkle root hash for a given verifier set.
 ///
 /// The `verifier_set_hash` function constructs a Merkle tree from the leaves
@@ -107,7 +51,7 @@ pub fn verifier_set_hash<T: rs_merkle::Hasher>(
     domain_separator: &[u8; 32],
 ) -> Result<T::Hash, EncodingError> {
     let leaves = merkle_tree_leaves(verifier_set, domain_separator)?.collect::<Vec<_>>();
-    let tree = crate::merkle::merkle_tree::<T, VerifierSetLeaf>(leaves.iter());
+    let tree = crate::merkle_tree::<T, VerifierSetLeaf>(leaves.iter());
 
     tree.root()
         .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)
@@ -141,3 +85,47 @@ pub(crate) fn merkle_tree_leaves<'a>(
             );
     Ok(iterator)
 }
+
+/// Represents a leaf node in a Merkle tree for a verifier set.
+///
+/// The `VerifierSetLeaf` struct encapsulates all necessary information about a
+/// verifier within a verifier set, including their public key, weight, and
+/// positional metadata. This struct is designed to be used as a leaf node in a
+/// Merkle tree, facilitating efficient and secure verification of verifiers.
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Debug,
+    udigest::Digestable,
+    borsh::BorshDeserialize,
+    borsh::BorshSerialize,
+)]
+pub struct VerifierSetLeaf {
+    /// The nonce value from the associated `VerifierSet`.
+    pub nonce: u64,
+
+    /// The quorum value from the associated `VerifierSet`.
+    pub quorum: u128,
+
+    /// The public key of the verifier.
+    pub signer_pubkey: PublicKey,
+
+    /// The weight assigned to the verifier, representing their voting power or
+    /// authority.
+    pub signer_weight: u128,
+
+    /// The position of this leaf within the Merkle tree.
+    pub position: u16,
+
+    /// The total number of leaves in the Merkle tree, representing the size of
+    /// the verifier set.
+    pub set_size: u16,
+
+    /// A domain separator used to ensure the uniqueness of hashes across
+    /// different contexts.
+    pub domain_separator: [u8; 32],
+}
+
+impl LeafHash for VerifierSetLeaf {}
