@@ -1,3 +1,4 @@
+use sha3::{Digest, Keccak256};
 use udigest::Digestable;
 
 use crate::{hasher::LeafHash, EncodingError};
@@ -53,7 +54,11 @@ impl LeafHash for Message {}
 impl Message {
     pub fn command_id(&self) -> [u8; 32] {
         let cc_id = &self.cc_id;
-        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0
+        let mut hasher = Keccak256::new();
+        hasher.update(cc_id.chain.as_bytes());
+        hasher.update(b"-");
+        hasher.update(cc_id.id.as_bytes());
+        hasher.finalize().into()
     }
 }
 

@@ -6700,7 +6700,7 @@ dependencies = [
  "hex",
  "rand 0.8.5",
  "rs_merkle",
- "solana-keccak-hasher",
+ "sha3",
  "thiserror 1.0.69",
  "udigest",
 ]
