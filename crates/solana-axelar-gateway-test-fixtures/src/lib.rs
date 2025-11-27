@@ -15,6 +15,7 @@ use solana_axelar_gateway::{
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
+use solana_axelar_std::execute_data::prefixed_message_hash_payload_type;
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
     CrossChainId, MerklizedMessage, Message, MessageLeaf, PayloadType, Signature,
@@ -556,11 +557,7 @@ pub fn create_verifier_info(
     verifier_merkle_tree: &MerkleTree,
     payload_type: PayloadType,
 ) -> SigningVerifierSetInfo {
-    let hashed_message =
-        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash_payload_type(
-            payload_type,
-            &payload_merkle_root,
-        );
+    let hashed_message = prefixed_message_hash_payload_type(payload_type, &payload_merkle_root);
 
     let message = libsecp256k1::Message::parse(&hashed_message);
     let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);

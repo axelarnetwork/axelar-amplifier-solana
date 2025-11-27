@@ -2,6 +2,7 @@ use crate::GatewayError;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use bitvec::prelude::*;
+use solana_axelar_std::execute_data::prefixed_message_hash_payload_type;
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::PayloadType;
 use solana_axelar_std::{
@@ -95,32 +96,6 @@ impl SignatureVerificationSessionData {
         Ok(())
     }
 
-    pub fn prefixed_message_hash_payload_type(
-        payload_type: PayloadType,
-        message: &[u8; 32],
-    ) -> [u8; 32] {
-        // Add command type prefis to the message to indicate the intent of the singer
-        // this prevents rotating signers with a payload_merkle_root intended for approving
-        // messages and vice versa
-        const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
-        Self::prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, &[payload_type as u8], message)
-    }
-
-    pub fn prefixed_message_hash(
-        prefix: &[u8],
-        payload_type: &[u8],
-        message: &[u8; 32],
-    ) -> [u8; 32] {
-        let mut prefixed_message =
-            Vec::with_capacity(prefix.len() + payload_type.len() + message.len());
-        prefixed_message.extend_from_slice(prefix);
-        prefixed_message.extend_from_slice(payload_type);
-        prefixed_message.extend_from_slice(message);
-
-        // Hash the prefixed message to get a 32-byte digest
-        solana_program::keccak::hash(&prefixed_message).to_bytes()
-    }
-
     pub fn verify_ecdsa_signature(
         pubkey: &Secp256k1Pubkey,
         signature: &EcdsaRecoverableSignature,
@@ -128,7 +103,7 @@ impl SignatureVerificationSessionData {
         message: &[u8; 32],
     ) -> bool {
         // Reconstruct and hash the prefixed message to get a 32-byte digest
-        let hashed_message = Self::prefixed_message_hash_payload_type(payload_type, message);
+        let hashed_message = prefixed_message_hash_payload_type(payload_type, message);
 
         // The recovery bit in the signature's bytes is placed at the end, as per the
         // 'multisig-prover' contract by Axelar. Unwrap: we know the 'signature'

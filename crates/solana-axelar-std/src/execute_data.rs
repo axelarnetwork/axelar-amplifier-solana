@@ -1,7 +1,6 @@
-use std::collections::BTreeMap;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
+use std::collections::BTreeMap;
 use udigest::encoding::EncodeValue;
 
 use crate::{
@@ -172,6 +171,28 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
                 })
                 .sum::<usize>(),
         )
+}
+
+pub fn prefixed_message_hash_payload_type(
+    payload_type: PayloadType,
+    message: &[u8; 32],
+) -> [u8; 32] {
+    // Add command type prefis to the message to indicate the intent of the singer
+    // this prevents rotating signers with a payload_merkle_root intended for approving
+    // messages and vice versa
+    const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
+    prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, &[payload_type as u8], message)
+}
+
+pub fn prefixed_message_hash(prefix: &[u8], payload_type: &[u8], message: &[u8; 32]) -> [u8; 32] {
+    let mut prefixed_message =
+        Vec::with_capacity(prefix.len() + payload_type.len() + message.len());
+    prefixed_message.extend_from_slice(prefix);
+    prefixed_message.extend_from_slice(payload_type);
+    prefixed_message.extend_from_slice(message);
+
+    // Hash the prefixed message to get a 32-byte digest
+    solana_keccak_hasher::hash(&prefixed_message).0
 }
 
 /// Hashes a payload, generating a unique root hash for payload validation.
