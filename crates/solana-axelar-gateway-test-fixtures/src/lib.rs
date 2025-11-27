@@ -558,15 +558,10 @@ pub fn create_verifier_info(
     verifier_merkle_tree: &MerkleTree,
     payload_type: PayloadType,
 ) -> SigningVerifierSetInfo {
-    let signed_message =
+    let hashed_message =
         solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash_payload_type(
             payload_type,
             &payload_merkle_root,
-        );
-
-    let hashed_message =
-        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash_offchain(
-            &signed_message,
         );
 
     let message = libsecp256k1::Message::parse(&hashed_message);

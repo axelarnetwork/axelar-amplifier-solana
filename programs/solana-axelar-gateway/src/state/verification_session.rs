@@ -77,16 +77,12 @@ impl SignatureVerificationSessionData {
             return err!(GatewayError::InvalidMerkleProof);
         }
 
-        let signed_message = Self::prefixed_message_hash_payload_type(
-            verifier_info.payload_type,
-            &payload_merkle_root,
-        );
-
         // Check: Digital signature
         if !Self::verify_ecdsa_signature(
             &verifier_info.leaf.signer_pubkey.0,
             &verifier_info.signature.0,
-            &signed_message,
+            verifier_info.payload_type,
+            &payload_merkle_root,
         ) {
             return err!(GatewayError::SignatureVerificationFailed);
         }
@@ -99,14 +95,6 @@ impl SignatureVerificationSessionData {
         Ok(())
     }
 
-    /// Prefix and hash the given message
-    pub fn prefixed_message_hash_offchain(message: &[u8; 32]) -> [u8; 32] {
-        // Add Solana offchain prefix to the message before verification
-        // This follows the Axelar convention for prefixing signed messages
-        const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
-        Self::prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, message)
-    }
-
     pub fn prefixed_message_hash_payload_type(
         payload_type: PayloadType,
         message: &[u8; 32],
@@ -114,12 +102,19 @@ impl SignatureVerificationSessionData {
         // Add command type prefis to the message to indicate the intent of the singer
         // this prevents rotating signers with a payload_merkle_root intended for approving
         // messages and vice versa
-        Self::prefixed_message_hash(&[payload_type as u8], message)
+        const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
+        Self::prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, &[payload_type as u8], message)
     }
 
-    pub fn prefixed_message_hash(prefix: &[u8], message: &[u8; 32]) -> [u8; 32] {
-        let mut prefixed_message = Vec::with_capacity(prefix.len() + message.len());
+    pub fn prefixed_message_hash(
+        prefix: &[u8],
+        payload_type: &[u8],
+        message: &[u8; 32],
+    ) -> [u8; 32] {
+        let mut prefixed_message =
+            Vec::with_capacity(prefix.len() + payload_type.len() + message.len());
         prefixed_message.extend_from_slice(prefix);
+        prefixed_message.extend_from_slice(payload_type);
         prefixed_message.extend_from_slice(message);
 
         // Hash the prefixed message to get a 32-byte digest
@@ -129,10 +124,11 @@ impl SignatureVerificationSessionData {
     pub fn verify_ecdsa_signature(
         pubkey: &Secp256k1Pubkey,
         signature: &EcdsaRecoverableSignature,
+        payload_type: PayloadType,
         message: &[u8; 32],
     ) -> bool {
-        // Hash the prefixed message to get a 32-byte digest
-        let hashed_message = Self::prefixed_message_hash_offchain(message);
+        // Reconstruct and hash the prefixed message to get a 32-byte digest
+        let hashed_message = Self::prefixed_message_hash_payload_type(payload_type, message);
 
         // The recovery bit in the signature's bytes is placed at the end, as per the
         // 'multisig-prover' contract by Axelar. Unwrap: we know the 'signature'
