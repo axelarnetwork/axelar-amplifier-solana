@@ -128,9 +128,9 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     assert!(!init_result.program_result.is_err());
 
     // Step 3: Create messages and payload merkle root
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    let messages = default_messages();
+    let (message_leaves, message_merkle_tree, payload_merkle_root) =
+        create_message_merkle_tree(setup.domain_separator, &messages);
     let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
@@ -269,7 +269,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         final_verification_session
             .signature_verification
             .signing_verifier_set_hash,
-        verifier_set_merkle_root,
+        setup.verifier_set_hash,
         "Signing verifier set hash should match our merkle root"
     );
 
@@ -941,9 +941,9 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
     assert!(!init_result.program_result.is_err());
 
     // Step 3: Create messages and payload merkle root for message approval
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-    let (_messages, _message_leaves, _message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    let messages = default_messages();
+    let (_message_leaves, _message_merkle_tree, payload_merkle_root) =
+        create_message_merkle_tree(setup.domain_separator, &messages);
 
     // Step 4: Initialize payload verification session with APPROVE MESSAGES command type
     let payload_type = PayloadType::ApproveMessages;
