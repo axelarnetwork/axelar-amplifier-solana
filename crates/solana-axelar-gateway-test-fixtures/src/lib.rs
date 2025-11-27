@@ -4,8 +4,7 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::{
-    prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
-    ToAccountMetas,
+    prelude::UpgradeableLoaderState, AccountDeserialize, InstructionData, ToAccountMetas,
 };
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
@@ -17,9 +16,10 @@ use solana_axelar_gateway::{
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{IncomingMessage, Message};
-use solana_axelar_std::hasher::LeafHash;
+use solana_axelar_std::execute_data::Payload;
+use solana_axelar_std::hasher::{Hasher, LeafHash};
 use solana_axelar_std::{
-    CrossChainId, MerklizedMessage, MessageLeaf, Signature, SigningVerifierSetInfo,
+    CrossChainId, MerklizedMessage, MessageLeaf, Messages, Signature, SigningVerifierSetInfo,
     VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
@@ -922,11 +922,8 @@ pub fn transfer_operatorship_helper(
     setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
-pub fn setup_message_merkle_tree(
-    setup: &TestSetup,
-    _verifier_set_merkle_root: [u8; 32],
-) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
-    let messages = vec![
+pub fn default_messages() -> Vec<Message> {
+    vec![
         create_test_message(
             "ethereum",
             "msg_1",
@@ -939,8 +936,13 @@ pub fn setup_message_merkle_tree(
             "8q49wyQjNrSEZf5A8h6jR7dwLnDxdnURftv89FWLWMGK",
             [2u8; 32],
         ),
-    ];
+    ]
+}
 
+pub fn create_message_merkle_tree(
+    domain_separator: [u8; 32],
+    messages: &Vec<Message>,
+) -> (Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
     let message_leaves: Vec<MessageLeaf> = messages
         .iter()
         .enumerate()
@@ -948,22 +950,15 @@ pub fn setup_message_merkle_tree(
             message: msg.clone(),
             position: i as u16,
             set_size: messages.len() as u16,
-            domain_separator: setup.domain_separator,
+            domain_separator,
         })
         .collect();
 
     let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
-
     let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
-
     let payload_merkle_root = message_merkle_tree.root().unwrap();
 
-    (
-        messages,
-        message_leaves,
-        message_merkle_tree,
-        payload_merkle_root,
-    )
+    (message_leaves, message_merkle_tree, payload_merkle_root)
 }
 
 pub fn approve_message_helper(
@@ -984,9 +979,7 @@ pub fn approve_message_helper(
         proof: message_proof_bytes,
     };
 
-    let cc_id = &messages[position].cc_id;
-    let command_id =
-        solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
+    let command_id = messages[position].command_id();
 
     let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
         &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
