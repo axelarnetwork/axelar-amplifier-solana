@@ -91,11 +91,10 @@ pub fn transfer_token_manager_operatorship_handler(
 
     // Close if no remaining roles
     if !origin_roles.has_roles() {
-        anchor_lang::AccountsClose::close(
-            &ctx.accounts.origin_roles_account,
-            ctx.accounts.payer.to_account_info(),
-        )
-        .map_err(|e| e.with_account_name("origin_roles_account"))?;
+        ctx.accounts
+            .origin_roles_account
+            .close(ctx.accounts.payer.to_account_info())
+            .map_err(|e| e.with_account_name("origin_roles_account"))?;
     }
 
     Ok(())
