@@ -148,6 +148,9 @@ pub fn execute_interchain_transfer_handler<'info>(
         else {
             return err!(ItsError::InterchainTransferExecutePdaMissing);
         };
+        let Some(interchain_transfer_execute_bump) = ctx.bumps.interchain_transfer_execute else {
+            return err!(ItsError::InterchainTransferExecutePdaMissing);
+        };
 
         // Validate and decode payload data value
 
@@ -211,9 +214,6 @@ pub fn execute_interchain_transfer_handler<'info>(
         let mut account_infos = accounts.to_account_infos();
         account_infos.extend(ctx.remaining_accounts.iter().cloned());
 
-        let (_, axelar_transfer_execute_bump) =
-            InterchainTransferExecute::find_pda(ctx.accounts.destination.key);
-
         // Invoke the destination program
 
         solana_program::program::invoke_signed(
@@ -223,7 +223,7 @@ pub fn execute_interchain_transfer_handler<'info>(
             &[&[
                 InterchainTransferExecute::SEED_PREFIX,
                 ctx.accounts.destination.key().as_ref(),
-                &[axelar_transfer_execute_bump],
+                &[interchain_transfer_execute_bump],
             ]],
         )?;
     }
