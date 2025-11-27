@@ -2,7 +2,7 @@ use crate::errors::ItsError;
 use anchor_lang::prelude::*;
 use std::time::Duration;
 
-const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60);
+const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60); // 6 hours
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum FlowDirection {
@@ -11,10 +11,7 @@ pub(crate) enum FlowDirection {
 }
 
 /// Struct containing flow information for a specific epoch.
-// TODO should this be an account? for now it's only used
-// as a value in ITS and TokenManager accounts
-#[account]
-#[derive(Debug, Eq, PartialEq, InitSpace)]
+#[derive(Clone, Debug, Eq, PartialEq, InitSpace, AnchorSerialize, AnchorDeserialize)]
 pub struct FlowState {
     pub flow_limit: Option<u64>,
     pub flow_in: u64,

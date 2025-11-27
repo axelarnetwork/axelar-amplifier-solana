@@ -22,8 +22,6 @@ pub struct ExecuteLinkToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    pub deployer: Signer<'info>,
-
     pub system_program: Program<'info, System>,
 
     #[account(

@@ -127,11 +127,9 @@ fn test_register_token_metadata() {
             its_root_pda,
             call_contract_signing_pda,
             gateway_event_authority,
-            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-                gas_treasury: treasury_pda,
-                gas_service: solana_axelar_gas_service::ID,
-                gas_event_authority,
-            },
+            gas_treasury: treasury_pda,
+            gas_service: solana_axelar_gas_service::ID,
+            gas_event_authority,
             event_authority,
             program: program_id,
         }
@@ -257,11 +255,9 @@ fn test_register_token_metadata_failure_for_empty_mint() {
             its_root_pda,
             call_contract_signing_pda,
             gateway_event_authority,
-            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-                gas_treasury: treasury_pda,
-                gas_service: solana_axelar_gas_service::ID,
-                gas_event_authority,
-            },
+            gas_treasury: treasury_pda,
+            gas_service: solana_axelar_gas_service::ID,
+            gas_event_authority,
             event_authority,
             program: program_id,
         }

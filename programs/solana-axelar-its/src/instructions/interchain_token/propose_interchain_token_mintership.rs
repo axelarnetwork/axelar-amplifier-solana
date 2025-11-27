@@ -33,7 +33,6 @@ pub struct ProposeInterchainTokenMintership<'info> {
 
     /// Origin user roles account (current minter's roles for this token manager)
     #[account(
-        mut,
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_account.key().as_ref(),

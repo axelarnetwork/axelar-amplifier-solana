@@ -4221,6 +4221,7 @@ dependencies = [
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
  "solana-axelar-its-test-fixtures",
+ "solana-axelar-memo",
  "solana-axelar-operators",
  "solana-axelar-std",
  "solana-program",

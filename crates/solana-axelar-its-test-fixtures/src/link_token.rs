@@ -73,11 +73,9 @@ pub fn execute_link_token_helper(
         system_program: solana_sdk::system_program::ID,
         call_contract_signing_pda,
         gateway_event_authority,
-        gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-            gas_treasury: ctx.gas_treasury.0,
-            gas_service: solana_axelar_gas_service::ID,
-            gas_event_authority,
-        },
+        gas_treasury: ctx.gas_treasury.0,
+        gas_service: solana_axelar_gas_service::ID,
+        gas_event_authority,
         // for event cpi
         event_authority,
         program: program_id,

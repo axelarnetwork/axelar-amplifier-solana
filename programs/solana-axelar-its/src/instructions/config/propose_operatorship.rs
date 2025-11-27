@@ -17,7 +17,6 @@ pub struct ProposeOperatorship<'info> {
 
     /// Origin user roles account (current operator's roles)
     #[account(
-        mut,
         seeds = [
             UserRoles::SEED_PREFIX,
             resource_account.key().as_ref(),

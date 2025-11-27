@@ -67,3 +67,9 @@ pub enum ItsError {
     #[msg("Invalid token manager type")]
     InvalidTokenManagerType,
 }
+
+impl From<ItsError> for ProgramError {
+    fn from(val: ItsError) -> Self {
+        anchor_lang::error::Error::from(val).into()
+    }
+}

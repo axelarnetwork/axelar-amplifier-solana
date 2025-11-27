@@ -2,7 +2,8 @@ use crate::{
     errors::ItsError,
     state::{InterchainTokenService, RolesError, TokenManager, UserRoles},
 };
-use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
 #[derive(Accounts)]
@@ -93,4 +94,36 @@ pub fn mint_interchain_token_handler(ctx: Context<MintInterchainToken>, amount: 
     anchor_spl::token_interface::mint_to(cpi_ctx, amount)?;
 
     Ok(())
+}
+
+pub fn make_mint_interchain_token_instruction(
+    token_id: [u8; 32],
+    amount: u64,
+    minter: Pubkey,
+    destination_account: Pubkey,
+    token_program: Pubkey,
+) -> (Instruction, crate::accounts::MintInterchainToken) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+    let token_manager_pda = crate::TokenManager::find_pda(token_id, its_root_pda).0;
+    let mint = crate::TokenManager::find_token_mint(token_id, its_root_pda).0;
+    let minter_roles_pda = crate::UserRoles::find_pda(&token_manager_pda, &minter).0;
+
+    let accounts = crate::accounts::MintInterchainToken {
+        mint,
+        destination_account,
+        its_root_pda,
+        token_manager_pda,
+        minter,
+        minter_roles_pda,
+        token_program,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::MintInterchainToken { amount }.data(),
+        },
+        accounts,
+    )
 }
