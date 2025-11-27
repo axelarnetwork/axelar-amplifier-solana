@@ -355,6 +355,8 @@ impl ItsTestHarness {
                 ],
             ),
         ]);
+
+        msg!("Operators initialized.");
     }
 
     pub fn ensure_gas_service_initialized(&self) {
@@ -390,6 +392,8 @@ impl ItsTestHarness {
                     .build(),
             ],
         )]);
+
+        msg!("Gas service initialized.");
     }
 
     // TODO move to gateway harness
@@ -510,6 +514,8 @@ impl ItsTestHarness {
 
         self.gateway.root = gateway_root_pda;
         self.gateway.verifier_set_tracker = verifier_set_tracker_pda;
+
+        msg!("Gateway initialized.");
     }
 
     #[allow(clippy::too_many_lines)]
