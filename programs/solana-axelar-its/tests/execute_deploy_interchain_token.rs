@@ -48,7 +48,6 @@ fn test_execute_deploy_interchain_token_success() {
         chain_name.clone(),
         its_hub_address.clone(),
     );
-
     let (its_relayer_transaction_pda, its_relayer_transaction_account) =
         init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
 

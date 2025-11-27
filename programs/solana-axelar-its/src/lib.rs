@@ -263,8 +263,8 @@ pub mod solana_axelar_its {
         )
     }
 
-    pub fn execute_interchain_transfer(
-        ctx: Context<ExecuteInterchainTransfer>,
+    pub fn execute_interchain_transfer<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
         token_id: [u8; 32],
         source_address: Vec<u8>,
         destination_address: Pubkey,

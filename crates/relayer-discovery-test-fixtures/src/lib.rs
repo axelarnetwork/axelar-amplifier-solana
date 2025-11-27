@@ -476,7 +476,7 @@ impl RelayerDiscoveryTestFixture {
         &mut self,
         message: &Message,
         payload: Vec<u8>,
-        mut accounts: Vec<(Pubkey, Account)>,
+        accounts: Vec<(Pubkey, Account)>,
     ) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
         self.approve_and_execute_with_checks(message, payload, accounts, None)
     }

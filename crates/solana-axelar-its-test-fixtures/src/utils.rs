@@ -534,7 +534,7 @@ pub fn init_its_relayer_transaction(
 
     let relayer_transaction_length = {
         let mut bytes = Vec::with_capacity(256);
-        solana_axelar_its::instructions::relayer_transaction()
+        solana_axelar_its::utils::relayer_transaction(None, None)
             .serialize(&mut bytes)
             .unwrap();
         bytes.len()

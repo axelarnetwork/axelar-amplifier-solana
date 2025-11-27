@@ -1,11 +1,11 @@
 use crate::{
-    seed_prefixes::{
+    CHAIN_NAME_HASH, InterchainTokenService, TokenManager, instruction::GetTransaction, seed_prefixes::{
         PREFIX_CANONICAL_TOKEN_SALT, PREFIX_CUSTOM_TOKEN_SALT, PREFIX_INTERCHAIN_TOKEN_ID,
         PREFIX_INTERCHAIN_TOKEN_SALT,
-    },
-    CHAIN_NAME_HASH,
+    }
 };
 use anchor_lang::{prelude::*, solana_program};
+use relayer_discovery::{structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTransaction}};
 
 pub fn interchain_token_deployer_salt(deployer: &Pubkey, salt: &[u8; 32]) -> [u8; 32] {
     solana_program::keccak::hashv(&[
@@ -46,4 +46,42 @@ pub fn linked_token_deployer_salt(deployer: &Pubkey, salt: &[u8; 32]) -> [u8; 32
         salt,
     ])
     .to_bytes()
+}
+
+pub fn relayer_transaction(
+    token_id: Option<[u8; 32]>,
+    destination_address: Option<Pubkey>,
+) -> RelayerTransaction {
+    let token_manager = match token_id {
+        Some(token_id) => TokenManager::find_pda(token_id, InterchainTokenService::find_pda().0).0,
+        None => crate::ID,
+    };
+    let destination_transaction = match destination_address {
+        Some(destination_address) => crate::ID,
+        None => crate::ID,
+    };
+    RelayerTransaction::Discovery(RelayerInstruction {
+        // We want the relayer to call this program.
+        program_id: crate::ID,
+        // No accounts are required for this.
+        accounts: vec![
+            RelayerAccount::Account {
+                pubkey: token_manager,
+                is_writable: false,
+            },
+            RelayerAccount::Account {
+                pubkey: destination_transaction,
+                is_writable: false,
+            },
+        ],
+        // The data we need to find the final transaction.
+        data: vec![
+            // We can easily get the discriminaator thankfully. Note that we need `instruction::GetTransaction` and not `instructions::GetTransaction`.
+            RelayerData::Bytes(Vec::from(GetTransaction::DISCRIMINATOR)),
+            // We do not want to prefix the payload with the length as it is decoded into a struct as opposed to a `Vec<u8>`.
+            RelayerData::Message,
+            // The command id, which is the only thing required (alongside this crate's id) to derive all the accounts required by the gateway.
+            RelayerData::Payload,
+        ],
+    })
 }

@@ -5,7 +5,7 @@ use relayer_discovery::transaction_pda_accounts;
 
 use crate::instruction::GetTransaction;
 
-transaction_pda_accounts!(relayer_transaction);
+transaction_pda_accounts!(relayer_transaction());
 
 #[derive(Accounts)]
 pub struct Init<'info> {

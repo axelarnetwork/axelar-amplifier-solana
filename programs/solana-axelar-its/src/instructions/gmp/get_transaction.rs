@@ -1,7 +1,5 @@
 use crate::{
-    errors::ItsError,
-    instruction,
-    state::{InterchainTokenService, TokenManager, UserRoles},
+    errors::ItsError, instruction, instructions::relayer_transaction, state::{InterchainTokenService, TokenManager, UserRoles}
 };
 use anchor_lang::{prelude::*, system_program};
 use anchor_spl::{
@@ -29,6 +27,8 @@ pub struct GetTransaction<'info> {
         bump = token_manager_pda.bump,
     )]
     pub token_manager_pda: Option<Account<'info, TokenManager>>,
+
+    pub executable_transaction: Option<AccountInfo<'info>>,
 }
 
 /// This should return a `RelayerTransaction` that will convert to an `Execute` instruction properly, for a given `payload` and `command_id`. No accounts are needed to find this information.
@@ -57,6 +57,8 @@ pub fn get_transaction_handler(
             transfer,
             inner_msg.source_chain,
             ctx.accounts.token_manager_pda.take(),
+            ctx.accounts.executable_transaction.take(),
+            None,
         ),
         DeployInterchainToken(deploy) => {
             deploy_interchain_token_transaction(message, deploy, inner_msg.source_chain)
@@ -84,7 +86,7 @@ fn deploy_interchain_token_transaction(
 
     let its_root_pda = InterchainTokenService::find_pda().0;
     let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
-    let token_mint_pda = TokenManager::find_token_mint_pda(token_id, its_root_pda).0;
+    let token_mint_pda = TokenManager::find_token_mint(token_id, its_root_pda).0;
     let token_manager_ata = get_associated_token_address_with_program_id(
         &token_manager_pda,
         &token_mint_pda,
@@ -343,25 +345,40 @@ fn link_token_transaction(
     ))
 }
 
-fn insterchain_transfer_transaction<'info>(
+pub fn insterchain_transfer_transaction<'info>(
     message: Message,
     transfer: InterchainTransfer,
     source_chain: String,
     token_manager: Option<Account<'info, TokenManager>>,
+    executable_transaction: Option<AccountInfo<'info>>,
+    executable_accounts: Option<Vec<RelayerAccount>>,
 ) -> Result<RelayerTransaction> {
+    if !transfer.data.is_empty() && executable_accounts.is_none() {
+        let Some(executable_transaction) = executable_transaction 
+        else {
+            return relayer_transaction(None, destination_address); 
+        };
+
+    };
     let Some(token_manager) = token_manager else {
         return Ok(RelayerTransaction::Discovery(RelayerInstruction {
             // We want the relayer to call this program.
             program_id: crate::ID,
             // No accounts are required for this.
-            accounts: vec![RelayerAccount::Account {
-                pubkey: TokenManager::find_pda(
-                    transfer.token_id.0,
-                    InterchainTokenService::find_pda().0,
-                )
-                .0,
-                is_writable: false,
-            }],
+            accounts: vec![
+                RelayerAccount::Account {
+                    pubkey: TokenManager::find_pda(
+                        transfer.token_id.0,
+                        InterchainTokenService::find_pda().0,
+                    )
+                    .0,
+                    is_writable: false,
+                },
+                RelayerAccount::Account {
+                    pubkey: crate::ID,
+                    is_writable: false,
+                },
+            ],
             // The data we need to find the final transaction.
             data: vec![
                 RelayerData::Bytes(Vec::from(instruction::GetTransaction::DISCRIMINATOR)),
@@ -450,6 +467,10 @@ fn insterchain_transfer_transaction<'info>(
                     },
                     RelayerAccount::Account {
                         pubkey: system_program::ID,
+                        is_writable: false,
+                    },
+                    RelayerAccount::Account {
+                        pubkey: program_id,
                         is_writable: false,
                     },
                 ],

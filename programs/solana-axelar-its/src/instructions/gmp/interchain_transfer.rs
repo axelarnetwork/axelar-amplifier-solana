@@ -1,17 +1,12 @@
 use crate::{
-    errors::ItsError,
-    events::InterchainTransferReceived,
-    instructions::gmp::*,
-    instructions::validate_message,
-    state::{
-        current_flow_epoch, token_manager, FlowDirection, InterchainTokenService,
-        InterchainTransferExecute, TokenManager,
-    },
+    errors::ItsError, events::InterchainTransferReceived, executable::{AxelarExecuteWithInterchainTokenInstruction, AxelarExecuteWithInterchainTokenPayload, builder::AxelarExecuteWithInterchainToken}, instructions::{gmp::*, validate_message}, state::{
+        FlowDirection, InterchainTokenService, InterchainTransferExecute, TokenManager, current_flow_epoch, token_manager
+    }
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use anchor_lang::{prelude::*, InstructionData};
+use anchor_lang::InstructionData;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_2022::spl_token_2022::{
@@ -23,7 +18,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};
-use solana_axelar_gateway::Message;
+use solana_axelar_gateway::{Message, payload::AxelarMessagePayload};
 use solana_program::{program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
@@ -108,8 +103,8 @@ pub struct ExecuteInterchainTransfer<'info> {
 
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::unimplemented)]
-pub fn execute_interchain_transfer_handler(
-    mut ctx: Context<ExecuteInterchainTransfer>,
+pub fn execute_interchain_transfer_handler<'info>(
+    mut ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
     token_id: [u8; 32],
     source_address: Vec<u8>,
     destination_address: Pubkey,
@@ -137,9 +132,6 @@ pub fn execute_interchain_transfer_handler(
         GMPPayload::InterchainTransfer(transfer),
         source_chain.clone(),
     )?;
-
-    let source_address =
-        String::from_utf8(source_address).map_err(|_| ItsError::InvalidInstructionData)?;
 
     if amount == 0 {
         return err!(ItsError::InvalidAmount);
