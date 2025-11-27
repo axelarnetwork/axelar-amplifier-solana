@@ -98,7 +98,6 @@ pub struct ExecuteInterchainTransfer<'info> {
 }
 
 #[allow(clippy::too_many_arguments)]
-#[allow(clippy::unimplemented)]
 pub fn execute_interchain_transfer_handler<'info>(
     mut ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
     message: Message,
