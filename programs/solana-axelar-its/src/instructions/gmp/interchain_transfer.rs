@@ -144,10 +144,6 @@ pub fn execute_interchain_transfer_handler<'info>(
     if !data.is_empty() {
         // Validate accounts
 
-        if !ctx.accounts.destination.executable {
-            return err!(ItsError::DestinationAddressNotExecutable);
-        }
-
         let Some(interchain_transfer_execute) = ctx.accounts.interchain_transfer_execute.as_ref()
         else {
             return err!(ItsError::InterchainTransferExecutePdaMissing);
