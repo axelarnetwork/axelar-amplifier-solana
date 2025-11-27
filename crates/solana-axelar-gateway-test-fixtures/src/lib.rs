@@ -939,7 +939,7 @@ pub fn default_messages() -> Vec<Message> {
 
 pub fn create_message_merkle_tree(
     domain_separator: [u8; 32],
-    messages: &Vec<Message>,
+    messages: &[Message],
 ) -> (Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
     let message_leaves: Vec<MessageLeaf> = messages
         .iter()

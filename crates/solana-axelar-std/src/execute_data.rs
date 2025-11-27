@@ -184,7 +184,7 @@ pub fn prefixed_message_hash_payload_type(
     prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, &[payload_type as u8], message)
 }
 
-pub fn prefixed_message_hash(prefix: &[u8], payload_type: &[u8], message: &[u8; 32]) -> [u8; 32] {
+fn prefixed_message_hash(prefix: &[u8], payload_type: &[u8], message: &[u8; 32]) -> [u8; 32] {
     let mut prefixed_message =
         Vec::with_capacity(prefix.len() + payload_type.len() + message.len());
     prefixed_message.extend_from_slice(prefix);
