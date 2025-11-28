@@ -106,10 +106,20 @@ fn test_execute_interchain_transfer_success() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
         verifier_leaves.clone(),
@@ -238,7 +248,8 @@ fn test_execute_interchain_transfer_success() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -419,10 +430,20 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
         verifier_leaves.clone(),
@@ -551,7 +572,8 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -708,10 +730,20 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
         verifier_leaves.clone(),
@@ -842,7 +874,8 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -1001,10 +1034,20 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
         verifier_leaves.clone(),
@@ -1133,7 +1176,8 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,

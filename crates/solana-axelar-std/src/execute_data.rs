@@ -1,7 +1,6 @@
-use std::collections::BTreeMap;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
+use std::collections::BTreeMap;
 use udigest::encoding::EncodeValue;
 
 use crate::{
@@ -45,6 +44,21 @@ pub enum Payload {
     NewVerifierSet(VerifierSet),
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(feature = "anchor"),
+    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
+)]
+#[cfg_attr(
+    feature = "anchor",
+    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+)]
+pub enum PayloadType {
+    ApproveMessages = 0,
+    RotateSigners = 1,
+}
+
 /// Represents the payload data in a Merkle tree structure.
 ///
 /// `MerklizedPayload` can either be a rotation of the verifier set or a
@@ -83,14 +97,18 @@ pub fn encode(
     domain_separator: [u8; 32],
     payload: Payload,
 ) -> Result<Vec<u8>, EncodingError> {
+    let payload_type = match payload {
+        Payload::Messages(_) => PayloadType::ApproveMessages,
+        Payload::NewVerifierSet(_) => PayloadType::RotateSigners,
+    };
+
+    // Verifier Set Merkle Tree
     let leaves = verifier_set::merkle_tree_leaves(signing_verifier_set, &domain_separator)?
         .collect::<Vec<_>>();
     let signer_merkle_tree = merkle_tree::<Hasher, VerifierSetLeaf>(leaves.iter());
     let signing_verifier_set_merkle_root = signer_merkle_tree
         .root()
         .ok_or(EncodingError::CannotMerklizeEmptyVerifierSet)?;
-    let (payload_merkle_root, payload_items) =
-        hash_payload_internal::<Hasher>(payload, domain_separator)?;
 
     let signing_verifier_set_leaves = leaves
         .into_iter()
@@ -101,11 +119,17 @@ pub fn encode(
                     signature: *signature,
                     leaf,
                     merkle_proof: merkle_proof.to_bytes(),
+                    payload_type,
                 });
             }
             None
         })
         .collect::<Vec<_>>();
+
+    // Payload Merkle Tree
+    let (payload_merkle_root, payload_items) =
+        hash_payload_internal::<Hasher>(payload, domain_separator)?;
+
     let execute_data = ExecuteData {
         signing_verifier_set_merkle_root,
         signing_verifier_set_leaves,
@@ -147,6 +171,28 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
                 })
                 .sum::<usize>(),
         )
+}
+
+pub fn prefixed_message_hash_payload_type(
+    payload_type: PayloadType,
+    message: &[u8; 32],
+) -> [u8; 32] {
+    // Add command type prefis to the message to indicate the intent of the singer
+    // this prevents rotating signers with a payload_merkle_root intended for approving
+    // messages and vice versa
+    const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
+    prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, &[payload_type as u8], message)
+}
+
+fn prefixed_message_hash(prefix: &[u8], payload_type: &[u8], message: &[u8; 32]) -> [u8; 32] {
+    let mut prefixed_message =
+        Vec::with_capacity(prefix.len() + payload_type.len() + message.len());
+    prefixed_message.extend_from_slice(prefix);
+    prefixed_message.extend_from_slice(payload_type);
+    prefixed_message.extend_from_slice(message);
+
+    // Hash the prefixed message to get a 32-byte digest
+    solana_keccak_hasher::hash(&prefixed_message).0
 }
 
 /// Hashes a payload, generating a unique root hash for payload validation.

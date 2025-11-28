@@ -9,13 +9,14 @@ use solana_axelar_gateway::{
 };
 use solana_axelar_gateway::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
 use solana_axelar_gateway_test_fixtures::{
-    approve_message_helper, call_contract_helper, create_verifier_info, initialize_gateway,
+    approve_message_helper_from_merklized, call_contract_helper,
+    create_merklized_messages_from_std, create_verifier_info, default_messages, initialize_gateway,
     initialize_payload_verification_session, initialize_payload_verification_session_with_root,
-    mock_setup_test, rotate_signers_helper, setup_message_merkle_tree,
-    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
+    mock_setup_test, rotate_signers_helper, setup_test_with_real_signers,
+    transfer_operatorship_helper, verify_signature_helper,
 };
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::U256;
+use solana_axelar_std::{PayloadType, U256};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -30,13 +31,7 @@ fn test_initialize_config() {
     assert!(!result.program_result.is_err());
 
     // Test the gateway config account
-    let gateway_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
+    let gateway_account = result.get_account(&setup.gateway_root_pda).unwrap().clone();
 
     let expected_config = GatewayConfig {
         current_epoch: setup.epoch,
@@ -55,11 +50,8 @@ fn test_initialize_config() {
     assert_eq!(actual_config, expected_config);
 
     let verifier_set_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .get_account(&setup.verifier_set_tracker_pda)
         .unwrap()
-        .1
         .clone();
 
     let actual_verifier_set_tracker =
@@ -83,8 +75,23 @@ fn test_initialize_payload_verification_session() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    let (result, verification_session_pda) =
-        initialize_payload_verification_session(&setup, &init_result);
+    let payload_type = PayloadType::ApproveMessages;
+
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
+    let (result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        payload_type,
+    );
 
     assert!(
         !result.program_result.is_err(),
@@ -93,11 +100,8 @@ fn test_initialize_payload_verification_session() {
     );
 
     let verification_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     let actual_verification_account = SignatureVerificationSessionData::try_deserialize(
@@ -106,7 +110,8 @@ fn test_initialize_payload_verification_session() {
     .unwrap();
 
     let mut expected_verification_account =
-        SignatureVerificationSessionData::new(SignatureVerification::default(), 255);
+        SignatureVerificationSessionData::new(SignatureVerification::default(), 254);
+
     expected_verification_account
         .signature_verification
         .signing_verifier_set_hash = setup.verifier_set_hash;
@@ -124,43 +129,46 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    // Step 3: Create messages and payload merkle root
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    // Step 3: Create messages and payload merkle root using std crate
+    let messages = default_messages();
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
+    let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
-            &init_result,
+            gateway_account,
+            verifier_set_tracker_account,
             payload_merkle_root,
+            payload_type,
         );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts
     let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .get_account(&setup.gateway_root_pda)
         .unwrap()
-        .1
         .clone();
 
     let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .get_account(&setup.verifier_set_tracker_pda)
         .unwrap()
-        .1
         .clone();
 
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     // Step 6: Sign the payload with both signers and verify signatures
@@ -171,6 +179,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
+        payload_type,
     );
 
     // Execute the first verify_signature instruction using helper
@@ -178,11 +187,15 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         &setup,
         payload_merkle_root,
         verifier_info_1,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            verification_session_account.clone(),
+        ),
         gateway_account.clone(),
-        verification_session_account.clone(),
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account.clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account.clone(),
+        ),
     );
 
     assert!(
@@ -193,11 +206,8 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 
     // Get updated verification session after first signature
     let updated_verification_account_after_first = verify_result_1
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     // Create verifier info for second signer
@@ -208,6 +218,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         &verifier_leaves[1],
         1, // Position 1
         &verifier_merkle_tree,
+        payload_type,
     );
 
     // Execute the second verify_signature instruction using helper
@@ -215,11 +226,12 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         &setup,
         payload_merkle_root,
         verifier_info_2,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            updated_verification_account_after_first,
+        ),
         gateway_account,
-        updated_verification_account_after_first,
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
     );
 
     assert!(
@@ -230,11 +242,8 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 
     // Step 7: Check the session contents to verify quorum was reached
     let final_verification_account = verify_result_2
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     let final_verification_session = SignatureVerificationSessionData::try_deserialize(
@@ -262,19 +271,25 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         final_verification_session
             .signature_verification
             .signing_verifier_set_hash,
-        verifier_set_merkle_root,
+        setup.verifier_set_hash,
         "Signing verifier set hash should match our merkle root"
     );
 
-    let (approve_result, incoming_message_pda) = approve_message_helper(
+    let final_gateway_account = verify_result_2
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let final_verification_session_account = verify_result_2
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+
+    let (approve_result, incoming_message_pda) = approve_message_helper_from_merklized(
         &setup,
-        message_merkle_tree,
-        message_leaves,
-        &messages,
+        &merklized_messages[0], // First message
         payload_merkle_root,
-        verification_session_pda,
-        verify_result_2,
-        0, // position
+        (verification_session_pda, final_verification_session_account),
+        final_gateway_account,
     );
 
     assert!(
@@ -284,11 +299,8 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     );
 
     let incoming_message_account = approve_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == incoming_message_pda)
+        .get_account(&incoming_message_pda)
         .unwrap()
-        .1
         .clone();
 
     assert_eq!(
@@ -326,39 +338,42 @@ fn test_rotate_signers() {
     // Step 4: Create rotation payload hash (what current verifiers need to sign)
     // New verifier set hash is used directly as the payload hash for rotation
     let rotation_payload_hash = new_verifier_set_hash;
+    let payload_type = PayloadType::RotateSigners;
 
     // Step 5: Initialize payload verification session (for the rotation)
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
-            &init_result,
+            gateway_account,
+            verifier_set_tracker_account,
             new_verifier_set_hash,
+            payload_type,
         );
     assert!(!session_result.program_result.is_err());
 
     // Step 6: Get existing accounts
     let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .get_account(&setup.gateway_root_pda)
         .unwrap()
-        .1
         .clone();
 
     let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .get_account(&setup.verifier_set_tracker_pda)
         .unwrap()
-        .1
         .clone();
 
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     // Step 7: CURRENT verifiers sign the ROTATION payload
@@ -370,28 +385,30 @@ fn test_rotate_signers() {
         verifier_leaves.first().unwrap(),
         0,
         &verifier_merkle_tree,
+        payload_type,
     );
 
     let verify_result_1 = verify_signature_helper(
         &setup,
         rotation_payload_hash,
         verifier_info_1,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            verification_session_account.clone(),
+        ),
         gateway_account.clone(),
-        verification_session_account.clone(),
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account.clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account.clone(),
+        ),
     );
 
     assert!(!verify_result_1.program_result.is_err());
 
     // Get updated verification session after first signature
     let updated_verification_account_after_first = verify_result_1
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     // Second verifier signs for rotation
@@ -402,28 +419,27 @@ fn test_rotate_signers() {
         &verifier_leaves[1],
         1,
         &verifier_merkle_tree,
+        payload_type,
     );
 
     let verify_result_2 = verify_signature_helper(
         &setup,
         rotation_payload_hash,
         verifier_info_2,
-        verification_session_pda,
-        gateway_account.clone(),
-        updated_verification_account_after_first,
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        (
+            verification_session_pda,
+            updated_verification_account_after_first,
+        ),
+        gateway_account,
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
     );
 
     assert!(!verify_result_2.program_result.is_err());
 
     // Step 8: Verify the session is complete
     let final_verification_account = verify_result_2
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     let final_verification_session = SignatureVerificationSessionData::try_deserialize(
@@ -437,11 +453,25 @@ fn test_rotate_signers() {
     );
 
     // Step 9: Execute the rotation instruction
+    let final_gateway_account = verify_result_2
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let final_verification_session_account = verify_result_2
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = verify_result_2
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let rotate_result = rotate_signers_helper(
         &setup,
         new_verifier_set_hash,
-        verification_session_pda,
-        verify_result_2,
+        (verification_session_pda, final_verification_session_account),
+        final_gateway_account,
+        verifier_set_tracker_account,
     );
 
     assert!(
@@ -457,11 +487,8 @@ fn test_rotate_signers() {
     );
 
     let new_verifier_set_account = rotate_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == new_verifier_set_tracker_pda)
+        .get_account(&new_verifier_set_tracker_pda)
         .unwrap()
-        .1
         .clone();
 
     let new_tracker =
@@ -475,11 +502,8 @@ fn test_rotate_signers() {
 
     // Step 11: Verify gateway config was updated
     let updated_gateway_account = rotate_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .get_account(&setup.gateway_root_pda)
         .unwrap()
-        .1
         .clone();
 
     let updated_config =
@@ -503,7 +527,17 @@ fn test_transfer_operatorship() {
     // Create a new operator
     let new_operator = Pubkey::new_unique();
 
-    let result = transfer_operatorship_helper(&setup, init_result, new_operator);
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let program_data_account = init_result
+        .get_account(&setup.program_data_pda)
+        .unwrap()
+        .clone();
+
+    let result =
+        transfer_operatorship_helper(&setup, gateway_account, program_data_account, new_operator);
 
     assert!(
         !result.program_result.is_err(),
@@ -512,13 +546,7 @@ fn test_transfer_operatorship() {
     );
 
     // Verify that the operator was changed
-    let updated_gateway_account = result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
+    let updated_gateway_account = result.get_account(&setup.gateway_root_pda).unwrap().clone();
 
     let updated_config =
         GatewayConfig::try_deserialize(&mut updated_gateway_account.data.as_slice()).unwrap();
@@ -537,7 +565,12 @@ fn test_call_contract_from_program() {
         "Gateway initialization should succeed"
     );
 
-    let result = call_contract_helper(&setup, init_result, memo_program_id);
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+
+    let result = call_contract_helper(&setup, gateway_account, memo_program_id);
 
     assert!(
         !result.program_result.is_err(),
@@ -652,15 +685,28 @@ fn test_fails_when_verifier_submits_signature_twice() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-    let (_messages, _message_leaves, _message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    let messages = default_messages();
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
+
+    let payload_type = PayloadType::ApproveMessages;
+
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
 
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
-            &init_result,
+            gateway_account,
+            verifier_set_tracker_account,
             payload_merkle_root,
+            payload_type,
         );
     assert!(!session_result.program_result.is_err());
 
@@ -670,6 +716,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
         verifier_leaves.first().unwrap(),
         0,
         &verifier_merkle_tree,
+        payload_type,
     );
 
     // First signature verification should succeed
@@ -677,29 +724,24 @@ fn test_fails_when_verifier_submits_signature_twice() {
         &setup,
         payload_merkle_root,
         verifier_info.clone(),
-        verification_session_pda,
+        (
+            verification_session_pda,
+            session_result
+                .get_account(&verification_session_pda)
+                .unwrap()
+                .clone(),
+        ),
         init_result
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .get_account(&setup.gateway_root_pda)
             .unwrap()
-            .1
             .clone(),
-        session_result
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == verification_session_pda)
-            .unwrap()
-            .1
-            .clone(),
-        setup.verifier_set_tracker_pda,
-        init_result
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-            .unwrap()
-            .1
-            .clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            init_result
+                .get_account(&setup.verifier_set_tracker_pda)
+                .unwrap()
+                .clone(),
+        ),
     );
     assert!(!verify_result_1.program_result.is_err());
 
@@ -708,29 +750,24 @@ fn test_fails_when_verifier_submits_signature_twice() {
         &setup,
         payload_merkle_root,
         verifier_info,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            verify_result_1
+                .get_account(&verification_session_pda)
+                .unwrap()
+                .clone(),
+        ),
         init_result
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+            .get_account(&setup.gateway_root_pda)
             .unwrap()
-            .1
             .clone(),
-        verify_result_1
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == verification_session_pda)
-            .unwrap()
-            .1
-            .clone(),
-        setup.verifier_set_tracker_pda,
-        init_result
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-            .unwrap()
-            .1
-            .clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            init_result
+                .get_account(&setup.verifier_set_tracker_pda)
+                .unwrap()
+                .clone(),
+        ),
     );
 
     // Should fail with SlotAlreadyVerified error
@@ -747,43 +784,47 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    // Step 3: Create messages and payload merkle root
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    // Step 3: Create messages and payload merkle root using std crate
+    let messages = default_messages();
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
+
+    let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
-            &init_result,
+            gateway_account,
+            verifier_set_tracker_account,
             payload_merkle_root,
+            payload_type,
         );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts
     let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .get_account(&setup.gateway_root_pda)
         .unwrap()
-        .1
         .clone();
 
     let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .get_account(&setup.verifier_set_tracker_pda)
         .unwrap()
-        .1
         .clone();
 
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     // Step 6: Sign the payload with ONLY ONE signer (not enough to make session valid)
@@ -793,31 +834,36 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
         verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
+        payload_type,
     );
 
     let verify_result_1 = verify_signature_helper(
         &setup,
         payload_merkle_root,
         verifier_info_1,
-        verification_session_pda,
+        (verification_session_pda, verification_session_account),
         gateway_account,
-        verification_session_account,
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
     );
     assert!(!verify_result_1.program_result.is_err());
 
     // Step 7: Now try to approve a message with only one signature (insufficient)
     // The verification session should not be valid since we need both signers
-    let (approve_result, _) = approve_message_helper(
+    let gateway_account = verify_result_1
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verification_session_account = verify_result_1
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+
+    let (approve_result, _) = approve_message_helper_from_merklized(
         &setup,
-        message_merkle_tree,
-        message_leaves,
-        &messages,
+        &merklized_messages[0], // First message
         payload_merkle_root,
-        verification_session_pda,
-        verify_result_1, // Only one signature, not two
-        0,               // Try to approve the first message
+        (verification_session_pda, verification_session_account),
+        gateway_account,
     );
 
     // Should fail because the verification session is not valid (insufficient signatures)
@@ -839,42 +885,46 @@ fn test_fails_when_verifying_invalid_signature() {
     assert!(!init_result.program_result.is_err());
 
     // Step 3: Create messages and payload merkle root
-    let verifier_set_merkle_root = setup.verifier_set_hash;
-    let (_, _message_leaves, _message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree(&setup, verifier_set_merkle_root);
+    let messages = default_messages();
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
+
+    let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session with the correct payload root
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
-            &init_result,
+            gateway_account,
+            verifier_set_tracker_account,
             payload_merkle_root,
+            payload_type,
         );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts
     let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
+        .get_account(&setup.gateway_root_pda)
         .unwrap()
-        .1
         .clone();
 
     let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
+        .get_account(&setup.verifier_set_tracker_pda)
         .unwrap()
-        .1
         .clone();
 
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     // Step 6: Create an INVALID signature by signing a different (fake) payload merkle root
@@ -887,6 +937,7 @@ fn test_fails_when_verifying_invalid_signature() {
         verifier_leaves.first().unwrap(),
         0, // Position 0
         &verifier_merkle_tree,
+        payload_type,
     );
 
     // Step 7: Try to verify the invalid signature against the correct payload root
@@ -894,11 +945,9 @@ fn test_fails_when_verifying_invalid_signature() {
         &setup,
         payload_merkle_root,
         invalid_verifier_info,
-        verification_session_pda,
+        (verification_session_pda, verification_session_account),
         gateway_account,
-        verification_session_account,
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
     );
 
     assert!(
@@ -906,4 +955,154 @@ fn test_fails_when_verifying_invalid_signature() {
         "Verifying invalid signature should fail, but got: {:?}",
         verify_result.program_result
     );
+}
+
+#[test]
+fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
+    // Step 1: Setup gateway with real signers
+    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
+        setup_test_with_real_signers();
+
+    // Step 2: Initialize gateway
+    let init_result = initialize_gateway(&setup);
+    assert!(!init_result.program_result.is_err());
+
+    // Step 3: Create messages and payload merkle root for message approval
+    let messages = default_messages();
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
+
+    // Step 4: Initialize payload verification session with APPROVE MESSAGES command type
+    let payload_type = PayloadType::ApproveMessages;
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
+    let (session_result, verification_session_pda) =
+        initialize_payload_verification_session_with_root(
+            &setup,
+            gateway_account,
+            verifier_set_tracker_account,
+            payload_merkle_root,
+            payload_type,
+        );
+    assert!(!session_result.program_result.is_err());
+
+    // Step 5: Get existing accounts
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
+    let verification_session_account = session_result
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+
+    // Step 6: Sign the payload with both signers to complete the session
+    // First signer
+    let verifier_info_1 = create_verifier_info(
+        &secret_key_1,
+        payload_merkle_root,
+        verifier_leaves.first().unwrap(),
+        0, // Position 0
+        &verifier_merkle_tree,
+        payload_type, // Using ApproveMessages command type for signing
+    );
+
+    // First signature verification should succeed
+    let verify_result_1 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_1,
+        (
+            verification_session_pda,
+            verification_session_account.clone(),
+        ),
+        gateway_account.clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account.clone(),
+        ),
+    );
+
+    assert!(!verify_result_1.program_result.is_err());
+
+    // Get updated verification session after first signature
+    let updated_verification_account_after_first = verify_result_1
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+
+    // Second signer
+    let verifier_info_2 = create_verifier_info(
+        &secret_key_2,
+        payload_merkle_root,
+        #[allow(clippy::indexing_slicing)]
+        &verifier_leaves[1],
+        1, // Position 1
+        &verifier_merkle_tree,
+        payload_type, // Using ApproveMessages command type for signing
+    );
+
+    let verify_result_2 = verify_signature_helper(
+        &setup,
+        payload_merkle_root,
+        verifier_info_2,
+        (
+            verification_session_pda,
+            updated_verification_account_after_first,
+        ),
+        gateway_account,
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
+    );
+
+    assert!(!verify_result_2.program_result.is_err());
+
+    // Step 7: Verify the session is complete and valid
+    let final_verification_account = verify_result_2
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+
+    let final_verification_session = SignatureVerificationSessionData::try_deserialize(
+        &mut final_verification_account.data.as_slice(),
+    )
+    .unwrap();
+
+    assert!(final_verification_session.signature_verification.is_valid());
+
+    // try to use approve message payload_merkle_root for rotate_signers: should fail
+    let final_gateway_account = verify_result_2
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let final_verification_session_account = verify_result_2
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = verify_result_2
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
+    let rotate_result = rotate_signers_helper(
+        &setup,
+        payload_merkle_root, // Using the same payload_merkle_root as new_verifier_set_hash
+        (verification_session_pda, final_verification_session_account),
+        final_gateway_account,
+        verifier_set_tracker_account,
+    );
+
+    assert!(rotate_result.program_result.is_err(),);
 }

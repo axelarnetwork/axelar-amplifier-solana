@@ -3,10 +3,10 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::{
-    prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
-    ToAccountMetas,
-};
+use std::collections::BTreeMap;
+
+use anchor_lang::{prelude::UpgradeableLoaderState, InstructionData, ToAccountMetas};
+use anchor_lang::{AccountDeserialize, AnchorDeserialize};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::seed_prefixes::{
@@ -16,11 +16,12 @@ use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
     ID as GATEWAY_PROGRAM_ID,
 };
-use solana_axelar_gateway::{IncomingMessage, Message};
+use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
+use solana_axelar_std::execute_data::{prefixed_message_hash_payload_type, ExecuteData};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    CrossChainId, MerklizedMessage, MessageLeaf, Signature, SigningVerifierSetInfo,
-    VerifierSetLeaf, U256,
+    CrossChainId, MerklizedMessage, Message, MessageLeaf, Payload, PayloadType, Signature,
+    SigningVerifierSetInfo, VerifierSet, VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
 use solana_sdk::{
@@ -337,39 +338,25 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
 
 pub fn initialize_payload_verification_session(
     setup: &TestSetup,
-    init_result: &InstructionResult,
+    gateway_account: Account,
+    verifier_set_tracker_account: Account,
+    payload_type: PayloadType,
 ) -> (InstructionResult, Pubkey) {
-    let initialized_gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let initialized_verifier_set_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
-
     let merkle_root = [3u8; 32];
     let signing_verifier_set_hash = setup.verifier_set_hash;
 
-    let (verification_session_pda, _verification_bump) = Pubkey::find_program_address(
-        &[
-            seed_prefixes::SIGNATURE_VERIFICATION_SEED,
-            &merkle_root,
-            &signing_verifier_set_hash,
-        ],
-        &GATEWAY_PROGRAM_ID,
+    let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
+        &merkle_root,
+        payload_type,
+        &signing_verifier_set_hash,
     );
 
     let instruction_data =
-        solana_axelar_gateway::instruction::InitializePayloadVerificationSession { merkle_root }
-            .data();
+        solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
+            merkle_root,
+            payload_type,
+        }
+        .data();
 
     let accounts = vec![
         (
@@ -382,7 +369,7 @@ pub fn initialize_payload_verification_session(
                 rent_epoch: 0,
             },
         ),
-        (setup.gateway_root_pda, initialized_gateway_account),
+        (setup.gateway_root_pda, gateway_account),
         (
             verification_session_pda,
             Account {
@@ -393,10 +380,7 @@ pub fn initialize_payload_verification_session(
                 rent_epoch: 0,
             },
         ),
-        (
-            setup.verifier_set_tracker_pda,
-            initialized_verifier_set_account,
-        ),
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
         (
             SYSTEM_PROGRAM_ID,
             Account {
@@ -458,39 +442,23 @@ pub fn create_test_message(
 
 pub fn initialize_payload_verification_session_with_root(
     setup: &TestSetup,
-    init_result: &InstructionResult,
+    gateway_account: Account,
+    verifier_set_tracker_account: Account,
     payload_merkle_root: [u8; 32],
+    payload_type: PayloadType,
 ) -> (InstructionResult, Pubkey) {
-    let initialized_gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let initialized_verifier_set_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
-
     let signing_verifier_set_hash = setup.verifier_set_hash;
 
-    let (verification_session_pda, _) = Pubkey::find_program_address(
-        &[
-            seed_prefixes::SIGNATURE_VERIFICATION_SEED,
-            &payload_merkle_root,
-            &signing_verifier_set_hash,
-        ],
-        &GATEWAY_PROGRAM_ID,
+    let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
+        &payload_merkle_root,
+        payload_type,
+        &signing_verifier_set_hash,
     );
 
     let instruction_data =
         solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
             merkle_root: payload_merkle_root,
+            payload_type,
         }
         .data();
 
@@ -505,7 +473,7 @@ pub fn initialize_payload_verification_session_with_root(
                 rent_epoch: 0,
             },
         ),
-        (setup.gateway_root_pda, initialized_gateway_account),
+        (setup.gateway_root_pda, gateway_account),
         (
             verification_session_pda,
             Account {
@@ -516,10 +484,7 @@ pub fn initialize_payload_verification_session_with_root(
                 rent_epoch: 0,
             },
         ),
-        (
-            setup.verifier_set_tracker_pda,
-            initialized_verifier_set_account,
-        ),
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
         (
             SYSTEM_PROGRAM_ID,
             Account {
@@ -556,11 +521,9 @@ pub fn create_verifier_info(
     verifier_leaf: &VerifierSetLeaf,
     position: usize,
     verifier_merkle_tree: &MerkleTree,
+    payload_type: PayloadType,
 ) -> SigningVerifierSetInfo {
-    let hashed_message =
-        solana_axelar_gateway::SignatureVerificationSessionData::prefixed_message_hash(
-            &payload_merkle_root,
-        );
+    let hashed_message = prefixed_message_hash_payload_type(payload_type, &payload_merkle_root);
 
     let message = libsecp256k1::Message::parse(&hashed_message);
     let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
@@ -576,12 +539,13 @@ pub fn create_verifier_info(
         signature,
         leaf: *verifier_leaf,
         merkle_proof: merkle_proof_bytes,
+        payload_type,
     }
 }
 
 pub fn call_contract_helper(
     setup: &TestSetup,
-    init_result: InstructionResult,
+    gateway_account: Account,
     memo_program_id: Pubkey,
 ) -> InstructionResult {
     let signing_pda = setup.gateway_caller_pda.unwrap();
@@ -631,8 +595,7 @@ pub fn call_contract_helper(
         ),
     ];
 
-    let gateway_root = init_result.get_account(&setup.gateway_root_pda).unwrap();
-    accounts.push((setup.gateway_root_pda, gateway_root.clone()));
+    accounts.push((setup.gateway_root_pda, gateway_account));
 
     let destination_chain = "ethereum".to_owned();
     let destination_contract_address = "0xdeadbeef".to_owned();
@@ -669,11 +632,9 @@ pub fn verify_signature_helper(
     setup: &TestSetup,
     payload_merkle_root: [u8; 32],
     verifier_info: SigningVerifierSetInfo,
-    verification_session_pda: Pubkey,
+    verification_session: (Pubkey, Account),
     gateway_account: Account,
-    verification_session_account: Account,
-    verifier_set_tracker_pda: Pubkey,
-    verifier_set_tracker_account: Account,
+    verifier_set_tracker: (Pubkey, Account),
 ) -> InstructionResult {
     let instruction_data = solana_axelar_gateway::instruction::VerifySignature {
         payload_merkle_root,
@@ -683,16 +644,16 @@ pub fn verify_signature_helper(
 
     let accounts = vec![
         (setup.gateway_root_pda, gateway_account),
-        (verification_session_pda, verification_session_account),
-        (verifier_set_tracker_pda, verifier_set_tracker_account),
+        (verification_session.0, verification_session.1),
+        (verifier_set_tracker.0, verifier_set_tracker.1),
     ];
 
     let instruction = Instruction {
         program_id: GATEWAY_PROGRAM_ID,
         accounts: vec![
             AccountMeta::new_readonly(setup.gateway_root_pda, false),
-            AccountMeta::new(verification_session_pda, false),
-            AccountMeta::new_readonly(verifier_set_tracker_pda, false),
+            AccountMeta::new(verification_session.0, false),
+            AccountMeta::new_readonly(verifier_set_tracker.0, false),
         ],
         data: instruction_data,
     };
@@ -704,8 +665,9 @@ pub fn verify_signature_helper(
 pub fn rotate_signers_helper(
     setup: &TestSetup,
     new_verifier_set_hash: [u8; 32],
-    verification_session_pda: Pubkey,
-    verify_result: InstructionResult,
+    verification_session: (Pubkey, Account),
+    gateway_account: Account,
+    verifier_set_tracker_account: Account,
 ) -> InstructionResult {
     let instruction_data = solana_axelar_gateway::instruction::RotateSigners {
         new_verifier_set_merkle_root: new_verifier_set_hash,
@@ -717,36 +679,12 @@ pub fn rotate_signers_helper(
         &GATEWAY_PROGRAM_ID,
     );
 
-    let final_gateway_account = verify_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let final_verification_session_account = verify_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let verifier_set_tracker_account = verify_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
-
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
 
     let accounts = vec![
-        (setup.gateway_root_pda, final_gateway_account),
-        (verification_session_pda, final_verification_session_account),
+        (setup.gateway_root_pda, gateway_account),
+        (verification_session.0, verification_session.1),
         (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
         (
             new_verifier_set_tracker_pda,
@@ -815,7 +753,7 @@ pub fn rotate_signers_helper(
         program_id: GATEWAY_PROGRAM_ID,
         accounts: vec![
             AccountMeta::new(setup.gateway_root_pda, false),
-            AccountMeta::new_readonly(verification_session_pda, false),
+            AccountMeta::new_readonly(verification_session.0, false),
             AccountMeta::new_readonly(setup.verifier_set_tracker_pda, false),
             AccountMeta::new(new_verifier_set_tracker_pda, false),
             AccountMeta::new(setup.payer, true),
@@ -834,29 +772,14 @@ pub fn rotate_signers_helper(
 
 pub fn transfer_operatorship_helper(
     setup: &TestSetup,
-    init_result: InstructionResult,
+    gateway_account: Account,
+    program_data_account: Account,
     new_operator: Pubkey,
 ) -> InstructionResult {
     let instruction_data = solana_axelar_gateway::instruction::TransferOperatorship {}.data();
 
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
-
-    let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let program_data_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.program_data_pda)
-        .unwrap()
-        .1
-        .clone();
 
     let accounts = vec![
         (setup.gateway_root_pda, gateway_account),
@@ -922,71 +845,14 @@ pub fn transfer_operatorship_helper(
     setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
-pub fn setup_message_merkle_tree(
+pub fn approve_message_helper_from_merklized(
     setup: &TestSetup,
-    _verifier_set_merkle_root: [u8; 32],
-) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
-    let messages = vec![
-        create_test_message(
-            "ethereum",
-            "msg_1",
-            "DNHKNbf4JWJNnquuWJuNUSFGsXbDYs1sPR1ZvVhah827",
-            [1u8; 32],
-        ),
-        create_test_message(
-            "ethereum",
-            "msg_2",
-            "8q49wyQjNrSEZf5A8h6jR7dwLnDxdnURftv89FWLWMGK",
-            [2u8; 32],
-        ),
-    ];
-
-    let message_leaves: Vec<MessageLeaf> = messages
-        .iter()
-        .enumerate()
-        .map(|(i, msg)| MessageLeaf {
-            message: msg.clone(),
-            position: i as u16,
-            set_size: messages.len() as u16,
-            domain_separator: setup.domain_separator,
-        })
-        .collect();
-
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
-
-    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
-
-    let payload_merkle_root = message_merkle_tree.root().unwrap();
-
-    (
-        messages,
-        message_leaves,
-        message_merkle_tree,
-        payload_merkle_root,
-    )
-}
-
-pub fn approve_message_helper(
-    setup: &TestSetup,
-    message_merkle_tree: MerkleTree,
-    message_leaves: Vec<MessageLeaf>,
-    messages: &[Message],
+    merklized_message: &MerklizedMessage,
     payload_merkle_root: [u8; 32],
-    verification_session_pda: Pubkey,
-    verify_result_2: InstructionResult,
-    position: usize,
+    verification_session: (Pubkey, Account),
+    gateway_account: Account,
 ) -> (InstructionResult, Pubkey) {
-    let message_proof = message_merkle_tree.proof(&[position]);
-    let message_proof_bytes = message_proof.to_bytes();
-
-    let merklized_message = MerklizedMessage {
-        leaf: message_leaves[position].clone(),
-        proof: message_proof_bytes,
-    };
-
-    let cc_id = &messages[position].cc_id;
-    let command_id =
-        solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
+    let command_id = merklized_message.leaf.message.command_id();
 
     let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
         &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
@@ -1002,24 +868,8 @@ pub fn approve_message_helper(
     }
     .data();
 
-    let final_gateway_account = verify_result_2
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let final_verification_session_account = verify_result_2
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
-        .unwrap()
-        .1
-        .clone();
-
     let approve_accounts = vec![
-        (setup.gateway_root_pda, final_gateway_account),
+        (setup.gateway_root_pda, gateway_account),
         (
             setup.payer,
             Account {
@@ -1030,7 +880,7 @@ pub fn approve_message_helper(
                 rent_epoch: 0,
             },
         ),
-        (verification_session_pda, final_verification_session_account),
+        (verification_session.0, verification_session.1),
         (
             incoming_message_pda,
             Account {
@@ -1078,7 +928,7 @@ pub fn approve_message_helper(
         accounts: vec![
             AccountMeta::new_readonly(setup.gateway_root_pda, false),
             AccountMeta::new(setup.payer, true),
-            AccountMeta::new_readonly(verification_session_pda, false),
+            AccountMeta::new_readonly(verification_session.0, false),
             AccountMeta::new(incoming_message_pda, false),
             AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
             AccountMeta::new_readonly(event_authority_pda, false),
@@ -1095,47 +945,114 @@ pub fn approve_message_helper(
     )
 }
 
+pub fn default_messages() -> Vec<Message> {
+    vec![
+        create_test_message(
+            "ethereum",
+            "msg_1",
+            "DNHKNbf4JWJNnquuWJuNUSFGsXbDYs1sPR1ZvVhah827",
+            [1u8; 32],
+        ),
+        create_test_message(
+            "ethereum",
+            "msg_2",
+            "8q49wyQjNrSEZf5A8h6jR7dwLnDxdnURftv89FWLWMGK",
+            [2u8; 32],
+        ),
+    ]
+}
+
+pub fn create_merklized_messages_from_std(
+    domain_separator: [u8; 32],
+    messages: &[Message],
+) -> (Vec<MerklizedMessage>, [u8; 32]) {
+    use solana_axelar_std::execute_data::{encode, Payload};
+    use solana_axelar_std::Messages;
+    use std::collections::BTreeMap;
+
+    // Create minimal verifier set with one dummy signer (we only need the payload part)
+    let dummy_pubkey = PublicKey([1u8; 33]);
+    let mut signers = BTreeMap::new();
+    signers.insert(dummy_pubkey, 1u128);
+
+    let verifier_set = VerifierSet {
+        nonce: 0,
+        signers,
+        quorum: 1,
+    };
+    let signatures = BTreeMap::new();
+
+    let payload = Payload::Messages(Messages(messages.to_vec()));
+
+    let encoded = encode(&verifier_set, &signatures, domain_separator, payload).unwrap();
+    let execute_data = solana_axelar_std::execute_data::ExecuteData::try_from_slice(&encoded)
+        .map_err(|_| solana_axelar_std::EncodingError::CannotMerklizeEmptyMessageSet)
+        .unwrap();
+
+    if let solana_axelar_std::execute_data::MerklizedPayload::NewMessages { messages } =
+        execute_data.payload_items
+    {
+        (messages, execute_data.payload_merkle_root)
+    } else {
+        panic!("Expected NewMessages payload")
+    }
+}
+
+pub fn approve_message_helper(
+    setup: &TestSetup,
+    messages: &[Message],
+    verification_session: (Pubkey, Account),
+    gateway_account: Account,
+    position: usize,
+) -> (InstructionResult, Pubkey) {
+    // Use the new std-based approach
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, messages);
+
+    let merklized_message = &merklized_messages[position];
+
+    approve_message_helper_from_merklized(
+        setup,
+        merklized_message,
+        payload_merkle_root,
+        verification_session,
+        gateway_account,
+    )
+}
+
 pub fn approve_messages_on_gateway(
     setup: &TestSetup,
     messages: Vec<Message>,
-    init_result: InstructionResult,
+    gateway_account: Account,
+    verifier_set_tracker_account: Account,
     secret_key_1: &SecretKey,
     secret_key_2: &SecretKey,
     verifier_leaves: Vec<VerifierSetLeaf>,
     verifier_merkle_tree: MerkleTree,
 ) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
-    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree_from_messages(setup, messages);
+    // Use the new std-based approach
+    let (messages, merklized_messages, payload_merkle_root) =
+        setup_merklized_messages_from_std(setup, messages)
+            .expect("Failed to create merklized messages");
+
+    let payload_type = PayloadType::ApproveMessages;
 
     let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(setup, &init_result, payload_merkle_root);
+        initialize_payload_verification_session_with_root(
+            setup,
+            gateway_account.clone(),
+            verifier_set_tracker_account.clone(),
+            payload_merkle_root,
+            payload_type,
+        );
     assert!(
         !session_result.program_result.is_err(),
         "Failed to initialize verification session"
     );
 
-    let gateway_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.gateway_root_pda)
-        .unwrap()
-        .1
-        .clone();
-
-    let verifier_set_tracker_account = init_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == setup.verifier_set_tracker_pda)
-        .unwrap()
-        .1
-        .clone();
-
     let verification_session_account = session_result
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     let verifier_info_1 = create_verifier_info(
@@ -1144,25 +1061,27 @@ pub fn approve_messages_on_gateway(
         &verifier_leaves[0],
         0,
         &verifier_merkle_tree,
+        PayloadType::ApproveMessages,
     );
 
     let verify_result_1 = verify_signature_helper(
         setup,
         payload_merkle_root,
         verifier_info_1,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            verification_session_account.clone(),
+        ),
         gateway_account.clone(),
-        verification_session_account.clone(),
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account.clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account.clone(),
+        ),
     );
 
     let updated_verification_account_after_first = verify_result_1
-        .resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| *pubkey == verification_session_pda)
+        .get_account(&verification_session_pda)
         .unwrap()
-        .1
         .clone();
 
     let verifier_info_2 = create_verifier_info(
@@ -1171,41 +1090,49 @@ pub fn approve_messages_on_gateway(
         &verifier_leaves[1],
         1,
         &verifier_merkle_tree,
+        PayloadType::ApproveMessages,
     );
 
     let verify_result_2 = verify_signature_helper(
         setup,
         payload_merkle_root,
         verifier_info_2,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            updated_verification_account_after_first,
+        ),
         gateway_account,
-        updated_verification_account_after_first,
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account,
+        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
     );
+
+    let final_gateway_account = verify_result_2
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+
+    let final_verification_session_account = verify_result_2
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
 
     let mut incoming_messages = Vec::new();
 
-    // Approve all messages
+    // Approve all messages using the new approach
     for i in 0..messages.len() {
-        // Step 8: Approve the message
-        let (approve_result, incoming_message_pda) = approve_message_helper(
+        let (approve_result, incoming_message_pda) = approve_message_helper_from_merklized(
             setup,
-            message_merkle_tree.clone(),
-            message_leaves.clone(),
-            &messages,
+            &merklized_messages[i],
             payload_merkle_root,
-            verification_session_pda,
-            verify_result_2.clone(),
-            i, // message position
+            (
+                verification_session_pda,
+                final_verification_session_account.clone(),
+            ),
+            final_gateway_account.clone(),
         );
 
         let incoming_message_account = approve_result
-            .resulting_accounts
-            .iter()
-            .find(|(pubkey, _)| *pubkey == incoming_message_pda)
+            .get_account(&incoming_message_pda)
             .unwrap()
-            .1
             .clone();
 
         // sanity check
@@ -1223,31 +1150,38 @@ pub fn approve_messages_on_gateway(
     incoming_messages
 }
 
-pub fn setup_message_merkle_tree_from_messages(
+pub fn create_test_execute_data(
+    verifier_set: &VerifierSet,
+    signers_with_sigs: &BTreeMap<PublicKey, Signature>,
+    domain_separator: [u8; 32],
+    payload: Payload,
+) -> ExecuteData {
+    let encoded = solana_axelar_std::execute_data::encode(
+        verifier_set,
+        signers_with_sigs,
+        domain_separator,
+        payload,
+    )
+    .unwrap();
+
+    ExecuteData::try_from_slice(&encoded).unwrap()
+}
+
+pub fn extract_payload_root_and_verifier_info(
+    execute_data: &ExecuteData,
+) -> ([u8; 32], Vec<SigningVerifierSetInfo>) {
+    (
+        execute_data.payload_merkle_root,
+        execute_data.signing_verifier_set_leaves.clone(),
+    )
+}
+
+pub fn setup_merklized_messages_from_std(
     setup: &TestSetup,
     messages: Vec<Message>,
-) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
-    let message_leaves: Vec<MessageLeaf> = messages
-        .iter()
-        .enumerate()
-        .map(|(i, msg)| MessageLeaf {
-            message: msg.clone(),
-            position: i as u16,
-            set_size: messages.len() as u16,
-            domain_separator: setup.domain_separator,
-        })
-        .collect();
+) -> Result<(Vec<Message>, Vec<MerklizedMessage>, [u8; 32]), solana_axelar_std::EncodingError> {
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
-
-    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
-
-    let payload_merkle_root = message_merkle_tree.root().unwrap();
-
-    (
-        messages,
-        message_leaves,
-        message_merkle_tree,
-        payload_merkle_root,
-    )
+    Ok((messages, merklized_messages, payload_merkle_root))
 }

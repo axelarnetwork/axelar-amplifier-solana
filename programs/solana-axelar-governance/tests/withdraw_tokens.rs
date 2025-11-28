@@ -82,10 +82,20 @@ fn should_execute_withdraw_tokens_through_proposal() {
         schedule_payload_hash,
     )];
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         messages.clone(),
-        init_result,
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
