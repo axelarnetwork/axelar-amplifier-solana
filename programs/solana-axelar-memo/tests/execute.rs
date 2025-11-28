@@ -83,23 +83,29 @@ fn test_execute() {
     let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
+    let gateway_root_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let (session_result, verification_session_pda) =
         initialize_payload_verification_session_with_root(
             &setup,
-            &init_result,
+            gateway_root_account.clone(),
+            verifier_set_tracker_account.clone(),
             payload_merkle_root,
             payload_type,
         );
 
-    let gateway_root_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
-
-    let verifier_set_tracker_account = init_result
-        .get_account(&setup.verifier_set_tracker_pda)
-        .unwrap();
-
     let verification_session_account = session_result
         .get_account(&verification_session_pda)
-        .unwrap();
+        .unwrap()
+        .clone();
 
     // Step 5: Sign the payload with both signers, verify both signatures on the gateway
     let verifier_info_1 = create_verifier_info(
@@ -115,16 +121,21 @@ fn test_execute() {
         &setup,
         payload_merkle_root,
         verifier_info_1,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            verification_session_account.clone(),
+        ),
         gateway_root_account.clone(),
-        verification_session_account.clone(),
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account.clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account.clone(),
+        ),
     );
 
     let updated_verification_account_after_first = verify_result_1
         .get_account(&verification_session_pda)
-        .unwrap();
+        .unwrap()
+        .clone();
 
     let verifier_info_2 = create_verifier_info(
         &secret_key_2,
@@ -139,22 +150,35 @@ fn test_execute() {
         &setup,
         payload_merkle_root,
         verifier_info_2,
-        verification_session_pda,
+        (
+            verification_session_pda,
+            updated_verification_account_after_first.clone(),
+        ),
         gateway_root_account.clone(),
-        updated_verification_account_after_first.clone(),
-        setup.verifier_set_tracker_pda,
-        verifier_set_tracker_account.clone(),
+        (
+            setup.verifier_set_tracker_pda,
+            verifier_set_tracker_account.clone(),
+        ),
     );
 
     // Step 6: Approve the message
+    let final_gateway_account = verify_result_2
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let final_verification_session_account = verify_result_2
+        .get_account(&verification_session_pda)
+        .unwrap()
+        .clone();
+
     let (approve_result, incoming_message_pda) = approve_message_helper(
         &setup,
         message_merkle_tree,
         message_leaves,
         &messages,
         payload_merkle_root,
-        verification_session_pda,
-        verify_result_2,
+        (verification_session_pda, final_verification_session_account),
+        final_gateway_account,
         0, // position
     );
 
@@ -163,7 +187,10 @@ fn test_execute() {
         "Message approval should succeed"
     );
 
-    let incoming_message_account = approve_result.get_account(&incoming_message_pda).unwrap();
+    let incoming_message_account = approve_result
+        .get_account(&incoming_message_pda)
+        .unwrap()
+        .clone();
 
     let incoming_message =
         IncomingMessage::try_deserialize(&mut incoming_message_account.data.as_slice()).unwrap();
@@ -219,7 +246,7 @@ fn test_execute() {
 
     assert!(init_result.program_result.is_ok());
 
-    let counter_pda_account = init_result.get_account(&counter_pda).unwrap();
+    let counter_pda_account = init_result.get_account(&counter_pda).unwrap().clone();
 
     // Step 7.2: Execute the message
     let message = &messages[0];
@@ -319,7 +346,7 @@ fn test_execute() {
         execute_result.program_result
     );
 
-    let counter_pda_account = execute_result.get_account(&counter_pda).unwrap();
+    let counter_pda_account = execute_result.get_account(&counter_pda).unwrap().clone();
 
     let counter_data = Counter::try_deserialize(&mut counter_pda_account.data.as_slice()).unwrap();
     assert_eq!(

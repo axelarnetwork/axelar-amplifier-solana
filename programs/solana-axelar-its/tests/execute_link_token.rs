@@ -104,11 +104,21 @@ fn test_execute_link_token() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -244,11 +254,21 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -386,11 +406,21 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
@@ -530,11 +560,21 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
         verifier_leaves,
