@@ -3,8 +3,10 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::AccountDeserialize;
+use std::collections::BTreeMap;
+
 use anchor_lang::{prelude::UpgradeableLoaderState, InstructionData, ToAccountMetas};
+use anchor_lang::{AccountDeserialize, AnchorDeserialize};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::seed_prefixes::{
@@ -15,11 +17,11 @@ use solana_axelar_gateway::{
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
-use solana_axelar_std::execute_data::prefixed_message_hash_payload_type;
+use solana_axelar_std::execute_data::{prefixed_message_hash_payload_type, ExecuteData};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    CrossChainId, MerklizedMessage, Message, MessageLeaf, PayloadType, Signature,
-    SigningVerifierSetInfo, VerifierSetLeaf, U256,
+    CrossChainId, MerklizedMessage, Message, MessageLeaf, Payload, PayloadType, Signature,
+    SigningVerifierSetInfo, VerifierSet, VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
 use solana_sdk::{
@@ -843,64 +845,14 @@ pub fn transfer_operatorship_helper(
     setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
-pub fn default_messages() -> Vec<Message> {
-    vec![
-        create_test_message(
-            "ethereum",
-            "msg_1",
-            "DNHKNbf4JWJNnquuWJuNUSFGsXbDYs1sPR1ZvVhah827",
-            [1u8; 32],
-        ),
-        create_test_message(
-            "ethereum",
-            "msg_2",
-            "8q49wyQjNrSEZf5A8h6jR7dwLnDxdnURftv89FWLWMGK",
-            [2u8; 32],
-        ),
-    ]
-}
-
-pub fn create_message_merkle_tree(
-    domain_separator: [u8; 32],
-    messages: &[Message],
-) -> (Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
-    let message_leaves: Vec<MessageLeaf> = messages
-        .iter()
-        .enumerate()
-        .map(|(i, msg)| MessageLeaf {
-            message: msg.clone(),
-            position: i as u16,
-            set_size: messages.len() as u16,
-            domain_separator,
-        })
-        .collect();
-
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
-    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
-    let payload_merkle_root = message_merkle_tree.root().unwrap();
-
-    (message_leaves, message_merkle_tree, payload_merkle_root)
-}
-
-pub fn approve_message_helper(
+pub fn approve_message_helper_from_merklized(
     setup: &TestSetup,
-    message_merkle_tree: MerkleTree,
-    message_leaves: Vec<MessageLeaf>,
-    messages: &[Message],
+    merklized_message: &MerklizedMessage,
     payload_merkle_root: [u8; 32],
     verification_session: (Pubkey, Account),
     gateway_account: Account,
-    position: usize,
 ) -> (InstructionResult, Pubkey) {
-    let message_proof = message_merkle_tree.proof(&[position]);
-    let message_proof_bytes = message_proof.to_bytes();
-
-    let merklized_message = MerklizedMessage {
-        leaf: message_leaves[position].clone(),
-        proof: message_proof_bytes,
-    };
-
-    let command_id = messages[position].command_id();
+    let command_id = merklized_message.leaf.message.command_id();
 
     let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
         &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
@@ -993,6 +945,81 @@ pub fn approve_message_helper(
     )
 }
 
+pub fn default_messages() -> Vec<Message> {
+    vec![
+        create_test_message(
+            "ethereum",
+            "msg_1",
+            "DNHKNbf4JWJNnquuWJuNUSFGsXbDYs1sPR1ZvVhah827",
+            [1u8; 32],
+        ),
+        create_test_message(
+            "ethereum",
+            "msg_2",
+            "8q49wyQjNrSEZf5A8h6jR7dwLnDxdnURftv89FWLWMGK",
+            [2u8; 32],
+        ),
+    ]
+}
+
+pub fn create_merklized_messages_from_std(
+    domain_separator: [u8; 32],
+    messages: &[Message],
+) -> (Vec<MerklizedMessage>, [u8; 32]) {
+    use solana_axelar_std::execute_data::{encode, Payload};
+    use solana_axelar_std::Messages;
+    use std::collections::BTreeMap;
+
+    // Create minimal verifier set with one dummy signer (we only need the payload part)
+    let dummy_pubkey = PublicKey([1u8; 33]);
+    let mut signers = BTreeMap::new();
+    signers.insert(dummy_pubkey, 1u128);
+
+    let verifier_set = VerifierSet {
+        nonce: 0,
+        signers,
+        quorum: 1,
+    };
+    let signatures = BTreeMap::new();
+
+    let payload = Payload::Messages(Messages(messages.to_vec()));
+
+    let encoded = encode(&verifier_set, &signatures, domain_separator, payload).unwrap();
+    let execute_data = solana_axelar_std::execute_data::ExecuteData::try_from_slice(&encoded)
+        .map_err(|_| solana_axelar_std::EncodingError::CannotMerklizeEmptyMessageSet)
+        .unwrap();
+
+    if let solana_axelar_std::execute_data::MerklizedPayload::NewMessages { messages } =
+        execute_data.payload_items
+    {
+        (messages, execute_data.payload_merkle_root)
+    } else {
+        panic!("Expected NewMessages payload")
+    }
+}
+
+pub fn approve_message_helper(
+    setup: &TestSetup,
+    messages: &[Message],
+    verification_session: (Pubkey, Account),
+    gateway_account: Account,
+    position: usize,
+) -> (InstructionResult, Pubkey) {
+    // Use the new std-based approach
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, messages);
+
+    let merklized_message = &merklized_messages[position];
+
+    approve_message_helper_from_merklized(
+        setup,
+        merklized_message,
+        payload_merkle_root,
+        verification_session,
+        gateway_account,
+    )
+}
+
 pub fn approve_messages_on_gateway(
     setup: &TestSetup,
     messages: Vec<Message>,
@@ -1003,8 +1030,10 @@ pub fn approve_messages_on_gateway(
     verifier_leaves: Vec<VerifierSetLeaf>,
     verifier_merkle_tree: MerkleTree,
 ) -> Vec<(IncomingMessage, Pubkey, Vec<u8>)> {
-    let (messages, message_leaves, message_merkle_tree, payload_merkle_root) =
-        setup_message_merkle_tree_from_messages(setup, messages);
+    // Use the new std-based approach
+    let (messages, merklized_messages, payload_merkle_root) =
+        setup_merklized_messages_from_std(setup, messages)
+            .expect("Failed to create merklized messages");
 
     let payload_type = PayloadType::ApproveMessages;
 
@@ -1088,21 +1117,17 @@ pub fn approve_messages_on_gateway(
 
     let mut incoming_messages = Vec::new();
 
-    // Approve all messages
+    // Approve all messages using the new approach
     for i in 0..messages.len() {
-        // Step 8: Approve the message
-        let (approve_result, incoming_message_pda) = approve_message_helper(
+        let (approve_result, incoming_message_pda) = approve_message_helper_from_merklized(
             setup,
-            message_merkle_tree.clone(),
-            message_leaves.clone(),
-            &messages,
+            &merklized_messages[i],
             payload_merkle_root,
             (
                 verification_session_pda,
                 final_verification_session_account.clone(),
             ),
             final_gateway_account.clone(),
-            i, // message position
         );
 
         let incoming_message_account = approve_result
@@ -1125,29 +1150,38 @@ pub fn approve_messages_on_gateway(
     incoming_messages
 }
 
-pub fn setup_message_merkle_tree_from_messages(
+pub fn create_test_execute_data(
+    verifier_set: &VerifierSet,
+    signers_with_sigs: &BTreeMap<PublicKey, Signature>,
+    domain_separator: [u8; 32],
+    payload: Payload,
+) -> ExecuteData {
+    let encoded = solana_axelar_std::execute_data::encode(
+        verifier_set,
+        signers_with_sigs,
+        domain_separator,
+        payload,
+    )
+    .unwrap();
+
+    ExecuteData::try_from_slice(&encoded).unwrap()
+}
+
+pub fn extract_payload_root_and_verifier_info(
+    execute_data: &ExecuteData,
+) -> ([u8; 32], Vec<SigningVerifierSetInfo>) {
+    (
+        execute_data.payload_merkle_root,
+        execute_data.signing_verifier_set_leaves.clone(),
+    )
+}
+
+pub fn setup_merklized_messages_from_std(
     setup: &TestSetup,
     messages: Vec<Message>,
-) -> (Vec<Message>, Vec<MessageLeaf>, MerkleTree, [u8; 32]) {
-    let message_leaves: Vec<MessageLeaf> = messages
-        .iter()
-        .enumerate()
-        .map(|(i, msg)| MessageLeaf {
-            message: msg.clone(),
-            position: i as u16,
-            set_size: messages.len() as u16,
-            domain_separator: setup.domain_separator,
-        })
-        .collect();
+) -> Result<(Vec<Message>, Vec<MerklizedMessage>, [u8; 32]), solana_axelar_std::EncodingError> {
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
 
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
-    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
-    let payload_merkle_root = message_merkle_tree.root().unwrap();
-
-    (
-        messages,
-        message_leaves,
-        message_merkle_tree,
-        payload_merkle_root,
-    )
+    Ok((messages, merklized_messages, payload_merkle_root))
 }

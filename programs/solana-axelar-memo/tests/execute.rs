@@ -6,14 +6,13 @@ use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
-    approve_message_helper, create_verifier_info, initialize_gateway,
-    initialize_payload_verification_session_with_root, setup_test_with_real_signers,
-    verify_signature_helper,
+    approve_message_helper, create_merklized_messages_from_std, create_verifier_info,
+    initialize_gateway, initialize_payload_verification_session_with_root,
+    setup_test_with_real_signers, verify_signature_helper,
 };
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
-use solana_axelar_std::{hasher::LeafHash, CrossChainId, Message, MessageLeaf};
-use solana_axelar_std::{MerkleTree, PayloadType};
+use solana_axelar_std::{CrossChainId, Message, PayloadType};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -65,21 +64,9 @@ fn test_execute() {
 
     let messages = vec![message.clone()];
 
-    let message_leaves: Vec<MessageLeaf> = messages
-        .iter()
-        .enumerate()
-        .map(|(i, msg)| MessageLeaf {
-            message: msg.clone(),
-            position: u16::try_from(i).unwrap(),
-            set_size: u16::try_from(messages.len()).unwrap(),
-            domain_separator: setup.domain_separator,
-        })
-        .collect();
-
-    let message_leaf_hashes: Vec<[u8; 32]> = message_leaves.iter().map(MessageLeaf::hash).collect();
-
-    let message_merkle_tree = MerkleTree::from_leaves(&message_leaf_hashes);
-    let payload_merkle_root = message_merkle_tree.root().unwrap();
+    // Create payload merkle root using std crate approach
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
     let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
@@ -173,10 +160,7 @@ fn test_execute() {
 
     let (approve_result, incoming_message_pda) = approve_message_helper(
         &setup,
-        message_merkle_tree,
-        message_leaves,
         &messages,
-        payload_merkle_root,
         (verification_session_pda, final_verification_session_account),
         final_gateway_account,
         0, // position

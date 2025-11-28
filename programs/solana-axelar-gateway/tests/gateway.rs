@@ -9,10 +9,11 @@ use solana_axelar_gateway::{
 };
 use solana_axelar_gateway::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
 use solana_axelar_gateway_test_fixtures::{
-    approve_message_helper, call_contract_helper, create_message_merkle_tree, create_verifier_info,
-    default_messages, initialize_gateway, initialize_payload_verification_session,
-    initialize_payload_verification_session_with_root, mock_setup_test, rotate_signers_helper,
-    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
+    approve_message_helper_from_merklized, call_contract_helper,
+    create_merklized_messages_from_std, create_verifier_info, default_messages, initialize_gateway,
+    initialize_payload_verification_session, initialize_payload_verification_session_with_root,
+    mock_setup_test, rotate_signers_helper, setup_test_with_real_signers,
+    transfer_operatorship_helper, verify_signature_helper,
 };
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{PayloadType, U256};
@@ -128,10 +129,10 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    // Step 3: Create messages and payload merkle root
+    // Step 3: Create messages and payload merkle root using std crate
     let messages = default_messages();
-    let (message_leaves, message_merkle_tree, payload_merkle_root) =
-        create_message_merkle_tree(setup.domain_separator, &messages);
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
     let payload_type = PayloadType::ApproveMessages;
 
     // Step 4: Initialize payload verification session
@@ -283,15 +284,12 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         .unwrap()
         .clone();
 
-    let (approve_result, incoming_message_pda) = approve_message_helper(
+    let (approve_result, incoming_message_pda) = approve_message_helper_from_merklized(
         &setup,
-        message_merkle_tree,
-        message_leaves,
-        &messages,
+        &merklized_messages[0], // First message
         payload_merkle_root,
         (verification_session_pda, final_verification_session_account),
         final_gateway_account,
-        0, // position
     );
 
     assert!(
@@ -688,7 +686,8 @@ fn test_fails_when_verifier_submits_signature_twice() {
     assert!(!init_result.program_result.is_err());
 
     let messages = default_messages();
-    let (_, _, payload_merkle_root) = create_message_merkle_tree(setup.domain_separator, &messages);
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
 
     let payload_type = PayloadType::ApproveMessages;
 
@@ -785,10 +784,10 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
 
-    // Step 3: Create messages and payload merkle root
+    // Step 3: Create messages and payload merkle root using std crate
     let messages = default_messages();
-    let (message_leaves, message_merkle_tree, payload_merkle_root) =
-        create_message_merkle_tree(setup.domain_separator, &messages);
+    let (merklized_messages, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
 
     let payload_type = PayloadType::ApproveMessages;
 
@@ -859,15 +858,12 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
         .unwrap()
         .clone();
 
-    let (approve_result, _) = approve_message_helper(
+    let (approve_result, _) = approve_message_helper_from_merklized(
         &setup,
-        message_merkle_tree,
-        message_leaves,
-        &messages,
+        &merklized_messages[0], // First message
         payload_merkle_root,
         (verification_session_pda, verification_session_account),
         gateway_account,
-        0, // position
     );
 
     // Should fail because the verification session is not valid (insufficient signatures)
@@ -890,8 +886,8 @@ fn test_fails_when_verifying_invalid_signature() {
 
     // Step 3: Create messages and payload merkle root
     let messages = default_messages();
-    let (_, _message_merkle_tree, payload_merkle_root) =
-        create_message_merkle_tree(setup.domain_separator, &messages);
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
 
     let payload_type = PayloadType::ApproveMessages;
 
@@ -973,8 +969,8 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
 
     // Step 3: Create messages and payload merkle root for message approval
     let messages = default_messages();
-    let (_message_leaves, _message_merkle_tree, payload_merkle_root) =
-        create_message_merkle_tree(setup.domain_separator, &messages);
+    let (_, payload_merkle_root) =
+        create_merklized_messages_from_std(setup.domain_separator, &messages);
 
     // Step 4: Initialize payload verification session with APPROVE MESSAGES command type
     let payload_type = PayloadType::ApproveMessages;
