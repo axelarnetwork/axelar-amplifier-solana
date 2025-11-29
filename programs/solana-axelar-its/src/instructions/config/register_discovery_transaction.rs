@@ -1,10 +1,7 @@
 #![allow(clippy::missing_asserts_for_indexing)]
-use crate::{InterchainTokenService, TokenManager, instruction::GetTransaction, utils::relayer_transaction};
+use crate::utils::relayer_transaction;
 use anchor_lang::prelude::*;
-use relayer_discovery::{
-    structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTransaction},
-    transaction_pda_accounts,
-};
+use relayer_discovery::transaction_pda_accounts;
 
 transaction_pda_accounts!(relayer_transaction(None, None));
 

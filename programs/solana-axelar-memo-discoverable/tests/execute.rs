@@ -29,13 +29,17 @@ fn test_execute() {
     // Step 7.1: Init Transaction PDA
     let transaction_pda =
         relayer_discovery::find_transaction_pda(&solana_axelar_memo_discoverable::id()).0;
+
+    let its_transaction_pda = solana_axelar_its::utils::find_interchain_executable_transaction_pda(
+        &solana_axelar_memo_discoverable::id(),
+    )
+    .0;
     let init_ix = solana_axelar_memo_discoverable::instruction::Init {};
     let init_accounts = solana_axelar_memo_discoverable::accounts::Init {
-        transaction: solana_axelar_memo_discoverable::accounts::RelayerTransactionAccounts {
-            relayer_transaction: transaction_pda,
-            payer: fixture.setup.payer,
-            system_program: SYSTEM_PROGRAM_ID,
-        },
+        transaction: transaction_pda,
+        its_transaction: its_transaction_pda,
+        payer: fixture.setup.payer,
+        system_program: SYSTEM_PROGRAM_ID,
     };
     let init_instruction = Instruction {
         program_id: EXECUTABLE_ID,
@@ -45,6 +49,16 @@ fn test_execute() {
     let init_accounts = vec![
         (
             transaction_pda,
+            Account {
+                lamports: 0,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            },
+        ),
+        (
+            its_transaction_pda,
             Account {
                 lamports: 0,
                 data: vec![],

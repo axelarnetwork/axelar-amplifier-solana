@@ -92,6 +92,9 @@ pub mod seed_prefixes {
     /// The seed prefix for deriving the interchain transfer execute signing PDA
     pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] =
         state::InterchainTransferExecute::SEED_PREFIX;
+
+    /// The seed prefix for deriving the interchain executable transaction pda
+    pub const INTERCHAIN_EXECUTABLE_TRANSACTION_PDA_SEED: &[u8] = b"interchain-executable";
 }
 
 #[program]
@@ -373,7 +376,7 @@ pub mod solana_axelar_its {
     ) -> Result<relayer_discovery::structs::RelayerTransaction> {
         instructions::get_transaction_handler(ctx, message, payload)
     }
-    
+
     pub fn handover_mint_authority(
         ctx: Context<HandoverMintAuthority>,
         token_id: [u8; 32],

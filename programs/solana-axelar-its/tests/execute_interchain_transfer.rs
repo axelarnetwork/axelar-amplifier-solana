@@ -2,41 +2,25 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::{
-    accounts::program, system_program, AccountDeserialize, InstructionData, ToAccountMetas,
-};
+use anchor_lang::{system_program, AccountDeserialize};
 use anchor_spl::{
-    associated_token::{
-        get_associated_token_address_with_program_id, spl_associated_token_account::instruction,
-    },
+    associated_token::get_associated_token_address_with_program_id,
     token_2022::spl_token_2022::{self},
 };
 use interchain_token_transfer_gmp::{
     DeployInterchainToken, GMPPayload, InterchainTransfer, ReceiveFromHub,
 };
 use mollusk_svm::result::Check;
-use mpl_token_metadata::accounts::Metadata;
 use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 use solana_axelar_gateway::GatewayConfig;
-use solana_axelar_gateway_test_fixtures::{
-    approve_messages_on_gateway, create_test_message, initialize_gateway,
-    setup_test_with_real_signers,
-};
-use solana_axelar_its::{
-    accounts::AxelarExecuteAccounts, state::TokenManager, utils::interchain_token_id, ItsError,
-};
+use solana_axelar_gateway_test_fixtures::{create_test_message, initialize_gateway};
+use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsError};
 use solana_axelar_its_test_fixtures::{
-    create_sysvar_instructions_data, deploy_interchain_token_extra_accounts,
-    execute_its_instruction, get_token_mint_pda, init_its_relayer_transaction,
-    init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs,
-    interchain_transfer_extra_accounts, new_empty_account, new_test_account, ExecuteTestAccounts,
-    ExecuteTestContext, ExecuteTestParams,
+    create_sysvar_instructions_data, get_token_mint_pda, init_its_relayer_transaction,
+    init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs, new_test_account,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
-use solana_sdk::{
-    account::Account, instruction::Instruction, keccak, native_token::LAMPORTS_PER_SOL,
-    pubkey::Pubkey,
-};
+use solana_sdk::{account::Account, keccak};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
@@ -274,12 +258,11 @@ fn test_execute_interchain_transfer_success() {
         transfer_encoded_payload.clone(),
         transfer_execute_accounts.clone(),
     );
-    
+
     assert!(
         transfer_result.is_ok(),
-        "Execute instruction should succeed: {:?}, {:?}",
+        "Execute instruction should succeed: {:?}",
         transfer_result,
-        transfer_message.command_id(),
     );
     let transfer_result = transfer_result.unwrap();
 

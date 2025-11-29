@@ -16,6 +16,7 @@ anchor-spl.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
 solana-program.workspace = true
+relayer-discovery.workspace = true
 
 rand.workspace = true
 hex.workspace = true
@@ -36,3 +37,4 @@ solana-axelar-its = { workspace = true, features = ["cpi", "no-entrypoint"] }
 # temp
 solana-axelar-gateway-test-fixtures.workspace = true
 solana-axelar-its-test-fixtures.workspace = true
+relayer-discovery-test-fixtures.workspace = true

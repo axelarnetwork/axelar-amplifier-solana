@@ -27,6 +27,7 @@ relayer-discovery.workspace = true
 rand.workspace = true
 solana-program.workspace = true
 solana-axelar-memo.workspace = true
+solana-axelar-memo-discoverable.workspace = true
 solana-axelar-gas-service.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
 solana-axelar-its-test-fixtures.workspace = true

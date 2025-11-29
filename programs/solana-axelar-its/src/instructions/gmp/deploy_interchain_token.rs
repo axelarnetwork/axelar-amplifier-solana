@@ -220,7 +220,6 @@ fn process_inbound_deploy(
     token_manager_pda_bump: u8,
     minter_roles_pda_bump: Option<u8>,
 ) -> Result<()> {
-    
     // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
 

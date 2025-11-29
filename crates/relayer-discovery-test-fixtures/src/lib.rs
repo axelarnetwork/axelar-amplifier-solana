@@ -5,6 +5,8 @@
 use anchor_lang::prelude::thiserror;
 use anchor_lang::{AnchorDeserialize, Key};
 
+use mollusk_svm::account_store::AccountStore;
+use mollusk_svm::MolluskContext;
 use solana_axelar_std::MerkleTree;
 use solana_axelar_std::{hasher::LeafHash, Message, MessageLeaf, VerifierSetLeaf};
 
@@ -50,7 +52,7 @@ pub enum RelayerDiscoveryFixtureError {
     #[error("relayer discovery failed to parse a transaction")]
     ConvertError(ConvertError),
     #[error("execution of final transaction failed")]
-    ExecuteFailed(Vec<Instruction>, Vec<(Pubkey, Account)>, ProgramResult),
+    ExecuteFailed(Vec<Instruction>, ProgramResult),
     #[error("checks length does not match discovered instructions length")]
     ChecksInstructionsLengthMissmatch(usize, usize),
 }
@@ -335,7 +337,7 @@ impl RelayerDiscoveryTestFixture {
                                         ));
                                     }
                                 }
-                            };
+                            }
 
                             let instructions_with_checks: Vec<(&Instruction, &[Check])> =
                                 match &checks {
@@ -367,7 +369,6 @@ impl RelayerDiscoveryTestFixture {
                                 ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
                                     return Err(RelayerDiscoveryFixtureError::ExecuteFailed(
                                         instructions,
-                                        accounts,
                                         result.program_result,
                                     ));
                                 }
@@ -485,5 +486,148 @@ impl RelayerDiscoveryTestFixture {
 impl Default for RelayerDiscoveryTestFixture {
     fn default() -> Self {
         RelayerDiscoveryTestFixture::new()
+    }
+}
+
+pub fn relayer_execute_with_checks<T: AccountStore>(
+    fixture: &MolluskContext<T>,
+    message: &Message,
+    payload: Vec<u8>,
+    checks: Option<Vec<Vec<Check>>>,
+) -> Result<InstructionResult, RelayerDiscoveryFixtureError> {
+    let mut relayer_discovery = RelayerDiscovery {
+        message: message.clone(),
+        payload,
+        payload_pda: None,
+        payers: vec![],
+    };
+
+    let (relayer_transaction_pda, _) =
+        find_transaction_pda(&Pubkey::from_str(&message.destination_address)?);
+
+    let relayer_transaction_account = fixture
+        .account_store
+        .borrow()
+        .get_account(&relayer_transaction_pda)
+        .ok_or(RelayerDiscoveryFixtureError::NoInitialRelayerTransaction)?;
+
+    let mut buffer = &relayer_transaction_account.data.clone();
+    let mut relayer_transaction = RelayerTransaction::deserialize(&mut buffer.as_slice())?;
+    loop {
+        match relayer_transaction {
+            RelayerTransaction::Discovery(ref relayer_instruction) => {
+                solana_sdk::msg!("Relayer Transaction: {:?}", relayer_instruction,);
+                let instruction = relayer_discovery.convert_instruction(relayer_instruction);
+                match instruction {
+                    Ok(instruction) => {
+                        let result = fixture.process_instruction(&instruction);
+                        match result.program_result {
+                            ProgramResult::Success => {
+                                buffer = &result.return_data;
+                                relayer_transaction =
+                                    RelayerTransaction::deserialize(&mut buffer.as_slice())?;
+                            }
+                            ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
+                                return Err(
+                                    RelayerDiscoveryFixtureError::DiscoveryInstructionFailed(
+                                        instruction,
+                                        result.program_result,
+                                    ),
+                                );
+                            }
+                        }
+                    }
+                    Err(error) => handle_relayer_err(error, &mut relayer_discovery, fixture)?,
+                }
+            }
+            RelayerTransaction::Final(ref relayer_instructions) => {
+                let instructions: Result<Vec<Instruction>, ConvertError> = relayer_instructions
+                    .iter()
+                    .map(|relayer_instruction| {
+                        relayer_discovery.convert_instruction(relayer_instruction)
+                    })
+                    .collect();
+                match instructions {
+                    Ok(instructions) => {
+                        let instructions_with_checks: Vec<(&Instruction, &[Check])> = match &checks
+                        {
+                            Some(checks) => {
+                                if checks.len() != instructions.len() {
+                                    return Err(RelayerDiscoveryFixtureError::ChecksInstructionsLengthMissmatch(checks.len(), instructions.len()));
+                                }
+                                instructions
+                                    .iter()
+                                    .zip(checks.iter())
+                                    .map(|(instruction, checks)| (instruction, checks.as_slice()))
+                                    .collect()
+                            }
+                            None => instructions
+                                .iter()
+                                .map(|instruction| (instruction, &[] as &[Check]))
+                                .collect(),
+                        };
+                        let result = fixture.process_and_validate_instruction_chain(
+                            instructions_with_checks.as_slice(),
+                        );
+                        match result.program_result {
+                            ProgramResult::Success => {
+                                return Ok(result);
+                            }
+                            ProgramResult::Failure(_) | ProgramResult::UnknownError(_) => {
+                                return Err(RelayerDiscoveryFixtureError::ExecuteFailed(
+                                    instructions,
+                                    result.program_result,
+                                ));
+                            }
+                        }
+                    }
+                    Err(error) => handle_relayer_err(error, &mut relayer_discovery, fixture)?,
+                }
+            }
+        }
+    }
+}
+
+fn handle_relayer_err<T: AccountStore>(
+    error: ConvertError,
+    relayer_discovery: &mut RelayerDiscovery,
+    fixture: &MolluskContext<T>,
+) -> Result<(), RelayerDiscoveryFixtureError> {
+    match error {
+        ConvertError::NeedMessagePayload => {
+            let pubkey = Pubkey::new_unique();
+            let account = Account {
+                lamports: 0,
+                data: relayer_discovery.payload.clone(),
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            };
+            relayer_discovery.add_payload_pda(pubkey);
+            fixture
+                .account_store
+                .borrow_mut()
+                .store_account(pubkey, account);
+            Ok(())
+        }
+        ConvertError::NeedPayer(amount) => {
+            let pubkey = Pubkey::new_unique();
+            let account = Account {
+                lamports: amount,
+                data: vec![],
+                owner: SYSTEM_PROGRAM_ID,
+                executable: false,
+                rent_epoch: 0,
+            };
+            relayer_discovery.add_payer(pubkey, amount);
+            fixture
+                .account_store
+                .borrow_mut()
+                .store_account(pubkey, account);
+            Ok(())
+        }
+        ConvertError::FailedMessageSerialization | ConvertError::FailedPayloadSerialization => {
+            Err(error.into())
+        }
     }
 }

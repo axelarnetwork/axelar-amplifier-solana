@@ -1,7 +1,15 @@
 use crate::{
-    errors::ItsError, events::InterchainTransferReceived, executable::{AxelarExecuteWithInterchainTokenInstruction, AxelarExecuteWithInterchainTokenPayload, builder::AxelarExecuteWithInterchainToken}, instructions::{gmp::*, validate_message}, state::{
-        FlowDirection, InterchainTokenService, InterchainTransferExecute, TokenManager, current_flow_epoch, token_manager
-    }
+    errors::ItsError,
+    events::InterchainTransferReceived,
+    executable::{
+        builder::AxelarExecuteWithInterchainToken, AxelarExecuteWithInterchainTokenInstruction,
+        AxelarExecuteWithInterchainTokenPayload,
+    },
+    instructions::{gmp::*, validate_message},
+    state::{
+        current_flow_epoch, token_manager, FlowDirection, InterchainTokenService,
+        InterchainTransferExecute, TokenManager,
+    },
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
@@ -18,7 +26,7 @@ use anchor_spl::{
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer};
-use solana_axelar_gateway::{Message, payload::AxelarMessagePayload};
+use solana_axelar_gateway::Message;
 use solana_program::{program_option::COption, program_pack::Pack};
 
 #[derive(Accounts)]
@@ -179,13 +187,6 @@ pub fn execute_interchain_transfer_handler<'info>(
 
         msg!("Got interchain transfer data, length: {}", data.len());
 
-        let destination_payload = AxelarMessagePayload::decode(&data)?;
-        let destination_accounts = destination_payload.account_meta();
-
-        if destination_accounts.len() != ctx.remaining_accounts.len() {
-            return Err(ProgramError::NotEnoughAccountKeys.into());
-        }
-
         let remaining_metas = ctx
             .remaining_accounts
             .iter()
@@ -195,14 +196,6 @@ pub fn execute_interchain_transfer_handler<'info>(
                 is_writable: ai.is_writable,
             })
             .collect::<Vec<_>>();
-
-        if !destination_accounts.eq(&remaining_metas) {
-            msg!("Provided executable accounts do not match the payload specified accounts");
-            return err!(ItsError::InvalidAccountData);
-        }
-
-        // Remove accounts from the final data sent to the destination program
-        let destination_data = destination_payload.payload_without_accounts().to_vec();
 
         // Prepare instruction to invoke
 
@@ -214,7 +207,7 @@ pub fn execute_interchain_transfer_handler<'info>(
         };
 
         let mut ix_accounts = accounts.to_account_metas(Some(true));
-        ix_accounts.extend(destination_accounts);
+        ix_accounts.extend(remaining_metas);
 
         let ix_data = AxelarExecuteWithInterchainTokenInstruction {
             execute_payload: AxelarExecuteWithInterchainTokenPayload {
@@ -224,7 +217,7 @@ pub fn execute_interchain_transfer_handler<'info>(
                 token_id,
                 token_mint: ctx.accounts.token_mint.key(),
                 amount: transferred_amount,
-                data: destination_data,
+                data,
             },
         };
 

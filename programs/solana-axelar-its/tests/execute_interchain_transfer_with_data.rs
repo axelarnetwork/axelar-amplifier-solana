@@ -1,10 +1,9 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
 
-use anchor_lang::prelude::AccountMeta;
+use anchor_lang::prelude::AnchorSerialize;
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
-use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
 
 #[test]
@@ -71,22 +70,28 @@ fn test_execute_interchain_transfer_with_data() {
 
     // Add memo program to the harness context
     its_harness.ctx.mollusk.add_program(
-        &solana_axelar_memo::ID,
-        "solana_axelar_memo",
+        &solana_axelar_memo_discoverable::ID,
+        "solana_axelar_memo_discoverable",
         &solana_sdk_ids::bpf_loader_upgradeable::ID,
     );
 
     its_harness.ctx.process_and_validate_instruction(
-        &solana_axelar_memo::make_init_ix(its_harness.payer),
+        &solana_axelar_memo_discoverable::make_init_ix(its_harness.payer),
         &[Check::success()],
     );
-    let counter_pda = solana_axelar_memo::Counter::get_pda().0;
-    let counter_account: solana_axelar_memo::Counter = its_harness
-        .get_account_as(&counter_pda)
-        .expect("counter account should exist");
-    assert_eq!(
-        counter_account.counter, 0,
-        "counter should have default value"
+
+    solana_sdk::msg!(
+        "({:?}, {:?})",
+        &solana_axelar_its::utils::find_interchain_executable_transaction_pda(
+            &solana_axelar_memo_discoverable::ID
+        )
+        .0,
+        &its_harness.get_account(
+            &solana_axelar_its::utils::find_interchain_executable_transaction_pda(
+                &solana_axelar_memo_discoverable::ID
+            )
+            .0
+        )
     );
 
     // Transfer
@@ -94,24 +99,27 @@ fn test_execute_interchain_transfer_with_data() {
     let token_id = its_harness.ensure_test_interchain_token();
     let source_chain = "ethereum";
     let source_address = "ethereum_address_123";
-    let receiver = solana_axelar_memo::ID;
+    let receiver = solana_axelar_memo_discoverable::ID;
     let transfer_amount = 1_000_000u64;
 
     // Data
 
     // String to print
     #[allow(clippy::non_ascii_literal)]
-    let memo_string = "🫆🫆🫆".as_bytes().to_vec();
-    // Custom accounts
-    let memo_accounts = vec![AccountMeta::new(counter_pda, false)];
-    // Payload encoding
-    let data = ExecutablePayload::new(
-        &memo_string,
-        &memo_accounts,
-        ExecutablePayloadEncodingScheme::Borsh,
-    )
-    .encode()
-    .expect("failed to encode executable payload");
+    let memo_string = String::from("🫆🫆🫆");
+    let storage_id = 123;
+    let counter_pda = solana_axelar_memo_discoverable::Counter::get_pda(storage_id).0;
+
+    let data = {
+        let mut bytes = vec![];
+        solana_axelar_memo_discoverable::Payload {
+            storage_id,
+            memo: memo_string,
+        }
+        .serialize(&mut bytes)
+        .unwrap();
+        bytes
+    };
 
     its_harness.ensure_trusted_chain(source_chain);
 
@@ -123,7 +131,7 @@ fn test_execute_interchain_transfer_with_data() {
         source_address,
         receiver,
         transfer_amount,
-        Some((data, memo_accounts)),
+        Some(data),
     );
 
     // Assert transfer

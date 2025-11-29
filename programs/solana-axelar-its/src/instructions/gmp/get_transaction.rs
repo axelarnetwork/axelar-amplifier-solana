@@ -1,5 +1,8 @@
 use crate::{
-    errors::ItsError, instruction, instructions::relayer_transaction, state::{InterchainTokenService, TokenManager, UserRoles}
+    errors::ItsError,
+    instruction, interchain_transfer_execute,
+    state::{InterchainTokenService, TokenManager, UserRoles},
+    utils::{find_interchain_executable_transaction_pda, relayer_transaction},
 };
 use anchor_lang::{prelude::*, system_program};
 use anchor_spl::{
@@ -353,50 +356,52 @@ pub fn insterchain_transfer_transaction<'info>(
     executable_transaction: Option<AccountInfo<'info>>,
     executable_accounts: Option<Vec<RelayerAccount>>,
 ) -> Result<RelayerTransaction> {
-    if !transfer.data.is_empty() && executable_accounts.is_none() {
-        let Some(executable_transaction) = executable_transaction 
-        else {
-            return relayer_transaction(None, destination_address); 
-        };
-
-    };
-    let Some(token_manager) = token_manager else {
-        return Ok(RelayerTransaction::Discovery(RelayerInstruction {
-            // We want the relayer to call this program.
-            program_id: crate::ID,
-            // No accounts are required for this.
-            accounts: vec![
-                RelayerAccount::Account {
-                    pubkey: TokenManager::find_pda(
-                        transfer.token_id.0,
-                        InterchainTokenService::find_pda().0,
-                    )
-                    .0,
-                    is_writable: false,
-                },
-                RelayerAccount::Account {
-                    pubkey: crate::ID,
-                    is_writable: false,
-                },
-            ],
-            // The data we need to find the final transaction.
-            data: vec![
-                RelayerData::Bytes(Vec::from(instruction::GetTransaction::DISCRIMINATOR)),
-                RelayerData::Message,
-                RelayerData::Payload,
-            ],
-        }));
-    };
-
-    let token_id = transfer.token_id.0;
-    let source_address = transfer.source_address.to_vec();
+    // Decode the destination address
     let destination_address = Pubkey::try_from(transfer.destination_address.to_vec())
         .map_err(|_| ItsError::InvalidArgument)?;
+    let token_id = transfer.token_id.0;
+    let source_address = transfer.source_address.to_vec();
     let amount: u64 = transfer
         .amount
         .try_into()
         .map_err(|_| ItsError::ArithmeticOverflow)?;
     let data = transfer.data.to_vec();
+
+    // If this is an interchain transfer with data and we don't have the executable accounts yet.
+    if !transfer.data.is_empty() && executable_accounts.is_none() {
+        let executable_transaction_pda =
+            find_interchain_executable_transaction_pda(&destination_address).0;
+        return Ok(match executable_transaction {
+            // If the executable_transaction_pda is provided, we return the transaction stored in the executable_transaction_pda, adding the token_manager_pda for extra information
+            Some(executable_transaction) => {
+                if executable_transaction.key != &executable_transaction_pda {
+                    return err!(ItsError::InvalidAccountData);
+                }
+
+                let mut relayer_transaction = RelayerTransaction::deserialize(
+                    &mut &executable_transaction.data.borrow()[..],
+                )?;
+                if let RelayerTransaction::Discovery(instruction) = &mut relayer_transaction {
+                    instruction.accounts.push(RelayerAccount::Account {
+                        pubkey: TokenManager::find_pda(
+                            transfer.token_id.0,
+                            InterchainTokenService::find_pda().0,
+                        )
+                        .0,
+                        is_writable: false,
+                    });
+                };
+                relayer_transaction
+            }
+            // Or simply we call this again asking for the executable_transaction_pda to be provided.
+            None => relayer_transaction(None, Some(executable_transaction_pda)),
+        });
+    };
+
+    let Some(token_manager) = token_manager else {
+        // If the token_manager is not provided we ask that this is called again with it.
+        return Ok(relayer_transaction(Some(token_id), None));
+    };
 
     let program_id = crate::ID;
     let token_mint_pda = token_manager.token_address;
@@ -417,6 +422,11 @@ pub fn insterchain_transfer_transaction<'info>(
     let token_program = anchor_spl::token_2022::spl_token_2022::id();
     let associated_token_program = anchor_spl::associated_token::spl_associated_token_account::id();
     let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let interchain_transfer_execute_pda = if data.is_empty() {
+        program_id
+    } else {
+        interchain_transfer_execute::InterchainTransferExecute::find_pda(&destination_address).0
+    };
 
     Ok(RelayerTransaction::Final(
         // A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
@@ -470,7 +480,7 @@ pub fn insterchain_transfer_transaction<'info>(
                         is_writable: false,
                     },
                     RelayerAccount::Account {
-                        pubkey: program_id,
+                        pubkey: interchain_transfer_execute_pda,
                         is_writable: false,
                     },
                 ],
@@ -484,6 +494,7 @@ pub fn insterchain_transfer_transaction<'info>(
                         is_writable: false,
                     },
                 ],
+                executable_accounts.unwrap_or(vec![]),
             ]
             .concat(),
             // The data needed.
@@ -502,4 +513,27 @@ pub fn insterchain_transfer_transaction<'info>(
             ],
         }],
     ))
+}
+
+pub fn decode_interchain_transfer_payload(
+    payload: Vec<u8>,
+) -> Result<(InterchainTransfer, String)> {
+    use GMPPayload::{InterchainTransfer, ReceiveFromHub};
+
+    let ReceiveFromHub(inner_msg) =
+        GMPPayload::decode(&payload).map_err(|_err| ItsError::InvalidInstructionData)?
+    else {
+        msg!("Unsupported GMP payload");
+        return err!(ItsError::InvalidInstructionData);
+    };
+
+    let payload =
+        GMPPayload::decode(&inner_msg.payload).map_err(|_err| ItsError::InvalidInstructionData)?;
+
+    match payload {
+        InterchainTransfer(transfer) => Ok((transfer, inner_msg.source_chain)),
+        _ => {
+            err!(ItsError::InvalidInstructionData)
+        }
+    }
 }
