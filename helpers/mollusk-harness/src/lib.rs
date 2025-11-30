@@ -78,6 +78,27 @@ pub trait TestHarness {
         T::try_deserialize(&mut account.data.as_slice()).ok()
     }
 
+    fn update_account<T, F>(&mut self, address: &Pubkey, updater: F) -> T
+    where
+        T: anchor_lang::AccountDeserialize
+            + anchor_lang::AnchorSerialize
+            + anchor_lang::Discriminator,
+        F: FnOnce(&mut T),
+    {
+        let mut account = self.get_account(address).expect("account should exist");
+        let mut data = T::try_deserialize(&mut account.data.as_slice())
+            .expect("failed to deserialize account");
+
+        updater(&mut data);
+
+        data.serialize(&mut &mut account.data[T::DISCRIMINATOR.len()..])
+            .expect("failed to serialize account");
+
+        self.store_account(*address, account);
+
+        data
+    }
+
     fn get_ata_2022_address(&self, wallet: Pubkey, token_mint: Pubkey) -> Pubkey {
         get_associated_token_address_with_program_id(
             &wallet,
@@ -749,6 +770,11 @@ impl ItsTestHarness {
     }
 
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
+        let its = self.get_its_root();
+        let trusted_chains_before = its.trusted_chains.len();
+
+        msg!("Ensuring trusted chain: {}", trusted_chain_name);
+
         let ix =
             make_set_trusted_chain_instruction(self.operator, trusted_chain_name.to_owned(), false)
                 .0;
@@ -763,7 +789,11 @@ impl ItsTestHarness {
 
         let its = self.get_its_root();
 
-        assert_eq!(its.trusted_chains.len(), 1, "must have one trusted chain");
+        assert_eq!(
+            its.trusted_chains.len(),
+            trusted_chains_before + 1,
+            "must have the trusted chain appended"
+        );
         assert!(
             its.trusted_chains.iter().any(|x| x == trusted_chain_name),
             "must have the trusted chain added"
