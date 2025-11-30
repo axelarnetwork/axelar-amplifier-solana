@@ -78,6 +78,14 @@ pub trait TestHarness {
         T::try_deserialize(&mut account.data.as_slice()).ok()
     }
 
+    /// Get a token account (legacy or 2022) from the context's account store.
+    fn get_token_account(
+        &self,
+        address: &Pubkey,
+    ) -> Option<anchor_spl::token_interface::TokenAccount> {
+        self.get_account_as(address)
+    }
+
     fn update_account<T, F>(&mut self, address: &Pubkey, updater: F) -> T
     where
         T: anchor_lang::AccountDeserialize

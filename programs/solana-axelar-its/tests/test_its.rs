@@ -10,13 +10,6 @@ use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEnco
 use solana_program::program_pack::IsInitialized;
 
 #[test]
-fn test_local_deploy_interchain_token() {
-    let its_harness = ItsTestHarness::new();
-
-    let _token_id = its_harness.ensure_test_interchain_token();
-}
-
-#[test]
 fn test_mint_interchain_tokens() {
     let its_harness = ItsTestHarness::new();
 
