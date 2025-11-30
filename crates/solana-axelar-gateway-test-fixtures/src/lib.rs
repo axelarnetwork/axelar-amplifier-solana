@@ -3,8 +3,6 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
-use std::collections::BTreeMap;
-
 use anchor_lang::{prelude::UpgradeableLoaderState, InstructionData, ToAccountMetas};
 use anchor_lang::{AccountDeserialize, AnchorDeserialize};
 use libsecp256k1::SecretKey;
@@ -17,10 +15,10 @@ use solana_axelar_gateway::{
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{IncomingMessage, SignatureVerificationSessionData};
-use solana_axelar_std::execute_data::{prefixed_message_hash_payload_type, ExecuteData};
+use solana_axelar_std::execute_data::{encode, prefixed_message_hash_payload_type, ExecuteData};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{
-    CrossChainId, MerklizedMessage, Message, MessageLeaf, Payload, PayloadType, Signature,
+    CrossChainId, MerklizedMessage, Message, Messages, Payload, PayloadType, Signature,
     SigningVerifierSetInfo, VerifierSet, VerifierSetLeaf, U256,
 };
 use solana_axelar_std::{MerkleTree, PublicKey};
@@ -31,6 +29,7 @@ use solana_sdk::{
     pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use std::collections::BTreeMap;
 
 pub struct TestSetup {
     pub mollusk: Mollusk,
@@ -962,14 +961,11 @@ pub fn default_messages() -> Vec<Message> {
     ]
 }
 
+#[allow(clippy::panic)]
 pub fn create_merklized_messages_from_std(
     domain_separator: [u8; 32],
     messages: &[Message],
 ) -> (Vec<MerklizedMessage>, [u8; 32]) {
-    use solana_axelar_std::execute_data::{encode, Payload};
-    use solana_axelar_std::Messages;
-    use std::collections::BTreeMap;
-
     // Create minimal verifier set with one dummy signer (we only need the payload part)
     let dummy_pubkey = PublicKey([1u8; 33]);
     let mut signers = BTreeMap::new();
@@ -1118,10 +1114,10 @@ pub fn approve_messages_on_gateway(
     let mut incoming_messages = Vec::new();
 
     // Approve all messages using the new approach
-    for i in 0..messages.len() {
+    for merklized_message in merklized_messages.iter().take(messages.len()) {
         let (approve_result, incoming_message_pda) = approve_message_helper_from_merklized(
             setup,
-            &merklized_messages[i],
+            merklized_message,
             payload_merkle_root,
             (
                 verification_session_pda,
@@ -1176,6 +1172,7 @@ pub fn extract_payload_root_and_verifier_info(
     )
 }
 
+#[allow(clippy::type_complexity)]
 pub fn setup_merklized_messages_from_std(
     setup: &TestSetup,
     messages: Vec<Message>,

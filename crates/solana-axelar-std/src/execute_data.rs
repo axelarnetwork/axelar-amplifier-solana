@@ -177,7 +177,7 @@ pub fn prefixed_message_hash_payload_type(
     payload_type: PayloadType,
     message: &[u8; 32],
 ) -> [u8; 32] {
-    // Add command type prefis to the message to indicate the intent of the singer
+    // Add command type prefix to the message to indicate the intent of the singer
     // this prevents rotating signers with a payload_merkle_root intended for approving
     // messages and vice versa
     const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";

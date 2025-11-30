@@ -120,6 +120,7 @@ fn test_initialize_payload_verification_session() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_approve_message_with_dual_signers_and_merkle_proof() {
     // Step 1: Setup gateway with real signers
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
@@ -775,6 +776,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_fails_when_approving_message_with_insufficient_signatures() {
     // Step 1: Setup gateway with real signers
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
