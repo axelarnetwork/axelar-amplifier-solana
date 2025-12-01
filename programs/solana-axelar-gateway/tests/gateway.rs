@@ -12,9 +12,9 @@ use solana_axelar_gateway_test_fixtures::{
     approve_message_helper_from_merklized, call_contract_helper,
     create_execute_data_with_signatures, create_merklized_messages_from_std,
     create_signing_verifier_set_leaves, default_messages, fake_messages, generate_random_signer,
-    initialize_gateway, initialize_payload_verification_session,
-    initialize_payload_verification_session_with_root, mock_setup_test, rotate_signers_helper,
-    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
+    initialize_gateway, initialize_payload_verification_session, mock_setup_test,
+    rotate_signers_helper, setup_test_with_real_signers, transfer_operatorship_helper,
+    verify_signature_helper,
 };
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{Messages, Payload, PayloadType, PublicKey, VerifierSet, U256};
@@ -88,10 +88,12 @@ fn test_initialize_payload_verification_session() {
         .unwrap()
         .clone();
 
+    let payload_merkle_root = [2u8; 32];
     let (result, verification_session_pda) = initialize_payload_verification_session(
         &setup,
         gateway_account,
         verifier_set_tracker_account,
+        payload_merkle_root,
         payload_type,
     );
 
@@ -112,7 +114,7 @@ fn test_initialize_payload_verification_session() {
     .unwrap();
 
     let mut expected_verification_account =
-        SignatureVerificationSessionData::new(SignatureVerification::default(), 255);
+        SignatureVerificationSessionData::new(SignatureVerification::default(), 254);
 
     expected_verification_account
         .signature_verification
@@ -147,14 +149,13 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_account,
-            verifier_set_tracker_account,
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        payload_merkle_root,
+        payload_type,
+    );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts
@@ -371,14 +372,13 @@ fn test_rotate_signers() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_account,
-            verifier_set_tracker_account,
-            new_verifier_set_hash,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        new_verifier_set_hash,
+        payload_type,
+    );
     assert!(!session_result.program_result.is_err());
 
     // Step 6: Get existing accounts
@@ -704,14 +704,13 @@ fn test_fails_when_verifier_submits_signature_twice() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_account,
-            verifier_set_tracker_account,
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        payload_merkle_root,
+        payload_type,
+    );
     assert!(!session_result.program_result.is_err());
 
     let payload_to_be_signed = Payload::Messages(Messages(messages.clone()));
@@ -807,14 +806,13 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_account,
-            verifier_set_tracker_account,
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        payload_merkle_root,
+        payload_type,
+    );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts
@@ -909,14 +907,13 @@ fn test_fails_when_verifying_invalid_signature() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_account,
-            verifier_set_tracker_account,
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        payload_merkle_root,
+        payload_type,
+    );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts
@@ -991,14 +988,13 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_account,
-            verifier_set_tracker_account,
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_account,
+        verifier_set_tracker_account,
+        payload_merkle_root,
+        payload_type,
+    );
     assert!(!session_result.program_result.is_err());
 
     // Step 5: Get existing accounts

@@ -311,81 +311,6 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
     setup.mollusk.process_instruction(&instruction, &accounts)
 }
 
-pub fn initialize_payload_verification_session(
-    setup: &TestSetup,
-    gateway_account: Account,
-    verifier_set_tracker_account: Account,
-    payload_type: PayloadType,
-) -> (InstructionResult, Pubkey) {
-    let merkle_root = [3u8; 32];
-    let signing_verifier_set_hash = setup.verifier_set_hash;
-
-    let (verification_session_pda, _) = SignatureVerificationSessionData::find_pda(
-        &merkle_root,
-        payload_type,
-        &signing_verifier_set_hash,
-    );
-
-    let instruction_data =
-        solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
-            merkle_root,
-            payload_type,
-        }
-        .data();
-
-    let accounts = vec![
-        (
-            setup.payer,
-            Account {
-                lamports: LAMPORTS_PER_SOL,
-                data: vec![],
-                owner: SYSTEM_PROGRAM_ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        (setup.gateway_root_pda, gateway_account),
-        (
-            verification_session_pda,
-            Account {
-                lamports: 0,
-                data: vec![],
-                owner: SYSTEM_PROGRAM_ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
-        (
-            SYSTEM_PROGRAM_ID,
-            Account {
-                lamports: 1,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-    ];
-
-    let instruction = Instruction {
-        program_id: GATEWAY_PROGRAM_ID,
-        accounts: vec![
-            AccountMeta::new(setup.payer, true),
-            AccountMeta::new_readonly(setup.gateway_root_pda, false),
-            AccountMeta::new(verification_session_pda, false),
-            AccountMeta::new_readonly(setup.verifier_set_tracker_pda, false),
-            AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
-        ],
-        data: instruction_data,
-    };
-
-    (
-        setup.mollusk.process_instruction(&instruction, &accounts),
-        verification_session_pda,
-    )
-}
-
 pub fn generate_random_signer() -> (SecretKey, [u8; 33]) {
     use rand::Rng;
     let mut rng = rand::thread_rng();
@@ -415,7 +340,7 @@ pub fn create_test_message(
     }
 }
 
-pub fn initialize_payload_verification_session_with_root(
+pub fn initialize_payload_verification_session(
     setup: &TestSetup,
     gateway_account: Account,
     verifier_set_tracker_account: Account,
@@ -951,16 +876,6 @@ pub fn fake_messages() -> Vec<Message> {
     ]
 }
 
-pub fn create_single_random_signer_map() -> BTreeMap<PublicKey, u128> {
-    let (_, compressed_pubkey) = generate_random_signer();
-    let pubkey = PublicKey(compressed_pubkey);
-
-    let mut signers = BTreeMap::new();
-    signers.insert(pubkey, 100u128);
-
-    signers
-}
-
 #[allow(clippy::panic)]
 pub fn create_merklized_messages_from_std(
     domain_separator: [u8; 32],
@@ -1132,14 +1047,13 @@ pub fn approve_messages_on_gateway(
         create_merklized_messages_from_std(setup.domain_separator, &messages);
     let payload_type = PayloadType::ApproveMessages;
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            setup,
-            gateway_account.clone(),
-            verifier_set_tracker_account.clone(),
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        setup,
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
+        payload_merkle_root,
+        payload_type,
+    );
     assert!(
         !session_result.program_result.is_err(),
         "Failed to initialize verification session"

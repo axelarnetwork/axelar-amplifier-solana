@@ -7,8 +7,8 @@ use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, create_merklized_messages_from_std, create_signing_verifier_set_leaves,
-    initialize_gateway, initialize_payload_verification_session_with_root,
-    setup_test_with_real_signers, verify_signature_helper,
+    initialize_gateway, initialize_payload_verification_session, setup_test_with_real_signers,
+    verify_signature_helper,
 };
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
@@ -79,14 +79,13 @@ fn test_execute() {
         .unwrap()
         .clone();
 
-    let (session_result, verification_session_pda) =
-        initialize_payload_verification_session_with_root(
-            &setup,
-            gateway_root_account.clone(),
-            verifier_set_tracker_account.clone(),
-            payload_merkle_root,
-            payload_type,
-        );
+    let (session_result, verification_session_pda) = initialize_payload_verification_session(
+        &setup,
+        gateway_root_account.clone(),
+        verifier_set_tracker_account.clone(),
+        payload_merkle_root,
+        payload_type,
+    );
 
     let verification_session_account = session_result
         .get_account(&verification_session_pda)
