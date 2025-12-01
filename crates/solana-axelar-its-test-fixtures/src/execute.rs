@@ -195,13 +195,9 @@ pub fn execute_its_instruction(
 
 /// Helper to create extra account metas for deploy interchain token
 pub fn deploy_interchain_token_extra_accounts(
-    deployer_ata: Pubkey,
-    deployer: Pubkey,
     metadata_account: Pubkey,
 ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
     solana_axelar_its::instructions::gmp::execute::execute_deploy_interchain_token_extra_accounts(
-        deployer_ata,
-        deployer,
         solana_sdk::sysvar::instructions::ID,
         mpl_token_metadata::ID,
         metadata_account,
@@ -211,12 +207,8 @@ pub fn deploy_interchain_token_extra_accounts(
 }
 
 /// Helper to create extra account metas for link token
-pub fn link_token_extra_accounts(
-    deployer: Pubkey,
-) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
-    solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(
-        deployer, None, None,
-    )
+pub fn link_token_extra_accounts() -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
+    solana_axelar_its::instructions::gmp::execute::execute_link_token_extra_accounts(None, None)
 }
 
 /// Helper to create extra account metas for interchain transfer

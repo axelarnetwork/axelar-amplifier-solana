@@ -1,6 +1,6 @@
 use crate::{
     errors::ItsError,
-    events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
+    events::{InterchainTokenDeployed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
@@ -144,12 +144,6 @@ pub fn deploy_interchain_token_handler(
         msg!("Name and/or symbol length too long");
         return err!(ItsError::InvalidArgument);
     }
-
-    emit_cpi!(InterchainTokenIdClaimed {
-        token_id,
-        deployer: *ctx.accounts.deployer.key,
-        salt: deploy_salt,
-    });
 
     // Validate minter accounts and initial supply
     match (
