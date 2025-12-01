@@ -913,22 +913,25 @@ impl ItsTestHarness {
         token_id
     }
 
+    pub const TEST_TOKEN_SALT: [u8; 32] = [1u8; 32];
+    pub const TEST_TOKEN_NAME: &'static str = "Test Token";
+    pub const TEST_TOKEN_SYMBOL: &'static str = "TTK";
+    pub const TEST_TOKEN_DECIMALS: u8 = 9;
+    pub const TEST_TOKEN_INITIAL_SUPPLY: u64 = 1_000_000_000_000; // 1,000 TTK
+
     #[must_use]
     pub fn ensure_test_interchain_token(&self) -> [u8; 32] {
-        let salt = [1u8; 32];
-        let name = "Test Token".to_owned();
-        let symbol = "TTK".to_owned();
-        let decimals = 9u8;
-        let initial_supply = 1_000_000_000_000; // 1,000 TTK
+        msg!("Deploying test local interchain token.");
+
         let minter = Some(self.operator);
 
         self.ensure_deploy_local_interchain_token(
             self.operator,
-            salt,
-            name,
-            symbol,
-            decimals,
-            initial_supply,
+            Self::TEST_TOKEN_SALT,
+            Self::TEST_TOKEN_NAME.to_owned(),
+            Self::TEST_TOKEN_SYMBOL.to_owned(),
+            Self::TEST_TOKEN_DECIMALS,
+            Self::TEST_TOKEN_INITIAL_SUPPLY,
             minter,
         )
     }
