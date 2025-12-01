@@ -179,7 +179,11 @@ tracing-error = "0.2"
 typed-builder = "0.20"
 xshell = "0.2"
 pretty_assertions = "1"
-udigest = { version = "0.2", features = ["derive"] }
+# Pinned versions to avoid edition2024 incompatibility with SBF toolchain (Cargo 1.84)
+udigest = { version = "=0.2.0", features = ["derive"] }
+udigest-derive = "=0.2.0"
+base64ct = "=1.7.3"
+ruint = "=1.16.0"
 async-recursion = "1"
 keccak-const = "0.2.0"
 syn = { version = "2", features = ["full"] }
