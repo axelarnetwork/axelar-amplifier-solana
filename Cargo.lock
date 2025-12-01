@@ -4215,6 +4215,7 @@ dependencies = [
  "libsecp256k1",
  "mollusk-svm 0.5.1",
  "mollusk-test-utils",
+ "mpl-token-metadata",
  "rand 0.8.5",
  "solana-axelar-gas-service",
  "solana-axelar-gateway",

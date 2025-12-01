@@ -20,7 +20,7 @@ use solana_axelar_its::{
     instructions::{
         execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
         make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
-        make_set_trusted_chain_instruction,
+        make_register_canonical_token_instruction, make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -117,6 +117,82 @@ pub trait TestHarness {
             .insert(mint, mint_account);
 
         msg!("Created SPL Token 2022 mint: {}", mint);
+
+        mint
+    }
+
+    /// Creates a native SPL Token 2022 mint with transfer fee extension using real instructions.
+    /// Returns the mint pubkey.
+    fn create_spl_token_mint_with_transfer_fee(
+        &self,
+        mint_authority: Pubkey,
+        decimals: u8,
+        transfer_fee_basis_points: u16,
+        maximum_fee: u64,
+    ) -> Pubkey {
+        use spl_token_2022::extension::ExtensionType;
+        use spl_token_2022::instruction as token_instruction;
+
+        let mint = Pubkey::new_unique();
+
+        // Calculate space needed for mint with transfer fee extension
+        let extension_types = &[ExtensionType::TransferFeeConfig];
+        let space = ExtensionType::try_calculate_account_len::<spl_token_2022::state::Mint>(
+            extension_types,
+        )
+        .unwrap();
+
+        let rent = solana_sdk::rent::Rent::default();
+        let lamports = rent.minimum_balance(space);
+
+        // Pre-create the account with correct size
+        let mint_account = Account {
+            lamports,
+            data: vec![0u8; space],
+            owner: spl_token_2022::ID,
+            executable: false,
+            rent_epoch: 0,
+        };
+
+        self.ctx()
+            .account_store
+            .borrow_mut()
+            .insert(mint, mint_account);
+
+        // 1. Initialize transfer fee config (must happen before mint init)
+        let init_fee_ix =
+            spl_token_2022::extension::transfer_fee::instruction::initialize_transfer_fee_config(
+                &spl_token_2022::ID,
+                &mint,
+                Some(&mint_authority),
+                Some(&mint_authority),
+                transfer_fee_basis_points,
+                maximum_fee,
+            )
+            .unwrap();
+
+        // 2. Initialize the mint
+        let init_mint_ix = token_instruction::initialize_mint2(
+            &spl_token_2022::ID,
+            &mint,
+            &mint_authority,
+            Some(&mint_authority),
+            decimals,
+        )
+        .unwrap();
+
+        // Execute both instructions
+        self.ctx().process_and_validate_instruction_chain(&[
+            (&init_fee_ix, &[Check::success()]),
+            (&init_mint_ix, &[Check::success()]),
+        ]);
+
+        msg!(
+            "Created SPL Token 2022 mint with transfer fee: {} (fee: {} bps, max: {})",
+            mint,
+            transfer_fee_basis_points,
+            maximum_fee
+        );
 
         mint
     }
@@ -311,6 +387,60 @@ pub trait TestHarness {
             .account_store
             .borrow_mut()
             .insert(sysvar_instructions_pubkey, sysvar_account);
+    }
+
+    /// Creates metadata for a token mint and stores it in the context.
+    /// Returns the metadata PDA.
+    fn create_token_metadata(
+        &self,
+        mint: Pubkey,
+        mint_authority: Pubkey,
+        name: String,
+        symbol: String,
+    ) -> Pubkey {
+        use anchor_lang::AnchorSerialize;
+
+        let (metadata_pda, _) = mpl_token_metadata::accounts::Metadata::find_pda(&mint);
+
+        let uri = format!("https://{}.com", symbol.to_lowercase());
+
+        let metadata = mpl_token_metadata::accounts::Metadata {
+            key: mpl_token_metadata::types::Key::MetadataV1,
+            update_authority: mint_authority,
+            mint,
+            name,
+            symbol,
+            uri,
+            seller_fee_basis_points: 0,
+            creators: None,
+            primary_sale_happened: false,
+            is_mutable: true,
+            edition_nonce: None,
+            token_standard: Some(mpl_token_metadata::types::TokenStandard::Fungible),
+            collection: None,
+            uses: None,
+            collection_details: None,
+            programmable_config: None,
+        };
+
+        let metadata_data = metadata.try_to_vec().unwrap();
+        let rent = solana_sdk::rent::Rent::default();
+        let metadata_account = Account {
+            lamports: rent.minimum_balance(metadata_data.len()),
+            data: metadata_data,
+            owner: mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
+            executable: false,
+            rent_epoch: 0,
+        };
+
+        self.ctx()
+            .account_store
+            .borrow_mut()
+            .insert(metadata_pda, metadata_account);
+
+        msg!("Created token metadata for mint: {}", mint);
+
+        metadata_pda
     }
 }
 
@@ -961,6 +1091,44 @@ impl ItsTestHarness {
             "Deployed interchain token mint: {}",
             token_manager.token_address,
         );
+
+        token_id
+    }
+
+    /// Registers a canonical token (existing SPL token) with the ITS.
+    /// Returns the token_id for the registered canonical token.
+    pub fn ensure_register_canonical_token(&self, token_mint: Pubkey) -> [u8; 32] {
+        let token_id = solana_axelar_its::utils::canonical_interchain_token_id(&token_mint);
+        let token_manager_pda =
+            solana_axelar_its::TokenManager::find_pda(token_id, self.its_root).0;
+
+        if self.account_exists(&token_manager_pda) {
+            return token_id;
+        }
+
+        let (ix, accounts) =
+            make_register_canonical_token_instruction(self.payer, token_mint, spl_token_2022::ID);
+
+        msg!(
+            "Registering canonical token {} with ID: {}",
+            token_mint,
+            hex::encode(token_id),
+        );
+
+        let expected_token_id =
+            solana_axelar_its::utils::canonical_interchain_token_id(&token_mint);
+
+        self.ctx.process_and_validate_instruction_chain(&[(
+            &ix,
+            &[
+                Check::success(),
+                Check::return_data(&expected_token_id),
+                Check::account(&accounts.token_manager_pda)
+                    .owner(&solana_axelar_its::ID)
+                    .rent_exempt()
+                    .build(),
+            ],
+        )]);
 
         token_id
     }
