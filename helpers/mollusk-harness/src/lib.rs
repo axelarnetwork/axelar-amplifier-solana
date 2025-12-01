@@ -78,6 +78,49 @@ pub trait TestHarness {
         T::try_deserialize(&mut account.data.as_slice()).ok()
     }
 
+    /// Creates a native SPL Token 2022 mint and stores it in the context.
+    /// Returns the mint pubkey.
+    fn create_spl_token_mint(
+        &self,
+        mint_authority: Pubkey,
+        decimals: u8,
+        supply: Option<u64>,
+    ) -> Pubkey {
+        use solana_sdk::program_pack::Pack;
+
+        let mint = Pubkey::new_unique();
+        let mint_data = {
+            let mut data = [0u8; spl_token_2022::state::Mint::LEN];
+            let mint_state = spl_token_2022::state::Mint {
+                mint_authority: Some(mint_authority).into(),
+                supply: supply.unwrap_or(1_000_000_000),
+                decimals,
+                is_initialized: true,
+                freeze_authority: Some(mint_authority).into(),
+            };
+            spl_token_2022::state::Mint::pack(mint_state, &mut data).unwrap();
+            data.to_vec()
+        };
+
+        let rent = solana_sdk::rent::Rent::default();
+        let mint_account = Account {
+            lamports: rent.minimum_balance(mint_data.len()),
+            data: mint_data,
+            owner: spl_token_2022::ID,
+            executable: false,
+            rent_epoch: 0,
+        };
+
+        self.ctx()
+            .account_store
+            .borrow_mut()
+            .insert(mint, mint_account);
+
+        msg!("Created SPL Token 2022 mint: {}", mint);
+
+        mint
+    }
+
     /// Get a token account (legacy or 2022) from the context's account store.
     fn get_token_account(
         &self,
@@ -86,7 +129,16 @@ pub trait TestHarness {
         self.get_account_as(address)
     }
 
-    fn update_account<T, F>(&mut self, address: &Pubkey, updater: F) -> T
+    fn update_account<F>(&mut self, address: &Pubkey, updater: F)
+    where
+        F: FnOnce(&mut Account),
+    {
+        let mut account = self.get_account(address).expect("account should exist");
+        updater(&mut account);
+        self.store_account(*address, account);
+    }
+
+    fn update_account_as<T, F>(&mut self, address: &Pubkey, updater: F) -> T
     where
         T: anchor_lang::AccountDeserialize
             + anchor_lang::AnchorSerialize

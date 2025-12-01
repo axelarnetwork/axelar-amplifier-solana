@@ -93,7 +93,7 @@ fn test_mint_interchain_token_no_minter_role_fails() {
     let minter_roles_pda = UserRoles::find_pda(&token_manager_pda, &harness.operator).0;
 
     // Remove minter role from operator
-    harness.update_account::<UserRoles, _>(&minter_roles_pda, |ur| {
+    harness.update_account_as::<UserRoles, _>(&minter_roles_pda, |ur| {
         ur.roles.remove(Roles::MINTER);
     });
 

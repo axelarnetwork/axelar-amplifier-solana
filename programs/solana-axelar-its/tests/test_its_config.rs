@@ -165,8 +165,9 @@ fn test_transfer_operatorship_without_deleting_roles_pda() {
     let curr_roles_pda = UserRoles::find_pda(&its_harness.its_root, &curr_operator).0;
 
     // Append FLOW_LIMITER role to current operator
-    its_harness
-        .update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles.insert(Roles::FLOW_LIMITER));
+    its_harness.update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| {
+        ur.roles.insert(Roles::FLOW_LIMITER);
+    });
 
     let new_operator = its_harness.get_new_wallet();
     its_harness.ensure_transfer_operatorship(new_operator);
@@ -191,7 +192,7 @@ fn test_transfer_operatorship_without_permissions() {
 
     // Set only FLOW_LIMITER role to current operator
     its_harness
-        .update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
+        .update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
 
     let new_operator = its_harness.get_new_wallet();
 
@@ -270,7 +271,7 @@ fn test_propose_operatorship_without_operator_role_fails() {
 
     // Set only FLOW_LIMITER role to current operator
     let curr_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
-    harness.update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
+    harness.update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
 
     let ix =
         make_propose_operatorship_instruction(harness.payer, harness.operator, proposed_operator).0;
@@ -355,8 +356,9 @@ fn test_accept_operatorship_keeps_other_roles() {
     let curr_roles_pda = UserRoles::find_pda(&harness.its_root, &curr_operator).0;
 
     // Add FLOW_LIMITER role to current operator
-    harness
-        .update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles.insert(Roles::FLOW_LIMITER));
+    harness.update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| {
+        ur.roles.insert(Roles::FLOW_LIMITER);
+    });
 
     let new_operator = harness.get_new_wallet();
 

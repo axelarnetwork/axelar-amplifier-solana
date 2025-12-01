@@ -135,7 +135,7 @@ fn test_set_trusted_chain_non_operator_user_roles() {
 
     let user_roles_pubkey = accounts.user_roles.expect("should use user roles auth");
 
-    its_harness.update_account::<solana_axelar_its::UserRoles, _>(&user_roles_pubkey, |roles| {
+    its_harness.update_account_as::<solana_axelar_its::UserRoles, _>(&user_roles_pubkey, |roles| {
         roles.roles = solana_axelar_its::Roles::FLOW_LIMITER;
     });
 
@@ -267,7 +267,7 @@ fn test_remove_trusted_chain_non_operator_user_roles() {
 
     let user_roles_pubkey = accounts.user_roles.expect("should use user roles auth");
 
-    its_harness.update_account::<solana_axelar_its::UserRoles, _>(&user_roles_pubkey, |roles| {
+    its_harness.update_account_as::<solana_axelar_its::UserRoles, _>(&user_roles_pubkey, |roles| {
         roles.roles = solana_axelar_its::Roles::FLOW_LIMITER;
     });
 
