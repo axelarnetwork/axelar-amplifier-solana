@@ -127,7 +127,7 @@ pub mod builder {
         pub interchain_transfer_execute: AccountInfo<'info>,
     }
 
-    impl<'info> anchor_lang::ToAccountMetas for AxelarExecuteWithInterchainToken<'info> {
+    impl anchor_lang::ToAccountMetas for AxelarExecuteWithInterchainToken<'_> {
         fn to_account_metas(&self, is_signer: Option<bool>) -> Vec<AccountMeta> {
             vec![
                 AccountMeta::new_readonly(self.token_program.key(), false),
