@@ -26,8 +26,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = payer,
-        space = InterchainTokenService::DISCRIMINATOR.len()
-            + InterchainTokenService::space_for(its_hub_address.len(), chain_name.len(), 0),
+        space = InterchainTokenService::space_for(its_hub_address.len(), chain_name.len(), 0),
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump,
     )]

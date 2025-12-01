@@ -29,6 +29,8 @@ impl InterchainTokenService {
         Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
     }
 
+    /// Calculates the space required for an `InterchainTokenService` account
+    /// with the Anchor discriminator included.
     pub fn space_for(
         hub_addr_len: usize,
         chain_name_len: usize,
