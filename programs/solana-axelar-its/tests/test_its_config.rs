@@ -7,9 +7,10 @@ use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 
 use solana_axelar_its::instructions::{
-    make_initialize_instruction, make_set_pause_status_instruction,
+    make_accept_operatorship_instruction, make_initialize_instruction,
+    make_propose_operatorship_instruction, make_set_pause_status_instruction,
 };
-use solana_axelar_its::{ItsError, Roles, RolesError, UserRoles};
+use solana_axelar_its::{ItsError, RoleProposal, Roles, RolesError, UserRoles};
 
 //
 // Initialize
@@ -17,13 +18,13 @@ use solana_axelar_its::{ItsError, Roles, RolesError, UserRoles};
 
 #[test]
 fn test_init_unauthorized_payer() {
-    let mut its_harness = ItsTestHarness::default();
+    let mut harness = ItsTestHarness::default();
 
-    let upgrade_authority = its_harness.get_new_wallet();
-    let payer = its_harness.get_new_wallet();
-    let operator = its_harness.get_new_wallet();
+    let upgrade_authority = harness.get_new_wallet();
+    let payer = harness.get_new_wallet();
+    let operator = harness.get_new_wallet();
 
-    its_harness.ensure_program_data_account(
+    harness.ensure_program_data_account(
         "solana_axelar_its",
         &solana_axelar_its::ID,
         upgrade_authority,
@@ -36,7 +37,7 @@ fn test_init_unauthorized_payer() {
         "axelar123".to_owned(),
     );
 
-    its_harness.ctx.process_and_validate_instruction(
+    harness.ctx.process_and_validate_instruction(
         &init_ix,
         &[Check::err(ItsError::InvalidAccountData.into())],
     );
@@ -44,10 +45,10 @@ fn test_init_unauthorized_payer() {
 
 #[test]
 fn test_init_gives_user_role_to_operator() {
-    let its_harness = ItsTestHarness::new();
+    let harness = ItsTestHarness::new();
 
-    let user_roles_pda = UserRoles::find_pda(&its_harness.its_root, &its_harness.operator).0;
-    let user_roles: UserRoles = its_harness
+    let user_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
+    let user_roles: UserRoles = harness
         .get_account_as(&user_roles_pda)
         .expect("user roles account should exist");
 
@@ -205,5 +206,186 @@ fn test_transfer_operatorship_without_permissions() {
     its_harness.ctx.process_and_validate_instruction(
         &ix,
         &[Check::err(RolesError::MissingOperatorRole.into())],
+    );
+}
+
+//
+// Propose/Accept operatorship
+//
+
+#[test]
+fn test_propose_operatorship() {
+    let harness = ItsTestHarness::new();
+
+    let proposed_operator = harness.get_new_wallet();
+
+    let ix =
+        make_propose_operatorship_instruction(harness.payer, harness.operator, proposed_operator).0;
+
+    let proposal_pda = RoleProposal::find_pda(
+        &harness.its_root,
+        &harness.operator,
+        &proposed_operator,
+        &solana_axelar_its::ID,
+    )
+    .0;
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[
+            Check::success(),
+            Check::account(&proposal_pda).rent_exempt().build(),
+        ],
+    );
+
+    // Verify proposal was created
+    let proposal: RoleProposal = harness
+        .get_account_as(&proposal_pda)
+        .expect("proposal account should exist");
+
+    assert_eq!(proposal.roles, Roles::OPERATOR);
+}
+
+#[test]
+fn test_propose_operatorship_to_self_fails() {
+    let harness = ItsTestHarness::new();
+
+    let ix = make_propose_operatorship_instruction(
+        harness.payer,
+        harness.operator,
+        harness.operator, // proposing to self
+    )
+    .0;
+
+    harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::InvalidArgument.into())]);
+}
+
+#[test]
+fn test_propose_operatorship_without_operator_role_fails() {
+    let mut harness = ItsTestHarness::new();
+
+    let proposed_operator = harness.get_new_wallet();
+
+    // Set only FLOW_LIMITER role to current operator
+    let curr_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
+    harness.update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
+
+    let ix =
+        make_propose_operatorship_instruction(harness.payer, harness.operator, proposed_operator).0;
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(RolesError::MissingOperatorRole.into())],
+    );
+}
+
+#[test]
+fn test_accept_operatorship() {
+    let harness = ItsTestHarness::new();
+
+    let new_operator = harness.get_new_wallet();
+
+    // First propose
+    let propose_ix =
+        make_propose_operatorship_instruction(harness.payer, harness.operator, new_operator).0;
+
+    harness
+        .ctx
+        .process_and_validate_instruction(&propose_ix, &[Check::success()]);
+
+    let old_operator_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
+    let proposal_pda = RoleProposal::find_pda(
+        &harness.its_root,
+        &harness.operator,
+        &new_operator,
+        &solana_axelar_its::ID,
+    )
+    .0;
+
+    // Then accept
+    let accept_ix =
+        make_accept_operatorship_instruction(harness.payer, harness.operator, new_operator).0;
+
+    harness.ctx.process_and_validate_instruction(
+        &accept_ix,
+        &[
+            Check::success(),
+            // Verify proposal PDA was closed
+            Check::account(&proposal_pda).closed().build(),
+            // Verify old operator's roles PDA was closed
+            Check::account(&old_operator_roles_pda).closed().build(),
+        ],
+    );
+
+    // Verify new operator has the role
+    let new_operator_roles_pda = UserRoles::find_pda(&harness.its_root, &new_operator).0;
+    let new_operator_roles: UserRoles = harness
+        .get_account_as(&new_operator_roles_pda)
+        .expect("new operator roles account should exist");
+
+    assert!(new_operator_roles.roles.contains(Roles::OPERATOR));
+}
+
+#[test]
+fn test_accept_operatorship_without_proposal_fails() {
+    let harness = ItsTestHarness::new();
+
+    let new_operator = harness.get_new_wallet();
+
+    // Try to accept without proposing first
+    let accept_ix =
+        make_accept_operatorship_instruction(harness.payer, harness.operator, new_operator).0;
+
+    harness.ctx.process_and_validate_instruction(
+        &accept_ix,
+        &[Check::err(
+            anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::AccountNotInitialized)
+                .into(),
+        )],
+    );
+}
+
+#[test]
+fn test_accept_operatorship_keeps_other_roles() {
+    let mut harness = ItsTestHarness::new();
+
+    let curr_operator = harness.operator;
+    let curr_roles_pda = UserRoles::find_pda(&harness.its_root, &curr_operator).0;
+
+    // Add FLOW_LIMITER role to current operator
+    harness
+        .update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles.insert(Roles::FLOW_LIMITER));
+
+    let new_operator = harness.get_new_wallet();
+
+    // Propose
+    let propose_ix =
+        make_propose_operatorship_instruction(harness.payer, curr_operator, new_operator).0;
+    harness
+        .ctx
+        .process_and_validate_instruction(&propose_ix, &[Check::success()]);
+
+    // Accept
+    let accept_ix =
+        make_accept_operatorship_instruction(harness.payer, curr_operator, new_operator).0;
+    harness
+        .ctx
+        .process_and_validate_instruction(&accept_ix, &[Check::success()]);
+
+    // Verify old operator still has FLOW_LIMITER role (account not closed)
+    let old_operator_roles: UserRoles = harness
+        .get_account_as(&curr_roles_pda)
+        .expect("old operator roles account should still exist");
+
+    assert_eq!(
+        old_operator_roles.roles,
+        Roles::FLOW_LIMITER,
+        "old operator should still have FLOW_LIMITER role"
+    );
+    assert!(
+        !old_operator_roles.roles.contains(Roles::OPERATOR),
+        "old operator should not have OPERATOR role"
     );
 }
