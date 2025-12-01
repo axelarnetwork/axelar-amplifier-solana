@@ -1156,6 +1156,34 @@ impl ItsTestHarness {
         )
     }
 
+    pub const TEST_CANONICAL_TOKEN_NAME: &'static str = "Canonical Token";
+    pub const TEST_CANONICAL_TOKEN_SYMBOL: &'static str = "CTKN";
+    pub const TEST_CANONICAL_TOKEN_DECIMALS: u8 = 9;
+    pub const TEST_CANONICAL_TOKEN_INITIAL_SUPPLY: u64 = 1_000_000_000_000; // 1,000 TTK
+
+    #[must_use]
+    pub fn ensure_test_registered_canonical_token(
+        &self,
+        mint_authority: Pubkey,
+    ) -> (Pubkey, [u8; 32]) {
+        let token_mint = self.create_spl_token_mint(
+            mint_authority,
+            Self::TEST_CANONICAL_TOKEN_DECIMALS,
+            Some(Self::TEST_CANONICAL_TOKEN_INITIAL_SUPPLY),
+        );
+
+        self.create_token_metadata(
+            token_mint,
+            mint_authority,
+            Self::TEST_CANONICAL_TOKEN_NAME.to_owned(),
+            Self::TEST_CANONICAL_TOKEN_SYMBOL.to_owned(),
+        );
+
+        let token_id = self.ensure_register_canonical_token(token_mint);
+
+        (token_mint, token_id)
+    }
+
     pub fn ensure_mint_interchain_token(
         &self,
         token_id: [u8; 32],

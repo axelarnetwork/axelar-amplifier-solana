@@ -5,7 +5,9 @@ use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
-use solana_axelar_its::instructions::make_register_canonical_token_instruction;
+use solana_axelar_its::instructions::{
+    make_deploy_remote_canonical_token_instruction, make_register_canonical_token_instruction,
+};
 use solana_axelar_its::state::TokenManager;
 use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
@@ -244,4 +246,205 @@ fn test_reject_register_canonical_token_when_paused() {
         &ix,
         &[Check::err(solana_axelar_its::ItsError::Paused.into())],
     );
+}
+
+//
+// Deploy remote canonical token
+//
+
+#[test]
+fn test_deploy_remote_canonical_token() {
+    let mut harness = ItsTestHarness::new();
+
+    // Setup: create and register a canonical token
+    let mint_authority = harness.get_new_wallet();
+    let (token_mint, _) = harness.ensure_test_registered_canonical_token(mint_authority);
+    harness.ensure_trusted_chain("ethereum");
+
+    // Deploy to remote chain
+    let (ix, _) = make_deploy_remote_canonical_token_instruction(
+        harness.payer,
+        token_mint,
+        "ethereum".to_owned(),
+        0,
+    );
+
+    harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::success()]);
+}
+
+#[test]
+fn test_reject_deploy_remote_canonical_token_untrusted_chain() {
+    let harness = ItsTestHarness::new();
+
+    // Setup: create and register a canonical token
+    let mint_authority = harness.get_new_wallet();
+    let token_mint = harness.create_spl_token_mint(mint_authority, 9, Some(1_000_000_000));
+
+    harness.create_token_metadata(
+        token_mint,
+        mint_authority,
+        "Canonical Token".to_owned(),
+        "CTKN".to_owned(),
+    );
+
+    let _token_id = harness.ensure_register_canonical_token(token_mint);
+
+    // Do NOT add trusted chain - should fail
+
+    let (ix, _) = make_deploy_remote_canonical_token_instruction(
+        harness.payer,
+        token_mint,
+        "ethereum".to_owned(),
+        0,
+    );
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(
+            solana_axelar_its::ItsError::UntrustedDestinationChain.into(),
+        )],
+    );
+}
+
+#[test]
+fn test_reject_deploy_remote_canonical_token_to_same_chain() {
+    let harness = ItsTestHarness::new();
+
+    let mint_authority = harness.get_new_wallet();
+    let token_mint = harness.create_spl_token_mint(mint_authority, 9, Some(1_000_000_000));
+
+    harness.create_token_metadata(
+        token_mint,
+        mint_authority,
+        "Canonical Token".to_owned(),
+        "CTKN".to_owned(),
+    );
+
+    let _token_id = harness.ensure_register_canonical_token(token_mint);
+
+    // Try to deploy to "solana" (same chain) - should fail
+    let (ix, _) = make_deploy_remote_canonical_token_instruction(
+        harness.payer,
+        token_mint,
+        "solana".to_owned(), // same as local chain
+        0,
+    );
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(
+            solana_axelar_its::ItsError::InvalidDestinationChain.into(),
+        )],
+    );
+}
+
+#[test]
+fn test_reject_deploy_remote_canonical_token_when_paused() {
+    let mut harness = ItsTestHarness::new();
+
+    let mint_authority = harness.get_new_wallet();
+    let token_mint = harness.create_spl_token_mint(mint_authority, 9, Some(1_000_000_000));
+
+    harness.create_token_metadata(
+        token_mint,
+        mint_authority,
+        "Canonical Token".to_owned(),
+        "CTKN".to_owned(),
+    );
+
+    let _token_id = harness.ensure_register_canonical_token(token_mint);
+    harness.ensure_trusted_chain("ethereum");
+
+    // Pause ITS
+    let pause_ix =
+        solana_axelar_its::instructions::make_set_pause_status_instruction(harness.operator, true)
+            .0;
+    harness
+        .ctx
+        .process_and_validate_instruction(&pause_ix, &[Check::success()]);
+
+    // Try to deploy while paused
+    let (ix, _) = make_deploy_remote_canonical_token_instruction(
+        harness.payer,
+        token_mint,
+        "ethereum".to_owned(),
+        0,
+    );
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(solana_axelar_its::ItsError::Paused.into())],
+    );
+}
+
+#[test]
+fn test_reject_deploy_remote_canonical_token_not_registered() {
+    let mut harness = ItsTestHarness::new();
+
+    let mint_authority = harness.get_new_wallet();
+    let token_mint = harness.create_spl_token_mint(mint_authority, 9, Some(1_000_000_000));
+
+    harness.create_token_metadata(
+        token_mint,
+        mint_authority,
+        "Canonical Token".to_owned(),
+        "CTKN".to_owned(),
+    );
+
+    // Do NOT register the canonical token - should fail
+    harness.ensure_trusted_chain("ethereum");
+
+    let (ix, _) = make_deploy_remote_canonical_token_instruction(
+        harness.payer,
+        token_mint,
+        "ethereum".to_owned(),
+        0,
+    );
+
+    // Token manager doesn't exist
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(
+            anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::AccountNotInitialized)
+                .into(),
+        )],
+    );
+}
+
+#[test]
+fn test_deploy_remote_canonical_token_multiple_chains() {
+    let mut harness = ItsTestHarness::new();
+
+    let mint_authority = harness.get_new_wallet();
+    let token_mint = harness.create_spl_token_mint(mint_authority, 9, Some(1_000_000_000));
+
+    harness.create_token_metadata(
+        token_mint,
+        mint_authority,
+        "Multi Chain Token".to_owned(),
+        "MCT".to_owned(),
+    );
+
+    let _token_id = harness.ensure_register_canonical_token(token_mint);
+
+    // Add multiple trusted chains
+    harness.ensure_trusted_chain("ethereum");
+    harness.ensure_trusted_chain("avalanche");
+    harness.ensure_trusted_chain("polygon");
+
+    // Deploy to each chain
+    for chain in ["ethereum", "avalanche", "polygon"] {
+        let (ix, _) = make_deploy_remote_canonical_token_instruction(
+            harness.payer,
+            token_mint,
+            chain.to_owned(),
+            0,
+        );
+
+        harness
+            .ctx
+            .process_and_validate_instruction(&ix, &[Check::success()]);
+    }
 }
