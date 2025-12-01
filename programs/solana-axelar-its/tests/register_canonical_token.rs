@@ -23,7 +23,7 @@ use solana_sdk::{signature::Keypair, signer::Signer};
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
-fn test_register_canonical_token() {
+fn register_canonical_token() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -117,7 +117,7 @@ fn test_register_canonical_token() {
 }
 
 #[test]
-fn test_reject_register_canonical_token_with_invalid_metadata() {
+fn reject_register_canonical_token_with_invalid_metadata() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();

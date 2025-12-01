@@ -13,7 +13,7 @@ use {
 };
 
 #[test]
-fn test_set_pause_status_success() {
+fn set_pause_status_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -117,7 +117,7 @@ fn test_set_pause_status_success() {
 }
 
 #[test]
-fn test_set_pause_status_already_paused() {
+fn set_pause_status_already_paused() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -201,7 +201,7 @@ fn test_set_pause_status_already_paused() {
 }
 
 #[test]
-fn test_set_pause_status_unauthorized() {
+fn set_pause_status_unauthorized() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -269,7 +269,7 @@ fn test_set_pause_status_unauthorized() {
 }
 
 #[test]
-fn test_set_pause_status_already_unpaused() {
+fn set_pause_status_already_unpaused() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 

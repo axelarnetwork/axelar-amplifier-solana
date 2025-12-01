@@ -2,6 +2,9 @@
 #![allow(clippy::little_endian_bytes)]
 #![allow(clippy::missing_asserts_for_indexing)]
 #![allow(clippy::too_many_arguments)]
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 pub mod errors;
 pub mod events;
 pub mod executable;

@@ -13,7 +13,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
-fn test_accept_operatorship() {
+fn accept_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -117,7 +117,7 @@ fn test_accept_operatorship() {
 }
 
 #[test]
-fn test_reject_invalid_operatorship() {
+fn reject_invalid_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 

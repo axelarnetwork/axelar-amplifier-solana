@@ -14,7 +14,7 @@ use {
 };
 
 #[test]
-fn test_transfer_operatorship_success() {
+fn transfer_operatorship_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -111,7 +111,7 @@ fn test_transfer_operatorship_success() {
 }
 
 #[test]
-fn test_reject_transfer_operatorship_with_invalid_authority() {
+fn reject_transfer_operatorship_with_invalid_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -192,7 +192,7 @@ fn test_reject_transfer_operatorship_with_invalid_authority() {
 }
 
 #[test]
-fn test_reject_transfer_operatorship_without_operator_role() {
+fn reject_transfer_operatorship_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 

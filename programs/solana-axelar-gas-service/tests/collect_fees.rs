@@ -13,7 +13,7 @@ mod initialize;
 use initialize::{init_gas_service, setup_mollusk, setup_operator};
 
 #[test]
-fn test_collect_native_fees() {
+fn collect_native_fees() {
     // Setup
 
     let program_id = solana_axelar_gas_service::id();
@@ -104,7 +104,7 @@ fn test_collect_native_fees() {
 }
 
 #[test]
-fn test_collect_native_fees_insufficient_funds() {
+fn collect_native_fees_insufficient_funds() {
     // Setup
 
     let program_id = solana_axelar_gas_service::id();
@@ -196,7 +196,7 @@ fn test_collect_native_fees_insufficient_funds() {
 #[allow(clippy::integer_division)]
 #[allow(clippy::print_stdout)]
 #[allow(clippy::integer_division_remainder_used)]
-fn test_collect_native_fees_not_rent_exempt() {
+fn collect_native_fees_not_rent_exempt() {
     // Setup
 
     let program_id = solana_axelar_gas_service::id();

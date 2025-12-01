@@ -14,7 +14,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_remove_token_manager_flow_limiter() {
+fn remove_token_manager_flow_limiter() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -188,7 +188,7 @@ fn test_remove_token_manager_flow_limiter() {
 }
 
 #[test]
-fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
+fn reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -362,7 +362,7 @@ fn test_reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
 }
 
 #[test]
-fn test_reject_remove_token_manager_flow_limiter_without_operator_role() {
+fn reject_remove_token_manager_flow_limiter_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 

@@ -9,7 +9,7 @@ use solana_axelar_its_test_fixtures::{init_its_service, new_default_account, new
 use {solana_sdk::pubkey::Pubkey, solana_sdk_ids::bpf_loader_upgradeable};
 
 #[test]
-fn test_initialize_success() {
+fn initialize_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -69,7 +69,7 @@ fn test_initialize_success() {
 #[allow(clippy::should_panic_without_expect)]
 #[test]
 #[should_panic]
-fn test_initialize_unauthorized_payer() {
+fn initialize_unauthorized_payer() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 

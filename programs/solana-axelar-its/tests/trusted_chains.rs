@@ -18,7 +18,7 @@ use {
 };
 
 #[test]
-fn test_set_trusted_chain_success() {
+fn set_trusted_chain_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -112,7 +112,7 @@ fn test_set_trusted_chain_success() {
 }
 
 #[test]
-fn test_set_trusted_chain_operator_success() {
+fn set_trusted_chain_operator_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -207,7 +207,7 @@ fn test_set_trusted_chain_operator_success() {
 }
 
 #[test]
-fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
+fn set_trusted_chain_operator_and_upgrade_authority_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -304,7 +304,7 @@ fn test_set_trusted_chain_operator_and_upgrade_authority_success() {
 }
 
 #[test]
-fn test_set_trusted_chain_already_exists() {
+fn set_trusted_chain_already_exists() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -411,7 +411,7 @@ fn test_set_trusted_chain_already_exists() {
 }
 
 #[test]
-fn test_set_trusted_chain_unauthorized() {
+fn set_trusted_chain_unauthorized() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -489,7 +489,7 @@ fn test_set_trusted_chain_unauthorized() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_set_trusted_chain_missing_operator_role() {
+fn set_trusted_chain_missing_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -565,7 +565,7 @@ fn test_set_trusted_chain_missing_operator_role() {
 }
 
 #[test]
-fn test_set_multiple_trusted_chains() {
+fn set_multiple_trusted_chains() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
