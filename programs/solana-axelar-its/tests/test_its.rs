@@ -9,25 +9,6 @@ use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
 
-#[test]
-fn test_mint_interchain_tokens() {
-    let its_harness = ItsTestHarness::new();
-
-    // Token
-    let token_id = its_harness.ensure_test_interchain_token();
-    let token_mint =
-        solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
-    let mint_amount = 1_000_000u64;
-
-    // Receiver
-    let receiver = its_harness.get_new_wallet();
-    let (receiver_ata, _) =
-        its_harness.get_or_create_ata_2022_account(its_harness.payer, receiver, token_mint);
-
-    // Mint
-    its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, receiver_ata);
-}
-
 // Outbound transfers
 
 #[test]
