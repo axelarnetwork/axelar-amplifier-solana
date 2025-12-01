@@ -1,4 +1,5 @@
 #![allow(clippy::indexing_slicing)]
+#![allow(clippy::too_many_arguments)]
 use std::collections::HashMap;
 
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
@@ -18,6 +19,8 @@ use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
         execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
+        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
+        make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -34,6 +37,18 @@ use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
     GatewayConfig, Message, VerifierSetTracker,
 };
+
+macro_rules! msg {
+    () => {
+        solana_sdk::msg!("[mollusk-harness]");
+    };
+    ($msg:literal) => {
+        solana_sdk::msg!(concat!("[mollusk-harness] ", $msg));
+    };
+    ($fmt:literal, $($arg:tt)*) => {
+        solana_sdk::msg!(concat!("[mollusk-harness] ", $fmt), $($arg)*);
+    };
+}
 
 pub trait TestHarness {
     fn ctx(&self) -> &MolluskContext<HashMap<Pubkey, Account>>;
@@ -63,6 +78,33 @@ pub trait TestHarness {
         T::try_deserialize(&mut account.data.as_slice()).ok()
     }
 
+    fn get_ata_2022_address(&self, wallet: Pubkey, token_mint: Pubkey) -> Pubkey {
+        get_associated_token_address_with_program_id(
+            &wallet,
+            &token_mint,
+            &anchor_spl::token_2022::spl_token_2022::ID,
+        )
+    }
+
+    /// For when we manually need to check rent exemption.
+    fn is_rent_exempt(&self, address: &Pubkey) -> bool {
+        let account = self
+            .get_account(address)
+            .expect("account must exist to check rent exemption");
+        self.ctx()
+            .mollusk
+            .sysvars
+            .rent
+            .is_exempt(account.lamports, account.data.len())
+    }
+
+    fn assert_rent_exempt(&self, address: &Pubkey) {
+        assert!(
+            self.is_rent_exempt(address),
+            "account {address} is not rent exempt",
+        );
+    }
+
     fn get_ata_2022_data(
         &self,
         wallet: Pubkey,
@@ -85,6 +127,42 @@ pub trait TestHarness {
                 &ata.data,
             ).expect("must be correct");
         ata.base
+    }
+
+    fn get_or_create_ata_2022_account(
+        &self,
+        payer: Pubkey,
+        wallet: Pubkey,
+        token_mint: Pubkey,
+    ) -> (Pubkey, spl_token_2022::state::Account) {
+        let ata = get_associated_token_address_with_program_id(
+            &wallet,
+            &token_mint,
+            &anchor_spl::token_2022::spl_token_2022::ID,
+        );
+
+        if !self.account_exists(&ata) {
+            let create_ata_ix =
+                associated_token::spl_associated_token_account::instruction::create_associated_token_account(
+                    &payer,
+                    &wallet,
+                    &token_mint,
+                    &anchor_spl::token_2022::spl_token_2022::ID,
+                );
+
+            self.ctx()
+                .process_and_validate_instruction(&create_ata_ix, &[Check::success()]);
+
+            msg!(
+                "Created ATA account for wallet: {}, mint: {}",
+                wallet,
+                token_mint
+            );
+        }
+
+        let ata_data = self.get_ata_2022_data(wallet, token_mint);
+
+        (ata, ata_data)
     }
 
     fn get_new_wallet(&self) -> Pubkey {
@@ -215,6 +293,11 @@ impl ItsTestHarness {
         harness.ensure_sysvar_instructions_account();
 
         harness
+    }
+
+    pub fn get_its_root(&self) -> InterchainTokenService {
+        self.get_account_as(&self.its_root)
+            .expect("ITS root account should exist")
     }
 
     pub fn ensure_operators_initialized(&self) {
@@ -601,7 +684,7 @@ impl ItsTestHarness {
         self.ctx
             .process_and_validate_instruction_chain(&instruction_checks);
 
-        solana_sdk::msg!("Messages approved on gateway.");
+        msg!("Messages approved on gateway.");
     }
 
     pub fn ensure_its_initialized(&mut self) {
@@ -657,44 +740,25 @@ impl ItsTestHarness {
         self.its_root = its_root_pda;
     }
 
-    pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
-        self.ensure_its_initialized();
+    /// Shortcut function to get the token mint for a given token ID.
+    pub fn token_mint_for_id(&self, token_id: [u8; 32]) -> Pubkey {
+        solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0
+    }
 
-        let program_data = self.ensure_program_data_account(
-            "solana_axelar_its",
-            &solana_axelar_its::ID,
-            self.operator,
+    pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
+        let ix =
+            make_set_trusted_chain_instruction(self.operator, trusted_chain_name.to_owned(), false)
+                .0;
+
+        self.ctx.process_and_validate_instruction(
+            &ix,
+            &[
+                Check::success(),
+                Check::account(&self.its_root).rent_exempt().build(),
+            ],
         );
 
-        let (event_authority, _, _) =
-            get_event_authority_and_program_accounts(&solana_axelar_its::ID);
-
-        let ix = Instruction {
-            program_id: solana_axelar_its::ID,
-            accounts: solana_axelar_its::accounts::SetTrustedChain {
-                payer: self.operator,
-                program_data: Some(program_data),
-                user_roles: None,
-                its_root_pda: self.its_root,
-                system_program: solana_sdk_ids::system_program::ID,
-                // Event authority
-                event_authority,
-                // The current program account
-                program: solana_axelar_its::ID,
-            }
-            .to_account_metas(None),
-            data: solana_axelar_its::instruction::SetTrustedChain {
-                chain_name: trusted_chain_name.to_owned(),
-            }
-            .data(),
-        };
-
-        self.ctx
-            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
-
-        let its: solana_axelar_its::InterchainTokenService = self
-            .get_account_as(&self.its_root)
-            .expect("ITS root account should exist");
+        let its = self.get_its_root();
 
         assert_eq!(its.trusted_chains.len(), 1, "must have one trusted chain");
         assert!(
@@ -703,7 +767,33 @@ impl ItsTestHarness {
         );
     }
 
-    #[allow(clippy::too_many_arguments)]
+    pub fn ensure_transfer_operatorship(&mut self, new_operator: Pubkey) {
+        let ix = solana_axelar_its::instructions::make_transfer_operatorship_instruction(
+            self.payer,
+            self.operator,
+            new_operator,
+        )
+        .0;
+
+        self.ctx
+            .process_and_validate_instruction(&ix, &[Check::success()]);
+
+        let new_operator_account =
+            solana_axelar_its::UserRoles::find_pda(&self.its_root, &new_operator).0;
+
+        let its_roles: solana_axelar_its::UserRoles = self
+            .get_account_as(&new_operator_account)
+            .expect("new operator roles account should exist");
+
+        assert!(
+            its_roles.has_operator_role(),
+            "new operator must have operator role"
+        );
+
+        // Update operator
+        self.operator = new_operator;
+    }
+
     pub fn ensure_deploy_local_interchain_token(
         &self,
         deployer: Pubkey,
@@ -733,7 +823,7 @@ impl ItsTestHarness {
             minter,
         );
 
-        solana_sdk::msg!(
+        msg!(
             "Deploying interchain token with ID: {}",
             hex::encode(token_id),
         );
@@ -757,7 +847,7 @@ impl ItsTestHarness {
             .get_account_as(&token_manager_pda)
             .expect("token manager account should exist");
 
-        solana_sdk::msg!(
+        msg!(
             "Deployed interchain token mint: {}",
             token_manager.token_address,
         );
@@ -765,6 +855,7 @@ impl ItsTestHarness {
         token_id
     }
 
+    #[must_use]
     pub fn ensure_test_interchain_token(&self) -> [u8; 32] {
         let salt = [1u8; 32];
         let name = "Test Token".to_owned();
@@ -782,6 +873,176 @@ impl ItsTestHarness {
             initial_supply,
             minter,
         )
+    }
+
+    pub fn ensure_mint_interchain_token(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        minter: Pubkey,
+        destination_account: Pubkey,
+        token_program: Pubkey,
+    ) {
+        // Check balance before minting
+        let dest: Option<anchor_spl::token_interface::TokenAccount> =
+            self.get_account_as(&destination_account);
+        let balance = dest.map_or(0u64, |a| a.amount);
+
+        let (ix, _) = make_mint_interchain_token_instruction(
+            token_id,
+            amount,
+            minter,
+            destination_account,
+            token_program,
+        );
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+
+        // Check balance after minting
+        let dest: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&destination_account)
+            .expect("destination account should exist after minting");
+        let new_balance = dest.amount;
+
+        // Ensure balance increased by minted amount
+        assert_eq!(
+            new_balance,
+            balance + amount,
+            "destination account balance should increase by minted amount"
+        );
+
+        msg!(
+            "Minted {} tokens of ID {} to account {}. Balance = {} -> {}",
+            amount,
+            hex::encode(token_id),
+            destination_account,
+            balance,
+            new_balance,
+        );
+    }
+
+    pub fn ensure_mint_test_interchain_token(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        destination_account: Pubkey,
+    ) {
+        let minter = self.operator;
+        let token_program = spl_token_2022::ID;
+
+        self.ensure_mint_interchain_token(
+            token_id,
+            amount,
+            minter,
+            destination_account,
+            token_program,
+        );
+    }
+
+    // TODO support token with fees
+    pub fn ensure_outgoing_interchain_transfer(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        token_program: Pubkey,
+        payer: Pubkey,
+        authority: Pubkey,
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        gas_value: u64,
+        caller_program_id: Option<Pubkey>,
+        caller_pda_seeds: Option<Vec<Vec<u8>>>,
+        data: Option<Vec<u8>>,
+    ) {
+        let token_mint = self.token_mint_for_id(token_id);
+
+        // Get balance before transfer
+        let authority_ata =
+            get_associated_token_address_with_program_id(&authority, &token_mint, &token_program);
+        let authority_ata_data: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&authority_ata)
+            .expect("authority ata should exist");
+
+        let balance_before = authority_ata_data.amount;
+
+        // Transfer
+
+        let (ix, _) = make_interchain_transfer_instruction(
+            token_id,
+            amount,
+            token_program,
+            payer,
+            authority,
+            destination_chain.clone(),
+            destination_address,
+            gas_value,
+            caller_program_id,
+            caller_pda_seeds,
+            data,
+        );
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+
+        // Check balance after transfer
+
+        let authority_ata_data: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&authority_ata)
+            .expect("authority ata should exist");
+
+        let balance_after = authority_ata_data.amount;
+
+        assert_eq!(
+            balance_after,
+            balance_before - amount,
+            "authority ata balance should decrease by transfer amount"
+        );
+
+        if let Some(caller_program_id) = caller_program_id {
+            msg!(
+                "Interchain transfer called by program {}",
+                caller_program_id,
+            );
+        }
+
+        msg!(
+			"Interchain transfer of {} tokens of ID {} from {} to destination chain '{}' initiated. Balance: {} -> {}",
+			amount,
+			hex::encode(token_id),
+			authority,
+			destination_chain,
+			balance_before,
+			balance_after,
+		);
+
+        // TODO check event emission
+    }
+
+    pub fn ensure_outgoing_user_interchain_transfer(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        token_program: Pubkey,
+        payer: Pubkey,
+        authority: Pubkey,
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        gas_value: u64,
+    ) {
+        self.ensure_outgoing_interchain_transfer(
+            token_id,
+            amount,
+            token_program,
+            payer,
+            authority,
+            destination_chain,
+            destination_address,
+            gas_value,
+            None,
+            None,
+            None,
+        );
     }
 
     pub fn execute_gmp(
@@ -938,5 +1199,38 @@ impl ItsTestHarness {
             transfer_payload_wrapped,
             extra_accounts,
         )
+    }
+
+    //
+    // Memo Program
+    //
+
+    pub fn ensure_memo_program_initialized(&mut self) {
+        let counter_pda = solana_axelar_memo::Counter::get_pda().0;
+        if self.account_exists(&counter_pda) {
+            return;
+        }
+
+        self.ctx.mollusk.add_program(
+            &solana_axelar_memo::ID,
+            "solana_axelar_memo",
+            &solana_sdk_ids::bpf_loader_upgradeable::ID,
+        );
+
+        self.ctx.process_and_validate_instruction(
+            &solana_axelar_memo::make_init_ix(self.payer),
+            &[Check::success()],
+        );
+
+        let counter_account: solana_axelar_memo::Counter = self
+            .get_account_as(&counter_pda)
+            .expect("counter account should exist");
+
+        assert_eq!(
+            counter_account.counter, 0,
+            "counter should have default value"
+        );
+
+        msg!("Memo program initialized.");
     }
 }

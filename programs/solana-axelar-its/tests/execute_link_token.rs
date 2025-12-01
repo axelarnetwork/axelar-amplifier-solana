@@ -155,7 +155,7 @@ fn test_execute_link_token() {
             (token_manager_ata, new_empty_account()),
         ],
         extra_accounts: vec![(payer, payer_account.clone())],
-        extra_account_metas: link_token_extra_accounts(payer),
+        extra_account_metas: link_token_extra_accounts(),
         token_manager_account: None,
     };
 
@@ -304,7 +304,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
         extra_accounts: vec![
             (payer, payer_account.clone()), // deployer same as payer
         ],
-        extra_account_metas: link_token_extra_accounts(payer),
+        extra_account_metas: link_token_extra_accounts(),
         token_manager_account: None,
     };
 
@@ -453,7 +453,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
         extra_accounts: vec![
             (payer, payer_account.clone()), // deployer same as payer
         ],
-        extra_account_metas: link_token_extra_accounts(payer),
+        extra_account_metas: link_token_extra_accounts(),
         token_manager_account: None,
     };
 
@@ -604,7 +604,7 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
         extra_accounts: vec![
             (payer, payer_account.clone()), // deployer same as payer
         ],
-        extra_account_metas: link_token_extra_accounts(payer),
+        extra_account_metas: link_token_extra_accounts(),
         token_manager_account: None,
     };
 

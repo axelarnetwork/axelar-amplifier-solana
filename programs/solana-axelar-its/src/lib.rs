@@ -277,8 +277,8 @@ pub mod solana_axelar_its {
         destination_address: Vec<u8>,
         amount: u64,
         gas_value: u64,
-        source_id: Option<Pubkey>,
-        pda_seeds: Option<Vec<Vec<u8>>>,
+        caller_program_id: Option<Pubkey>,
+        caller_pda_seeds: Option<Vec<Vec<u8>>>,
         data: Option<Vec<u8>>,
     ) -> Result<()> {
         instructions::interchain_transfer_handler(
@@ -288,8 +288,8 @@ pub mod solana_axelar_its {
             destination_address,
             amount,
             gas_value,
-            source_id,
-            pda_seeds,
+            caller_program_id,
+            caller_pda_seeds,
             data,
         )
     }
