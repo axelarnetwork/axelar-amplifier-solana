@@ -281,6 +281,7 @@ impl TestHarness for ItsTestHarness {
     }
 }
 
+#[derive(Default)]
 pub struct GatewayHarnessInfo {
     pub root: Pubkey,
     pub signers: Vec<libsecp256k1::SecretKey>,
@@ -290,36 +291,29 @@ pub struct GatewayHarnessInfo {
 }
 
 impl Default for ItsTestHarness {
+    /// Create a default ITS test harness without initializing ITS.
+    /// Useful for testing initialization itself.
     fn default() -> Self {
-        Self::new()
+        let mollusk = initialize_mollusk_with_programs();
+
+        Self {
+            ctx: mollusk.with_context(HashMap::new()),
+            payer: Pubkey::new_unique(),
+            operator: Pubkey::new_unique(),
+            gateway: GatewayHarnessInfo::default(),
+            its_root: Pubkey::default(),
+        }
     }
 }
 
 impl ItsTestHarness {
     pub fn new() -> Self {
-        let mollusk = initialize_mollusk_with_programs();
-        let payer = Pubkey::new_unique();
-        let operator = Pubkey::new_unique();
-        let ctx = mollusk.with_context(HashMap::new());
+        let mut harness = Self::default();
 
-        let mut harness = Self {
-            ctx,
-            payer,
-            operator,
-            gateway: GatewayHarnessInfo {
-                root: Pubkey::new_from_array([0u8; 32]),
-                signers: vec![],
-                verifier_set_tracker: Pubkey::new_from_array([0u8; 32]),
-                verifier_set_leaves: vec![],
-                verifier_merkle_tree: MerkleTree::new(),
-            },
-            its_root: Pubkey::new_from_array([0u8; 32]),
-        };
-
-        harness.ensure_account_exists_with_lamports(payer, LAMPORTS_PER_SOL * 100);
-        harness.ensure_account_exists_with_lamports(operator, LAMPORTS_PER_SOL * 100);
-        harness.ensure_its_initialized();
+        harness.ensure_account_exists_with_lamports(harness.payer, LAMPORTS_PER_SOL * 100);
+        harness.ensure_account_exists_with_lamports(harness.operator, LAMPORTS_PER_SOL * 100);
         harness.ensure_sysvar_instructions_account();
+        harness.ensure_its_initialized();
 
         harness
     }
@@ -727,47 +721,36 @@ impl ItsTestHarness {
             return;
         }
 
-        let program_data = self.ensure_program_data_account(
+        // operator will also serve as the payer and upgrade authority
+        let upgrade_authority = self.operator;
+
+        self.ensure_program_data_account(
             "solana_axelar_its",
             &solana_axelar_its::ID,
-            self.operator,
+            upgrade_authority,
         );
 
-        let user_roles_pda =
-            solana_axelar_its::UserRoles::find_pda(&its_root_pda, &self.operator).0;
+        let (init_ix, init_accounts) = solana_axelar_its::instructions::make_initialize_instruction(
+            upgrade_authority,
+            self.operator,
+            "solana".to_owned(),
+            "axelar123".to_owned(),
+        );
 
-        let its_init_ix = Instruction {
-            program_id: solana_axelar_its::ID,
-            accounts: solana_axelar_its::accounts::Initialize {
-                payer: self.operator,
-                program_data,
-                its_root_pda,
-                system_program: solana_sdk_ids::system_program::ID,
-                operator: self.operator,
-                user_roles_account: user_roles_pda,
-            }
-            .to_account_metas(None),
-            data: solana_axelar_its::instruction::Initialize {
-                chain_name: "solana".to_owned(),
-                its_hub_address: "axelar123".to_owned(),
-            }
-            .data(),
-        };
-
-        self.ctx.process_and_validate_instruction_chain(&[(
-            &its_init_ix,
+        self.ctx.process_and_validate_instruction(
+            &init_ix,
             &[
                 Check::success(),
                 Check::account(&its_root_pda)
                     .owner(&solana_axelar_its::ID)
                     .rent_exempt()
                     .build(),
-                Check::account(&user_roles_pda)
+                Check::account(&init_accounts.user_roles_account)
                     .owner(&solana_axelar_its::ID)
                     .rent_exempt()
                     .build(),
             ],
-        )]);
+        );
 
         self.its_root = its_root_pda;
     }
