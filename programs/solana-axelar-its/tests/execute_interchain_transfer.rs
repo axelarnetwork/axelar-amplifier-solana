@@ -31,8 +31,7 @@ use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022
 #[test]
 fn test_execute_interchain_transfer_success() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -122,8 +121,6 @@ fn test_execute_interchain_transfer_success() {
         verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -252,8 +249,6 @@ fn test_execute_interchain_transfer_success() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
@@ -354,8 +349,7 @@ fn test_execute_interchain_transfer_success() {
 #[test]
 fn test_reject_execute_interchain_transfer_with_zero_amount() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -446,8 +440,6 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
         verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -576,8 +568,6 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
@@ -654,8 +644,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
 #[test]
 fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -746,8 +735,6 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
         verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -878,8 +865,6 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
@@ -958,8 +943,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
 #[test]
 fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -1050,8 +1034,6 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
         verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -1180,8 +1162,6 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =

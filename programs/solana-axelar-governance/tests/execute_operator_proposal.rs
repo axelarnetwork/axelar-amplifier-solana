@@ -28,8 +28,7 @@ use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
 #[test]
 fn should_execute_operator_proposal() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -109,8 +108,6 @@ fn should_execute_operator_proposal() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     // Step 7: Setup Governance

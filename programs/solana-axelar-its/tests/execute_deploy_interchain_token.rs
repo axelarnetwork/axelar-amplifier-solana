@@ -30,8 +30,7 @@ use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022
 #[test]
 fn test_execute_deploy_interchain_token_success() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -111,8 +110,6 @@ fn test_execute_deploy_interchain_token_success() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -231,8 +228,7 @@ fn test_execute_deploy_interchain_token_success() {
 #[test]
 fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -312,8 +308,6 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -398,8 +392,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
 #[test]
 fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -481,8 +474,6 @@ fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];

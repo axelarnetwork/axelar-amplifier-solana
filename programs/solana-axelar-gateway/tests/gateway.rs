@@ -10,13 +10,14 @@ use solana_axelar_gateway::{
 use solana_axelar_gateway::{IncomingMessage, MessageStatus, SignatureVerificationSessionData};
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper_from_merklized, call_contract_helper,
-    create_merklized_messages_from_std, create_verifier_info, default_messages, initialize_gateway,
-    initialize_payload_verification_session, initialize_payload_verification_session_with_root,
-    mock_setup_test, rotate_signers_helper, setup_test_with_real_signers,
-    transfer_operatorship_helper, verify_signature_helper,
+    create_merklized_messages_from_std, create_signing_verifier_set_leaves,
+    create_signing_verifier_set_leaves_for_external_payload, default_messages, fake_messages,
+    initialize_gateway, initialize_payload_verification_session,
+    initialize_payload_verification_session_with_root, mock_setup_test, rotate_signers_helper,
+    setup_test_with_real_signers, transfer_operatorship_helper, verify_signature_helper,
 };
 use solana_axelar_std::hasher::LeafHash;
-use solana_axelar_std::{PayloadType, U256};
+use solana_axelar_std::{Messages, Payload, PayloadType, U256};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -123,8 +124,7 @@ fn test_initialize_payload_verification_session() {
 #[allow(clippy::indexing_slicing)]
 fn test_approve_message_with_dual_signers_and_merkle_proof() {
     // Step 1: Setup gateway with real signers
-    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -172,16 +172,15 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         .unwrap()
         .clone();
 
-    // Step 6: Sign the payload with both signers and verify signatures
-    // Create verifier info for first signer
-    let verifier_info_1 = create_verifier_info(
+    let payload_to_be_signed = Payload::Messages(Messages(messages.clone()));
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        domain_separator,
         &secret_key_1,
-        payload_merkle_root,
-        verifier_leaves.first().unwrap(),
-        0, // Position 0
-        &verifier_merkle_tree,
-        payload_type,
+        &secret_key_2,
+        payload_to_be_signed,
     );
+
+    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
 
     // Execute the first verify_signature instruction using helper
     let verify_result_1 = verify_signature_helper(
@@ -211,16 +210,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
         .unwrap()
         .clone();
 
-    // Create verifier info for second signer
-    let verifier_info_2 = create_verifier_info(
-        &secret_key_2,
-        payload_merkle_root,
-        #[allow(clippy::indexing_slicing)]
-        &verifier_leaves[1],
-        1, // Position 1
-        &verifier_merkle_tree,
-        payload_type,
-    );
+    let verifier_info_2 = singing_verifier_set_leaves[1].clone();
 
     // Execute the second verify_signature instruction using helper
     let verify_result_2 = verify_signature_helper(
@@ -324,10 +314,10 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_rotate_signers() {
     // Step 1: Setup gateway with real signers (current verifier set)
-    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -378,16 +368,15 @@ fn test_rotate_signers() {
         .clone();
 
     // Step 7: CURRENT verifiers sign the ROTATION payload
-
-    // First verifier signs for rotation
-    let verifier_info_1 = create_verifier_info(
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves_for_external_payload(
+        domain_separator,
         &secret_key_1,
-        rotation_payload_hash,
-        verifier_leaves.first().unwrap(),
-        0,
-        &verifier_merkle_tree,
+        &secret_key_2,
         payload_type,
+        rotation_payload_hash,
     );
+
+    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
 
     let verify_result_1 = verify_signature_helper(
         &setup,
@@ -413,15 +402,7 @@ fn test_rotate_signers() {
         .clone();
 
     // Second verifier signs for rotation
-    let verifier_info_2 = create_verifier_info(
-        &secret_key_2,
-        rotation_payload_hash,
-        #[allow(clippy::indexing_slicing)]
-        &verifier_leaves[1],
-        1,
-        &verifier_merkle_tree,
-        payload_type,
-    );
+    let verifier_info_2 = singing_verifier_set_leaves[1].clone();
 
     let verify_result_2 = verify_signature_helper(
         &setup,
@@ -678,10 +659,10 @@ fn test_call_contract_direct_signer() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_fails_when_verifier_submits_signature_twice() {
     // Setup
-    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
-        setup_test_with_real_signers();
+    let (setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(!init_result.program_result.is_err());
@@ -711,14 +692,16 @@ fn test_fails_when_verifier_submits_signature_twice() {
         );
     assert!(!session_result.program_result.is_err());
 
-    let verifier_info = create_verifier_info(
+    let payload_to_be_signed = Payload::Messages(Messages(messages));
+
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        domain_separator,
         &secret_key_1,
-        payload_merkle_root,
-        verifier_leaves.first().unwrap(),
-        0,
-        &verifier_merkle_tree,
-        payload_type,
+        &secret_key_2,
+        payload_to_be_signed,
     );
+
+    let verifier_info = singing_verifier_set_leaves[0].clone();
 
     // First signature verification should succeed
     let verify_result_1 = verify_signature_helper(
@@ -779,8 +762,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
 #[allow(clippy::indexing_slicing)]
 fn test_fails_when_approving_message_with_insufficient_signatures() {
     // Step 1: Setup gateway with real signers
-    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
-        setup_test_with_real_signers();
+    let (setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -829,15 +811,16 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
         .unwrap()
         .clone();
 
-    // Step 6: Sign the payload with ONLY ONE signer (not enough to make session valid)
-    let verifier_info_1 = create_verifier_info(
+    let payload_to_be_signed = Payload::Messages(Messages(messages));
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        domain_separator,
         &secret_key_1,
-        payload_merkle_root,
-        verifier_leaves.first().unwrap(),
-        0, // Position 0
-        &verifier_merkle_tree,
-        payload_type,
+        &secret_key_2,
+        payload_to_be_signed,
     );
+
+    // Step 6: Sign the payload with ONLY ONE signer (not enough to make session valid)
+    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
 
     let verify_result_1 = verify_signature_helper(
         &setup,
@@ -877,10 +860,10 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_fails_when_verifying_invalid_signature() {
     // Step 1: Setup gateway with real signers
-    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
-        setup_test_with_real_signers();
+    let (setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -929,24 +912,23 @@ fn test_fails_when_verifying_invalid_signature() {
         .unwrap()
         .clone();
 
-    // Step 6: Create an INVALID signature by signing a different (fake) payload merkle root
-    let fake_payload_merkle_root = [0x42u8; 32]; // Wrong payload root
-
-    // Create verifier info with the wrong payload
-    let invalid_verifier_info = create_verifier_info(
+    let fake_messages = fake_messages();
+    let payload_to_be_signed = Payload::Messages(Messages(fake_messages));
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        domain_separator,
         &secret_key_1,
-        fake_payload_merkle_root,
-        verifier_leaves.first().unwrap(),
-        0, // Position 0
-        &verifier_merkle_tree,
-        payload_type,
+        &secret_key_2,
+        payload_to_be_signed,
     );
+
+    // Step 6: Sign the payload with ONLY ONE signer (not enough to make session valid)
+    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
 
     // Step 7: Try to verify the invalid signature against the correct payload root
     let verify_result = verify_signature_helper(
         &setup,
         payload_merkle_root,
-        invalid_verifier_info,
+        verifier_info_1,
         (verification_session_pda, verification_session_account),
         gateway_account,
         (setup.verifier_set_tracker_pda, verifier_set_tracker_account),
@@ -960,10 +942,10 @@ fn test_fails_when_verifying_invalid_signature() {
 }
 
 #[test]
+#[allow(clippy::indexing_slicing)]
 fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
     // Step 1: Setup gateway with real signers
-    let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -1012,15 +994,15 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
         .clone();
 
     // Step 6: Sign the payload with both signers to complete the session
-    // First signer
-    let verifier_info_1 = create_verifier_info(
+    let payload_to_be_signed = Payload::Messages(Messages(messages));
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        domain_separator,
         &secret_key_1,
-        payload_merkle_root,
-        verifier_leaves.first().unwrap(),
-        0, // Position 0
-        &verifier_merkle_tree,
-        payload_type, // Using ApproveMessages command type for signing
+        &secret_key_2,
+        payload_to_be_signed,
     );
+
+    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
 
     // First signature verification should succeed
     let verify_result_1 = verify_signature_helper(
@@ -1047,15 +1029,7 @@ fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
         .clone();
 
     // Second signer
-    let verifier_info_2 = create_verifier_info(
-        &secret_key_2,
-        payload_merkle_root,
-        #[allow(clippy::indexing_slicing)]
-        &verifier_leaves[1],
-        1, // Position 1
-        &verifier_merkle_tree,
-        payload_type, // Using ApproveMessages command type for signing
-    );
+    let verifier_info_2 = singing_verifier_set_leaves[1].clone();
 
     let verify_result_2 = verify_signature_helper(
         &setup,

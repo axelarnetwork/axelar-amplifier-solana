@@ -24,8 +24,7 @@ use solana_sdk::{keccak, pubkey::Pubkey};
 #[test]
 fn test_execute_link_token() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -121,8 +120,6 @@ fn test_execute_link_token() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -177,8 +174,7 @@ fn test_execute_link_token() {
 
 #[test]
 fn test_reject_execute_link_token_with_invalid_token_manager_type() {
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -271,8 +267,6 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -326,8 +320,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
 #[test]
 fn test_reject_execute_link_token_with_invalid_destination_token_address() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -423,8 +416,6 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -478,8 +469,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
 #[test]
 fn test_reject_execute_link_token_with_invalid_token_id() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -577,8 +567,6 @@ fn test_reject_execute_link_token_with_invalid_token_id() {
         verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];

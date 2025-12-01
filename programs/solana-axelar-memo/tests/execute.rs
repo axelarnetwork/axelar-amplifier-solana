@@ -6,13 +6,13 @@ use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
-    approve_message_helper, create_merklized_messages_from_std, create_verifier_info,
+    approve_message_helper, create_merklized_messages_from_std, create_signing_verifier_set_leaves,
     initialize_gateway, initialize_payload_verification_session_with_root,
     setup_test_with_real_signers, verify_signature_helper,
 };
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
-use solana_axelar_std::{CrossChainId, Message, PayloadType};
+use solana_axelar_std::{CrossChainId, Message, Messages, Payload, PayloadType};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
@@ -37,8 +37,7 @@ fn test_execute() {
     let test_payload_hash: [u8; 32] = test_payload.hash().unwrap();
 
     // Step 1: Setup test with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Add the memo program to the Mollusk instance
     setup.mollusk.add_program(
@@ -95,14 +94,15 @@ fn test_execute() {
         .clone();
 
     // Step 5: Sign the payload with both signers, verify both signatures on the gateway
-    let verifier_info_1 = create_verifier_info(
+    let payload_to_be_signed = Payload::Messages(Messages(messages.clone()));
+    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        domain_separator,
         &secret_key_1,
-        payload_merkle_root,
-        &verifier_leaves[0],
-        0, // Position 0
-        &verifier_merkle_tree,
-        payload_type,
+        &secret_key_2,
+        payload_to_be_signed,
     );
+
+    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
 
     let verify_result_1 = verify_signature_helper(
         &setup,
@@ -124,14 +124,7 @@ fn test_execute() {
         .unwrap()
         .clone();
 
-    let verifier_info_2 = create_verifier_info(
-        &secret_key_2,
-        payload_merkle_root,
-        &verifier_leaves[1],
-        1, // Position 1
-        &verifier_merkle_tree,
-        payload_type,
-    );
+    let verifier_info_2 = singing_verifier_set_leaves[1].clone();
 
     let verify_result_2 = verify_signature_helper(
         &setup,
