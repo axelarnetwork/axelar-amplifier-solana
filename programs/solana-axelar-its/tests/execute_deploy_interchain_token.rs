@@ -31,7 +31,7 @@ use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 #[test]
 fn test_execute_deploy_interchain_token_success() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -212,7 +212,7 @@ fn test_execute_deploy_interchain_token_success() {
 #[allow(clippy::string_slice)]
 fn test_execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -369,7 +369,7 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
 #[test]
 fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();

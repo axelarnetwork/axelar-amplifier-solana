@@ -20,7 +20,7 @@ use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
 #[test]
 fn should_full_governance_workflow_schedule_and_approve_operator() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);

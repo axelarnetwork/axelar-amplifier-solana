@@ -24,7 +24,7 @@ use solana_sdk::{keccak, pubkey::Pubkey};
 #[test]
 fn test_execute_link_token() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -174,7 +174,7 @@ fn test_execute_link_token() {
 
 #[test]
 fn test_reject_execute_link_token_with_invalid_token_manager_type() {
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -320,7 +320,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
 #[test]
 fn test_reject_execute_link_token_with_invalid_destination_token_address() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -469,7 +469,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
 #[test]
 fn test_reject_execute_link_token_with_invalid_token_id() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, _, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);

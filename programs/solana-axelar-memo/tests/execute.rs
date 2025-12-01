@@ -37,7 +37,7 @@ fn test_execute() {
     let test_payload_hash: [u8; 32] = test_payload.hash().unwrap();
 
     // Step 1: Setup test with real signers
-    let (mut setup, domain_separator, secret_key_1, secret_key_2) = setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Add the memo program to the Mollusk instance
     setup.mollusk.add_program(
@@ -95,14 +95,15 @@ fn test_execute() {
 
     // Step 5: Sign the payload with both signers, verify both signatures on the gateway
     let payload_to_be_signed = Payload::Messages(Messages(messages.clone()));
-    let singing_verifier_set_leaves = create_signing_verifier_set_leaves(
-        domain_separator,
+    let signing_verifier_set_leaves = create_signing_verifier_set_leaves(
+        setup.domain_separator,
         &secret_key_1,
         &secret_key_2,
         payload_to_be_signed,
+        setup.verifier_set.clone(),
     );
 
-    let verifier_info_1 = singing_verifier_set_leaves[0].clone();
+    let verifier_info_1 = signing_verifier_set_leaves[0].clone();
 
     let verify_result_1 = verify_signature_helper(
         &setup,
@@ -124,7 +125,7 @@ fn test_execute() {
         .unwrap()
         .clone();
 
-    let verifier_info_2 = singing_verifier_set_leaves[1].clone();
+    let verifier_info_2 = signing_verifier_set_leaves[1].clone();
 
     let verify_result_2 = verify_signature_helper(
         &setup,

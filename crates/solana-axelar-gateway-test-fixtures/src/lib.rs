@@ -50,6 +50,7 @@ pub struct TestSetup {
     pub minimum_rotation_delay: u64,
     pub epoch: U256,
     pub previous_verifier_retention: U256,
+    pub verifier_set: VerifierSet,
     pub gateway_caller_pda: Option<Pubkey>,
     pub gateway_caller_bump: Option<u8>,
     pub event_authority_pda: Option<Pubkey>,
@@ -66,12 +67,21 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
     let upgrade_authority = Pubkey::new_unique();
     let operator = Pubkey::new_unique();
 
-    // dummy values
-    let verifier_set_hash = [1u8; 32];
+    let domain_separator = [1u8; 32];
+    let verifier_set_hash = [2u8; 32];
+    let minimum_rotation_delay = 3600;
     let epoch = U256::from(1u64);
     let previous_verifier_retention = U256::from(5u64);
-    let domain_separator = [2u8; 32];
-    let minimum_rotation_delay = 3600;
+
+    // Create a mock verifier set
+    let dummy_pubkey = PublicKey([1u8; 33]);
+    let mut signers = BTreeMap::new();
+    signers.insert(dummy_pubkey, 100u128);
+    let verifier_set = VerifierSet {
+        nonce: 0,
+        signers,
+        quorum: 100,
+    };
 
     // Derive PDAs
     let (gateway_root_pda, gateway_bump) =
@@ -111,6 +121,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
                 minimum_rotation_delay,
                 epoch,
                 previous_verifier_retention,
+                verifier_set: verifier_set.clone(),
                 gateway_caller_pda: Some(gateway_caller_pda),
                 gateway_caller_bump: Some(gateway_caller_bump),
                 event_authority_pda: Some(event_authority_pda),
@@ -132,6 +143,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
             minimum_rotation_delay,
             epoch,
             previous_verifier_retention,
+            verifier_set,
             gateway_caller_pda: None,
             gateway_caller_bump: None,
             event_authority_pda: None,
@@ -140,7 +152,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
     }
 }
 
-pub fn setup_test_with_real_signers() -> (TestSetup, [u8; 32], SecretKey, SecretKey) {
+pub fn setup_test_with_real_signers() -> (TestSetup, SecretKey, SecretKey) {
     let mollusk = Mollusk::new(
         &GATEWAY_PROGRAM_ID,
         "../../target/deploy/solana_axelar_gateway",
@@ -159,7 +171,7 @@ pub fn setup_test_with_real_signers() -> (TestSetup, [u8; 32], SecretKey, Secret
     let domain_separator = [2u8; 32];
     let minimum_rotation_delay = 3600;
 
-    let verifier_set_hash =
+    let (verifier_set_hash, verifier_set) =
         create_merklized_verifier_set_from_keypairs(domain_separator, public_key_1, public_key_2);
 
     // Step 4: Derive PDAs with the REAL verifier set hash
@@ -189,13 +201,14 @@ pub fn setup_test_with_real_signers() -> (TestSetup, [u8; 32], SecretKey, Secret
         minimum_rotation_delay,
         epoch,
         previous_verifier_retention,
+        verifier_set,
         gateway_caller_pda: None,
         gateway_caller_bump: None,
         event_authority_pda: None,
         event_authority_bump: None,
     };
 
-    (setup, domain_separator, secret_key_1, secret_key_2)
+    (setup, secret_key_1, secret_key_2)
 }
 
 pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
@@ -953,7 +966,7 @@ pub fn create_merklized_messages_from_std(
     domain_separator: [u8; 32],
     messages: &[Message],
 ) -> (Vec<MerklizedMessage>, [u8; 32]) {
-    // Create minimal verifier set with one dummy signer (we only need the payload part)
+    // Note: create minimal verifier set with one dummy signer (we only need the payload part)
     let dummy_pubkey = PublicKey([1u8; 33]);
     let mut signers = BTreeMap::new();
     signers.insert(dummy_pubkey, 1u128);
@@ -986,6 +999,7 @@ pub fn create_execute_data_with_signatures(
     secret_key_1: &SecretKey,
     secret_key_2: &SecretKey,
     payload_to_be_signed: Payload,
+    current_verifier_set: VerifierSet,
 ) -> ExecuteData {
     // Extract public keys from secret keys
     let public_key_1 = libsecp256k1::PublicKey::from_secret_key(secret_key_1);
@@ -993,19 +1007,6 @@ pub fn create_execute_data_with_signatures(
     let pubkey_1 = PublicKey(public_key_1.serialize_compressed());
     let pubkey_2 = PublicKey(public_key_2.serialize_compressed());
 
-    // Create the signing verifier set with EXACTLY THE SAME PARAMETERS
-    // as create_merklized_verifier_set_from_keypairs
-    let mut signers = BTreeMap::new();
-    signers.insert(pubkey_1, 50u128);
-    signers.insert(pubkey_2, 50u128);
-
-    let signing_verifier_set = VerifierSet {
-        nonce: 1, // MUST match create_merklized_verifier_set_from_keypairs
-        signers,
-        quorum: 100, // MUST match create_merklized_verifier_set_from_keypairs
-    };
-
-    // Rest of the function remains the same...
     let payload_merkle_root =
         hash_payload::<Hasher>(&domain_separator, payload_to_be_signed.clone()).unwrap();
 
@@ -1033,7 +1034,7 @@ pub fn create_execute_data_with_signatures(
     signatures.insert(pubkey_2, signature2);
 
     let encoded = encode(
-        &signing_verifier_set,
+        &current_verifier_set,
         &signatures,
         domain_separator,
         payload_to_be_signed,
@@ -1048,93 +1049,16 @@ pub fn create_signing_verifier_set_leaves(
     secret_key_1: &SecretKey,
     secret_key_2: &SecretKey,
     payload_to_be_signed: Payload,
+    current_verifier_set: VerifierSet,
 ) -> Vec<SigningVerifierSetInfo> {
     let execute_data = create_execute_data_with_signatures(
         domain_separator,
         secret_key_1,
         secret_key_2,
         payload_to_be_signed,
+        current_verifier_set,
     );
 
-    execute_data.signing_verifier_set_leaves
-}
-
-pub fn create_signing_verifier_set_leaves_for_external_payload(
-    domain_separator: [u8; 32],
-    secret_key_1: &SecretKey,
-    secret_key_2: &SecretKey,
-    payload_type: PayloadType,
-    external_payload_merkle_root: [u8; 32],
-) -> Vec<SigningVerifierSetInfo> {
-    // Extract public keys from secret keys
-    let public_key_1 = libsecp256k1::PublicKey::from_secret_key(secret_key_1);
-    let public_key_2 = libsecp256k1::PublicKey::from_secret_key(secret_key_2);
-    let pubkey_1 = PublicKey(public_key_1.serialize_compressed());
-    let pubkey_2 = PublicKey(public_key_2.serialize_compressed());
-
-    // Create the signing verifier set - must match setup
-    let mut signers = BTreeMap::new();
-    signers.insert(pubkey_1, 50u128);
-    signers.insert(pubkey_2, 50u128);
-
-    let signing_verifier_set = VerifierSet {
-        nonce: 1,
-        signers,
-        quorum: 100,
-    };
-
-    // Sign the external payload merkle root
-    let hashed_message =
-        prefixed_message_hash_payload_type(payload_type, &external_payload_merkle_root);
-    let message = libsecp256k1::Message::parse(&hashed_message);
-
-    // Create signatures for both signers
-    let (sig1, recovery_id1) = libsecp256k1::sign(&message, secret_key_1);
-    let mut sig1_bytes = sig1.serialize().to_vec();
-    sig1_bytes.push(recovery_id1.serialize());
-    let signature1 = Signature(sig1_bytes.try_into().unwrap());
-
-    let (sig2, recovery_id2) = libsecp256k1::sign(&message, secret_key_2);
-    let mut sig2_bytes = sig2.serialize().to_vec();
-    sig2_bytes.push(recovery_id2.serialize());
-    let signature2 = Signature(sig2_bytes.try_into().unwrap());
-
-    // Create signatures map
-    let mut signatures = BTreeMap::new();
-    signatures.insert(pubkey_1, signature1);
-    signatures.insert(pubkey_2, signature2);
-
-    // We need to create a dummy payload just to use the encode function
-    // Use the correct payload type to match the payload_type parameter
-    let dummy_payload = match payload_type {
-        PayloadType::ApproveMessages => {
-            let dummy_message = create_test_message(
-                "ethereum",
-                "dummy_msg",
-                "DNHKNbf4JWJNnquuWJuNUSFGsXbDYs1sPR1ZvVhah827",
-                [1u8; 32],
-            );
-            Payload::Messages(Messages(vec![dummy_message]))
-        }
-        PayloadType::RotateSigners => {
-            let dummy_verifier_set = VerifierSet {
-                nonce: 0,
-                signers: create_single_random_signer_map(),
-                quorum: 100,
-            };
-            Payload::NewVerifierSet(dummy_verifier_set)
-        }
-    };
-
-    let encoded = encode(
-        &signing_verifier_set,
-        &signatures,
-        domain_separator,
-        dummy_payload,
-    )
-    .unwrap();
-
-    let execute_data = ExecuteData::try_from_slice(&encoded).unwrap();
     execute_data.signing_verifier_set_leaves
 }
 
@@ -1142,7 +1066,7 @@ pub fn create_merklized_verifier_set_from_keypairs(
     domain_separator: [u8; 32],
     public_key_1: [u8; 33],
     public_key_2: [u8; 33],
-) -> [u8; 32] {
+) -> ([u8; 32], VerifierSet) {
     let pubkey_1 = PublicKey(public_key_1);
     let pubkey_2 = PublicKey(public_key_2);
 
@@ -1167,7 +1091,10 @@ pub fn create_merklized_verifier_set_from_keypairs(
         .map_err(|_| solana_axelar_std::EncodingError::CannotMerklizeEmptyVerifierSet)
         .unwrap();
 
-    execute_data.signing_verifier_set_merkle_root
+    (
+        execute_data.signing_verifier_set_merkle_root,
+        new_verifier_set,
+    )
 }
 
 pub fn approve_message_helper(
@@ -1230,6 +1157,7 @@ pub fn approve_messages_on_gateway(
         secret_key_1,
         secret_key_2,
         payload_to_be_signed,
+        setup.verifier_set.clone(),
     );
 
     let verifier_info_1 = signing_verifier_set_leaves[0].clone();
@@ -1311,41 +1239,4 @@ pub fn approve_messages_on_gateway(
     }
 
     incoming_messages
-}
-
-pub fn create_test_execute_data(
-    verifier_set: &VerifierSet,
-    signers_with_sigs: &BTreeMap<PublicKey, Signature>,
-    domain_separator: [u8; 32],
-    payload: Payload,
-) -> ExecuteData {
-    let encoded = solana_axelar_std::execute_data::encode(
-        verifier_set,
-        signers_with_sigs,
-        domain_separator,
-        payload,
-    )
-    .unwrap();
-
-    ExecuteData::try_from_slice(&encoded).unwrap()
-}
-
-pub fn extract_payload_root_and_verifier_info(
-    execute_data: &ExecuteData,
-) -> ([u8; 32], Vec<SigningVerifierSetInfo>) {
-    (
-        execute_data.payload_merkle_root,
-        execute_data.signing_verifier_set_leaves.clone(),
-    )
-}
-
-#[allow(clippy::type_complexity)]
-pub fn setup_merklized_messages_from_std(
-    setup: &TestSetup,
-    messages: Vec<Message>,
-) -> Result<(Vec<Message>, Vec<MerklizedMessage>, [u8; 32]), solana_axelar_std::EncodingError> {
-    let (merklized_messages, payload_merkle_root) =
-        create_merklized_messages_from_std(setup.domain_separator, &messages);
-
-    Ok((messages, merklized_messages, payload_merkle_root))
 }
