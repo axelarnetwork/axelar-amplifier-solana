@@ -9,7 +9,11 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::{
     make_initialize_instruction, make_set_pause_status_instruction,
 };
-use solana_axelar_its::{ItsError, Roles, UserRoles};
+use solana_axelar_its::{ItsError, Roles, RolesError, UserRoles};
+
+//
+// Initialize
+//
 
 #[test]
 fn test_init_unauthorized_payer() {
@@ -135,4 +139,71 @@ fn test_set_pause_status_already_unpaused() {
     harness
         .ctx
         .process_and_validate_instruction(&ix, &[Check::err(ItsError::InvalidArgument.into())]);
+}
+
+//
+// Transfer operatorship
+//
+
+#[test]
+fn test_transfer_operatorship() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let new_operator = its_harness.get_new_wallet();
+
+    // This will ensure the roles have been transferred
+    // and the previous operator's roles PDA has been deleted
+    its_harness.ensure_transfer_operatorship(new_operator);
+}
+
+#[test]
+fn test_transfer_operatorship_without_deleting_roles_pda() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let curr_operator = its_harness.operator;
+    let curr_roles_pda = UserRoles::find_pda(&its_harness.its_root, &curr_operator).0;
+
+    // Append FLOW_LIMITER role to current operator
+    its_harness
+        .update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles.insert(Roles::FLOW_LIMITER));
+
+    let new_operator = its_harness.get_new_wallet();
+    its_harness.ensure_transfer_operatorship(new_operator);
+
+    let updated_curr_roles: UserRoles = its_harness
+        .get_account_as(&curr_roles_pda)
+        .expect("current roles account should still exist");
+
+    assert_eq!(
+        updated_curr_roles.roles,
+        Roles::FLOW_LIMITER,
+        "current operator should still have FLOW_LIMITER role"
+    );
+}
+
+#[test]
+fn test_transfer_operatorship_without_permissions() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let curr_operator = its_harness.operator;
+    let curr_roles_pda = UserRoles::find_pda(&its_harness.its_root, &curr_operator).0;
+
+    // Set only FLOW_LIMITER role to current operator
+    its_harness
+        .update_account::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
+
+    let new_operator = its_harness.get_new_wallet();
+
+    let ix = solana_axelar_its::instructions::make_transfer_operatorship_instruction(
+        its_harness.payer,
+        curr_operator,
+        new_operator,
+    )
+    .0;
+
+    // Process
+    its_harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(RolesError::MissingOperatorRole.into())],
+    );
 }

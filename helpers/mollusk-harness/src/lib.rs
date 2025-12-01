@@ -799,22 +799,56 @@ impl ItsTestHarness {
         )
         .0;
 
+        let old_operator_account =
+            solana_axelar_its::UserRoles::find_pda(&self.its_root, &self.operator).0;
+
+        let old_its_roles: solana_axelar_its::UserRoles = self
+            .get_account_as(&old_operator_account)
+            .expect("old operator roles account should exist before transfer");
+
+        // Check if old operator only had operator role
+        let should_be_closed = old_its_roles.roles == solana_axelar_its::Roles::OPERATOR;
+
+        // Process
         self.ctx
             .process_and_validate_instruction(&ix, &[Check::success()]);
 
-        let new_operator_account =
-            solana_axelar_its::UserRoles::find_pda(&self.its_root, &new_operator).0;
+        // Check old operator
+        {
+            let old_its_roles: Option<solana_axelar_its::UserRoles> =
+                self.get_account_as(&old_operator_account);
 
-        let its_roles: solana_axelar_its::UserRoles = self
-            .get_account_as(&new_operator_account)
-            .expect("new operator roles account should exist");
+            if should_be_closed {
+                assert!(
+                    old_its_roles.is_none(),
+                    "old operator roles account should be closed"
+                );
+            } else {
+                assert!(
+                    !old_its_roles
+                        .expect("old operator account should still have other roles")
+                        .has_operator_role(),
+                    "old operator must not have operator role"
+                );
+            }
+        }
 
-        assert!(
-            its_roles.has_operator_role(),
-            "new operator must have operator role"
-        );
+        // Check new operator
+        {
+            let new_operator_account =
+                solana_axelar_its::UserRoles::find_pda(&self.its_root, &new_operator).0;
 
-        // Update operator
+            let its_roles: solana_axelar_its::UserRoles = self
+                .get_account_as(&new_operator_account)
+                .expect("new operator roles account should exist");
+
+            assert!(
+                its_roles.has_operator_role(),
+                "new operator must have operator role"
+            );
+        }
+
+        // Update operator in harness
         self.operator = new_operator;
     }
 
