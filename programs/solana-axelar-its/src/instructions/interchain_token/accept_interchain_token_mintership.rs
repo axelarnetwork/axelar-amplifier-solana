@@ -80,7 +80,7 @@ pub struct AcceptInterchainTokenMintership<'info> {
         bump = proposal_account.bump,
         constraint = proposal_account.roles.contains(Roles::MINTER)
             @ RolesError::ProposalMissingMinterRole,
-        // Return balance to origin user
+        // Return balance to origin user (proposer)
         close = origin_user_account,
     )]
     pub proposal_account: Account<'info, RoleProposal>,

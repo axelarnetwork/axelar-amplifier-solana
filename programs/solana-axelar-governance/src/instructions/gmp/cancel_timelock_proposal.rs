@@ -1,4 +1,4 @@
-use crate::{ExecutableProposal, GovernanceConfig, ProposalCancelled};
+use crate::{ExecutableProposal, GovernanceConfig, GovernanceError, ProposalCancelled};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -17,7 +17,8 @@ pub struct CancelTimelockProposal<'info> {
         mut,
         close = governance_config,
         seeds = [ExecutableProposal::SEED_PREFIX, &proposal_hash],
-        bump = proposal_pda.bump
+        bump = proposal_pda.bump,
+        constraint = eta == proposal_pda.eta @ GovernanceError::InvalidArgument
     )]
     pub proposal_pda: Account<'info, ExecutableProposal>,
 }

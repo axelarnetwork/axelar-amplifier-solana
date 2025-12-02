@@ -11,43 +11,20 @@ use crate::ITS_HUB_CHAIN_NAME;
 #[derive(Clone)]
 pub struct GMPAccounts<'info> {
     pub payer: AccountInfo<'info>,
-    pub gateway_root_pda: AccountInfo<'info>,
-    pub gateway_program: AccountInfo<'info>,
-    pub gas_treasury: AccountInfo<'info>,
-    pub gas_service: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
-    pub its_hub_address: String,
+    pub gateway_program: AccountInfo<'info>,
+    pub gateway_root_pda: AccountInfo<'info>,
+    pub gateway_event_authority: AccountInfo<'info>,
     pub call_contract_signing_pda: AccountInfo<'info>,
     pub its_program: AccountInfo<'info>,
-    pub gateway_event_authority: AccountInfo<'info>,
+    pub its_hub_address: String,
+    pub gas_service: AccountInfo<'info>,
+    pub gas_treasury: AccountInfo<'info>,
     pub gas_event_authority: AccountInfo<'info>,
 }
 
 pub trait ToGMPAccounts<'info> {
     fn to_gmp_accounts(&self) -> GMPAccounts<'info>;
-}
-
-#[derive(Accounts)]
-pub struct GasServiceAccounts<'info> {
-    /// The GMP gas treasury account
-    #[account(
-        mut,
-        seeds = [solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
-        seeds::program = solana_axelar_gas_service::ID,
-        bump = gas_treasury.load()?.bump,
-    )]
-    pub gas_treasury: AccountLoader<'info, solana_axelar_gas_service::state::Treasury>,
-
-    /// The GMP gas service program account
-    pub gas_service: Program<'info, solana_axelar_gas_service::program::SolanaAxelarGasService>,
-
-    /// Event authority for gas service
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = gas_service.key()
-    )]
-    pub gas_event_authority: AccountInfo<'info>,
 }
 
 //
@@ -103,8 +80,12 @@ pub fn process_outbound(
     // Call contract instruction
 
     // NOTE: this could be calculated at compile time
-    let (_, signing_pda_bump) =
+    let (expected_signing_pda, signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &crate::ID);
+
+    if expected_signing_pda != *gmp_accounts.call_contract_signing_pda.key {
+        return Err(ItsError::InvalidAccountData.into());
+    }
 
     let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
 

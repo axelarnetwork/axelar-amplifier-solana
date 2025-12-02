@@ -17,7 +17,6 @@ pub struct ProposeTokenManagerOperatorship<'info> {
 
     /// Origin user roles account (current operator's roles for this token manager)
     #[account(
-        mut,
         seeds = [
             UserRoles::SEED_PREFIX,
             token_manager_account.key().as_ref(),
