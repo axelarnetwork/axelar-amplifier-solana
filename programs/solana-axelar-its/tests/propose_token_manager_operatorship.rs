@@ -2,30 +2,27 @@
 #![allow(clippy::too_many_lines)]
 
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
-use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::state::{RoleProposal, roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
-    new_empty_account, new_test_account, DeployInterchainTokenContext,
+    new_test_account, propose_token_manager_operatorship_helper, DeployInterchainTokenContext,
+    ProposeTokenManagerOperatorshipContext,
 };
-use {
-    anchor_lang::{solana_program::instruction::Instruction, InstructionData, ToAccountMetas},
-    solana_sdk::pubkey::Pubkey,
-};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn transfer_token_manager_operatorship_success() {
+fn test_propose_token_manager_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let (_, payer_account) = new_test_account();
+    let (_, payer_account) = new_test_account(); // Get a fresh account for payer
 
     let (current_operator, current_operator_account) = new_test_account();
-    let (new_operator, new_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -48,7 +45,6 @@ fn transfer_token_manager_operatorship_success() {
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64;
 
-    // Calculate the token manager and minter roles PDAs
     let token_id = interchain_token_id(&current_operator, &salt);
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &current_operator);
@@ -58,8 +54,8 @@ fn transfer_token_manager_operatorship_success() {
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
         (payer, payer_account.clone()),
-        Some(current_operator), // minter (will get OPERATOR role for token manager)
-        Some(minter_roles_pda), // minter_roles_pda
+        Some(current_operator),
+        Some(minter_roles_pda),
     );
 
     let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
@@ -78,11 +74,6 @@ fn transfer_token_manager_operatorship_success() {
         .get_account(&token_manager_pda)
         .expect("TokenManager account should exist");
 
-    let token_manager_data =
-        TokenManager::try_deserialize(&mut token_manager_account.data.as_slice())
-            .expect("Failed to deserialize TokenManager");
-    assert_eq!(token_manager_data.token_id, token_id);
-
     let current_operator_token_roles_account = deploy_result
         .get_account(&minter_roles_pda)
         .expect("Current operator token roles account should exist");
@@ -90,32 +81,19 @@ fn transfer_token_manager_operatorship_success() {
     let current_operator_token_roles =
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
-    assert!(
-        current_operator_token_roles.contains(roles::OPERATOR),
-        "Current operator should have OPERATOR role for token manager"
+
+    assert!(current_operator_token_roles.contains(roles::OPERATOR));
+
+    // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
+    let (proposal_pda, proposal_pda_bump) = RoleProposal::find_pda(
+        &token_manager_pda,
+        &current_operator,
+        &proposed_operator,
+        &program_id,
     );
 
-    let (new_operator_token_roles_pda, new_operator_token_roles_pda_bump) =
-        UserRoles::find_pda(&token_manager_pda, &new_operator);
-
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferTokenManagerOperatorship {
-            system_program: solana_sdk_ids::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: minter_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: new_operator,
-            destination_roles_account: new_operator_token_roles_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferTokenManagerOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
         (
@@ -124,66 +102,48 @@ fn transfer_token_manager_operatorship_success() {
         ),
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
-        (new_operator, new_operator_account.clone()),
-        (new_operator_token_roles_pda, new_empty_account()),
-    ];
+        (proposed_operator, proposed_operator_account.clone()),
+    );
 
-    let result = mollusk.process_instruction(&ix, &accounts);
+    let checks = vec![Check::success()];
+    let (result, _) = propose_token_manager_operatorship_helper(ctx, checks);
 
     assert!(result.program_result.is_ok());
 
-    let old_operator_token_roles_account = result
+    // Verify the proposal account was created with correct data
+    let proposal_account = result
+        .get_account(&proposal_pda)
+        .expect("Proposal account should exist");
+
+    let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
+        .expect("Failed to deserialize RoleProposal");
+
+    assert_eq!(proposal_data.roles, roles::OPERATOR);
+    assert_eq!(proposal_data.bump, proposal_pda_bump);
+
+    // Verify the current operator still has their role (proposal doesn't transfer immediately)
+    let current_operator_token_roles_account_after = result
         .get_account(&minter_roles_pda)
         .expect("Current operator token roles account should exist");
 
-    let old_operator_token_roles =
-        UserRoles::try_deserialize(&mut old_operator_token_roles_account.data.as_slice())
-            .expect("Failed to deserialize current operator token roles");
-    assert!(
-        !old_operator_token_roles.contains(roles::OPERATOR),
-        "Old operator should not have OPERATOR role for token manager"
-    );
+    let current_operator_token_roles_after =
+        UserRoles::try_deserialize(&mut current_operator_token_roles_account_after.data.as_slice())
+            .expect("Failed to deserialize current operator token roles after proposal");
 
-    let updated_current_token_roles_account = result
-        .get_account(&minter_roles_pda)
-        .expect("Current operator token roles account should exist");
-
-    let updated_current_token_roles =
-        UserRoles::try_deserialize(&mut updated_current_token_roles_account.data.as_slice())
-            .expect("Failed to deserialize updated current operator token roles");
-
-    assert!(
-        !updated_current_token_roles.contains(roles::OPERATOR),
-        "Current operator should no longer have OPERATOR role for token manager"
-    );
-
-    let new_operator_token_roles_account = result
-        .get_account(&new_operator_token_roles_pda)
-        .expect("New operator token roles account should exist");
-
-    let new_operator_token_roles =
-        UserRoles::try_deserialize(&mut new_operator_token_roles_account.data.as_slice())
-            .expect("Failed to deserialize new operator token roles");
-
-    assert_eq!(
-        new_operator_token_roles.bump,
-        new_operator_token_roles_pda_bump
-    );
-
-    assert!(new_operator_token_roles.contains(roles::OPERATOR));
+    assert!(current_operator_token_roles_after.contains(roles::OPERATOR));
 }
 
 #[test]
-fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
+fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let (_, payer_account) = new_test_account();
+    let (_, payer_account) = new_test_account(); // Get a fresh account for payer
 
     let (current_operator, current_operator_account) = new_test_account();
-    let (new_operator, new_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -206,7 +166,6 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64;
 
-    // Calculate the token manager and minter roles PDAs
     let token_id = interchain_token_id(&current_operator, &salt);
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &current_operator);
@@ -216,8 +175,8 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
         (payer, payer_account.clone()),
-        Some(current_operator), // minter (will get OPERATOR role for token manager)
-        Some(minter_roles_pda), // minter_roles_pda
+        Some(current_operator),
+        Some(minter_roles_pda),
     );
 
     let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
@@ -236,11 +195,6 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
         .get_account(&token_manager_pda)
         .expect("TokenManager account should exist");
 
-    let token_manager_data =
-        TokenManager::try_deserialize(&mut token_manager_account.data.as_slice())
-            .expect("Failed to deserialize TokenManager");
-    assert_eq!(token_manager_data.token_id, token_id);
-
     let current_operator_token_roles_account = deploy_result
         .get_account(&minter_roles_pda)
         .expect("Current operator token roles account should exist");
@@ -248,63 +202,51 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
     let current_operator_token_roles =
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
-    assert!(
-        current_operator_token_roles.contains(roles::OPERATOR),
-        "Current operator should have OPERATOR role for token manager"
+
+    assert!(current_operator_token_roles.contains(roles::OPERATOR));
+
+    // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
+    let (_proposal_pda, _) = RoleProposal::find_pda(
+        &token_manager_pda,
+        &current_operator,
+        &proposed_operator,
+        &program_id,
     );
 
-    let (new_operator_token_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &new_operator);
+    let invalid_current_operator = Pubkey::new_unique();
 
-    let malicious_operator = Pubkey::new_unique();
-
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferTokenManagerOperatorship {
-            system_program: solana_sdk_ids::system_program::ID,
-            payer,
-            origin_user_account: malicious_operator,
-            origin_roles_account: minter_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: new_operator,
-            destination_roles_account: new_operator_token_roles_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferTokenManagerOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
-        (malicious_operator, current_operator_account.clone()),
+        (invalid_current_operator, current_operator_account.clone()),
         (
             minter_roles_pda,
             current_operator_token_roles_account.clone(),
         ),
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
-        (new_operator, new_operator_account.clone()),
-        (new_operator_token_roles_pda, new_empty_account()),
-    ];
+        (proposed_operator, proposed_operator_account.clone()),
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(anchor_lang::error::ErrorCode::ConstraintSeeds).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_token_manager_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }
 
 #[test]
-fn reject_transfer_token_manager_operatorship_without_operator_role() {
-    let program_id = solana_axelar_its::id();
+fn test_reject_propose_token_manager_operatorship_without_operator_role() {
+    let _program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
     let payer = upgrade_authority;
-    let (_, payer_account) = new_test_account(); // More lamports
+    let (_, payer_account) = new_test_account(); // Get a fresh account for payer
 
     let (current_operator, current_operator_account) = new_test_account();
-    let (new_operator, new_operator_account) = new_test_account();
+    let (proposed_operator, proposed_operator_account) = new_test_account();
 
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
@@ -327,7 +269,6 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
     let decimals = 9u8;
     let initial_supply = 1_000_000_000u64;
 
-    // Calculate the token manager and minter roles PDAs
     let token_id = interchain_token_id(&current_operator, &salt);
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (minter_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &current_operator);
@@ -337,8 +278,8 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
         (its_root_pda, its_root_account.clone()),
         (current_operator, current_operator_account.clone()),
         (payer, payer_account.clone()),
-        Some(current_operator), // minter (will get OPERATOR role for token manager)
-        Some(minter_roles_pda), // minter_roles_pda
+        Some(current_operator),
+        Some(minter_roles_pda),
     );
 
     let (deploy_result, token_manager_pda, _, _, _, _, mollusk) = deploy_interchain_token_helper(
@@ -357,24 +298,20 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
         .get_account(&token_manager_pda)
         .expect("TokenManager account should exist");
 
-    let token_manager_data =
-        TokenManager::try_deserialize(&mut token_manager_account.data.as_slice())
-            .expect("Failed to deserialize TokenManager");
-    assert_eq!(token_manager_data.token_id, token_id);
-
     let current_operator_token_roles_account = deploy_result
         .get_account(&minter_roles_pda)
         .expect("Current operator token roles account should exist");
 
-    // Remove roles from minter account
     let mut current_operator_token_roles_account_clone =
         current_operator_token_roles_account.clone();
 
     let mut current_operator_token_roles =
-        UserRoles::try_deserialize(&mut current_operator_token_roles_account_clone.data.as_ref())
-            .expect("Failed to deserialize flow limiter roles");
+        UserRoles::try_deserialize(&mut current_operator_token_roles_account_clone.data.as_slice())
+            .expect("Failed to deserialize current operator token roles");
+
     current_operator_token_roles.roles = roles::EMPTY;
 
+    // Remove roles from current operator
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
     current_operator_token_roles
@@ -382,38 +319,25 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
         .expect("Failed to serialize");
     current_operator_token_roles_account_clone.data = new_data;
 
-    let (new_operator_token_roles_pda, _) = UserRoles::find_pda(&token_manager_pda, &new_operator);
+    // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
 
-    let ix = Instruction {
-        program_id,
-        accounts: solana_axelar_its::accounts::TransferTokenManagerOperatorship {
-            system_program: solana_sdk_ids::system_program::ID,
-            payer,
-            origin_user_account: current_operator,
-            origin_roles_account: minter_roles_pda,
-            its_root_pda,
-            token_manager_account: token_manager_pda,
-            destination_user_account: new_operator,
-            destination_roles_account: new_operator_token_roles_pda,
-        }
-        .to_account_metas(None),
-        data: solana_axelar_its::instruction::TransferTokenManagerOperatorship {}.data(),
-    };
-
-    let accounts = vec![
-        keyed_account_for_system_program(),
+    let ctx = ProposeTokenManagerOperatorshipContext::new(
+        mollusk,
         (payer, payer_account.clone()),
         (current_operator, current_operator_account.clone()),
-        (minter_roles_pda, current_operator_token_roles_account_clone),
+        (
+            minter_roles_pda,
+            current_operator_token_roles_account_clone.clone(),
+        ),
         (its_root_pda, its_root_account.clone()),
         (token_manager_pda, token_manager_account.clone()),
-        (new_operator, new_operator_account.clone()),
-        (new_operator_token_roles_pda, new_empty_account()),
-    ];
+        (proposed_operator, proposed_operator_account.clone()),
+    );
 
     let checks = vec![Check::err(
         anchor_lang::error::Error::from(RolesError::MissingOperatorRole).into(),
     )];
 
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
+    let (result, _) = propose_token_manager_operatorship_helper(ctx, checks);
+    assert!(result.program_result.is_err());
 }

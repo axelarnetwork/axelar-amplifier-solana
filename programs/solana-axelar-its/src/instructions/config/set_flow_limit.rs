@@ -1,6 +1,6 @@
 use crate::{
     events::FlowLimitSet,
-    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, roles, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -29,8 +29,7 @@ pub struct SetFlowLimit<'info> {
             operator.key().as_ref(),
         ],
         bump = its_roles_pda.bump,
-        constraint = its_roles_pda.roles.contains(Roles::OPERATOR)
-            @ RolesError::MissingOperatorRole,
+        constraint = its_roles_pda.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
     )]
     pub its_roles_pda: Account<'info, UserRoles>,
 

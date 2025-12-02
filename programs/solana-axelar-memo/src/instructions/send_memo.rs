@@ -9,7 +9,7 @@ pub struct SendMemo<'info> {
     /// Reference to our program
     pub memo_program: Program<'info, crate::program::Memo>,
 
-    /// Our standardized PDA for calling the gateway
+    /// CHECK: Our standardized PDA for calling the gateway
     #[account(
         seeds = [CALL_CONTRACT_SIGNING_SEED],
         bump,

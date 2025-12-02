@@ -2,8 +2,7 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
-    utils::truncate_utf8,
+    state::{InterchainTokenService, roles, TokenManager, Type, UserRoles},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
@@ -201,7 +200,7 @@ pub fn process_inbound_deploy(
             .ok_or(ItsError::MinterRolesNotProvided)?;
         minter_roles_pda.bump =
             minter_roles_pda_bump.ok_or(ItsError::MinterRolesPdaBumpNotProvided)?;
-        minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
+        minter_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER | roles::MINTER;
     }
 
     Ok(())

@@ -1,6 +1,6 @@
 #![allow(clippy::missing_asserts_for_indexing)]
 use crate::{
-    state::{InterchainTokenService, Roles, UserRoles},
+    state::{InterchainTokenService, roles, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -63,7 +63,7 @@ pub fn initialize(
         InterchainTokenService::new(ctx.bumps.its_root_pda, chain_name, its_hub_address);
 
     // Initialize and assign OPERATOR role to the operator account.
-    ctx.accounts.user_roles_account.roles = Roles::OPERATOR;
+    ctx.accounts.user_roles_account.roles = roles::OPERATOR;
     ctx.accounts.user_roles_account.bump = ctx.bumps.user_roles_account;
 
     Ok(())

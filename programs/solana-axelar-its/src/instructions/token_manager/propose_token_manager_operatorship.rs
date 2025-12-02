@@ -1,11 +1,11 @@
 use crate::{
-    state::{InterchainTokenService, roles, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, RoleProposal, roles, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-pub struct TransferTokenManagerOperatorship<'info> {
+pub struct ProposeTokenManagerOperatorship<'info> {
     pub system_program: Program<'info, System>,
 
     /// Payer for transaction fees and account creation
@@ -46,56 +46,45 @@ pub struct TransferTokenManagerOperatorship<'info> {
     )]
     pub token_manager_account: Account<'info, TokenManager>,
 
-    /// Destination user account (will receive OPERATOR role)
+    /// CHECK: Destination user account (will receive OPERATOR role)
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]
     pub destination_user_account: AccountInfo<'info>,
 
-    /// Destination user roles account for this token manager
+    /// Role proposal PDA for the destination user for this token manager
     #[account(
-        init_if_needed,
+        init,
         payer = payer,
-        space = UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE,
+        space = RoleProposal::DISCRIMINATOR.len() + RoleProposal::INIT_SPACE,
         seeds = [
-            UserRoles::SEED_PREFIX,
+            RoleProposal::SEED_PREFIX,
             token_manager_account.key().as_ref(),
+            origin_user_account.key().as_ref(),
             destination_user_account.key().as_ref(),
         ],
         bump,
     )]
-    pub destination_roles_account: Account<'info, UserRoles>,
+    pub proposal_account: Account<'info, RoleProposal>,
 }
 
-pub fn transfer_token_manager_operatorship_handler(
-    ctx: Context<TransferTokenManagerOperatorship>,
+pub fn propose_token_manager_operatorship_handler(
+    ctx: Context<ProposeTokenManagerOperatorship>,
 ) -> Result<()> {
-    msg!("Instruction: TransferTokenManagerOperatorship");
+    msg!("Instruction: ProposeTokenManagerOperatorship");
 
-    let origin_roles = &mut ctx.accounts.origin_roles_account;
-    let destination_roles = &mut ctx.accounts.destination_roles_account;
+    let proposal = &mut ctx.accounts.proposal_account;
 
-    // Remove OPERATOR role from origin user
-    origin_roles.remove(roles::OPERATOR);
-
-    // Add OPERATOR role to destination user
-    destination_roles.insert(roles::OPERATOR);
-    destination_roles.bump = ctx.bumps.destination_roles_account;
+    // Initialize the proposal with OPERATOR role
+    proposal.roles = roles::OPERATOR;
+    proposal.bump = ctx.bumps.proposal_account;
 
     msg!(
-        "Transferred token manager operatorship for token_id {:?} from {} to {}",
+        "Proposed token manager operatorship transfer for token_id {:?} from {} to {}",
         ctx.accounts.token_manager_account.token_id,
         ctx.accounts.origin_user_account.key(),
         ctx.accounts.destination_user_account.key()
     );
-
-    // Close if no remaining roles
-    if !origin_roles.has_roles() {
-        ctx.accounts
-            .origin_roles_account
-            .close(ctx.accounts.payer.to_account_info())
-            .map_err(|e| e.with_account_name("origin_roles_account"))?;
-    }
 
     Ok(())
 }
