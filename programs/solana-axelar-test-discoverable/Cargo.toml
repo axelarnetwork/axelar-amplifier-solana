@@ -1,5 +1,5 @@
 [package]
-name = "solana-axelar-memo-discoverable"
+name = "solana-axelar-test-discoverable"
 version.workspace = true
 authors.workspace = true
 repository.workspace = true
@@ -26,7 +26,7 @@ solana-program.workspace = true
 workspace = true
 
 [lib]
-name = "solana_axelar_memo_discoverable"
+name = "solana_axelar_test_discoverable"
 crate-type = ["cdylib", "lib"]
 
 [features]

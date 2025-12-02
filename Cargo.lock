@@ -6704,23 +6704,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-axelar-memo-discoverable"
-version = "0.1.4"
-dependencies = [
- "anchor-lang",
- "bincode",
- "hex",
- "mollusk-svm 0.5.1",
- "relayer-discovery",
- "relayer-discovery-test-fixtures",
- "solana-axelar-gateway",
- "solana-axelar-gateway-test-fixtures",
- "solana-axelar-std",
- "solana-program",
- "solana-sdk",
-]
-
-[[package]]
 name = "solana-axelar-operators"
 version = "0.1.4"
 dependencies = [
@@ -6747,6 +6730,23 @@ dependencies = [
  "solana-keccak-hasher",
  "thiserror 1.0.69",
  "udigest",
+]
+
+[[package]]
+name = "solana-axelar-test-discoverable"
+version = "0.1.4"
+dependencies = [
+ "anchor-lang",
+ "bincode",
+ "hex",
+ "mollusk-svm 0.5.1",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-std",
+ "solana-program",
+ "solana-sdk",
 ]
 
 [[package]]
