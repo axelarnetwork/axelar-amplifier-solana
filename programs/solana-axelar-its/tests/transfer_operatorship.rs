@@ -4,7 +4,7 @@
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::setup_mollusk;
-use solana_axelar_its::state::{Roles, RolesError, UserRoles};
+use solana_axelar_its::state::{roles, RolesError, UserRoles};
 use solana_axelar_its_test_fixtures::{
     init_its_service, new_default_account, new_empty_account, new_test_account,
 };
@@ -49,7 +49,7 @@ fn test_transfer_operatorship_success() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let (new_operator_roles_pda, new_operator_roles_pda_bump) = Pubkey::find_program_address(
         &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
@@ -105,7 +105,7 @@ fn test_transfer_operatorship_success() {
     assert_eq!(new_operator_roles.bump, new_operator_roles_pda_bump);
 
     assert!(
-        new_operator_roles.roles.contains(Roles::OPERATOR),
+        new_operator_roles.contains(roles::OPERATOR),
         "New operator should have OPERATOR role"
     );
 }
@@ -147,7 +147,7 @@ fn test_reject_transfer_operatorship_with_invalid_authority() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let (new_operator_roles_pda, _) = Pubkey::find_program_address(
         &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
@@ -228,7 +228,7 @@ fn test_reject_transfer_operatorship_without_operator_role() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let (new_operator_roles_pda, _) = Pubkey::find_program_address(
         &UserRoles::pda_seeds(&its_root_pda, &new_operator)[..],
@@ -256,7 +256,7 @@ fn test_reject_transfer_operatorship_without_operator_role() {
         UserRoles::try_deserialize(&mut current_operator_roles_account_clone.data.as_ref())
             .expect("Failed to deserialize roles");
 
-    current_operator_roles.roles = Roles::empty();
+    current_operator_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);

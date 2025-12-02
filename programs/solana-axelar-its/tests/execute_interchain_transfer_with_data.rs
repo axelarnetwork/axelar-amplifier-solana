@@ -19,7 +19,7 @@ fn test_init_gives_user_role_to_operator() {
 
     assert_eq!(
         user_roles.roles,
-        solana_axelar_its::Roles::OPERATOR,
+        solana_axelar_its::roles::OPERATOR,
         "user should be an operator"
     );
 }

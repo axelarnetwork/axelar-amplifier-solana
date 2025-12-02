@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, RoleProposal, Roles, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, RoleProposal, roles, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -64,7 +64,7 @@ pub struct AcceptTokenManagerOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR)
+        constraint = origin_roles_account.contains(roles::OPERATOR)
             @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
@@ -79,7 +79,7 @@ pub struct AcceptTokenManagerOperatorship<'info> {
             destination_user_account.key().as_ref(),
         ],
         bump = proposal_account.bump,
-        constraint = proposal_account.roles.contains(Roles::OPERATOR)
+        constraint = proposal_account.contains(roles::OPERATOR)
             @ RolesError::ProposalMissingOperatorRole,
         // Note: should the balance be sent to payer or origin_user_account?
         close = origin_user_account,
@@ -96,10 +96,10 @@ pub fn accept_token_manager_operatorship_handler(
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
     // Remove OPERATOR role from origin user
-    origin_roles.roles.remove(Roles::OPERATOR);
+    origin_roles.remove(roles::OPERATOR);
 
     // Add OPERATOR role to destination user
-    destination_roles.roles.insert(Roles::OPERATOR);
+    destination_roles.insert(roles::OPERATOR);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(

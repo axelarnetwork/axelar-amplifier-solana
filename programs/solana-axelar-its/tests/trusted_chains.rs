@@ -6,7 +6,7 @@ use anchor_lang::{AccountDeserialize, Discriminator};
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
 use solana_axelar_its::{
-    state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    state::{InterchainTokenService, roles, RolesError, UserRoles},
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{init_its_service, new_default_account, new_test_account};
@@ -529,7 +529,7 @@ fn test_set_trusted_chain_missing_operator_role() {
     let trusted_chain_name = "ethereum".to_string();
 
     // Update operator user role to not be OPERATOR
-    user_roles_account.data[UserRoles::DISCRIMINATOR.len()] = Roles::MINTER.bits();
+    user_roles_account.data[UserRoles::DISCRIMINATOR.len()] = roles::MINTER;
 
     let ix = Instruction {
         program_id,

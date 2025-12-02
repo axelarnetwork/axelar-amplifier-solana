@@ -3,7 +3,7 @@
 
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{RoleProposal, Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::state::{RoleProposal, roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
@@ -82,7 +82,7 @@ fn test_propose_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
 
-    assert!(current_operator_token_roles.roles.contains(Roles::OPERATOR));
+    assert!(current_operator_token_roles.contains(roles::OPERATOR));
 
     // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
     let (proposal_pda, proposal_pda_bump) = RoleProposal::find_pda(
@@ -118,7 +118,7 @@ fn test_propose_token_manager_operatorship() {
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize RoleProposal");
 
-    assert_eq!(proposal_data.roles, Roles::OPERATOR);
+    assert_eq!(proposal_data.roles, roles::OPERATOR);
     assert_eq!(proposal_data.bump, proposal_pda_bump);
 
     // Verify the current operator still has their role (proposal doesn't transfer immediately)
@@ -130,9 +130,7 @@ fn test_propose_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account_after.data.as_slice())
             .expect("Failed to deserialize current operator token roles after proposal");
 
-    assert!(current_operator_token_roles_after
-        .roles
-        .contains(Roles::OPERATOR));
+    assert!(current_operator_token_roles_after.contains(roles::OPERATOR));
 }
 
 #[test]
@@ -205,7 +203,7 @@ fn test_reject_propose_token_manager_operatorship_with_invalid_authority() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
 
-    assert!(current_operator_token_roles.roles.contains(Roles::OPERATOR));
+    assert!(current_operator_token_roles.contains(roles::OPERATOR));
 
     // Nonexistent account, will be deployed by ProposeTokenManagerOperatorship
     let (_proposal_pda, _) = RoleProposal::find_pda(
@@ -311,7 +309,7 @@ fn test_reject_propose_token_manager_operatorship_without_operator_role() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account_clone.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
 
-    current_operator_token_roles.roles = Roles::empty();
+    current_operator_token_roles.roles = roles::EMPTY;
 
     // Remove roles from current operator
     let mut new_data = Vec::new();

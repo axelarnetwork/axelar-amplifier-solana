@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, RoleProposal, Roles, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, RoleProposal, roles, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -63,7 +63,7 @@ pub struct AcceptInterchainTokenMintership<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::MINTER)
+        constraint = origin_roles_account.contains(roles::MINTER)
             @ RolesError::MissingMinterRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
@@ -78,7 +78,7 @@ pub struct AcceptInterchainTokenMintership<'info> {
             destination_user_account.key().as_ref(),
         ],
         bump = proposal_account.bump,
-        constraint = proposal_account.roles.contains(Roles::MINTER)
+        constraint = proposal_account.contains(roles::MINTER)
             @ RolesError::ProposalMissingMinterRole,
         // Return balance to origin user
         close = origin_user_account,
@@ -97,10 +97,10 @@ pub fn accept_interchain_token_mintership_handler(
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
     // Remove MINTER role from origin user
-    origin_roles.roles.remove(Roles::MINTER);
+    origin_roles.remove(roles::MINTER);
 
     // Add MINTER role to destination user
-    destination_roles.roles.insert(Roles::MINTER);
+    destination_roles.insert(roles::MINTER);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(

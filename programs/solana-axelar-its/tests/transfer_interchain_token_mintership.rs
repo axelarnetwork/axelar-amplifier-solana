@@ -3,7 +3,7 @@
 
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{Roles, TokenManager, UserRoles};
+use solana_axelar_its::state::{roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
@@ -88,7 +88,7 @@ fn test_transfer_interchain_token_mintership_success() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
     assert!(
-        current_minter_token_roles.roles.contains(Roles::MINTER),
+        current_minter_token_roles.contains(roles::MINTER),
         "Current minter should have MINTER role for token manager"
     );
 
@@ -123,7 +123,7 @@ fn test_transfer_interchain_token_mintership_success() {
         UserRoles::try_deserialize(&mut old_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
     assert!(
-        !old_minter_token_roles.roles.contains(Roles::MINTER),
+        !old_minter_token_roles.contains(roles::MINTER),
         "Old minter should not have MINTER role for token manager"
     );
 
@@ -139,7 +139,7 @@ fn test_transfer_interchain_token_mintership_success() {
     assert_eq!(new_minter_token_roles.bump, new_minter_token_roles_pda_bump);
 
     assert!(
-        new_minter_token_roles.roles.contains(Roles::MINTER),
+        new_minter_token_roles.contains(roles::MINTER),
         "New minter should have MINTER role for token manager"
     );
 }
@@ -215,7 +215,7 @@ fn test_reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
     assert!(
-        current_minter_token_roles.roles.contains(Roles::MINTER),
+        current_minter_token_roles.contains(roles::MINTER),
         "Current minter should have MINTER role for token manager"
     );
 
@@ -314,12 +314,12 @@ fn test_reject_transfer_interchain_token_mintership_without_minter_role() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
     assert!(
-        current_minter_token_roles.roles.contains(Roles::MINTER),
+        current_minter_token_roles.contains(roles::MINTER),
         "Current minter should have MINTER role for token manager"
     );
 
     // Remove the MINTER role from current_minter to test failure
-    current_minter_token_roles.roles.remove(Roles::MINTER);
+    current_minter_token_roles.remove(roles::MINTER);
     let mut serialized_data = Vec::new();
     current_minter_token_roles
         .serialize(&mut serialized_data)
@@ -419,7 +419,7 @@ fn test_reject_transfer_interchain_token_mintership_same_sender_destination() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
     assert!(
-        current_minter_token_roles.roles.contains(Roles::MINTER),
+        current_minter_token_roles.contains(roles::MINTER),
         "Current minter should have MINTER role for token manager"
     );
 

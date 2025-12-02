@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, roles, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -24,7 +24,7 @@ pub struct TransferTokenManagerOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
@@ -76,10 +76,10 @@ pub fn transfer_token_manager_operatorship_handler(
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
     // Remove OPERATOR role from origin user
-    origin_roles.roles.remove(Roles::OPERATOR);
+    origin_roles.remove(roles::OPERATOR);
 
     // Add OPERATOR role to destination user
-    destination_roles.roles.insert(Roles::OPERATOR);
+    destination_roles.insert(roles::OPERATOR);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(

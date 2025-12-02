@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    state::{InterchainTokenService, roles, RolesError, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -24,7 +24,7 @@ pub struct TransferOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
@@ -62,9 +62,9 @@ pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Resu
     let origin_roles = &mut ctx.accounts.origin_roles_account;
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
-    origin_roles.roles.remove(Roles::OPERATOR);
+    origin_roles.remove(roles::OPERATOR);
 
-    destination_roles.roles.insert(Roles::OPERATOR);
+    destination_roles.insert(roles::OPERATOR);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(

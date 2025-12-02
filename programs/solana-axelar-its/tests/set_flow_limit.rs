@@ -6,7 +6,7 @@ use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
-use solana_axelar_its::state::{Roles, RolesError};
+use solana_axelar_its::state::{roles, RolesError};
 use solana_axelar_its::{
     state::{TokenManager, UserRoles},
     utils::interchain_token_id,
@@ -344,7 +344,7 @@ fn test_reject_set_flow_limit_without_operator_role() {
 
     let mut user_roles = UserRoles::try_deserialize(&mut user_roles_account_clone.data.as_ref())
         .expect("Failed to deserialize flow limiter roles");
-    user_roles.roles = Roles::empty();
+    user_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);

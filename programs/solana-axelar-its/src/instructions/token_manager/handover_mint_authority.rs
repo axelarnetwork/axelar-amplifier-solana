@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    state::{InterchainTokenService, roles, TokenManager, Type, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -97,7 +97,7 @@ pub fn handover_mint_authority_handler(
     )?;
 
     // Setup minter role for the payer
-    minter_roles.roles.insert(Roles::MINTER);
+    minter_roles.insert(roles::MINTER);
     minter_roles.bump = ctx.bumps.minter_roles;
 
     msg!(

@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, RoleProposal, Roles, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, RoleProposal, roles, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -40,7 +40,7 @@ pub struct ProposeInterchainTokenMintership<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::MINTER)
+        constraint = origin_roles_account.contains(roles::MINTER)
             @ RolesError::MissingMinterRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
@@ -77,7 +77,7 @@ pub fn propose_token_manager_mintership_handler(
     let proposal = &mut ctx.accounts.proposal_account;
 
     // Initialize the proposal with MINTER role
-    proposal.roles = Roles::MINTER;
+    proposal.roles = roles::MINTER;
     proposal.bump = ctx.bumps.proposal_account;
 
     msg!(

@@ -5,7 +5,7 @@ use anchor_lang::{prelude::borsh, AccountDeserialize, Discriminator};
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
 use solana_axelar_its::{
-    state::{RoleProposal, Roles, UserRoles},
+    state::{RoleProposal, roles, UserRoles},
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{
@@ -52,7 +52,7 @@ fn test_propose_operatorship() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let ctx = ProposeOperatorshipContext::new(
         mollusk,
@@ -85,7 +85,7 @@ fn test_propose_operatorship() {
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize proposal account");
 
-    assert_eq!(proposal_data.roles, Roles::OPERATOR);
+    assert_eq!(proposal_data.roles, roles::OPERATOR);
 }
 
 #[test]
@@ -123,7 +123,7 @@ fn test_propose_malicious_operatorship_failure() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let attacker = Pubkey::new_unique();
     let malicious_proposed_operator = Pubkey::new_unique();
@@ -190,7 +190,7 @@ fn test_propose_self_failure() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let ctx = ProposeOperatorshipContext::new(
         mollusk,
@@ -248,7 +248,7 @@ fn test_propose_operatorship_missing_operator_role_failure() {
 
     // Create UserRoles data with missing operator role
     let user_roles_data = UserRoles {
-        roles: Roles::MINTER,
+        roles: roles::MINTER,
         bump,
     };
 

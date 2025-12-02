@@ -4,7 +4,7 @@
 
 use anchor_lang::AccountDeserialize;
 use mollusk_test_utils::setup_mollusk;
-use solana_axelar_its::state::{InterchainTokenService, Roles, UserRoles};
+use solana_axelar_its::state::{InterchainTokenService, roles, UserRoles};
 use solana_axelar_its_test_fixtures::{init_its_service, new_default_account, new_test_account};
 use {solana_sdk::pubkey::Pubkey, solana_sdk_ids::bpf_loader_upgradeable};
 
@@ -49,7 +49,7 @@ fn test_initialize_success() {
     let roles_data = UserRoles::try_deserialize(&mut user_roles_account.data.as_slice())
         .expect("Failed to deserialize roles data");
 
-    assert_eq!(roles_data.roles, Roles::OPERATOR);
+    assert_eq!(roles_data.roles, roles::OPERATOR);
 
     // Verify PDAs are derived correctly
     let expected_its_pda =

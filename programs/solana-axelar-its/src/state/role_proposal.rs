@@ -1,4 +1,3 @@
-use crate::state::user_roles::Roles;
 use anchor_lang::prelude::*;
 
 #[account]
@@ -6,7 +5,7 @@ use anchor_lang::prelude::*;
 /// Proposal to transfer roles to a user.
 pub struct RoleProposal {
     // The roles to be transferred.
-    pub roles: Roles,
+    pub roles: u8,
     /// The bump seed used to derive the PDA, ensuring the address is valid.
     pub bump: u8,
 }
@@ -21,6 +20,23 @@ impl RoleProposal {
             origin.as_ref(),
             user.as_ref(),
         ]
+    }
+
+    pub fn has_roles(&self) -> bool {
+        self.roles != 0u8
+    }
+
+    pub fn contains(&self, role: u8) -> bool {
+        let res = self.roles & role;
+        return res == role;
+    }
+
+    pub fn insert(&mut self, new_role: u8) {
+        self.roles |= new_role;
+    }
+
+    pub fn remove(&mut self, role: u8) {
+        self.roles &= !role;
     }
 
     pub fn find_pda(

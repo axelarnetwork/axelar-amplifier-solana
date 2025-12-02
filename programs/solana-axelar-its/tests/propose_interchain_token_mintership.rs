@@ -3,7 +3,7 @@
 
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{RoleProposal, Roles, RolesError, TokenManager, Type, UserRoles};
+use solana_axelar_its::state::{RoleProposal, roles, RolesError, TokenManager, Type, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
@@ -89,7 +89,7 @@ fn test_propose_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
 
-    assert!(current_minter_token_roles.roles.contains(Roles::MINTER));
+    assert!(current_minter_token_roles.contains(roles::MINTER));
 
     // Nonexistent account, will be deployed by ProposeInterchainTokenMintership
     let (proposal_pda, proposal_pda_bump) = RoleProposal::find_pda(
@@ -122,7 +122,7 @@ fn test_propose_interchain_token_mintership() {
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize RoleProposal");
 
-    assert_eq!(proposal_data.roles, Roles::MINTER);
+    assert_eq!(proposal_data.roles, roles::MINTER);
     assert_eq!(proposal_data.bump, proposal_pda_bump);
 
     // Verify the current minter still has their role (proposal doesn't transfer immediately)
@@ -134,9 +134,7 @@ fn test_propose_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account_after.data.as_slice())
             .expect("Failed to deserialize current minter token roles after proposal");
 
-    assert!(current_minter_token_roles_after
-        .roles
-        .contains(Roles::MINTER));
+    assert!(current_minter_token_roles_after.contains(roles::MINTER));
 }
 
 #[test]
@@ -209,7 +207,7 @@ fn test_reject_propose_interchain_token_mintership_with_invalid_authority() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
 
-    assert!(current_minter_token_roles.roles.contains(Roles::MINTER));
+    assert!(current_minter_token_roles.contains(roles::MINTER));
 
     let invalid_current_minter = Pubkey::new_unique();
 
@@ -303,7 +301,7 @@ fn test_reject_propose_interchain_token_mintership_without_minter_role() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account_clone.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
 
-    current_minter_token_roles.roles = Roles::empty();
+    current_minter_token_roles.roles = roles::EMPTY;
 
     // Remove roles from current minter
     let mut new_data = Vec::new();

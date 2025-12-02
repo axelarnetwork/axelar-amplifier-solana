@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, RoleProposal, Roles, RolesError, UserRoles},
+    state::{InterchainTokenService, RoleProposal, roles, RolesError, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -24,7 +24,7 @@ pub struct ProposeOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
@@ -63,7 +63,7 @@ pub fn propose_operatorship_handler(ctx: Context<ProposeOperatorship>) -> Result
     let proposal = &mut ctx.accounts.proposal_account;
 
     // Initialize the proposal with OPERATOR role
-    proposal.roles = Roles::OPERATOR;
+    proposal.roles = roles::OPERATOR;
     proposal.bump = ctx.bumps.proposal_account;
 
     msg!(

@@ -2,7 +2,7 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    state::{roles, token_manager, InterchainTokenService, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::solana_program::instruction::Instruction;
@@ -163,7 +163,7 @@ pub fn deploy_interchain_token_handler(
         // Both minter accounts provided - initialize roles
         (Some(_minter), Some(minter_roles_pda), Some(bump), _supply) => {
             minter_roles_pda.bump = bump;
-            minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
+            minter_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER | roles::MINTER;
         }
         // No minter provided and zero supply
         (None, None, None, 0) => {

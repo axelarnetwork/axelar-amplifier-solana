@@ -3,7 +3,7 @@
 
 use anchor_lang::AccountDeserialize;
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
+use solana_axelar_its::state::{RoleProposal, roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     accept_interchain_token_mintership_helper, deploy_interchain_token_helper, init_its_service,
@@ -83,7 +83,7 @@ fn test_accept_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
 
-    assert!(current_minter_token_roles.roles.contains(Roles::MINTER));
+    assert!(current_minter_token_roles.contains(roles::MINTER));
 
     // Propose mintership transfer
     let (proposal_pda, _bump) = RoleProposal::find_pda(
@@ -113,7 +113,7 @@ fn test_accept_interchain_token_mintership() {
         .expect("Proposal account should exist");
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize RoleProposal");
-    assert_eq!(proposal_data.roles, Roles::MINTER);
+    assert_eq!(proposal_data.roles, roles::MINTER);
 
     // Accept mintership transfer
     let (new_minter_roles_pda, new_minter_roles_bump) =
@@ -150,7 +150,7 @@ fn test_accept_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut old_minter_roles_account.data.as_slice())
             .expect("Failed to deserialize old minter roles");
 
-    assert!(!old_minter_roles.roles.contains(Roles::MINTER));
+    assert!(!old_minter_roles.contains(roles::MINTER));
 
     // New minter should have MINTER role
     let new_minter_roles_account = accept_result
@@ -160,7 +160,7 @@ fn test_accept_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut new_minter_roles_account.data.as_slice())
             .expect("Failed to deserialize new minter roles");
 
-    assert!(new_minter_roles.roles.contains(Roles::MINTER));
+    assert!(new_minter_roles.contains(roles::MINTER));
     assert_eq!(new_minter_roles.bump, new_minter_roles_bump);
 
     // Proposal account should be closed
@@ -238,7 +238,7 @@ fn test_reject_invalid_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut current_minter_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current minter token roles");
 
-    assert!(current_minter_token_roles.roles.contains(Roles::MINTER));
+    assert!(current_minter_token_roles.contains(roles::MINTER));
 
     // Propose mintership transfer
     let (proposal_pda, _bump) = RoleProposal::find_pda(
@@ -268,7 +268,7 @@ fn test_reject_invalid_interchain_token_mintership() {
         .expect("Proposal account should exist");
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize RoleProposal");
-    assert_eq!(proposal_data.roles, Roles::MINTER);
+    assert_eq!(proposal_data.roles, roles::MINTER);
 
     let (malicious_proposed_minter, malicious_proposed_minter_account) = new_test_account();
 
@@ -310,7 +310,7 @@ fn test_reject_invalid_interchain_token_mintership() {
         UserRoles::try_deserialize(&mut old_minter_roles_account.data.as_slice())
             .expect("Failed to deserialize old minter roles");
 
-    assert!(old_minter_roles.roles.contains(Roles::MINTER));
+    assert!(old_minter_roles.contains(roles::MINTER));
 
     // New minter should not have the MINTER role
     let new_minter_roles_account = accept_result

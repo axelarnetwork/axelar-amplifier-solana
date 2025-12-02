@@ -3,7 +3,7 @@
 
 use anchor_lang::AccountDeserialize;
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{RoleProposal, Roles, TokenManager, UserRoles};
+use solana_axelar_its::state::{RoleProposal, roles, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     accept_token_manager_operatorship_helper, deploy_interchain_token_helper, init_its_service,
@@ -83,7 +83,7 @@ fn test_accept_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
 
-    assert!(current_operator_token_roles.roles.contains(Roles::OPERATOR));
+    assert!(current_operator_token_roles.contains(roles::OPERATOR));
 
     // Propose operatorship transfer
     let (proposal_pda, _bump) = RoleProposal::find_pda(
@@ -117,7 +117,7 @@ fn test_accept_token_manager_operatorship() {
         .expect("Proposal account should exist");
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize RoleProposal");
-    assert_eq!(proposal_data.roles, Roles::OPERATOR);
+    assert_eq!(proposal_data.roles, roles::OPERATOR);
 
     // Accept operatorship transfer
     let (new_operator_roles_pda, new_operator_roles_bump) =
@@ -154,7 +154,7 @@ fn test_accept_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut old_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize old operator roles");
 
-    assert!(!old_operator_roles.roles.contains(Roles::OPERATOR));
+    assert!(!old_operator_roles.contains(roles::OPERATOR));
 
     // New operator should have OPERATOR role
     let new_operator_roles_account = accept_result
@@ -164,7 +164,7 @@ fn test_accept_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut new_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize new operator roles");
 
-    assert!(new_operator_roles.roles.contains(Roles::OPERATOR));
+    assert!(new_operator_roles.contains(roles::OPERATOR));
     assert_eq!(new_operator_roles.bump, new_operator_roles_bump);
 
     // Proposal account should be closed
@@ -243,7 +243,7 @@ fn test_reject_invalid_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
 
-    assert!(current_operator_token_roles.roles.contains(Roles::OPERATOR));
+    assert!(current_operator_token_roles.contains(roles::OPERATOR));
 
     // Propose operatorship transfer
     let (proposal_pda, _bump) = RoleProposal::find_pda(
@@ -277,7 +277,7 @@ fn test_reject_invalid_token_manager_operatorship() {
         .expect("Proposal account should exist");
     let proposal_data = RoleProposal::try_deserialize(&mut proposal_account.data.as_slice())
         .expect("Failed to deserialize RoleProposal");
-    assert_eq!(proposal_data.roles, Roles::OPERATOR);
+    assert_eq!(proposal_data.roles, roles::OPERATOR);
 
     let (malicious_proposed_operator, malicious_proposed_operator_account) = new_test_account();
 
@@ -322,7 +322,7 @@ fn test_reject_invalid_token_manager_operatorship() {
         UserRoles::try_deserialize(&mut old_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize old operator roles");
 
-    assert!(old_operator_roles.roles.contains(Roles::OPERATOR));
+    assert!(old_operator_roles.contains(roles::OPERATOR));
 
     // New operator should not have the OPERATOR role
     let new_operator_roles_account = accept_result

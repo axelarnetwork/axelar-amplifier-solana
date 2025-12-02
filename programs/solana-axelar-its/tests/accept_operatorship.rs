@@ -4,7 +4,7 @@
 use anchor_lang::{prelude::borsh, AccountDeserialize, Discriminator};
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
-use solana_axelar_its::state::{RoleProposal, Roles, UserRoles};
+use solana_axelar_its::state::{RoleProposal, roles, UserRoles};
 use solana_axelar_its_test_fixtures::{
     accept_operatorship_helper, init_its_service, new_default_account, new_empty_account,
     new_test_account, propose_operatorship_helper, AcceptOperatorshipContext,
@@ -49,7 +49,7 @@ fn test_accept_operatorship() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let ctx = ProposeOperatorshipContext::new(
         mollusk,
@@ -109,7 +109,7 @@ fn test_accept_operatorship() {
         UserRoles::try_deserialize(&mut new_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize new operator roles");
 
-    assert!(new_operator_roles.roles.contains(Roles::OPERATOR));
+    assert!(new_operator_roles.contains(roles::OPERATOR));
 
     // Check that proposal was closed
     let proposal_account = accept_result.get_account(&proposal_pda).unwrap();
@@ -152,14 +152,14 @@ fn test_reject_invalid_operatorship() {
     let current_roles_data =
         UserRoles::try_deserialize(&mut current_operator_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator roles");
-    assert!(current_roles_data.roles.contains(Roles::OPERATOR));
+    assert!(current_roles_data.contains(roles::OPERATOR));
 
     let fake_origin = Pubkey::new_unique();
     let (wrong_proposal_pda, fake_bump) =
         RoleProposal::find_pda(&its_root_pda, &fake_origin, &new_operator, &program_id);
 
     let role_proposal_data = RoleProposal {
-        roles: Roles::OPERATOR,
+        roles: roles::OPERATOR,
         bump: fake_bump,
     };
 
