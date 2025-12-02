@@ -5,9 +5,9 @@ use solana_axelar_gateway::Message;
 
 use anchor_lang::AnchorSerialize;
 use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
-use solana_axelar_memo_discoverable::Payload;
-use solana_axelar_memo_discoverable::ID as EXECUTABLE_ID;
 use solana_axelar_std::CrossChainId;
+use solana_axelar_test_discoverable::Payload;
+use solana_axelar_test_discoverable::ID as EXECUTABLE_ID;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -21,8 +21,8 @@ fn test_execute() {
 
     // Add the memo program to the Mollusk instance
     fixture.setup.mollusk.add_program(
-        &solana_axelar_memo_discoverable::id(),
-        "../../target/deploy/solana_axelar_memo_discoverable",
+        &solana_axelar_test_discoverable::id(),
+        "../../target/deploy/solana_axelar_test_discoverable",
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
@@ -118,7 +118,7 @@ fn test_execute() {
         },
         source_address: "0x1234567890123456789012345678901234567890".to_string(),
         destination_chain: "solana".to_string(),
-        destination_address: solana_axelar_memo_discoverable::id().to_string(), // This is crucial!
+        destination_address: solana_axelar_test_discoverable::id().to_string(), // This is crucial!
         payload_hash,
     };
 

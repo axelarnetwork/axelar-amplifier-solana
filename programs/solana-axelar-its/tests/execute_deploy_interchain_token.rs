@@ -213,7 +213,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
     let salt = [1u8; 32];
     let token_id = interchain_token_id(&payer, &salt);
     let name = "Test Token ".repeat(10).trim_end().to_owned(); // large name, should revert
-    let symbol = "TEST".to_owned();
+    let symbol = "TEST".repeat(10).to_owned();
     let decimals = 9u8;
 
     let deploy_payload = DeployInterchainToken {
@@ -418,7 +418,6 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
     // Step 11: Verify success and results
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
     let (token_mint_pda, _) = get_token_mint_pda(token_id);
-
     let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
 
     assert!(

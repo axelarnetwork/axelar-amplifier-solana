@@ -4,6 +4,7 @@ use crate::{
     instructions::{gmp::*, validate_mint_extensions},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    utils::truncate_utf8,
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
@@ -204,8 +205,8 @@ pub fn execute_deploy_interchain_token_handler(
             .as_ref()
             .map(anchor_lang::Key::key)
             .unwrap_or_default(),
-        name,
-        symbol,
+        name: truncated_name,
+        symbol: truncated_symbol,
         decimals,
     });
 
@@ -222,12 +223,6 @@ fn process_inbound_deploy(
 ) -> Result<()> {
     // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
-
-    // super::token_manager::deploy(...)
-    validate_mint_extensions(
-        Type::NativeInterchainToken,
-        &ctx.token_mint.to_account_info(),
-    )?;
 
     TokenManager::init_account(
         &mut ctx.token_manager_pda,

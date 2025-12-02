@@ -61,7 +61,10 @@ pub fn initialize_config_handler(
     config.current_epoch = U256::from(1u64);
     config.previous_verifier_set_retention = params.previous_verifier_retention;
     config.minimum_rotation_delay = params.minimum_rotation_delay;
-    config.last_rotation_timestamp = Clock::get()?.unix_timestamp as u64;
+    config.last_rotation_timestamp = Clock::get()?
+        .unix_timestamp
+        .try_into()
+        .map_err(|_| GatewayError::InvalidTimestamp)?;
     config.operator = params.operator;
     config.domain_separator = params.domain_separator;
     config.bump = ctx.bumps.gateway_root_pda;

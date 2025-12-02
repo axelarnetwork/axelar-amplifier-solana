@@ -118,14 +118,13 @@ pub fn execute_interchain_transfer_extra_accounts(
 /// Usage:
 /// ```ignore
 /// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
-/// accounts.extend(execute_link_token_extra_accounts(deployer, minter, minter_roles_pda));
+/// accounts.extend(execute_link_token_extra_accounts(minter, minter_roles_pda));
 /// ```
 pub fn execute_link_token_extra_accounts(
-    deployer: Pubkey,
     operator: Option<Pubkey>,
     operator_roles_pda: Option<Pubkey>,
 ) -> Vec<AccountMeta> {
-    let mut accounts = vec![AccountMeta::new(deployer, false)];
+    let mut accounts = Vec::with_capacity(2);
 
     if let Some(key) = operator {
         accounts.push(AccountMeta::new(key, false));
@@ -144,8 +143,6 @@ pub fn execute_link_token_extra_accounts(
 /// ```ignore
 /// let mut accounts = solana_axelar_its::accounts::Execute { ... }.to_account_metas(None);
 /// accounts.extend(execute_deploy_interchain_token_extra_accounts(
-///     deployer_ata,
-///     deployer,
 ///     sysvar_instructions,
 ///     mpl_token_metadata_program,
 ///     mpl_token_metadata_account,
@@ -154,8 +151,6 @@ pub fn execute_link_token_extra_accounts(
 /// ));
 /// ```
 pub fn execute_deploy_interchain_token_extra_accounts(
-    deployer_ata: Pubkey,
-    deployer: Pubkey,
     sysvar_instructions: Pubkey,
     mpl_token_metadata_program: Pubkey,
     mpl_token_metadata_account: Pubkey,
@@ -163,8 +158,6 @@ pub fn execute_deploy_interchain_token_extra_accounts(
     minter_roles_pda: Option<Pubkey>,
 ) -> Vec<AccountMeta> {
     let mut accounts = vec![
-        AccountMeta::new(deployer_ata, false),
-        AccountMeta::new(deployer, false),
         AccountMeta::new_readonly(sysvar_instructions, false),
         AccountMeta::new_readonly(mpl_token_metadata_program, false),
         AccountMeta::new(mpl_token_metadata_account, false),

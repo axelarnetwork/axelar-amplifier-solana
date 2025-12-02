@@ -92,7 +92,7 @@ relayer_transaction.execute()
 ``` 
 
 ### An Example: Memo Discoverable
-Look at [this](../../programs/solana-axelar-memo-discoverable/) for a working example.
+Look at [this](../../programs/solana-axelar-test-discoverable/) for a working example.
 #### Init
 A one time call has to be made to the `Init` instruction to setup the `transaction_pda`.
 ```rust

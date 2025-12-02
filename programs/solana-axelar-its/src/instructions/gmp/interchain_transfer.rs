@@ -110,7 +110,6 @@ pub struct ExecuteInterchainTransfer<'info> {
 }
 
 #[allow(clippy::too_many_arguments)]
-#[allow(clippy::unimplemented)]
 pub fn execute_interchain_transfer_handler<'info>(
     mut ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
     token_id: [u8; 32],
@@ -174,12 +173,11 @@ pub fn execute_interchain_transfer_handler<'info>(
     if !data.is_empty() {
         // Validate accounts
 
-        if !ctx.accounts.destination.executable {
-            return err!(ItsError::DestinationAddressNotExecutable);
-        }
-
         let Some(interchain_transfer_execute) = ctx.accounts.interchain_transfer_execute.as_ref()
         else {
+            return err!(ItsError::InterchainTransferExecutePdaMissing);
+        };
+        let Some(interchain_transfer_execute_bump) = ctx.bumps.interchain_transfer_execute else {
             return err!(ItsError::InterchainTransferExecutePdaMissing);
         };
 
@@ -230,9 +228,6 @@ pub fn execute_interchain_transfer_handler<'info>(
         let mut account_infos = accounts.to_account_infos();
         account_infos.extend(ctx.remaining_accounts.iter().cloned());
 
-        let (_, axelar_transfer_execute_bump) =
-            InterchainTransferExecute::find_pda(ctx.accounts.destination.key);
-
         // Invoke the destination program
 
         solana_program::program::invoke_signed(
@@ -242,7 +237,7 @@ pub fn execute_interchain_transfer_handler<'info>(
             &[&[
                 InterchainTransferExecute::SEED_PREFIX,
                 ctx.accounts.destination.key().as_ref(),
-                &[axelar_transfer_execute_bump],
+                &[interchain_transfer_execute_bump],
             ]],
         )?;
     }
