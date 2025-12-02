@@ -1,8 +1,57 @@
 //! Type definitions for the Merkle tree primitives used in this crate.
 
+#[cfg(not(any(feature = "solana", feature = "sha3")))]
+compile_error!("Either the `solana` or `sha3` feature must be enabled for solana-axelar-std");
+
 use arrayref::mut_array_refs;
 pub use rs_merkle::{MerkleProof, MerkleTree};
 use udigest::encoding::EncodeValue;
+
+/// Computes a Keccak256 hash of the input data.
+///
+/// Uses `solana-keccak-hasher` when the `solana` feature is enabled,
+/// otherwise falls back to the `sha3` crate.
+#[cfg(feature = "solana")]
+#[inline]
+fn keccak256(data: &[u8]) -> [u8; 32] {
+    solana_keccak_hasher::hash(data).to_bytes()
+}
+
+/// Computes a Keccak256 hash of the input data.
+///
+/// Uses `solana-keccak-hasher` when the `solana` feature is enabled,
+/// otherwise falls back to the `sha3` crate.
+#[cfg(all(feature = "sha3", not(feature = "solana")))]
+#[inline]
+fn keccak256(data: &[u8]) -> [u8; 32] {
+    use sha3::Digest;
+    sha3::Keccak256::digest(data).into()
+}
+
+/// Computes a Keccak256 hash over multiple byte slices.
+///
+/// Uses `solana-keccak-hasher` when the `solana` feature is enabled,
+/// otherwise falls back to the `sha3` crate.
+#[cfg(feature = "solana")]
+#[inline]
+pub fn keccak256v(data: &[&[u8]]) -> [u8; 32] {
+    solana_keccak_hasher::hashv(data).to_bytes()
+}
+
+/// Computes a Keccak256 hash over multiple byte slices.
+///
+/// Uses `solana-keccak-hasher` when the `solana` feature is enabled,
+/// otherwise falls back to the `sha3` crate.
+#[cfg(all(feature = "sha3", not(feature = "solana")))]
+#[inline]
+pub fn keccak256v(data: &[&[u8]]) -> [u8; 32] {
+    use sha3::Digest;
+    let mut hasher = sha3::Keccak256::new();
+    for slice in data {
+        hasher.update(slice);
+    }
+    hasher.finalize().into()
+}
 
 #[derive(Copy, Clone)]
 pub struct Hasher;
@@ -11,7 +60,7 @@ impl rs_merkle::Hasher for Hasher {
     type Hash = [u8; 32];
 
     fn hash(data: &[u8]) -> Self::Hash {
-        solana_keccak_hasher::hash(data).to_bytes()
+        keccak256(data)
     }
 
     /// This implementation deviates from the default for several reasons:
@@ -28,7 +77,7 @@ impl rs_merkle::Hasher for Hasher {
         prefix[0] = 1;
         left_node.copy_from_slice(left);
         right_node.copy_from_slice(right.unwrap_or(left));
-        solana_keccak_hasher::hash(&concatenated).to_bytes()
+        keccak256(&concatenated)
     }
 }
 
@@ -47,6 +96,6 @@ pub trait LeafHash: udigest::Digestable {
     fn hash(&self) -> [u8; 32] {
         let mut buffer = VecBuf(vec![]);
         self.unambiguously_encode(EncodeValue::new(&mut buffer));
-        solana_keccak_hasher::hash(&buffer.0).to_bytes()
+        keccak256(&buffer.0)
     }
 }

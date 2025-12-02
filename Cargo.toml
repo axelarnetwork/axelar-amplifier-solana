@@ -201,7 +201,7 @@ solana-axelar-governance = { version = "0.1.4", path = "programs/solana-axelar-g
 solana-axelar-its = { version = "0.1.4", path = "programs/solana-axelar-its", default-features = false }
 
 # helper crates (published to crates.io)
-solana-axelar-std = { version = "0.1.2", path = "crates/solana-axelar-std" }
+solana-axelar-std = { version = "0.1.2", path = "crates/solana-axelar-std", features = ["solana"] }
 governance-gmp = { version = "0.1.1", path = "helpers/governance-gmp" }
 interchain-token-transfer-gmp = { version = "0.1.1", path = "helpers/interchain-token-transfer-gmp" }
 program-utils = { version = "0.1.2", path = "helpers/program-utils", default-features = false }

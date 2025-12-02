@@ -1,6 +1,7 @@
 use udigest::Digestable;
 
-use crate::{hasher::LeafHash, EncodingError};
+use crate::hasher::{keccak256v, LeafHash};
+use crate::EncodingError;
 
 /// Identifies a specific blockchain and its unique identifier within that
 /// chain.
@@ -53,7 +54,7 @@ impl LeafHash for Message {}
 impl Message {
     pub fn command_id(&self) -> [u8; 32] {
         let cc_id = &self.cc_id;
-        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).to_bytes()
+        keccak256v(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()])
     }
 }
 
