@@ -1,4 +1,7 @@
 #![allow(unexpected_cfgs)]
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 pub mod instructions;

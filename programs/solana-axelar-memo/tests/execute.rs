@@ -25,7 +25,7 @@ use solana_sdk::{
 #[test]
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::non_ascii_literal)]
-fn test_execute() {
+fn execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
     let (counter_pda, _counter_pda_bump) = Counter::get_pda();

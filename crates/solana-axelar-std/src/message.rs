@@ -53,7 +53,7 @@ impl LeafHash for Message {}
 impl Message {
     pub fn command_id(&self) -> [u8; 32] {
         let cc_id = &self.cc_id;
-        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0
+        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).to_bytes()
     }
 }
 

@@ -22,7 +22,7 @@ use solana_sdk::{
 };
 
 #[test]
-fn test_initialize_config() {
+fn initialize_config() {
     let gateway_caller = None;
     let setup = mock_setup_test(gateway_caller);
     let result = initialize_gateway(&setup);
@@ -76,7 +76,7 @@ fn test_initialize_config() {
 }
 
 #[test]
-fn test_initialize_payload_verification_session() {
+fn initialize_payload_verification_session_works() {
     let gateway_caller = None;
     let setup = mock_setup_test(gateway_caller);
 
@@ -115,7 +115,7 @@ fn test_initialize_payload_verification_session() {
 }
 
 #[test]
-fn test_approve_message_with_dual_signers_and_merkle_proof() {
+fn approve_message_with_dual_signers_and_merkle_proof() {
     // Step 1: Setup gateway with real signers
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -311,7 +311,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 }
 
 #[test]
-fn test_rotate_signers() {
+fn rotate_signers() {
     // Step 1: Setup gateway with real signers (current verifier set)
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -492,7 +492,7 @@ fn test_rotate_signers() {
 }
 
 #[test]
-fn test_transfer_operatorship() {
+fn transfer_operatorship() {
     let gateway_caller = None;
     let setup = mock_setup_test(gateway_caller);
 
@@ -526,7 +526,7 @@ fn test_transfer_operatorship() {
 }
 
 #[test]
-fn test_call_contract_from_program() {
+fn call_contract_from_program() {
     let memo_program_id = Pubkey::new_unique();
     let setup = mock_setup_test(Some(memo_program_id));
 
@@ -548,7 +548,7 @@ fn test_call_contract_from_program() {
 
 #[test]
 #[allow(clippy::str_to_string)]
-fn test_call_contract_direct_signer() {
+fn call_contract_direct_signer() {
     let setup = mock_setup_test(None);
 
     // Initialize gateway
@@ -644,7 +644,7 @@ fn test_call_contract_direct_signer() {
 }
 
 #[test]
-fn test_fails_when_verifier_submits_signature_twice() {
+fn fails_when_verifier_submits_signature_twice() {
     // Setup
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
         setup_test_with_real_signers();
@@ -738,7 +738,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
 }
 
 #[test]
-fn test_fails_when_approving_message_with_insufficient_signatures() {
+fn fails_when_approving_message_with_insufficient_signatures() {
     // Step 1: Setup gateway with real signers
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
         setup_test_with_real_signers();
@@ -829,7 +829,7 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
 }
 
 #[test]
-fn test_fails_when_verifying_invalid_signature() {
+fn fails_when_verifying_invalid_signature() {
     // Step 1: Setup gateway with real signers
     let (setup, verifier_leaves, verifier_merkle_tree, secret_key_1, _secret_key_2) =
         setup_test_with_real_signers();

@@ -22,7 +22,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::{keccak, pubkey::Pubkey};
 
 #[test]
-fn test_execute_link_token() {
+fn execute_link_token() {
     // Step 1: Setup gateway with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -166,7 +166,7 @@ fn test_execute_link_token() {
 }
 
 #[test]
-fn test_reject_execute_link_token_with_invalid_token_manager_type() {
+fn reject_execute_link_token_with_invalid_token_manager_type() {
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
 
@@ -304,7 +304,7 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
 }
 
 #[test]
-fn test_reject_execute_link_token_with_invalid_destination_token_address() {
+fn reject_execute_link_token_with_invalid_destination_token_address() {
     // Step 1: Setup gateway with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -446,7 +446,7 @@ fn test_reject_execute_link_token_with_invalid_destination_token_address() {
 }
 
 #[test]
-fn test_reject_execute_link_token_with_invalid_token_id() {
+fn reject_execute_link_token_with_invalid_token_id() {
     // Step 1: Setup gateway with real signers
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();

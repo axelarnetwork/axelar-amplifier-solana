@@ -1,4 +1,7 @@
 #![allow(clippy::empty_structs_with_brackets)]
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 pub mod instructions;

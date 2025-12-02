@@ -24,7 +24,7 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 use spl_token_2022::state::Mint;
 
 #[test]
-fn test_register_token_metadata() {
+fn register_token_metadata() {
     // Initialize gateway
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 
@@ -167,7 +167,7 @@ fn test_register_token_metadata() {
 }
 
 #[test]
-fn test_register_token_metadata_failure_for_empty_mint() {
+fn register_token_metadata_failure_for_empty_mint() {
     // Initialize gateway
     let (setup, _, _, _, _) = setup_test_with_real_signers();
 

@@ -276,14 +276,14 @@ mod tests {
     };
 
     #[test]
-    fn test_validate_system_account_key() {
+    fn validate_system_account_key_works() {
         assert!(validate_system_account_key(&system_program::ID).is_ok());
         assert!(validate_system_account_key(&sysvar::instructions::ID).is_err());
         assert!(validate_system_account_key(&sysvar::rent::ID).is_err());
     }
 
     #[test]
-    fn test_validate_spl_associated_token_account_key() {
+    fn validate_spl_associated_token_account_key_works() {
         assert!(
             validate_spl_associated_token_account_key(&spl_associated_token_account::ID).is_ok()
         );
@@ -292,21 +292,21 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_rent_key() {
+    fn validate_rent_key_works() {
         assert!(validate_rent_key(&sysvar::rent::ID).is_ok());
         assert!(validate_rent_key(&system_program::ID).is_err());
         assert!(validate_rent_key(&spl_associated_token_account::ID).is_err());
     }
 
     #[test]
-    fn test_sysvar_instructions_key() {
+    fn sysvar_instructions_key() {
         assert!(validate_sysvar_instructions_key(&sysvar::instructions::ID).is_ok());
         assert!(validate_sysvar_instructions_key(&system_program::ID).is_err());
         assert!(validate_sysvar_instructions_key(&spl_associated_token_account::ID).is_err());
     }
 
     #[test]
-    fn test_mpl_token_metadata_key() {
+    fn mpl_token_metadata_key() {
         assert!(validate_mpl_token_metadata_key(&mpl_token_metadata::ID).is_ok());
         assert!(validate_mpl_token_metadata_key(&system_program::ID).is_err());
         assert!(validate_mpl_token_metadata_key(&spl_associated_token_account::ID).is_err());

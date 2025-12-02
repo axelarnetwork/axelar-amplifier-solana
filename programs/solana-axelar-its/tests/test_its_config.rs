@@ -6,7 +6,7 @@ use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 
 #[test]
-fn test_init_gives_user_role_to_operator() {
+fn init_gives_user_role_to_operator() {
     let its_harness = ItsTestHarness::new();
 
     let user_roles_pda =
@@ -23,7 +23,7 @@ fn test_init_gives_user_role_to_operator() {
 }
 
 #[test]
-fn test_set_trusted_chain_by_upgrade_authority() {
+fn set_trusted_chain_by_upgrade_authority() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -39,7 +39,7 @@ fn test_set_trusted_chain_by_upgrade_authority() {
 }
 
 #[test]
-fn test_set_trusted_chain_by_operator() {
+fn set_trusted_chain_by_operator() {
     let mut its_harness = ItsTestHarness::new();
 
     // We transfer the operator to make sure the operator
@@ -72,7 +72,7 @@ fn test_set_trusted_chain_by_operator() {
 }
 
 #[test]
-fn test_set_trusted_chain_duplicate_fails() {
+fn set_trusted_chain_duplicate_fails() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -94,7 +94,7 @@ fn test_set_trusted_chain_duplicate_fails() {
 }
 
 #[test]
-fn test_remove_trusted_chain_by_upgrade_authority() {
+fn remove_trusted_chain_by_upgrade_authority() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -122,7 +122,7 @@ fn test_remove_trusted_chain_by_upgrade_authority() {
 }
 
 #[test]
-fn test_remove_unknown_trusted_chain_fails() {
+fn remove_unknown_trusted_chain_fails() {
     let its_harness = ItsTestHarness::new();
 
     let chain_name = "ethereum".to_owned();

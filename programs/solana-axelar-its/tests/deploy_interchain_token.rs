@@ -19,7 +19,7 @@ use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
-fn test_deploy_interchain_token() {
+fn deploy_interchain_token() {
     let mollusk = initialize_mollusk_with_programs();
     let (payer, payer_account) = new_test_account();
     let (deployer, deployer_account) = new_test_account();
@@ -185,7 +185,7 @@ fn test_deploy_interchain_token() {
 }
 
 #[test]
-fn test_reject_deploy_interchain_token_zero_supply_no_minter() {
+fn reject_deploy_interchain_token_zero_supply_no_minter() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();

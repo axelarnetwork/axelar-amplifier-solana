@@ -17,7 +17,7 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey, ren
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
-fn test_deploy_and_mint_interchain_token() {
+fn deploy_and_mint_interchain_token() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -185,7 +185,7 @@ fn test_deploy_and_mint_interchain_token() {
 }
 
 #[test]
-fn test_reject_mint_interchain_token_invalid_authority() {
+fn reject_mint_interchain_token_invalid_authority() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -340,7 +340,7 @@ fn test_reject_mint_interchain_token_invalid_authority() {
 }
 
 #[test]
-fn test_reject_mint_interchain_token_with_no_minter_role() {
+fn reject_mint_interchain_token_with_no_minter_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
