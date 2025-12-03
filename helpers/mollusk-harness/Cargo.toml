@@ -21,7 +21,6 @@ mpl-token-metadata.workspace = true
 rand.workspace = true
 hex.workspace = true
 libsecp256k1.workspace = true
-alloy-primitives.workspace = true
 
 mollusk-svm.workspace = true
 
