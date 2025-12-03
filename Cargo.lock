@@ -4211,7 +4211,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "hex",
- "interchain-token-transfer-gmp",
  "libsecp256k1",
  "mollusk-svm 0.5.1",
  "mollusk-test-utils",

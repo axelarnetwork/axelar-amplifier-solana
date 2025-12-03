@@ -27,7 +27,6 @@ mollusk-svm.workspace = true
 
 mollusk-test-utils.workspace = true
 solana-axelar-std.workspace = true
-interchain-token-transfer-gmp.workspace = true
 
 solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint"] }

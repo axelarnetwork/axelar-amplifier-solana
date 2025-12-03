@@ -2,10 +2,10 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
+use anchor_lang::prelude::borsh;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022;
-use interchain_token_transfer_gmp::{GMPPayload, LinkToken, ReceiveFromHub};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{
@@ -13,7 +13,7 @@ use solana_axelar_gateway_test_fixtures::{
     setup_test_with_real_signers,
 };
 use solana_axelar_its::ItsError;
-use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
+use solana_axelar_its::{encoding, state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
     create_test_mint, execute_its_instruction, init_its_service_with_ethereum_trusted,
     initialize_mollusk_with_programs, link_token_extra_accounts, new_empty_account,
@@ -73,24 +73,21 @@ fn execute_link_token() {
     let link_params = vec![]; // No additional params (no operator)
 
     // Step 7: Create the GMP payload
-    let link_payload = LinkToken {
-        selector: alloy_primitives::U256::from(5), // MESSAGE_TYPE_ID for LinkToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
-        token_manager_type: alloy_primitives::U256::from(token_manager_type),
-        source_token_address: alloy_primitives::Bytes::from(source_token_address),
-        destination_token_address: alloy_primitives::Bytes::from(destination_token_address),
-        link_params: alloy_primitives::Bytes::from(link_params.clone()),
+    let link_payload = encoding::LinkToken {
+        token_id,
+        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        source_token_address: source_token_address.clone(),
+        destination_token_address: destination_token_address.clone(),
+        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
     };
 
     // Wrap in ReceiveFromHub payload
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::LinkToken(link_payload).encode().into(),
+        message: encoding::Message::LinkToken(link_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8: Create test message
@@ -213,24 +210,21 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
     let link_params = vec![]; // No additional params (no operator)
 
     // Step 7: Create the GMP payload
-    let link_payload = LinkToken {
-        selector: alloy_primitives::U256::from(5), // MESSAGE_TYPE_ID for LinkToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
-        token_manager_type: alloy_primitives::U256::from(token_manager_type),
-        source_token_address: alloy_primitives::Bytes::from(source_token_address),
-        destination_token_address: alloy_primitives::Bytes::from(destination_token_address),
-        link_params: alloy_primitives::Bytes::from(link_params.clone()),
+    let link_payload = encoding::LinkToken {
+        token_id,
+        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        source_token_address: source_token_address.clone(),
+        destination_token_address: destination_token_address.clone(),
+        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
     };
 
     // Wrap in ReceiveFromHub payload
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::LinkToken(link_payload).encode().into(),
+        message: encoding::Message::LinkToken(link_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8: Create test message
@@ -355,24 +349,21 @@ fn reject_execute_link_token_with_invalid_destination_token_address() {
     let link_params = vec![]; // No additional params (no operator)
 
     // Step 7: Create the GMP payload
-    let link_payload = LinkToken {
-        selector: alloy_primitives::U256::from(5), // MESSAGE_TYPE_ID for LinkToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
-        token_manager_type: alloy_primitives::U256::from(token_manager_type),
-        source_token_address: alloy_primitives::Bytes::from(source_token_address),
-        destination_token_address: alloy_primitives::Bytes::from(destination_token_address),
-        link_params: alloy_primitives::Bytes::from(link_params.clone()),
+    let link_payload = encoding::LinkToken {
+        token_id,
+        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        source_token_address: source_token_address.clone(),
+        destination_token_address: destination_token_address.clone(),
+        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
     };
 
     // Wrap in ReceiveFromHub payload
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::LinkToken(link_payload).encode().into(),
+        message: encoding::Message::LinkToken(link_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8: Create test message
@@ -499,24 +490,21 @@ fn reject_execute_link_token_with_invalid_token_id() {
     let invalid_token_id = [2u8; 32];
 
     // Step 7: Create the GMP payload
-    let link_payload = LinkToken {
-        selector: alloy_primitives::U256::from(5), // MESSAGE_TYPE_ID for LinkToken
-        token_id: alloy_primitives::FixedBytes::from(invalid_token_id),
-        token_manager_type: alloy_primitives::U256::from(token_manager_type),
-        source_token_address: alloy_primitives::Bytes::from(source_token_address),
-        destination_token_address: alloy_primitives::Bytes::from(destination_token_address),
-        link_params: alloy_primitives::Bytes::from(link_params.clone()),
+    let link_payload = encoding::LinkToken {
+        token_id: invalid_token_id,
+        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        source_token_address: source_token_address.clone(),
+        destination_token_address: destination_token_address.clone(),
+        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
     };
 
     // Wrap in ReceiveFromHub payload
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::LinkToken(link_payload).encode().into(),
+        message: encoding::Message::LinkToken(link_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8: Create test message
