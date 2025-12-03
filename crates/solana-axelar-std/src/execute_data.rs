@@ -10,6 +10,9 @@ use crate::{
     EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
 };
 
+/// Prefix used for off-chain Solana message signing
+pub const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
+
 /// Represents the complete set of execution data required for verification and
 /// processing.
 ///
@@ -173,26 +176,23 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
         )
 }
 
+#[allow(clippy::indexing_slicing)]
 pub fn prefixed_message_hash_payload_type(
     payload_type: PayloadType,
     message: &[u8; 32],
 ) -> [u8; 32] {
-    // Add command type prefix to the message to indicate the intent of the singer
-    // this prevents rotating signers with a payload_merkle_root intended for approving
-    // messages and vice versa
-    const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
-    prefixed_message_hash(SOLANA_OFFCHAIN_PREFIX, &[payload_type as u8], message)
-}
-
-fn prefixed_message_hash(prefix: &[u8], payload_type: &[u8], message: &[u8; 32]) -> [u8; 32] {
-    let mut prefixed_message =
-        Vec::with_capacity(prefix.len() + payload_type.len() + message.len());
-    prefixed_message.extend_from_slice(prefix);
-    prefixed_message.extend_from_slice(payload_type);
-    prefixed_message.extend_from_slice(message);
-
     // Hash the prefixed message to get a 32-byte digest
-    solana_keccak_hasher::hash(&prefixed_message).to_bytes()
+    solana_keccak_hasher::hashv(&[
+        // 1. Add Solana offchain prefix to the message
+        SOLANA_OFFCHAIN_PREFIX,
+        // 2. Add payload type prefix to the message to indicate the intent of the signer
+        // this prevents rotating signers with a payload_merkle_root intended for approving
+        // messages and vice versa
+        &[payload_type as u8],
+        // 3. Add the original message
+        message,
+    ])
+    .to_bytes()
 }
 
 /// Hashes a payload, generating a unique root hash for payload validation.
