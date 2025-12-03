@@ -7,15 +7,13 @@ use anchor_lang::{prelude::UpgradeableLoaderState, InstructionData, ToAccountMet
 use anchor_lang::{AccountDeserialize, AnchorDeserialize};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
-use solana_axelar_gateway::seed_prefixes::{
-    self, CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED, VERIFIER_SET_TRACKER_SEED,
-};
+use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
     ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{
-    IncomingMessage, SignatureVerificationSessionData, VerifierSetTracker,
+    GatewayConfig, IncomingMessage, SignatureVerificationSessionData, VerifierSetTracker,
 };
 use solana_axelar_std::execute_data::{
     encode, hash_payload, prefixed_message_hash_payload_type, ExecuteData,
@@ -84,18 +82,15 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
     };
 
     // Derive PDAs
-    let (gateway_root_pda, gateway_bump) =
-        Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
+    let (gateway_root_pda, gateway_bump) = GatewayConfig::find_pda();
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
         &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
-    let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
-        &[VERIFIER_SET_TRACKER_SEED, &verifier_set_hash],
-        &GATEWAY_PROGRAM_ID,
-    );
+    let (verifier_set_tracker_pda, verifier_bump) =
+        VerifierSetTracker::find_pda(&verifier_set_hash);
 
     match gateway_caller_program_id {
         Some(program_id) => {
@@ -175,8 +170,7 @@ pub fn setup_test_with_real_signers() -> (TestSetup, SecretKey, SecretKey) {
         create_merklized_verifier_set_from_keypairs(domain_separator, public_key_1, public_key_2);
 
     // Step 4: Derive PDAs with the REAL verifier set hash
-    let (gateway_root_pda, gateway_bump) =
-        Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
+    let (gateway_root_pda, gateway_bump) = GatewayConfig::find_pda();
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
@@ -751,10 +745,7 @@ pub fn approve_message_helper_from_merklized(
 ) -> (InstructionResult, Pubkey) {
     let command_id = merklized_message.leaf.message.command_id();
 
-    let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
-        &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
-        &GATEWAY_PROGRAM_ID,
-    );
+    let (incoming_message_pda, _) = IncomingMessage::find_pda(&command_id);
 
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
