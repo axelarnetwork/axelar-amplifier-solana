@@ -5,14 +5,14 @@ use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 
 #[test]
-fn test_local_deploy_interchain_token() {
+fn local_deploy_interchain_token() {
     let its_harness = ItsTestHarness::new();
 
     let _token_id = its_harness.ensure_test_interchain_token();
 }
 
 #[test]
-fn test_local_deploy_zero_supply_token() {
+fn local_deploy_zero_supply_token() {
     let its_harness = ItsTestHarness::new();
     let deployer = its_harness.get_new_wallet();
 
@@ -37,7 +37,7 @@ fn test_local_deploy_zero_supply_token() {
 }
 
 #[test]
-fn test_local_deploy_initial_supply_token() {
+fn local_deploy_initial_supply_token() {
     let its_harness = ItsTestHarness::new();
 
     let deployer = its_harness.get_new_wallet();
@@ -70,7 +70,7 @@ fn test_local_deploy_initial_supply_token() {
 }
 
 #[test]
-fn test_local_deploy_token_metadata() {
+fn local_deploy_token_metadata() {
     let its_harness = ItsTestHarness::new();
 
     let deployer = its_harness.get_new_wallet();
@@ -110,7 +110,7 @@ fn test_local_deploy_token_metadata() {
 }
 
 #[test]
-fn test_local_deploy_long_name_symbol() {
+fn local_deploy_long_name_symbol() {
     let its_harness = ItsTestHarness::new();
     let deployer = its_harness.get_new_wallet();
 
@@ -135,7 +135,7 @@ fn test_local_deploy_long_name_symbol() {
 }
 
 #[test]
-fn test_local_deploy_minter_roles() {
+fn local_deploy_minter_roles() {
     use solana_axelar_its::{Roles, UserRoles};
 
     let its_harness = ItsTestHarness::new();

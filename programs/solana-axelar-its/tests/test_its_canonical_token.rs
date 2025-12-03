@@ -13,7 +13,7 @@ use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
 
 #[test]
-fn test_register_canonical_token() {
+fn register_canonical_token() {
     let harness = ItsTestHarness::new();
 
     // Create a native SPL token mint (not an interchain token)
@@ -63,7 +63,7 @@ fn test_register_canonical_token() {
 }
 
 #[test]
-fn test_reject_register_canonical_token_without_metadata() {
+fn reject_register_canonical_token_without_metadata() {
     let harness = ItsTestHarness::new();
 
     // Create a native SPL token mint without metadata
@@ -82,7 +82,7 @@ fn test_reject_register_canonical_token_without_metadata() {
 }
 
 #[test]
-fn test_reject_register_canonical_token_with_invalid_mint() {
+fn reject_register_canonical_token_with_invalid_mint() {
     let harness = ItsTestHarness::new();
 
     // Use a random pubkey that doesn't have a valid mint account
@@ -111,7 +111,7 @@ fn test_reject_register_canonical_token_with_invalid_mint() {
 }
 
 #[test]
-fn test_reject_register_same_canonical_token_twice() {
+fn reject_register_same_canonical_token_twice() {
     let harness = ItsTestHarness::new();
 
     // Create and register a canonical token
@@ -148,7 +148,7 @@ fn test_reject_register_same_canonical_token_twice() {
 }
 
 #[test]
-fn test_register_canonical_token_different_decimals() {
+fn register_canonical_token_different_decimals() {
     let harness = ItsTestHarness::new();
 
     // Test with different decimal values
@@ -177,7 +177,7 @@ fn test_register_canonical_token_different_decimals() {
 }
 
 #[test]
-fn test_register_canonical_token_with_transfer_fee() {
+fn register_canonical_token_with_transfer_fee() {
     let harness = ItsTestHarness::new();
 
     // Create a native SPL token mint with transfer fee extension
@@ -216,7 +216,7 @@ fn test_register_canonical_token_with_transfer_fee() {
 }
 
 #[test]
-fn test_reject_register_canonical_token_when_paused() {
+fn reject_register_canonical_token_when_paused() {
     let harness = ItsTestHarness::new();
 
     // Create a valid canonical token setup
@@ -253,7 +253,7 @@ fn test_reject_register_canonical_token_when_paused() {
 //
 
 #[test]
-fn test_deploy_remote_canonical_token() {
+fn deploy_remote_canonical_token() {
     let mut harness = ItsTestHarness::new();
 
     // Setup: create and register a canonical token
@@ -275,7 +275,7 @@ fn test_deploy_remote_canonical_token() {
 }
 
 #[test]
-fn test_reject_deploy_remote_canonical_token_untrusted_chain() {
+fn reject_deploy_remote_canonical_token_untrusted_chain() {
     let harness = ItsTestHarness::new();
 
     // Setup: create and register a canonical token
@@ -309,7 +309,7 @@ fn test_reject_deploy_remote_canonical_token_untrusted_chain() {
 }
 
 #[test]
-fn test_reject_deploy_remote_canonical_token_to_same_chain() {
+fn reject_deploy_remote_canonical_token_to_same_chain() {
     let harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -341,7 +341,7 @@ fn test_reject_deploy_remote_canonical_token_to_same_chain() {
 }
 
 #[test]
-fn test_reject_deploy_remote_canonical_token_when_paused() {
+fn reject_deploy_remote_canonical_token_when_paused() {
     let mut harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -380,7 +380,7 @@ fn test_reject_deploy_remote_canonical_token_when_paused() {
 }
 
 #[test]
-fn test_reject_deploy_remote_canonical_token_not_registered() {
+fn reject_deploy_remote_canonical_token_not_registered() {
     let mut harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -414,7 +414,7 @@ fn test_reject_deploy_remote_canonical_token_not_registered() {
 }
 
 #[test]
-fn test_deploy_remote_canonical_token_multiple_chains() {
+fn deploy_remote_canonical_token_multiple_chains() {
     let mut harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();

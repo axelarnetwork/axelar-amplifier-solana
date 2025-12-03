@@ -7,7 +7,7 @@ use solana_axelar_its::instructions::make_deploy_remote_interchain_token_instruc
 use solana_axelar_its::ItsError;
 
 #[test]
-fn test_deploy_remote_interchain_token() {
+fn deploy_remote_interchain_token() {
     let mut harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -30,7 +30,7 @@ fn test_deploy_remote_interchain_token() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_untrusted_chain_fails() {
+fn deploy_remote_interchain_token_untrusted_chain_fails() {
     let harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -50,7 +50,7 @@ fn test_deploy_remote_interchain_token_untrusted_chain_fails() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_same_chain_fails() {
+fn deploy_remote_interchain_token_same_chain_fails() {
     let mut harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -71,7 +71,7 @@ fn test_deploy_remote_interchain_token_same_chain_fails() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_no_local_token_fails() {
+fn deploy_remote_interchain_token_no_local_token_fails() {
     let harness = ItsTestHarness::new();
 
     // Don't deploy locally, try to deploy remotely directly
@@ -93,7 +93,7 @@ fn test_deploy_remote_interchain_token_no_local_token_fails() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_paused_fails() {
+fn deploy_remote_interchain_token_paused_fails() {
     let mut harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -123,7 +123,7 @@ fn test_deploy_remote_interchain_token_paused_fails() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_wrong_deployer_fails() {
+fn deploy_remote_interchain_token_wrong_deployer_fails() {
     let mut harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -151,7 +151,7 @@ fn test_deploy_remote_interchain_token_wrong_deployer_fails() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_wrong_salt_fails() {
+fn deploy_remote_interchain_token_wrong_salt_fails() {
     let mut harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -179,7 +179,7 @@ fn test_deploy_remote_interchain_token_wrong_salt_fails() {
 }
 
 #[test]
-fn test_deploy_remote_interchain_token_multiple_chains() {
+fn deploy_remote_interchain_token_multiple_chains() {
     let mut harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();

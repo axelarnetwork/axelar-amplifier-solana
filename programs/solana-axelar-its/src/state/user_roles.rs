@@ -120,7 +120,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_user_roles_round_trip() {
+    fn user_roles_round_trip() {
         let original = UserRoles {
             roles: Roles::MINTER | Roles::OPERATOR,
             bump: 42,
@@ -136,7 +136,7 @@ mod tests {
     }
 
     #[test]
-    fn test_roles_bitflags() {
+    fn roles_bitflags() {
         let roles_list = vec![
             Roles::MINTER,
             Roles::OPERATOR,

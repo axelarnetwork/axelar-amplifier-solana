@@ -6,7 +6,7 @@ use solana_axelar_its::instructions::make_register_token_metadata_instruction;
 use solana_axelar_its::ItsError;
 
 #[test]
-fn test_register_token_metadata() {
+fn register_token_metadata() {
     let harness = ItsTestHarness::new();
 
     // Create a native SPL token (not an interchain token)
@@ -25,7 +25,7 @@ fn test_register_token_metadata() {
 }
 
 #[test]
-fn test_register_token_metadata_with_gas() {
+fn register_token_metadata_with_gas() {
     let harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -43,7 +43,7 @@ fn test_register_token_metadata_with_gas() {
 }
 
 #[test]
-fn test_register_token_metadata_different_decimals() {
+fn register_token_metadata_different_decimals() {
     let harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -59,7 +59,7 @@ fn test_register_token_metadata_different_decimals() {
 }
 
 #[test]
-fn test_register_token_metadata_paused_fails() {
+fn register_token_metadata_paused_fails() {
     let harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -81,7 +81,7 @@ fn test_register_token_metadata_paused_fails() {
 }
 
 #[test]
-fn test_register_token_metadata_multiple_times() {
+fn register_token_metadata_multiple_times() {
     let harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();
@@ -101,7 +101,7 @@ fn test_register_token_metadata_multiple_times() {
 }
 
 #[test]
-fn test_register_token_metadata_different_tokens() {
+fn register_token_metadata_different_tokens() {
     let harness = ItsTestHarness::new();
 
     let mint_authority = harness.get_new_wallet();

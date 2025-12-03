@@ -7,7 +7,7 @@ use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 
 #[test]
-fn test_set_trusted_chain_by_upgrade_authority() {
+fn set_trusted_chain_by_upgrade_authority() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -23,7 +23,7 @@ fn test_set_trusted_chain_by_upgrade_authority() {
 }
 
 #[test]
-fn test_set_multiple_trusted_chain_by_upgrade_authority() {
+fn set_multiple_trusted_chain_by_upgrade_authority() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -45,7 +45,7 @@ fn test_set_multiple_trusted_chain_by_upgrade_authority() {
 }
 
 #[test]
-fn test_set_trusted_chain_by_operator() {
+fn set_trusted_chain_by_operator() {
     let mut its_harness = ItsTestHarness::new();
 
     // We transfer the operator to make sure the operator
@@ -78,7 +78,7 @@ fn test_set_trusted_chain_by_operator() {
 }
 
 #[test]
-fn test_set_trusted_chain_duplicate_fails() {
+fn set_trusted_chain_duplicate_fails() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -100,7 +100,7 @@ fn test_set_trusted_chain_duplicate_fails() {
 }
 
 #[test]
-fn test_set_trusted_chain_unauthorized() {
+fn set_trusted_chain_unauthorized() {
     let its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -122,7 +122,7 @@ fn test_set_trusted_chain_unauthorized() {
 }
 
 #[test]
-fn test_set_trusted_chain_non_operator_user_roles() {
+fn set_trusted_chain_non_operator_user_roles() {
     let mut its_harness = ItsTestHarness::new();
 
     let chain_name = "ethereum".to_owned();
@@ -148,7 +148,7 @@ fn test_set_trusted_chain_non_operator_user_roles() {
 }
 
 #[test]
-fn test_remove_trusted_chain_by_upgrade_authority() {
+fn remove_trusted_chain_by_upgrade_authority() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_chain_name = "ethereum".to_owned();
@@ -177,7 +177,7 @@ fn test_remove_trusted_chain_by_upgrade_authority() {
 }
 
 #[test]
-fn test_remove_unknown_trusted_chain_fails() {
+fn remove_unknown_trusted_chain_fails() {
     let its_harness = ItsTestHarness::new();
 
     let chain_name = "ethereum".to_owned();
@@ -198,7 +198,7 @@ fn test_remove_unknown_trusted_chain_fails() {
 }
 
 #[test]
-fn test_remove_trusted_chain_invalid_auth() {
+fn remove_trusted_chain_invalid_auth() {
     let mut its_harness = ItsTestHarness::new();
 
     let chain_name = "ethereum".to_owned();
@@ -225,7 +225,7 @@ fn test_remove_trusted_chain_invalid_auth() {
 }
 
 #[test]
-fn test_remove_trusted_chain_invalid_user_roles() {
+fn remove_trusted_chain_invalid_user_roles() {
     let mut its_harness = ItsTestHarness::new();
 
     let chain_name = "ethereum".to_owned();
@@ -253,7 +253,7 @@ fn test_remove_trusted_chain_invalid_user_roles() {
 }
 
 #[test]
-fn test_remove_trusted_chain_non_operator_user_roles() {
+fn remove_trusted_chain_non_operator_user_roles() {
     let mut its_harness = ItsTestHarness::new();
 
     let chain_name = "ethereum".to_owned();

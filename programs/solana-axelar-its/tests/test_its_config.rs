@@ -17,7 +17,7 @@ use solana_axelar_its::{ItsError, RoleProposal, Roles, RolesError, UserRoles};
 //
 
 #[test]
-fn test_init_unauthorized_payer() {
+fn init_unauthorized_payer() {
     let mut harness = ItsTestHarness::default();
 
     let upgrade_authority = harness.get_new_wallet();
@@ -44,7 +44,7 @@ fn test_init_unauthorized_payer() {
 }
 
 #[test]
-fn test_init_gives_user_role_to_operator() {
+fn init_gives_user_role_to_operator() {
     let harness = ItsTestHarness::new();
 
     let user_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
@@ -64,7 +64,7 @@ fn test_init_gives_user_role_to_operator() {
 //
 
 #[test]
-fn test_set_pause_status() {
+fn set_pause_status() {
     let harness = ItsTestHarness::new();
 
     // Verify initial state is unpaused
@@ -92,7 +92,7 @@ fn test_set_pause_status() {
 }
 
 #[test]
-fn test_set_pause_status_already_paused() {
+fn set_pause_status_already_paused() {
     let harness = ItsTestHarness::new();
 
     // Pause first
@@ -113,7 +113,7 @@ fn test_set_pause_status_already_paused() {
 }
 
 #[test]
-fn test_set_pause_status_unauthorized() {
+fn set_pause_status_unauthorized() {
     let harness = ItsTestHarness::new();
 
     // Create unauthorized user
@@ -131,7 +131,7 @@ fn test_set_pause_status_unauthorized() {
 }
 
 #[test]
-fn test_set_pause_status_already_unpaused() {
+fn set_pause_status_already_unpaused() {
     let harness = ItsTestHarness::new();
 
     // Try to unpause when already unpaused (should fail)
@@ -147,7 +147,7 @@ fn test_set_pause_status_already_unpaused() {
 //
 
 #[test]
-fn test_transfer_operatorship() {
+fn transfer_operatorship() {
     let mut its_harness = ItsTestHarness::new();
 
     let new_operator = its_harness.get_new_wallet();
@@ -158,7 +158,7 @@ fn test_transfer_operatorship() {
 }
 
 #[test]
-fn test_transfer_operatorship_without_deleting_roles_pda() {
+fn transfer_operatorship_without_deleting_roles_pda() {
     let mut its_harness = ItsTestHarness::new();
 
     let curr_operator = its_harness.operator;
@@ -184,7 +184,7 @@ fn test_transfer_operatorship_without_deleting_roles_pda() {
 }
 
 #[test]
-fn test_transfer_operatorship_without_permissions() {
+fn transfer_operatorship_without_permissions() {
     let mut its_harness = ItsTestHarness::new();
 
     let curr_operator = its_harness.operator;
@@ -215,7 +215,7 @@ fn test_transfer_operatorship_without_permissions() {
 //
 
 #[test]
-fn test_propose_operatorship() {
+fn propose_operatorship() {
     let harness = ItsTestHarness::new();
 
     let proposed_operator = harness.get_new_wallet();
@@ -248,7 +248,7 @@ fn test_propose_operatorship() {
 }
 
 #[test]
-fn test_propose_operatorship_to_self_fails() {
+fn propose_operatorship_to_self_fails() {
     let harness = ItsTestHarness::new();
 
     let ix = make_propose_operatorship_instruction(
@@ -264,7 +264,7 @@ fn test_propose_operatorship_to_self_fails() {
 }
 
 #[test]
-fn test_propose_operatorship_without_operator_role_fails() {
+fn propose_operatorship_without_operator_role_fails() {
     let mut harness = ItsTestHarness::new();
 
     let proposed_operator = harness.get_new_wallet();
@@ -283,7 +283,7 @@ fn test_propose_operatorship_without_operator_role_fails() {
 }
 
 #[test]
-fn test_accept_operatorship() {
+fn accept_operatorship() {
     let harness = ItsTestHarness::new();
 
     let new_operator = harness.get_new_wallet();
@@ -330,7 +330,7 @@ fn test_accept_operatorship() {
 }
 
 #[test]
-fn test_accept_operatorship_without_proposal_fails() {
+fn accept_operatorship_without_proposal_fails() {
     let harness = ItsTestHarness::new();
 
     let new_operator = harness.get_new_wallet();
@@ -349,7 +349,7 @@ fn test_accept_operatorship_without_proposal_fails() {
 }
 
 #[test]
-fn test_accept_operatorship_keeps_other_roles() {
+fn accept_operatorship_keeps_other_roles() {
     let mut harness = ItsTestHarness::new();
 
     let curr_operator = harness.operator;

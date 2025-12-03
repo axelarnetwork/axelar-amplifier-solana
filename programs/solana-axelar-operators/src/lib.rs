@@ -1,4 +1,7 @@
 //! Axelar Operators program for the Solana blockchain
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 pub mod instructions;

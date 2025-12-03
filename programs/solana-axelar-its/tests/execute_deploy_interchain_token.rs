@@ -29,7 +29,7 @@ use solana_program::program_pack::Pack;
 use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 
 #[test]
-fn test_execute_deploy_interchain_token_success() {
+fn execute_deploy_interchain_token_success() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -203,7 +203,7 @@ fn test_execute_deploy_interchain_token_success() {
 
 #[test]
 #[allow(clippy::string_slice)]
-fn test_execute_deploy_interchain_token_with_large_metadata() {
+fn execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();
@@ -353,7 +353,7 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
 }
 
 #[test]
-fn test_reject_execute_deploy_interchain_token_with_mismatched_minter() {
+fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
         setup_test_with_real_signers();

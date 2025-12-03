@@ -8,7 +8,7 @@ use solana_axelar_its::instructions::make_mint_interchain_token_instruction;
 use solana_axelar_its::{ItsError, Roles, RolesError, UserRoles};
 
 #[test]
-fn test_mint_interchain_tokens() {
+fn mint_interchain_tokens() {
     let its_harness = ItsTestHarness::new();
 
     // Token
@@ -27,7 +27,7 @@ fn test_mint_interchain_tokens() {
 }
 
 #[test]
-fn test_mint_interchain_token_zero_amount_fails() {
+fn mint_interchain_token_zero_amount_fails() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -51,7 +51,7 @@ fn test_mint_interchain_token_zero_amount_fails() {
 }
 
 #[test]
-fn test_mint_interchain_token_unauthorized_minter_fails() {
+fn mint_interchain_token_unauthorized_minter_fails() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -83,7 +83,7 @@ fn test_mint_interchain_token_unauthorized_minter_fails() {
 }
 
 #[test]
-fn test_mint_interchain_token_no_minter_role_fails() {
+fn mint_interchain_token_no_minter_role_fails() {
     let mut harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -116,7 +116,7 @@ fn test_mint_interchain_token_no_minter_role_fails() {
 }
 
 #[test]
-fn test_mint_interchain_token_paused_fails() {
+fn mint_interchain_token_paused_fails() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -148,7 +148,7 @@ fn test_mint_interchain_token_paused_fails() {
 }
 
 #[test]
-fn test_mint_interchain_token_wrong_token_id_fails() {
+fn mint_interchain_token_wrong_token_id_fails() {
     let harness = ItsTestHarness::new();
 
     let _token_id = harness.ensure_test_interchain_token();
@@ -185,7 +185,7 @@ fn test_mint_interchain_token_wrong_token_id_fails() {
 }
 
 #[test]
-fn test_mint_interchain_token_multiple_mints() {
+fn mint_interchain_token_multiple_mints() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();

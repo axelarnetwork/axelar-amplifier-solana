@@ -14,7 +14,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_accept_token_manager_operatorship() {
+fn accept_token_manager_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -173,7 +173,7 @@ fn test_accept_token_manager_operatorship() {
 }
 
 #[test]
-fn test_reject_invalid_token_manager_operatorship() {
+fn reject_invalid_token_manager_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 

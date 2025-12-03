@@ -117,7 +117,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_byte_layout_compatibility() {
+    fn byte_layout_compatibility() {
         // Verify U128 has identical byte representation to u128
         let test_value = 0x0102_0304_0506_0708_090a_0b0c_0d0e_0f10_u128;
 
@@ -129,13 +129,13 @@ mod tests {
     }
 
     #[test]
-    fn test_constants() {
+    fn constants() {
         assert_eq!(U128::ZERO.get(), 0);
         assert_eq!(U128::MAX.get(), u128::MAX);
     }
 
     #[test]
-    fn test_arithmetic() {
+    fn arithmetic() {
         let a = U128::new(100);
         let b = U128::new(50);
 
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn test_conversions() {
+    fn conversions() {
         #[allow(clippy::unreadable_literal)]
         let value = 0x123456789abcdef0_u128;
 

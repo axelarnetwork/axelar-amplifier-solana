@@ -6,7 +6,7 @@ use solana_axelar_its::instructions::make_set_flow_limit_instruction;
 use solana_axelar_its::{ItsError, Roles, RolesError, TokenManager, UserRoles};
 
 #[test]
-fn test_set_flow_limit() {
+fn set_flow_limit() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -36,7 +36,7 @@ fn test_set_flow_limit() {
 }
 
 #[test]
-fn test_set_flow_limit_remove() {
+fn set_flow_limit_remove() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -70,7 +70,7 @@ fn test_set_flow_limit_remove() {
 }
 
 #[test]
-fn test_set_flow_limit_same_value_fails() {
+fn set_flow_limit_same_value_fails() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -89,7 +89,7 @@ fn test_set_flow_limit_same_value_fails() {
 }
 
 #[test]
-fn test_set_flow_limit_unauthorized_operator_fails() {
+fn set_flow_limit_unauthorized_operator_fails() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -110,7 +110,7 @@ fn test_set_flow_limit_unauthorized_operator_fails() {
 }
 
 #[test]
-fn test_set_flow_limit_without_operator_role_fails() {
+fn set_flow_limit_without_operator_role_fails() {
     let mut harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -135,7 +135,7 @@ fn test_set_flow_limit_without_operator_role_fails() {
 }
 
 #[test]
-fn test_set_flow_limit_nonexistent_token_fails() {
+fn set_flow_limit_nonexistent_token_fails() {
     let harness = ItsTestHarness::new();
 
     // Don't deploy any token, try to set flow limit
@@ -158,7 +158,7 @@ fn test_set_flow_limit_nonexistent_token_fails() {
 }
 
 #[test]
-fn test_set_flow_limit_update_existing() {
+fn set_flow_limit_update_existing() {
     let harness = ItsTestHarness::new();
 
     let token_id = harness.ensure_test_interchain_token();
@@ -194,7 +194,7 @@ fn test_set_flow_limit_update_existing() {
 }
 
 #[test]
-fn test_set_flow_limit_multiple_tokens() {
+fn set_flow_limit_multiple_tokens() {
     let harness = ItsTestHarness::new();
 
     // Deploy two tokens with different salts
