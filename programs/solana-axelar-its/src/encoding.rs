@@ -1,13 +1,17 @@
 //! Borsh serialization mirrors for `interchain-token-service-std`
 //! and `its-borsh-translator` types.
 //! These mirrors are necessary because Anchor's Borsh serialization
-//! is not compatible with the Borsh serialization used in the cosmwasm
-//! environment. Anchor currently uses borsh v0.10.4 while cosmwasm
+//! is not compatible with the Borsh serialization used in its-borsh-translator
+//! environment. Anchor currently uses borsh v0.10.4 while cosmwasm env
 //! requires 1.x.
-
-use anchor_lang::prelude::*;
+//! Additionally, Anchor currently requires AnchorSerialize/AnchorDeserialize
+//! derives for IDL generation.
+//!
+//! WARNING: These mirrors must be kept in sync with the cosmwasm contract!
+//! https://github.com/axelarnetwork/axelar-amplifier/tree/main/contracts/its-borsh-translator
 
 use crate::ItsError;
+use anchor_lang::prelude::*;
 
 // Borsh-serializable mirror of interchain_token_service_std::InterchainTransfer
 #[derive(AnchorSerialize, AnchorDeserialize)]
