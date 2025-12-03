@@ -192,7 +192,7 @@ fn prefixed_message_hash(prefix: &[u8], payload_type: &[u8], message: &[u8; 32])
     prefixed_message.extend_from_slice(message);
 
     // Hash the prefixed message to get a 32-byte digest
-    solana_keccak_hasher::hash(&prefixed_message).0
+    solana_keccak_hasher::hash(&prefixed_message).to_bytes()
 }
 
 /// Hashes a payload, generating a unique root hash for payload validation.
