@@ -5,6 +5,7 @@
 // Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
 #![allow(deprecated)]
 
+pub mod encoding;
 pub mod errors;
 pub mod events;
 pub mod executable;

@@ -6642,14 +6642,12 @@ dependencies = [
 name = "solana-axelar-its"
 version = "0.1.4"
 dependencies = [
- "alloy-primitives",
  "anchor-lang",
  "anchor-spl",
  "bincode",
  "bitflags 2.10.0",
  "bytemuck",
  "hex",
- "interchain-token-transfer-gmp",
  "libsecp256k1",
  "mollusk-harness",
  "mollusk-svm 0.5.1",

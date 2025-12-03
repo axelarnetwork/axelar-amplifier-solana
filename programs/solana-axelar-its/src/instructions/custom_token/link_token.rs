@@ -1,4 +1,5 @@
 use crate::{
+    encoding,
     errors::ItsError,
     events::LinkTokenStarted,
     gmp::*,
@@ -9,7 +10,6 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
-use interchain_token_transfer_gmp::{GMPPayload, LinkToken as LinkTokenPayload};
 use solana_axelar_gateway::{program::SolanaAxelarGateway, GatewayConfig};
 
 #[derive(Accounts)]
@@ -135,27 +135,27 @@ pub fn link_token_handler(
         params: link_params.clone(),
     });
 
-    // Create the GMP payload for linking the token
-    let message = GMPPayload::LinkToken(LinkTokenPayload {
-        selector: LinkTokenPayload::MESSAGE_TYPE_ID
-            .try_into()
-            .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_id: token_id.into(),
+    let payload = encoding::Message::LinkToken(encoding::LinkToken {
+        token_id,
         token_manager_type: token_manager_type.into(),
         source_token_address: ctx
             .accounts
             .token_manager_pda
             .token_address
             .to_bytes()
-            .into(),
-        destination_token_address: destination_token_address.into(),
-        link_params: link_params.into(),
+            .to_vec(),
+        destination_token_address,
+        params: if link_params.is_empty() {
+            None
+        } else {
+            Some(link_params)
+        },
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
 
     // Process the outbound GMP message
-    process_outbound(gmp_accounts, destination_chain, gas_value, message)?;
+    send_to_hub_wrap(gmp_accounts, payload, destination_chain, gas_value)?;
 
     Ok(token_id)
 }

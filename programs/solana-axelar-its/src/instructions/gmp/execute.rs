@@ -1,9 +1,9 @@
+use crate::encoding::{HubMessage, Message as ItsMessage};
 use crate::{errors::ItsError, state::InterchainTokenService, InterchainTransferExecute};
 use anchor_lang::{prelude::*, solana_program, InstructionData, Key};
-use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::{
     executable::{validate_message_raw, HasAxelarExecutable},
-    executable_accounts, Message,
+    executable_accounts, Message as CrossChainMessage,
 };
 use solana_program::instruction::AccountMeta;
 use solana_program::instruction::Instruction;
@@ -45,13 +45,10 @@ pub struct Execute<'info> {
 
 pub fn execute_handler<'info>(
     ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
-    message: Message,
+    message: CrossChainMessage,
     payload: Vec<u8>,
 ) -> Result<()> {
-    use GMPPayload::{
-        DeployInterchainToken, InterchainTransfer, LinkToken, ReceiveFromHub,
-        RegisterTokenMetadata, SendToHub,
-    };
+    use ItsMessage::{DeployInterchainToken, InterchainTransfer, LinkToken};
 
     // Verify that the message comes from the trusted Axelar ITS Hub
     if message.source_address != ctx.accounts.its_root_pda.its_hub_address {
@@ -59,9 +56,14 @@ pub fn execute_handler<'info>(
         return err!(ItsError::InvalidInstructionData);
     }
 
+    let hub_message =
+        HubMessage::try_from_slice(&payload).map_err(|_err| ItsError::InvalidInstructionData)?;
+
     // Execute can only be called with ReceiveFromHub payload at the top level
-    let ReceiveFromHub(inner_msg) =
-        GMPPayload::decode(&payload).map_err(|_err| ItsError::InvalidInstructionData)?
+    let HubMessage::ReceiveFromHub {
+        source_chain,
+        message: inner_message,
+    } = hub_message
     else {
         msg!("Unsupported GMP payload");
         return err!(ItsError::InvalidInstructionData);
@@ -70,52 +72,40 @@ pub fn execute_handler<'info>(
     // Validate the GMP message
     validate_message_raw(&ctx.accounts.axelar_executable(), message.clone(), &payload)?;
 
-    if !ctx
-        .accounts
-        .its_root_pda
-        .is_trusted_chain(&inner_msg.source_chain)
-    {
+    if !ctx.accounts.its_root_pda.is_trusted_chain(&source_chain) {
         return err!(ItsError::UntrustedSourceChain);
     }
 
-    let payload =
-        GMPPayload::decode(&inner_msg.payload).map_err(|_err| ItsError::InvalidInstructionData)?;
-
-    let source_chain = &inner_msg.source_chain;
-
-    match payload {
+    match inner_message {
         InterchainTransfer(transfer) => {
-            cpi_execute_interchain_transfer(ctx, transfer, message, source_chain)
+            cpi_execute_interchain_transfer(ctx, transfer, message, &source_chain)
         }
         DeployInterchainToken(deploy) => cpi_execute_deploy_interchain_token(ctx, deploy),
         LinkToken(payload) => cpi_execute_link_token(ctx, payload),
-        SendToHub(_) | ReceiveFromHub(_) | RegisterTokenMetadata(_) => {
-            err!(ItsError::InvalidInstructionData)
-        }
     }
 }
 
 fn cpi_execute_interchain_transfer<'info>(
     ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
-    transfer: interchain_token_transfer_gmp::InterchainTransfer,
-    message: Message,
+    transfer: crate::encoding::InterchainTransfer,
+    message: CrossChainMessage,
     source_chain: &str,
 ) -> Result<()> {
-    let token_id = transfer.token_id.0;
+    let token_id = transfer.token_id;
 
     let destination_address: [u8; 32] = transfer
         .destination_address
-        .as_ref()
+        .as_slice()
         .try_into()
         .map_err(|_| ItsError::InvalidAccountData)?;
     let destination_address = Pubkey::new_from_array(destination_address);
 
-    let amount: u64 = transfer
-        .amount
-        .try_into()
-        .map_err(|_| ItsError::ArithmeticOverflow)?;
+    // Convert amount from [u8; 32] LE to u64
+    // NOTE: this could be handled by the ITS cosmwasm contract
+    // for more compact representation
+    let amount = crate::encoding::u64_from_le_bytes_32(transfer.amount)?;
 
-    let data = transfer.data;
+    let data = transfer.data.unwrap_or_default();
 
     let instruction_data = crate::instruction::ExecuteInterchainTransfer {
         token_id,
@@ -195,22 +185,19 @@ fn cpi_execute_interchain_transfer<'info>(
 
 fn cpi_execute_link_token<'info>(
     ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
-    payload: interchain_token_transfer_gmp::LinkToken,
+    payload: crate::encoding::LinkToken,
 ) -> Result<()> {
-    let token_id = payload.token_id.0;
+    let token_id = payload.token_id;
 
     let destination_token_address: [u8; 32] = payload
         .destination_token_address
-        .as_ref()
+        .as_slice()
         .try_into()
         .map_err(|_| ItsError::InvalidAccountData)?;
 
-    let token_manager_type: u8 = payload
-        .token_manager_type
-        .try_into()
-        .map_err(|_| ItsError::ArithmeticOverflow)?; // U256 to u8
+    let token_manager_type: u8 = crate::encoding::u8_from_le_bytes_32(payload.token_manager_type)?;
 
-    let link_params = payload.link_params.to_vec(); // Vec<u8>
+    let link_params = payload.params.unwrap_or_default();
 
     // Create the instruction data using Anchor's InstructionData trait
     let instruction_data = crate::instruction::ExecuteLinkToken {
@@ -272,14 +259,14 @@ fn cpi_execute_link_token<'info>(
 
 fn cpi_execute_deploy_interchain_token<'info>(
     ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
-    deploy: interchain_token_transfer_gmp::DeployInterchainToken,
+    deploy: crate::encoding::DeployInterchainToken,
 ) -> Result<()> {
     // Extract data from the deploy payload
-    let token_id = deploy.token_id.0;
+    let token_id = deploy.token_id;
     let name = deploy.name;
     let symbol = deploy.symbol;
     let decimals = deploy.decimals;
-    let minter = deploy.minter;
+    let minter = deploy.minter.unwrap_or_default();
 
     // Create the instruction data using Anchor's InstructionData trait
     let instruction_data = crate::instruction::ExecuteDeployInterchainToken {
@@ -287,7 +274,7 @@ fn cpi_execute_deploy_interchain_token<'info>(
         name,
         symbol,
         decimals,
-        minter: minter.to_vec(),
+        minter,
     };
 
     let mut remaining = ctx.remaining_accounts.iter();
