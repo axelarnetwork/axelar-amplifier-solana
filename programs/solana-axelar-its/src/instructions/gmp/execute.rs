@@ -109,10 +109,10 @@ fn cpi_execute_interchain_transfer<'info>(
 
     let instruction_data = crate::instruction::ExecuteInterchainTransfer {
         token_id,
-        source_address: transfer.source_address.to_vec(),
+        source_address: transfer.source_address,
         destination_address,
         amount,
-        data: data.to_vec(),
+        data,
         message,
         source_chain: source_chain.to_owned(),
     };

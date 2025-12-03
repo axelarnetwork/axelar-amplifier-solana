@@ -57,8 +57,7 @@ pub fn send_to_hub(
 
     let payload = payload
         .try_to_vec()
-        // TODO better error
-        .map_err(|_| ItsError::InvalidArgument)?;
+        .map_err(|_| ItsError::SerializationError)?;
     let payload_hash = solana_program::keccak::hash(&payload).to_bytes();
     let destination_address = gmp_accounts.its_hub_address;
     let refund_address = gmp_accounts.payer.key();
