@@ -11,7 +11,7 @@ description = "Axelar Gateway Anchor program for Solana"
 [dependencies]
 bytemuck.workspace = true
 anchor-lang.workspace = true
-solana-axelar-std = { workspace = true, features = ["anchor"] }
+solana-axelar-std = { workspace = true, features = ["anchor", "solana"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
 alloy-primitives.workspace = true
