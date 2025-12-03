@@ -78,7 +78,11 @@ fn execute_link_token() {
         token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
-        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
+        params: if link_params.is_empty() {
+            None
+        } else {
+            Some(link_params.clone())
+        },
     };
 
     // Wrap in ReceiveFromHub payload
@@ -215,7 +219,11 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
         token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
-        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
+        params: if link_params.is_empty() {
+            None
+        } else {
+            Some(link_params.clone())
+        },
     };
 
     // Wrap in ReceiveFromHub payload
@@ -354,7 +362,11 @@ fn reject_execute_link_token_with_invalid_destination_token_address() {
         token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
-        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
+        params: if link_params.is_empty() {
+            None
+        } else {
+            Some(link_params.clone())
+        },
     };
 
     // Wrap in ReceiveFromHub payload
@@ -495,7 +507,11 @@ fn reject_execute_link_token_with_invalid_token_id() {
         token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
-        params: if link_params.is_empty() { None } else { Some(link_params.clone()) },
+        params: if link_params.is_empty() {
+            None
+        } else {
+            Some(link_params.clone())
+        },
     };
 
     // Wrap in ReceiveFromHub payload
