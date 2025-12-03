@@ -200,10 +200,6 @@ solana-axelar-gateway = { version = "0.1.4", path = "programs/solana-axelar-gate
 solana-axelar-governance = { version = "0.1.4", path = "programs/solana-axelar-governance", default-features = false }
 solana-axelar-its = { version = "0.1.4", path = "programs/solana-axelar-its", default-features = false }
 
-# helper crates (git only)
-# its-borsh-translator = { git = "https://github.com/commonprefix/axelar-amplifier.git", branch = "solana-its-translations", package = "its-borsh-translator" }
-# its-borsh-translator = { path = "../axelar-amplifier/contracts/its-borsh-translator" }
-
 # helper crates (published to crates.io)
 solana-axelar-std = { version = "0.1.2", path = "crates/solana-axelar-std" }
 governance-gmp = { version = "0.1.1", path = "helpers/governance-gmp" }
