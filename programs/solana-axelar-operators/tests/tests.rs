@@ -226,7 +226,7 @@ pub fn transfer_master(
 }
 
 #[test]
-fn test_initialize_add_remove() {
+fn initialize_add_remove() {
     let program_id = solana_axelar_operators::id();
 
     let mollusk = setup_mollusk(&program_id, "solana_axelar_operators");
@@ -281,7 +281,7 @@ fn test_initialize_add_remove() {
 }
 
 #[test]
-fn test_transfer_master() {
+fn transfer_master_works() {
     let program_id = solana_axelar_operators::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_operators");
 

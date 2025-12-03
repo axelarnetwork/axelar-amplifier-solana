@@ -12,7 +12,7 @@ mod initialize;
 use initialize::{init_gas_service, setup_mollusk, setup_operator};
 
 #[test]
-fn test_add_native_gas() {
+fn add_native_gas() {
     // Setup
     let program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&program_id, "solana_axelar_gas_service");
@@ -94,7 +94,7 @@ fn test_add_native_gas() {
 }
 
 #[test]
-fn test_add_native_gas_fails_for_zero() {
+fn add_native_gas_fails_for_zero() {
     // Setup
 
     let program_id = solana_axelar_gas_service::id();
@@ -173,7 +173,7 @@ fn test_add_native_gas_fails_for_zero() {
 }
 
 #[test]
-fn test_add_native_gas_fails_insufficient_balance() {
+fn add_native_gas_fails_insufficient_balance() {
     // Setup
 
     let program_id = solana_axelar_gas_service::id();

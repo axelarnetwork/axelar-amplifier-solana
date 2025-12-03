@@ -25,7 +25,7 @@ use solana_sdk::{
 use std::collections::BTreeMap;
 
 #[test]
-fn test_initialize_config() {
+fn initialize_config() {
     let gateway_caller = None;
     let setup = mock_setup_test(gateway_caller);
     let result = initialize_gateway(&setup);
@@ -70,7 +70,7 @@ fn test_initialize_config() {
 }
 
 #[test]
-fn test_initialize_payload_verification_session() {
+fn initialize_payload_verification_session_works() {
     let gateway_caller = None;
     let setup = mock_setup_test(gateway_caller);
 
@@ -520,7 +520,7 @@ fn test_rotate_signers() {
 }
 
 #[test]
-fn test_transfer_operatorship() {
+fn transfer_operatorship() {
     let gateway_caller = None;
     let setup = mock_setup_test(gateway_caller);
 
@@ -558,7 +558,7 @@ fn test_transfer_operatorship() {
 }
 
 #[test]
-fn test_call_contract_from_program() {
+fn call_contract_from_program() {
     let memo_program_id = Pubkey::new_unique();
     let setup = mock_setup_test(Some(memo_program_id));
 
@@ -585,7 +585,7 @@ fn test_call_contract_from_program() {
 
 #[test]
 #[allow(clippy::str_to_string)]
-fn test_call_contract_direct_signer() {
+fn call_contract_direct_signer() {
     let setup = mock_setup_test(None);
 
     // Initialize gateway

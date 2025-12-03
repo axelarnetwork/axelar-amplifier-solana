@@ -14,7 +14,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_accept_interchain_token_mintership() {
+fn accept_interchain_token_mintership() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -169,7 +169,7 @@ fn test_accept_interchain_token_mintership() {
 }
 
 #[test]
-fn test_reject_invalid_interchain_token_mintership() {
+fn reject_invalid_interchain_token_mintership() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -325,7 +325,7 @@ fn test_reject_invalid_interchain_token_mintership() {
 }
 
 #[test]
-fn test_reject_accept_without_proposal() {
+fn reject_accept_without_proposal() {
     let mollusk = initialize_mollusk_with_programs();
 
     let upgrade_authority = Pubkey::new_unique();

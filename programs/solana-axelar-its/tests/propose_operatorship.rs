@@ -15,7 +15,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
-fn test_propose_operatorship() {
+fn propose_operatorship() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -89,7 +89,7 @@ fn test_propose_operatorship() {
 }
 
 #[test]
-fn test_propose_malicious_operatorship_failure() {
+fn propose_malicious_operatorship_failure() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -153,7 +153,7 @@ fn test_propose_malicious_operatorship_failure() {
 }
 
 #[test]
-fn test_propose_self_failure() {
+fn propose_self_failure() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 
@@ -213,7 +213,7 @@ fn test_propose_self_failure() {
 }
 
 #[test]
-fn test_propose_operatorship_missing_operator_role_failure() {
+fn propose_operatorship_missing_operator_role_failure() {
     let program_id = solana_axelar_its::id();
     let mollusk = setup_mollusk(&program_id, "solana_axelar_its");
 

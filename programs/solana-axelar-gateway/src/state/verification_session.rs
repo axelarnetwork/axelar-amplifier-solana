@@ -240,7 +240,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_initialization() {
+    fn initialization() {
         let buffer = [0_u8; size_of::<SignatureVerificationSessionData>()];
         let from_pod: &SignatureVerificationSessionData = bytemuck::cast_ref(&buffer);
         let default = &SignatureVerificationSessionData::default();
@@ -254,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn test_serialization() {
+    fn serialization() {
         let mut buffer: [u8; size_of::<SignatureVerificationSessionData>()] =
             [42; size_of::<SignatureVerificationSessionData>()];
 
@@ -278,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn test_alignment_compatibility() {
+    fn alignment_compatibility() {
         // Critical: alignment must be ≤ 8 to work with Anchor's 8-byte discriminator
         // The struct data starts at byte offset 8, which is 8-byte aligned but NOT 16-byte aligned
         let alignment = std::mem::align_of::<SignatureVerificationSessionData>();

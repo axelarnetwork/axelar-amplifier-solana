@@ -21,7 +21,7 @@ use solana_axelar_its_test_fixtures::{init_its_service, initialize_mollusk_with_
 use solana_sdk::{instruction::Instruction, pubkey::Pubkey};
 
 #[test]
-fn test_register_custom_token_without_operator() {
+fn register_custom_token_without_operator() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -97,7 +97,7 @@ fn test_register_custom_token_without_operator() {
 }
 
 #[test]
-fn test_reject_register_custom_token_with_native_interchain() {
+fn reject_register_custom_token_with_native_interchain() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -150,7 +150,7 @@ fn test_reject_register_custom_token_with_native_interchain() {
 }
 
 #[test]
-fn test_register_custom_token_with_operator() {
+fn register_custom_token_with_operator() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -223,7 +223,7 @@ fn test_register_custom_token_with_operator() {
 }
 
 #[test]
-fn test_reject_register_custom_token_with_mismatched_operator() {
+fn reject_register_custom_token_with_mismatched_operator() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
