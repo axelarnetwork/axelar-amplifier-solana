@@ -10,6 +10,20 @@ use relayer_discovery::structs::RelayerTransaction;
 use solana_axelar_gateway::executable::Message;
 use solana_axelar_its::executable::AxelarExecuteWithInterchainTokenPayload;
 
+use program_utils::ensure_single_feature;
+
+ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+
+#[cfg(feature = "devnet-amplifier")]
+declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
+
+#[cfg(feature = "stagenet")]
+declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
+
+#[cfg(feature = "testnet")]
+declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
+
+#[cfg(feature = "mainnet")]
 declare_id!("8VRxuTLvEWsUcGsA299QQdUPaFuYkV6qkHDC5gtqt3Zc");
 
 #[program]

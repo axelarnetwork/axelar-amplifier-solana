@@ -377,7 +377,7 @@ pub fn insterchain_transfer_transaction<'info>(
                 if executable_transaction.key != &executable_transaction_pda {
                     return err!(ItsError::InvalidAccountData);
                 }
-
+                msg!("{:?}", &executable_transaction.data.borrow());
                 let mut relayer_transaction = RelayerTransaction::deserialize(
                     &mut &executable_transaction.data.borrow()[..],
                 )?;

@@ -28,14 +28,14 @@ fn test_execute() {
 
     // Step 7.1: Init Transaction PDA
     let transaction_pda =
-        relayer_discovery::find_transaction_pda(&solana_axelar_memo_discoverable::id()).0;
+        relayer_discovery::find_transaction_pda(&solana_axelar_test_discoverable::id()).0;
 
     let its_transaction_pda = solana_axelar_its::utils::find_interchain_executable_transaction_pda(
-        &solana_axelar_memo_discoverable::id(),
+        &solana_axelar_test_discoverable::id(),
     )
     .0;
-    let init_ix = solana_axelar_memo_discoverable::instruction::Init {};
-    let init_accounts = solana_axelar_memo_discoverable::accounts::Init {
+    let init_ix = solana_axelar_test_discoverable::instruction::Init {};
+    let init_accounts = solana_axelar_test_discoverable::accounts::Init {
         transaction: transaction_pda,
         its_transaction: its_transaction_pda,
         payer: fixture.setup.payer,

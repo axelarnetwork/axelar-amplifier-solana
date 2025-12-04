@@ -24,13 +24,6 @@ fn test_init_gives_user_role_to_operator() {
 }
 
 #[test]
-fn test_local_deploy_interchain_token() {
-    let its_harness = ItsTestHarness::new();
-
-    its_harness.ensure_test_interchain_token();
-}
-
-#[test]
 fn test_execute_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
@@ -70,25 +63,25 @@ fn test_execute_interchain_transfer_with_data() {
 
     // Add memo program to the harness context
     its_harness.ctx.mollusk.add_program(
-        &solana_axelar_memo_discoverable::ID,
-        "solana_axelar_memo_discoverable",
+        &solana_axelar_test_discoverable::ID,
+        "solana_axelar_test_discoverable",
         &solana_sdk_ids::bpf_loader_upgradeable::ID,
     );
 
     its_harness.ctx.process_and_validate_instruction(
-        &solana_axelar_memo_discoverable::make_init_ix(its_harness.payer),
+        &solana_axelar_test_discoverable::make_init_ix(its_harness.payer),
         &[Check::success()],
     );
 
     solana_sdk::msg!(
         "({:?}, {:?})",
         &solana_axelar_its::utils::find_interchain_executable_transaction_pda(
-            &solana_axelar_memo_discoverable::ID
+            &solana_axelar_test_discoverable::ID
         )
         .0,
         &its_harness.get_account(
             &solana_axelar_its::utils::find_interchain_executable_transaction_pda(
-                &solana_axelar_memo_discoverable::ID
+                &solana_axelar_test_discoverable::ID
             )
             .0
         )
@@ -99,7 +92,7 @@ fn test_execute_interchain_transfer_with_data() {
     let token_id = its_harness.ensure_test_interchain_token();
     let source_chain = "ethereum";
     let source_address = "ethereum_address_123";
-    let receiver = solana_axelar_memo_discoverable::ID;
+    let receiver = solana_axelar_test_discoverable::ID;
     let transfer_amount = 1_000_000u64;
 
     // Data
@@ -108,11 +101,11 @@ fn test_execute_interchain_transfer_with_data() {
     #[allow(clippy::non_ascii_literal)]
     let memo_string = String::from("🫆🫆🫆");
     let storage_id = 123;
-    let counter_pda = solana_axelar_memo_discoverable::Counter::get_pda(storage_id).0;
+    let counter_pda = solana_axelar_test_discoverable::Counter::get_pda(storage_id).0;
 
     let data = {
         let mut bytes = vec![];
-        solana_axelar_memo_discoverable::Payload {
+        solana_axelar_test_discoverable::Payload {
             storage_id,
             memo: memo_string,
         }

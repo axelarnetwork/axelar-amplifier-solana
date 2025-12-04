@@ -7,6 +7,8 @@ use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::result::{Check, ProgramResult};
 use mpl_token_metadata::accounts::Metadata;
+use mpl_token_metadata::MAX_NAME_LENGTH;
+use mpl_token_metadata::MAX_SYMBOL_LENGTH;
 use relayer_discovery_test_fixtures::{RelayerDiscoveryFixtureError, RelayerDiscoveryTestFixture};
 use solana_axelar_gateway_test_fixtures::{create_test_message, initialize_gateway};
 use solana_axelar_its::ItsError;
@@ -178,7 +180,7 @@ fn test_execute_deploy_interchain_token_success() {
 }
 
 #[test]
-fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
+fn test_execute_deploy_interchain_token_with_large_metadata() {
     let mut fixture = RelayerDiscoveryTestFixture::new();
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
 
@@ -287,9 +289,7 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
         mollusk_svm::program::keyed_account_for_system_program(),
     ];
 
-    let checks = vec![Check::err(
-        anchor_lang::error::Error::from(ItsError::InvalidArgument).into(),
-    )];
+    let checks = vec![Check::success()];
 
     // Step 10: Approve and execute
     let test_result = fixture.approve_and_execute_with_checks(
@@ -299,7 +299,18 @@ fn test_reject_execute_deploy_interchain_token_with_large_metadata() {
         Some(vec![checks]),
     );
 
-    assert!(test_result.is_err());
+    assert!(test_result.is_ok());
+
+    let test_result = test_result.unwrap();
+
+    let (token_mint_pda, _) = get_token_mint_pda(token_id);
+    let (metadata_account, _) = Metadata::find_pda(&token_mint_pda);
+    let created_metadata_account = test_result.get_account(&metadata_account).unwrap();
+    let created_metadata_account = Metadata::from_bytes(&created_metadata_account.data)
+        .expect("should be valid metadata account");
+
+    assert_eq!(created_metadata_account.name, name[..MAX_NAME_LENGTH]);
+    assert_eq!(created_metadata_account.symbol, symbol[..MAX_SYMBOL_LENGTH]);
 }
 
 #[test]

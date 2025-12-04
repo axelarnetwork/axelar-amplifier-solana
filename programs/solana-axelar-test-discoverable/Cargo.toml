@@ -11,10 +11,11 @@ edition.workspace = true
 anchor-lang = { workspace = true, features = ["init-if-needed"] }
 solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 solana-axelar-its = { workspace = true, features = ["cpi"] }
-relayer-discovery.workspace=true
+relayer-discovery.workspace = true
 anchor-spl.workspace = true
 solana-axelar-std.workspace = true
 interchain-token-transfer-gmp.workspace = true
+program-utils.workspace = true
 
 [dev-dependencies]
 solana-axelar-gateway-test-fixtures.workspace = true
@@ -50,16 +51,7 @@ devnet-amplifier = [
 	"solana-axelar-gateway/devnet-amplifier",
 	"solana-axelar-its/devnet-amplifier",
 ]
-stagenet = [
-	"solana-axelar-gateway/stagenet",
-	"solana-axelar-its/stagenet",
-]
-testnet = [
-	"solana-axelar-gateway/testnet",
-	"solana-axelar-its/testnet",
-]
-mainnet = [
-	"solana-axelar-gateway/mainnet",
-	"solana-axelar-its/mainnet",
-]
+stagenet = ["solana-axelar-gateway/stagenet", "solana-axelar-its/stagenet"]
+testnet = ["solana-axelar-gateway/testnet", "solana-axelar-its/testnet"]
+mainnet = ["solana-axelar-gateway/mainnet", "solana-axelar-its/mainnet"]
 default = ["devnet-amplifier"]

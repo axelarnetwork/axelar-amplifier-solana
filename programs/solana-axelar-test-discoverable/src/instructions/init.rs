@@ -3,6 +3,7 @@ use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::system_program;
 use anchor_lang::Discriminator;
 use anchor_lang::InstructionData;
+use relayer_discovery::structs::RelayerAccount;
 use relayer_discovery::structs::{RelayerData, RelayerInstruction, RelayerTransaction};
 use relayer_discovery::transaction_pda_accounts;
 use relayer_discovery::TRANSACTION_PDA_SEED;
@@ -64,7 +65,10 @@ fn relayer_transaction() -> RelayerTransaction {
         // We want the relayer to call this program.
         program_id: crate::ID,
         // No accounts are required for this.
-        accounts: vec![],
+        accounts: vec![RelayerAccount::Account {
+            pubkey: crate::ID,
+            is_writable: false,
+        }],
         // The data we need to find the final transaction.
         data: vec![
             // We can easily get the discriminaator thankfully. Note that we need `instruction::GetTransaction` and not `instructions::GetTransaction`.

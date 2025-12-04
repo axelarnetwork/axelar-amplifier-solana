@@ -2,7 +2,7 @@
 #![allow(clippy::indexing_slicing)]
 //! TEMPORARY: Test file using the new test harness. The tests will be split up into multiple files as the harness gets adopted.
 
-use anchor_lang::prelude::AccountMeta;
+use anchor_lang::{prelude::AccountMeta, AnchorSerialize};
 use anchor_spl::token_2022;
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
@@ -211,32 +211,34 @@ fn test_execute_interchain_transfer_with_data() {
     let mut its_harness = ItsTestHarness::new();
 
     // Init memo
-    its_harness.ensure_memo_program_initialized();
-    let counter_pda = solana_axelar_memo::Counter::get_pda().0;
+    its_harness.ensure_test_discoverable_program_initialized();
 
     // Transfer
 
     let token_id = its_harness.ensure_test_interchain_token();
     let source_chain = "ethereum";
     let source_address = "ethereum_address_123";
-    let receiver = solana_axelar_memo::ID;
+    let receiver = solana_axelar_test_discoverable::ID;
     let transfer_amount = 1_000_000u64;
 
     // Data
 
     // String to print
     #[allow(clippy::non_ascii_literal)]
-    let memo_string = "🫆🫆🫆".as_bytes().to_vec();
-    // Custom accounts
-    let memo_accounts = vec![AccountMeta::new(counter_pda, false)];
+    let memo_string = String::from("🫆🫆🫆");
+    let storage_id = 123;
+
     // Payload encoding
-    let data = ExecutablePayload::new(
-        &memo_string,
-        &memo_accounts,
-        ExecutablePayloadEncodingScheme::Borsh,
-    )
-    .encode()
-    .expect("failed to encode executable payload");
+    let data = {
+        let mut bytes = vec![];
+        solana_axelar_test_discoverable::Payload {
+            storage_id,
+            memo: memo_string,
+        }
+        .serialize(&mut bytes)
+        .expect("failed to encode executable payload");
+        bytes
+    };
 
     its_harness.ensure_trusted_chain(source_chain);
 
@@ -248,7 +250,7 @@ fn test_execute_interchain_transfer_with_data() {
         source_address,
         receiver,
         transfer_amount,
-        Some((data, memo_accounts)),
+        Some(data),
     );
 
     // Assert transfer
@@ -256,6 +258,7 @@ fn test_execute_interchain_transfer_with_data() {
     let token_mint =
         solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
     let destination_ata_data = its_harness.get_ata_2022_data(receiver, token_mint);
+    let counter_pda = solana_axelar_test_discoverable::Counter::get_pda(storage_id).0;
 
     assert_eq!(destination_ata_data.amount, transfer_amount);
     assert_eq!(destination_ata_data.mint, token_mint);
@@ -264,7 +267,7 @@ fn test_execute_interchain_transfer_with_data() {
 
     // Assert memo execution
 
-    let counter_account: solana_axelar_memo::Counter = its_harness
+    let counter_account: solana_axelar_test_discoverable::Counter = its_harness
         .get_account_as(&counter_pda)
         .expect("counter account should exist");
     assert_eq!(

@@ -4,7 +4,8 @@ use std::collections::HashMap;
 
 use anchor_lang::{AnchorSerialize, InstructionData, ToAccountMetas};
 use anchor_spl::{
-    associated_token::get_associated_token_address_with_program_id, token_2022::spl_token_2022,
+    associated_token::{self, get_associated_token_address_with_program_id},
+    token_2022::spl_token_2022,
 };
 use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer, ReceiveFromHub};
 use mollusk_svm::{
@@ -17,7 +18,12 @@ use rand::Rng;
 use relayer_discovery_test_fixtures::relayer_execute_with_checks;
 use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
-    instructions::make_deploy_interchain_token_instruction, InterchainTokenService,
+    instructions::{
+        make_deploy_interchain_token_instruction,
+        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
+        make_set_trusted_chain_instruction,
+    },
+    InterchainTokenService,
 };
 use solana_axelar_its_test_fixtures::initialize_mollusk_with_programs;
 use solana_axelar_std::{
@@ -781,8 +787,10 @@ impl ItsTestHarness {
         (transaction_pda, transaction_account.clone())
     }
 
-    pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
-        self.ensure_its_initialized();
+    /// Shortcut function to get the token mint for a given token ID.
+    pub fn token_mint_for_id(&self, token_id: [u8; 32]) -> Pubkey {
+        solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0
+    }
 
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
         let ix =
@@ -914,6 +922,176 @@ impl ItsTestHarness {
         )
     }
 
+    pub fn ensure_mint_interchain_token(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        minter: Pubkey,
+        destination_account: Pubkey,
+        token_program: Pubkey,
+    ) {
+        // Check balance before minting
+        let dest: Option<anchor_spl::token_interface::TokenAccount> =
+            self.get_account_as(&destination_account);
+        let balance = dest.map_or(0u64, |a| a.amount);
+
+        let (ix, _) = make_mint_interchain_token_instruction(
+            token_id,
+            amount,
+            minter,
+            destination_account,
+            token_program,
+        );
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+
+        // Check balance after minting
+        let dest: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&destination_account)
+            .expect("destination account should exist after minting");
+        let new_balance = dest.amount;
+
+        // Ensure balance increased by minted amount
+        assert_eq!(
+            new_balance,
+            balance + amount,
+            "destination account balance should increase by minted amount"
+        );
+
+        msg!(
+            "Minted {} tokens of ID {} to account {}. Balance = {} -> {}",
+            amount,
+            hex::encode(token_id),
+            destination_account,
+            balance,
+            new_balance,
+        );
+    }
+
+    pub fn ensure_mint_test_interchain_token(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        destination_account: Pubkey,
+    ) {
+        let minter = self.operator;
+        let token_program = spl_token_2022::ID;
+
+        self.ensure_mint_interchain_token(
+            token_id,
+            amount,
+            minter,
+            destination_account,
+            token_program,
+        );
+    }
+
+    // TODO support token with fees
+    pub fn ensure_outgoing_interchain_transfer(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        token_program: Pubkey,
+        payer: Pubkey,
+        authority: Pubkey,
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        gas_value: u64,
+        caller_program_id: Option<Pubkey>,
+        caller_pda_seeds: Option<Vec<Vec<u8>>>,
+        data: Option<Vec<u8>>,
+    ) {
+        let token_mint = self.token_mint_for_id(token_id);
+
+        // Get balance before transfer
+        let authority_ata =
+            get_associated_token_address_with_program_id(&authority, &token_mint, &token_program);
+        let authority_ata_data: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&authority_ata)
+            .expect("authority ata should exist");
+
+        let balance_before = authority_ata_data.amount;
+
+        // Transfer
+
+        let (ix, _) = make_interchain_transfer_instruction(
+            token_id,
+            amount,
+            token_program,
+            payer,
+            authority,
+            destination_chain.clone(),
+            destination_address,
+            gas_value,
+            caller_program_id,
+            caller_pda_seeds,
+            data,
+        );
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])]);
+
+        // Check balance after transfer
+
+        let authority_ata_data: anchor_spl::token_interface::TokenAccount = self
+            .get_account_as(&authority_ata)
+            .expect("authority ata should exist");
+
+        let balance_after = authority_ata_data.amount;
+
+        assert_eq!(
+            balance_after,
+            balance_before - amount,
+            "authority ata balance should decrease by transfer amount"
+        );
+
+        if let Some(caller_program_id) = caller_program_id {
+            msg!(
+                "Interchain transfer called by program {}",
+                caller_program_id,
+            );
+        }
+
+        msg!(
+			"Interchain transfer of {} tokens of ID {} from {} to destination chain '{}' initiated. Balance: {} -> {}",
+			amount,
+			hex::encode(token_id),
+			authority,
+			destination_chain,
+			balance_before,
+			balance_after,
+		);
+
+        // TODO check event emission
+    }
+
+    pub fn ensure_outgoing_user_interchain_transfer(
+        &self,
+        token_id: [u8; 32],
+        amount: u64,
+        token_program: Pubkey,
+        payer: Pubkey,
+        authority: Pubkey,
+        destination_chain: String,
+        destination_address: Vec<u8>,
+        gas_value: u64,
+    ) {
+        self.ensure_outgoing_interchain_transfer(
+            token_id,
+            amount,
+            token_program,
+            payer,
+            authority,
+            destination_chain,
+            destination_address,
+            gas_value,
+            None,
+            None,
+            None,
+        );
+    }
+
     pub fn execute_gmp(&self, source_chain: &str, payload: GMPPayload) -> InstructionResult {
         let encoded_payload = payload.encode();
         let payload_hash = solana_sdk::keccak::hashv(&[&encoded_payload]).to_bytes();
@@ -1018,5 +1196,37 @@ impl ItsTestHarness {
         );
 
         msg!("Memo program initialized.");
+    }
+
+    pub fn ensure_test_discoverable_program_initialized(&mut self) {
+        let transaction_pda =
+            relayer_discovery::find_transaction_pda(&solana_axelar_test_discoverable::ID).0;
+        let its_transaction_pda =
+            solana_axelar_its::utils::find_interchain_executable_transaction_pda(
+                &solana_axelar_test_discoverable::ID,
+            )
+            .0;
+        if self.account_exists(&transaction_pda) {
+            return;
+        }
+
+        // Add memo program to the harness context
+        self.ctx.mollusk.add_program(
+            &solana_axelar_test_discoverable::ID,
+            "solana_axelar_test_discoverable",
+            &solana_sdk_ids::bpf_loader_upgradeable::ID,
+        );
+
+        self.ctx.process_and_validate_instruction(
+            &solana_axelar_test_discoverable::make_init_ix(self.payer),
+            &[Check::success()],
+        );
+
+        self.get_account(&transaction_pda)
+            .expect("transaction account should exist");
+        self.get_account(&its_transaction_pda)
+            .expect("transaction account should exist");
+
+        msg!("Test discoverable program initialized",);
     }
 }

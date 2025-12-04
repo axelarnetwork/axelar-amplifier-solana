@@ -4223,8 +4223,10 @@ dependencies = [
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
  "solana-axelar-its-test-fixtures",
+ "solana-axelar-memo",
  "solana-axelar-operators",
  "solana-axelar-std",
+ "solana-axelar-test-discoverable",
  "solana-program",
  "solana-sdk",
  "solana-sdk-ids",
@@ -6662,9 +6664,9 @@ dependencies = [
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its-test-fixtures",
  "solana-axelar-memo",
- "solana-axelar-memo-discoverable",
  "solana-axelar-operators",
  "solana-axelar-std",
+ "solana-axelar-test-discoverable",
  "solana-program",
  "solana-sdk",
  "solana-sdk-ids",
@@ -6709,26 +6711,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-axelar-memo-discoverable"
-version = "0.1.4"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "bincode",
- "hex",
- "interchain-token-transfer-gmp",
- "mollusk-svm 0.5.1",
- "relayer-discovery",
- "relayer-discovery-test-fixtures",
- "solana-axelar-gateway",
- "solana-axelar-gateway-test-fixtures",
- "solana-axelar-its",
- "solana-axelar-std",
- "solana-program",
- "solana-sdk",
-]
-
-[[package]]
 name = "solana-axelar-operators"
 version = "0.1.4"
 dependencies = [
@@ -6755,6 +6737,27 @@ dependencies = [
  "solana-keccak-hasher",
  "thiserror 1.0.69",
  "udigest",
+]
+
+[[package]]
+name = "solana-axelar-test-discoverable"
+version = "0.1.4"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "bincode",
+ "hex",
+ "interchain-token-transfer-gmp",
+ "mollusk-svm 0.5.1",
+ "program-utils",
+ "relayer-discovery",
+ "relayer-discovery-test-fixtures",
+ "solana-axelar-gateway",
+ "solana-axelar-gateway-test-fixtures",
+ "solana-axelar-its",
+ "solana-axelar-std",
+ "solana-program",
+ "solana-sdk",
 ]
 
 [[package]]

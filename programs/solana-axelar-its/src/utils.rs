@@ -52,6 +52,17 @@ pub fn linked_token_deployer_salt(deployer: &Pubkey, salt: &[u8; 32]) -> [u8; 32
     .to_bytes()
 }
 
+pub fn truncate_utf8(s: &mut String, max_bytes: usize) {
+    if s.len() <= max_bytes {
+        return;
+    }
+    let mut cut = max_bytes;
+    while !s.is_char_boundary(cut) {
+        cut -= 1;
+    }
+    s.truncate(cut);
+}
+
 pub fn find_interchain_executable_transaction_pda(interchain_executable: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[INTERCHAIN_EXECUTABLE_TRANSACTION_PDA_SEED],
