@@ -3,6 +3,8 @@ use crate::{
     ItsError,
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 #[derive(Accounts)]
 pub struct ProposeOperatorship<'info> {
@@ -72,4 +74,40 @@ pub fn propose_operatorship_handler(ctx: Context<ProposeOperatorship>) -> Result
     );
 
     Ok(())
+}
+
+/// Creates a ProposeOperatorship instruction
+pub fn make_propose_operatorship_instruction(
+    payer: Pubkey,
+    origin_user_account: Pubkey,
+    destination_user_account: Pubkey,
+) -> (Instruction, crate::accounts::ProposeOperatorship) {
+    let resource_account = InterchainTokenService::find_pda().0;
+
+    let origin_roles_account = UserRoles::find_pda(&resource_account, &origin_user_account).0;
+    let (proposal_account, _) = RoleProposal::find_pda(
+        &resource_account,
+        &origin_user_account,
+        &destination_user_account,
+        &crate::ID,
+    );
+
+    let accounts = crate::accounts::ProposeOperatorship {
+        system_program: anchor_lang::system_program::ID,
+        payer,
+        origin_user_account,
+        origin_roles_account,
+        resource_account,
+        destination_user_account,
+        proposal_account,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::ProposeOperatorship {}.data(),
+        },
+        accounts,
+    )
 }

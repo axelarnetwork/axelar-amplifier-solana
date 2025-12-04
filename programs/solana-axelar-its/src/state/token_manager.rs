@@ -80,6 +80,8 @@ impl TokenManager {
     }
 }
 
+// TODO rename this to TokenManagerType or similar
+// to avoid ambiguity
 #[derive(Debug, Eq, PartialEq, Clone, Copy, AnchorSerialize, AnchorDeserialize, InitSpace)]
 pub enum Type {
     /// For tokens that are deployed directly from ITS itself they use a native
