@@ -131,7 +131,7 @@ impl RelayerDiscovery {
                 Ok(bytes)
             }
             RelayerData::Payload => {
-                let mut bytes = Vec::with_capacity(size_of::<Message>());
+                let mut bytes = Vec::with_capacity(size_of::<usize>() + self.payload.len());
                 self.payload
                     .serialize(&mut bytes)
                     .map_err(|_| ConvertError::FailedPayloadSerialization)?;
@@ -159,7 +159,6 @@ impl RelayerDiscovery {
             .map(|data| self.convert_data(data))
             .collect();
 
-        //let data = instruction.data.iter().map(|data| self.convert_data(data)).collect()?;
         Ok(Instruction {
             program_id: instruction.program_id,
             accounts: accounts?,
