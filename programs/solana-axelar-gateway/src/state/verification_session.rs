@@ -35,7 +35,7 @@ impl SignatureVerificationSessionData {
             &[
                 Self::SEED_PREFIX,
                 payload_merkle_root,
-                &[payload_type as u8],
+                &[payload_type.into()],
                 signing_verifier_set_hash,
             ],
             &crate::ID,

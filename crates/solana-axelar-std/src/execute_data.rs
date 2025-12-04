@@ -62,6 +62,15 @@ pub enum PayloadType {
     RotateSigners = 1,
 }
 
+impl From<PayloadType> for u8 {
+    fn from(payload_type: PayloadType) -> Self {
+        match payload_type {
+            PayloadType::ApproveMessages => 0,
+            PayloadType::RotateSigners => 1,
+        }
+    }
+}
+
 /// Represents the payload data in a Merkle tree structure.
 ///
 /// `MerklizedPayload` can either be a rotation of the verifier set or a
@@ -188,7 +197,7 @@ pub fn prefixed_message_hash_payload_type(
         // 2. Add payload type prefix to the message to indicate the intent of the signer
         // this prevents rotating signers with a payload_merkle_root intended for approving
         // messages and vice versa
-        &[payload_type as u8],
+        &[payload_type.into()],
         // 3. Add the original message
         message,
     ])

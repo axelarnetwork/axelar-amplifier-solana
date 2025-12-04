@@ -24,7 +24,7 @@ pub struct InitializePayloadVerificationSession<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             merkle_root.as_ref(),
-            &[payload_type as u8],
+            &[payload_type.into()],
             verifier_set_tracker_pda.load()?.verifier_set_hash.as_ref(),
         ],
         bump

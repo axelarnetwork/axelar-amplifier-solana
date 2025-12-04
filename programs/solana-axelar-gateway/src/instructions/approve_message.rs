@@ -25,7 +25,7 @@ pub struct ApproveMessage<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             payload_merkle_root.as_ref(),
-            &[PayloadType::ApproveMessages as u8],
+            &[PayloadType::ApproveMessages.into()],
             verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref()
         ],
         bump = verification_session_account.load()?.bump,
