@@ -99,7 +99,7 @@ fn local_deploy_token_metadata() {
         .get_account(&metadata_account)
         .expect("metadata account should exist after deployment");
     let metadata = mpl_token_metadata::accounts::Metadata::from_bytes(&metadata_account.data)
-        .expect("metadata account should deserialie");
+        .expect("metadata account should deserialize");
 
     assert!(!metadata.is_mutable, "metadata should be immutable");
     // remove padding
