@@ -158,8 +158,7 @@ fn test_execute_interchain_transfer_success() {
     );
     assert!(
         deploy_result.is_ok(),
-        "Execute instruction should succeed: {:?}",
-        deploy_result,
+        "Execute instruction should succeed: {deploy_result:?}",
     );
     let deploy_result = deploy_result.unwrap();
 
@@ -261,8 +260,7 @@ fn test_execute_interchain_transfer_success() {
 
     assert!(
         transfer_result.is_ok(),
-        "Execute instruction should succeed: {:?}",
-        transfer_result,
+        "Execute instruction should succeed: {transfer_result:?}",
     );
     let transfer_result = transfer_result.unwrap();
 
@@ -418,8 +416,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     );
     assert!(
         deploy_result.is_ok(),
-        "Execute instruction should succeed: {:?}",
-        deploy_result,
+        "Execute instruction should succeed: {deploy_result:?}",
     );
     let deploy_result = deploy_result.unwrap();
 

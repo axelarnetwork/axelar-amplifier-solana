@@ -1,3 +1,4 @@
+#![allow(clippy::missing_asserts_for_indexing)]
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::system_program;

@@ -19,9 +19,8 @@ use relayer_discovery_test_fixtures::relayer_execute_with_checks;
 use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
-        make_deploy_interchain_token_instruction,
-        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
-        make_set_trusted_chain_instruction,
+        make_deploy_interchain_token_instruction, make_interchain_transfer_instruction,
+        make_mint_interchain_token_instruction, make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -1128,7 +1127,7 @@ impl ItsTestHarness {
             Some(vec![vec![Check::success()]]),
         );
 
-        assert!(result.is_ok(), "relayer discovery failed: {:?}", result);
+        assert!(result.is_ok(), "relayer discovery failed: {result:?}");
 
         result.unwrap()
     }

@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_lines)]
+
 use crate::{
     errors::ItsError,
     instruction, interchain_transfer_execute,
@@ -24,7 +26,7 @@ pub struct GetTransaction<'info> {
         seeds = [
             TokenManager::SEED_PREFIX,
             InterchainTokenService::find_pda().0.key().as_ref(),
-            GMPPayload::decode(&payload).unwrap().token_id().unwrap().as_ref(),
+            GMPPayload::decode(&payload).map_err(|_| ItsError::InvalidInstructionData)?.token_id().map_err(|_| ItsError::InvalidInstructionData)?.as_ref(),
         ]
         ,
         bump = token_manager_pda.bump,
@@ -41,7 +43,10 @@ pub fn get_transaction_handler(
     message: Message,
     payload: Vec<u8>,
 ) -> Result<RelayerTransaction> {
-    use GMPPayload::{DeployInterchainToken, InterchainTransfer, LinkToken, ReceiveFromHub};
+    use GMPPayload::{
+        DeployInterchainToken, InterchainTransfer, LinkToken, ReceiveFromHub,
+        RegisterTokenMetadata, SendToHub,
+    };
 
     // Execute can only be called with ReceiveFromHub payload at the top level
     let ReceiveFromHub(inner_msg) =
@@ -69,7 +74,7 @@ pub fn get_transaction_handler(
         LinkToken(link_token) => {
             link_token_transaction(message, link_token, inner_msg.source_chain)
         }
-        _ => {
+        SendToHub(_) | ReceiveFromHub(_) | RegisterTokenMetadata(_) => {
             err!(ItsError::InvalidInstructionData)
         }
     }
@@ -138,7 +143,7 @@ fn deploy_interchain_token_transaction(
             accounts: [
                 vec![
                     // payer, need to do testing to figure out the amount needed here.
-                    RelayerAccount::Payer(1000000000),
+                    RelayerAccount::Payer(1_000_000_000),
                     // system_program,
                     RelayerAccount::Account {
                         pubkey: system_program::ID,
@@ -284,7 +289,7 @@ fn link_token_transaction(
             accounts: [
                 vec![
                     // payer, need to do testing to figure out the amount needed here.
-                    RelayerAccount::Payer(1000000000),
+                    RelayerAccount::Payer(1_000_000_000),
                     // system_program,
                     RelayerAccount::Account {
                         pubkey: system_program::ID,
@@ -390,13 +395,13 @@ pub fn insterchain_transfer_transaction<'info>(
                         .0,
                         is_writable: false,
                     });
-                };
+                }
                 relayer_transaction
             }
             // Or simply we call this again asking for the executable_transaction_pda to be provided.
             None => relayer_transaction(None, Some(executable_transaction_pda)),
         });
-    };
+    }
 
     let Some(token_manager) = token_manager else {
         // If the token_manager is not provided we ask that this is called again with it.
@@ -438,7 +443,7 @@ pub fn insterchain_transfer_transaction<'info>(
             accounts: [
                 vec![
                     // payer, need to do testing to figure out the amount needed here.
-                    RelayerAccount::Payer(1000000000),
+                    RelayerAccount::Payer(1_000_000_000),
                 ],
                 // executable
                 relayer_discovery::executable_relayer_accounts(&message.command_id(), &crate::id()),
@@ -494,7 +499,7 @@ pub fn insterchain_transfer_transaction<'info>(
                         is_writable: false,
                     },
                 ],
-                executable_accounts.unwrap_or(vec![]),
+                executable_accounts.unwrap_or_default(),
             ]
             .concat(),
             // The data needed.
@@ -518,7 +523,10 @@ pub fn insterchain_transfer_transaction<'info>(
 pub fn decode_interchain_transfer_payload(
     payload: Vec<u8>,
 ) -> Result<(InterchainTransfer, String)> {
-    use GMPPayload::{InterchainTransfer, ReceiveFromHub};
+    use GMPPayload::{
+        DeployInterchainToken, InterchainTransfer, LinkToken, ReceiveFromHub,
+        RegisterTokenMetadata, SendToHub,
+    };
 
     let ReceiveFromHub(inner_msg) =
         GMPPayload::decode(&payload).map_err(|_err| ItsError::InvalidInstructionData)?
@@ -532,7 +540,11 @@ pub fn decode_interchain_transfer_payload(
 
     match payload {
         InterchainTransfer(transfer) => Ok((transfer, inner_msg.source_chain)),
-        _ => {
+        DeployInterchainToken(_)
+        | SendToHub(_)
+        | ReceiveFromHub(_)
+        | LinkToken(_)
+        | RegisterTokenMetadata(_) => {
             err!(ItsError::InvalidInstructionData)
         }
     }

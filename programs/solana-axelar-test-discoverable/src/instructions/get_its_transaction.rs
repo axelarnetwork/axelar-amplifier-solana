@@ -18,7 +18,7 @@ pub struct GetItsTransaction<'info> {
         seeds = [
             TokenManager::SEED_PREFIX,
             InterchainTokenService::find_pda().0.key().as_ref(),
-            GMPPayload::decode(&payload).unwrap().token_id().unwrap().as_ref(),
+            GMPPayload::decode(&payload).map_err(|_| ProgramError::InvalidInstructionData)?.token_id().map_err(|_| ProgramError::InvalidInstructionData)?.as_ref(),
         ],
         bump = token_manager_pda.bump,
         seeds::program = solana_axelar_its::ID,

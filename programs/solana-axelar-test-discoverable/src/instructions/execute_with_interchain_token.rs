@@ -20,7 +20,7 @@ pub struct ExecuteWithInterchainToken<'info> {
         payer = payer,
         seeds = [
             Counter::SEED_PREFIX,
-            &Payload::deserialize(&mut execute_payload.data.as_slice()).unwrap().storage_id.to_ne_bytes(),
+            &Payload::deserialize(&mut execute_payload.data.as_slice()).map_err(|_| ProgramError::InvalidInstructionData)?.storage_id.to_ne_bytes(),
         ],
         bump,
     )]

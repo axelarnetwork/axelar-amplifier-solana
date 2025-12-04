@@ -2,11 +2,10 @@
 #![allow(clippy::indexing_slicing)]
 //! TEMPORARY: Test file using the new test harness. The tests will be split up into multiple files as the harness gets adopted.
 
-use anchor_lang::{prelude::AccountMeta, AnchorSerialize};
+use anchor_lang::AnchorSerialize;
 use anchor_spl::token_2022;
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
-use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_program::program_pack::IsInitialized;
 
 #[test]

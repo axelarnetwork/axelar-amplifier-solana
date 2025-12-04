@@ -126,7 +126,7 @@ pub fn execute_interchain_transfer_handler<'info>(
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
         token_id: token_id.into(),
         source_address: Bytes::from(source_address.clone()),
-        destination_address: Bytes::from(destination_address.clone().to_bytes()),
+        destination_address: Bytes::from(destination_address.to_bytes()),
         amount: amount
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,

@@ -5,13 +5,13 @@
 use anchor_lang::{solana_program, AccountDeserialize};
 use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
-use mollusk_svm::result::{Check, ProgramResult};
+use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::MAX_NAME_LENGTH;
 use mpl_token_metadata::MAX_SYMBOL_LENGTH;
-use relayer_discovery_test_fixtures::{RelayerDiscoveryFixtureError, RelayerDiscoveryTestFixture};
+use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 use solana_axelar_gateway_test_fixtures::{create_test_message, initialize_gateway};
-use solana_axelar_its::ItsError;
+use solana_axelar_its::utils::truncate_utf8;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::init_its_relayer_transaction;
 use solana_axelar_its_test_fixtures::new_test_account;
@@ -137,8 +137,7 @@ fn test_execute_deploy_interchain_token_success() {
 
     assert!(
         test_result.is_ok(),
-        "Execute instruction should succeed: {:?}",
-        test_result,
+        "Execute instruction should succeed: {test_result:?}",
     );
 
     let test_result = test_result.unwrap();
@@ -214,8 +213,8 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
     let token_id = interchain_token_id(&payer, &salt);
-    let name = "Test Token ".repeat(10).trim_end().to_owned(); // large name, should revert
-    let symbol = "TEST".repeat(10).to_owned();
+    let mut name = "Test Token ".repeat(10).trim_end().to_owned(); // large name, should revert
+    let mut symbol = "TEST".repeat(10).to_owned();
     let decimals = 9u8;
 
     let deploy_payload = DeployInterchainToken {
@@ -309,8 +308,10 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
     let created_metadata_account = Metadata::from_bytes(&created_metadata_account.data)
         .expect("should be valid metadata account");
 
-    assert_eq!(created_metadata_account.name, name[..MAX_NAME_LENGTH]);
-    assert_eq!(created_metadata_account.symbol, symbol[..MAX_SYMBOL_LENGTH]);
+    truncate_utf8(&mut name, MAX_NAME_LENGTH);
+    truncate_utf8(&mut symbol, MAX_SYMBOL_LENGTH);
+    assert_eq!(created_metadata_account.name, name);
+    assert_eq!(created_metadata_account.symbol, symbol);
 }
 
 #[test]
@@ -359,7 +360,7 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::from(minter.clone()), // Empty bytes for no minter
+        minter: alloy_primitives::Bytes::from(minter), // Empty bytes for no minter
     };
 
     let receive_from_hub_payload = ReceiveFromHub {
@@ -420,8 +421,7 @@ fn test_execute_deploy_interchain_token_with_minter_success() {
 
     assert!(
         test_result.is_ok(),
-        "Execute instruction should succeed: {:?}",
-        test_result,
+        "Execute instruction should succeed: {test_result:?}",
     );
 
     let test_result = test_result.unwrap();

@@ -3,27 +3,18 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::AccountDeserialize;
-use anchor_lang::{InstructionData, ToAccountMetas};
-use anchor_spl::associated_token::get_associated_token_address_with_program_id;
-use anchor_spl::token_2022::spl_token_2022;
 use interchain_token_transfer_gmp::{GMPPayload, LinkToken, ReceiveFromHub};
 use mollusk_svm::result::Check;
 use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
-use solana_axelar_gateway::GatewayConfig;
-use solana_axelar_gateway_test_fixtures::{
-    approve_messages_on_gateway, create_test_message, initialize_gateway,
-    setup_test_with_real_signers,
-};
-use solana_axelar_its::{instruction, ItsError};
+use solana_axelar_gateway_test_fixtures::create_test_message;
+use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_test_mint, execute_its_instruction, init_its_relayer_transaction,
-    init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs,
-    link_token_extra_accounts, new_empty_account, new_test_account, ExecuteTestAccounts,
-    ExecuteTestContext, ExecuteTestParams,
+    create_test_mint, init_its_relayer_transaction, init_its_service_with_ethereum_trusted,
+    initialize_mollusk_with_programs, new_test_account,
 };
 use solana_sdk::account::Account;
-use solana_sdk::{keccak, pubkey::Pubkey};
+use solana_sdk::keccak;
 
 #[test]
 fn test_execute_link_token() {
@@ -144,7 +135,7 @@ fn test_execute_link_token() {
         Some(vec![checks]),
     );
 
-    assert!(test_result.is_ok(), "{:?}", test_result);
+    assert!(test_result.is_ok(), "{test_result:?}");
 
     let test_result = test_result.unwrap();
 
@@ -277,5 +268,5 @@ fn test_reject_execute_link_token_with_invalid_token_manager_type() {
         Some(vec![checks]),
     );
 
-    assert!(test_result.is_err(), "{:?}", test_result);
+    assert!(test_result.is_err(), "{test_result:?}");
 }

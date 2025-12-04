@@ -99,7 +99,6 @@ pub fn execute_link_token_handler(
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
         token_id: token_id.into(),
         token_manager_type: token_manager_type
-            .clone()
             .try_into()
             .map_err(|_err| ItsError::ArithmeticOverflow)?,
         source_token_address: Bytes::from(source_token_address.clone()),
