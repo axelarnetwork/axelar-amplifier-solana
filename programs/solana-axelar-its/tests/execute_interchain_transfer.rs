@@ -2,13 +2,11 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
+use anchor_lang::prelude::borsh;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
     token_2022::spl_token_2022::{self},
-};
-use interchain_token_transfer_gmp::{
-    DeployInterchainToken, GMPPayload, InterchainTransfer, ReceiveFromHub,
 };
 use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
@@ -17,7 +15,7 @@ use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsError};
+use solana_axelar_its::{encoding, state::TokenManager, utils::interchain_token_id, ItsError};
 use solana_axelar_its_test_fixtures::{
     create_sysvar_instructions_data, deploy_interchain_token_extra_accounts,
     execute_its_instruction, get_token_mint_pda, init_its_service_with_ethereum_trusted,
@@ -72,26 +70,21 @@ fn execute_interchain_transfer_success() {
     let decimals = 9u8;
 
     // Create the deploy token GMP payload
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::new(), // Empty bytes for no minter
+        minter: None,
     };
 
     // Wrap in ReceiveFromHub payload
-    let deploy_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let deploy_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let deploy_gmp_payload = GMPPayload::ReceiveFromHub(deploy_receive_from_hub_payload);
-    let deploy_encoded_payload = deploy_gmp_payload.encode();
+    let deploy_encoded_payload = borsh::to_vec(&deploy_hub_message).unwrap();
     let deploy_payload_hash = keccak::hashv(&[&deploy_encoded_payload]).to_bytes();
 
     // Create test message for deploy
@@ -202,25 +195,20 @@ fn execute_interchain_transfer_success() {
 
     let source_address_bytes = source_address.as_bytes().to_vec();
 
-    let transfer_payload = InterchainTransfer {
-        selector: alloy_primitives::U256::from(0), // MESSAGE_TYPE_ID for InterchainTransfer
-        token_id: alloy_primitives::FixedBytes::from(token_id),
-        source_address: alloy_primitives::Bytes::from(source_address_bytes.clone()),
-        destination_address: alloy_primitives::Bytes::from(destination_address.clone()),
-        amount: alloy_primitives::U256::from(transfer_amount),
-        data: alloy_primitives::Bytes::new(), // Empty data for simple transfer
+    let transfer_payload = encoding::InterchainTransfer {
+        token_id,
+        source_address: source_address_bytes.clone(),
+        destination_address: destination_address.clone(),
+        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        data: None,
     };
 
-    let transfer_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4),
+    let transfer_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::InterchainTransfer(transfer_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::InterchainTransfer(transfer_payload),
     };
 
-    let transfer_gmp_payload = GMPPayload::ReceiveFromHub(transfer_receive_from_hub_payload);
-    let transfer_encoded_payload = transfer_gmp_payload.encode();
+    let transfer_encoded_payload = borsh::to_vec(&transfer_hub_message).unwrap();
     let transfer_payload_hash = keccak::hashv(&[&transfer_encoded_payload]).to_bytes();
 
     let mut transfer_message = create_test_message(
@@ -381,26 +369,21 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
     let decimals = 9u8;
 
     // Create the deploy token GMP payload
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::new(), // Empty bytes for no minter
+        minter: None,
     };
 
     // Wrap in ReceiveFromHub payload
-    let deploy_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let deploy_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let deploy_gmp_payload = GMPPayload::ReceiveFromHub(deploy_receive_from_hub_payload);
-    let deploy_encoded_payload = deploy_gmp_payload.encode();
+    let deploy_encoded_payload = borsh::to_vec(&deploy_hub_message).unwrap();
     let deploy_payload_hash = keccak::hashv(&[&deploy_encoded_payload]).to_bytes();
 
     // Create test message for deploy
@@ -511,25 +494,20 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
 
     let source_address_bytes = source_address.as_bytes().to_vec();
 
-    let transfer_payload = InterchainTransfer {
-        selector: alloy_primitives::U256::from(0), // MESSAGE_TYPE_ID for InterchainTransfer
-        token_id: alloy_primitives::FixedBytes::from(token_id),
-        source_address: alloy_primitives::Bytes::from(source_address_bytes.clone()),
-        destination_address: alloy_primitives::Bytes::from(destination_address.clone()),
-        amount: alloy_primitives::U256::from(transfer_amount),
-        data: alloy_primitives::Bytes::new(), // Empty data for simple transfer
+    let transfer_payload = encoding::InterchainTransfer {
+        token_id,
+        source_address: source_address_bytes.clone(),
+        destination_address: destination_address.clone(),
+        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        data: None,
     };
 
-    let transfer_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4),
+    let transfer_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::InterchainTransfer(transfer_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::InterchainTransfer(transfer_payload),
     };
 
-    let transfer_gmp_payload = GMPPayload::ReceiveFromHub(transfer_receive_from_hub_payload);
-    let transfer_encoded_payload = transfer_gmp_payload.encode();
+    let transfer_encoded_payload = borsh::to_vec(&transfer_hub_message).unwrap();
     let transfer_payload_hash = keccak::hashv(&[&transfer_encoded_payload]).to_bytes();
 
     let mut transfer_message = create_test_message(
@@ -666,26 +644,21 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
     let decimals = 9u8;
 
     // Create the deploy token GMP payload
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::new(), // Empty bytes for no minter
+        minter: None,
     };
 
     // Wrap in ReceiveFromHub payload
-    let deploy_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let deploy_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let deploy_gmp_payload = GMPPayload::ReceiveFromHub(deploy_receive_from_hub_payload);
-    let deploy_encoded_payload = deploy_gmp_payload.encode();
+    let deploy_encoded_payload = borsh::to_vec(&deploy_hub_message).unwrap();
     let deploy_payload_hash = keccak::hashv(&[&deploy_encoded_payload]).to_bytes();
 
     // Create test message for deploy
@@ -798,25 +771,20 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
 
     let invalid_token_id = [2u8; 32];
 
-    let transfer_payload = InterchainTransfer {
-        selector: alloy_primitives::U256::from(0), // MESSAGE_TYPE_ID for InterchainTransfer
-        token_id: alloy_primitives::FixedBytes::from(invalid_token_id),
-        source_address: alloy_primitives::Bytes::from(source_address_bytes.clone()),
-        destination_address: alloy_primitives::Bytes::from(destination_address.clone()),
-        amount: alloy_primitives::U256::from(transfer_amount),
-        data: alloy_primitives::Bytes::new(), // Empty data for simple transfer
+    let transfer_payload = encoding::InterchainTransfer {
+        token_id: invalid_token_id,
+        source_address: source_address_bytes.clone(),
+        destination_address: destination_address.clone(),
+        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        data: None,
     };
 
-    let transfer_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4),
+    let transfer_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::InterchainTransfer(transfer_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::InterchainTransfer(transfer_payload),
     };
 
-    let transfer_gmp_payload = GMPPayload::ReceiveFromHub(transfer_receive_from_hub_payload);
-    let transfer_encoded_payload = transfer_gmp_payload.encode();
+    let transfer_encoded_payload = borsh::to_vec(&transfer_hub_message).unwrap();
     let transfer_payload_hash = keccak::hashv(&[&transfer_encoded_payload]).to_bytes();
 
     let mut transfer_message = create_test_message(
@@ -955,26 +923,21 @@ fn reject_execute_interchain_transfer_with_mismatched_destination() {
     let decimals = 9u8;
 
     // Create the deploy token GMP payload
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::new(), // Empty bytes for no minter
+        minter: None,
     };
 
     // Wrap in ReceiveFromHub payload
-    let deploy_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let deploy_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let deploy_gmp_payload = GMPPayload::ReceiveFromHub(deploy_receive_from_hub_payload);
-    let deploy_encoded_payload = deploy_gmp_payload.encode();
+    let deploy_encoded_payload = borsh::to_vec(&deploy_hub_message).unwrap();
     let deploy_payload_hash = keccak::hashv(&[&deploy_encoded_payload]).to_bytes();
 
     // Create test message for deploy
@@ -1085,25 +1048,20 @@ fn reject_execute_interchain_transfer_with_mismatched_destination() {
 
     let source_address_bytes = source_address.as_bytes().to_vec();
 
-    let transfer_payload = InterchainTransfer {
-        selector: alloy_primitives::U256::from(0), // MESSAGE_TYPE_ID for InterchainTransfer
-        token_id: alloy_primitives::FixedBytes::from(token_id),
-        source_address: alloy_primitives::Bytes::from(source_address_bytes.clone()),
-        destination_address: alloy_primitives::Bytes::from(destination_address.clone()),
-        amount: alloy_primitives::U256::from(transfer_amount),
-        data: alloy_primitives::Bytes::new(), // Empty data for simple transfer
+    let transfer_payload = encoding::InterchainTransfer {
+        token_id,
+        source_address: source_address_bytes.clone(),
+        destination_address: destination_address.clone(),
+        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        data: None,
     };
 
-    let transfer_receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4),
+    let transfer_hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::InterchainTransfer(transfer_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::InterchainTransfer(transfer_payload),
     };
 
-    let transfer_gmp_payload = GMPPayload::ReceiveFromHub(transfer_receive_from_hub_payload);
-    let transfer_encoded_payload = transfer_gmp_payload.encode();
+    let transfer_encoded_payload = borsh::to_vec(&transfer_hub_message).unwrap();
     let transfer_payload_hash = keccak::hashv(&[&transfer_encoded_payload]).to_bytes();
 
     let mut transfer_message = create_test_message(

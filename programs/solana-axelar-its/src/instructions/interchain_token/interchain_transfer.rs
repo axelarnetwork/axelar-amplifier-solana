@@ -1,3 +1,4 @@
+use crate::encoding;
 use crate::get_fee_and_decimals;
 use crate::get_mint_decimals;
 use crate::gmp::*;
@@ -15,7 +16,6 @@ use anchor_lang::InstructionData;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_interface::TokenInterface;
 use anchor_spl::token_interface::{Mint, TokenAccount};
-use interchain_token_transfer_gmp::GMPPayload;
 use solana_axelar_gateway::program::SolanaAxelarGateway;
 
 #[derive(Accounts)]
@@ -249,20 +249,16 @@ fn process_outbound_transfer(
         data_hash,
     });
 
-    let inner_payload =
-        GMPPayload::InterchainTransfer(interchain_token_transfer_gmp::InterchainTransfer {
-            selector: interchain_token_transfer_gmp::InterchainTransfer::MESSAGE_TYPE_ID
-                .try_into()
-                .map_err(|_err| ItsError::ArithmeticOverflow)?,
-            token_id: token_id.into(),
-            source_address: source_address.to_bytes().into(),
-            destination_address: destination_address.into(),
-            amount: alloy_primitives::U256::from(amount),
-            data: data.unwrap_or_default().into(),
-        });
+    let payload = encoding::Message::InterchainTransfer(encoding::InterchainTransfer {
+        token_id,
+        source_address: source_address.to_bytes().to_vec(),
+        destination_address,
+        amount: encoding::u64_to_le_bytes_32(amount),
+        data,
+    });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
-    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
+    send_to_hub_wrap(gmp_accounts, payload, destination_chain, gas_value)?;
 
     Ok(())
 }

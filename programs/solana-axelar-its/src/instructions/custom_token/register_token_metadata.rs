@@ -1,15 +1,9 @@
-use crate::gmp::*;
-use crate::{
-    errors::ItsError, events::TokenMetadataRegistered, state::InterchainTokenService,
-    ITS_HUB_CHAIN_NAME,
-};
+use crate::{encoding, gmp::*};
+use crate::{errors::ItsError, events::TokenMetadataRegistered, state::InterchainTokenService};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
 use anchor_spl::token_interface::Mint;
-use interchain_token_transfer_gmp::{
-    GMPPayload, RegisterTokenMetadata as RegisterTokenMetadataPayload,
-};
 use solana_axelar_gateway::{program::SolanaAxelarGateway, GatewayConfig};
 
 #[derive(Accounts)]
@@ -90,28 +84,21 @@ pub fn register_token_metadata_handler(
     msg!("Instruction: RegisterTokenMetadata");
 
     let decimals = ctx.accounts.token_mint.decimals;
+    let token_address = ctx.accounts.token_mint.key();
 
-    // Create the register token metadata payload
-    let inner_payload = GMPPayload::RegisterTokenMetadata(RegisterTokenMetadataPayload {
-        selector: RegisterTokenMetadataPayload::MESSAGE_TYPE_ID
-            .try_into()
-            .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_address: ctx.accounts.token_mint.key().to_bytes().into(),
+    emit_cpi!(TokenMetadataRegistered {
+        token_address,
         decimals,
     });
 
-    emit_cpi!(TokenMetadataRegistered {
-        token_address: ctx.accounts.token_mint.key(),
+    let payload = encoding::HubMessage::RegisterTokenMetadata(encoding::RegisterTokenMetadata {
         decimals,
+        token_address: token_address.to_bytes().to_vec(),
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
-    process_outbound(
-        gmp_accounts,
-        ITS_HUB_CHAIN_NAME.to_owned(),
-        gas_value,
-        inner_payload,
-    )?;
+
+    send_to_hub(gmp_accounts, payload, gas_value)?;
 
     Ok(())
 }
