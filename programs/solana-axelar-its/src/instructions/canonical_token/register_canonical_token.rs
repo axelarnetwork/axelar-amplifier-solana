@@ -124,7 +124,7 @@ pub fn register_canonical_interchain_token_handler(
         token_id,
         token_manager: *ctx.accounts.token_manager_pda.to_account_info().key,
         token_manager_type: token_manager_type.into(),
-        params: vec![], // No additional params for canonical tokens
+        params: None, // No additional params for canonical tokens
     });
 
     Ok(token_id)
