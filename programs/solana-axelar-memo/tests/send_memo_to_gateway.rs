@@ -12,7 +12,7 @@ use solana_sdk::{
 #[test]
 #[allow(clippy::too_many_lines)]
 #[allow(clippy::non_ascii_literal)]
-fn test_send_memo_to_gateway() {
+fn send_memo_to_gateway() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
 

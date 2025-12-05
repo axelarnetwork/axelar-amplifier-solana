@@ -8,36 +8,10 @@ use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_program::program_pack::IsInitialized;
 
-#[test]
-fn test_local_deploy_interchain_token() {
-    let its_harness = ItsTestHarness::new();
-
-    let _token_id = its_harness.ensure_test_interchain_token();
-}
-
-#[test]
-fn test_mint_interchain_tokens() {
-    let its_harness = ItsTestHarness::new();
-
-    // Token
-    let token_id = its_harness.ensure_test_interchain_token();
-    let token_mint =
-        solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
-    let mint_amount = 1_000_000u64;
-
-    // Receiver
-    let receiver = its_harness.get_new_wallet();
-    let (receiver_ata, _) =
-        its_harness.get_or_create_ata_2022_account(its_harness.payer, receiver, token_mint);
-
-    // Mint
-    its_harness.ensure_mint_test_interchain_token(token_id, mint_amount, receiver_ata);
-}
-
 // Outbound transfers
 
 #[test]
-fn test_user_interchain_transfer() {
+fn user_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
     // Create token
@@ -74,7 +48,7 @@ fn test_user_interchain_transfer() {
 }
 
 #[test]
-fn test_cpi_interchain_transfer() {
+fn cpi_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 
@@ -121,7 +95,7 @@ fn test_cpi_interchain_transfer() {
 }
 
 #[test]
-fn test_cpi_interchain_transfer_invalid_pda_arguments() {
+fn cpi_interchain_transfer_invalid_pda_arguments() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 
@@ -174,7 +148,7 @@ fn test_cpi_interchain_transfer_invalid_pda_arguments() {
 // Inbound transfers
 
 #[test]
-fn test_execute_interchain_transfer() {
+fn execute_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
     let token_id = its_harness.ensure_test_interchain_token();
@@ -206,7 +180,7 @@ fn test_execute_interchain_transfer() {
 }
 
 #[test]
-fn test_execute_interchain_transfer_with_data() {
+fn execute_interchain_transfer_with_data() {
     let mut its_harness = ItsTestHarness::new();
 
     // Init memo

@@ -110,7 +110,7 @@ mod tests {
     use anchor_lang::AnchorSerialize;
 
     #[test]
-    fn test_space_function_matches_actual_size() {
+    fn space_function_matches_actual_size() {
         // Test with empty trusted chains
         let its_empty = InterchainTokenService {
             its_hub_address: "test".to_string(),
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn test_space_function_with_few_chains() {
+    fn space_function_with_few_chains() {
         let its = InterchainTokenService {
             its_hub_address: "test".to_string(),
             chain_name: "solana".to_string(),
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn test_space_function_with_many_chains() {
+    fn space_function_with_many_chains() {
         let trusted_chains: Vec<String> = (0..40).map(|i| format!("chain_{i}")).collect();
 
         let its = InterchainTokenService {

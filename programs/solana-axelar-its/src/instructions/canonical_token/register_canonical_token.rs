@@ -10,6 +10,9 @@ use crate::{
     },
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
+use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022::extension::{
     BaseStateWithExtensions, ExtensionType, StateWithExtensions,
 };
@@ -121,8 +124,54 @@ pub fn register_canonical_interchain_token_handler(
         token_id,
         token_manager: *ctx.accounts.token_manager_pda.to_account_info().key,
         token_manager_type: token_manager_type.into(),
-        params: vec![], // No additional params for canonical tokens
+        params: None, // No additional params for canonical tokens
     });
 
     Ok(token_id)
+}
+
+pub fn make_register_canonical_token_instruction(
+    payer: Pubkey,
+    token_mint: Pubkey,
+    token_program: Pubkey,
+) -> (
+    Instruction,
+    crate::accounts::RegisterCanonicalInterchainToken,
+) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+
+    let token_id = canonical_interchain_token_id(&token_mint);
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
+
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &token_mint,
+        &token_program,
+    );
+
+    let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint);
+    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+
+    let accounts = crate::accounts::RegisterCanonicalInterchainToken {
+        payer,
+        metadata_account,
+        system_program: anchor_lang::system_program::ID,
+        its_root_pda,
+        token_manager_pda,
+        token_mint,
+        token_manager_ata,
+        token_program,
+        associated_token_program: anchor_spl::associated_token::spl_associated_token_account::ID,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::RegisterCanonicalInterchainToken {}.data(),
+        },
+        accounts,
+    )
 }

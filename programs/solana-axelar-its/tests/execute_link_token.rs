@@ -17,7 +17,7 @@ use solana_sdk::account::Account;
 use solana_sdk::keccak;
 
 #[test]
-fn test_execute_link_token() {
+fn execute_link_token() {
     // Step 1: Setup gateway with real signers
     let mut fixture = RelayerDiscoveryTestFixture::new();
 
@@ -148,7 +148,7 @@ fn test_execute_link_token() {
 }
 
 #[test]
-fn test_reject_execute_link_token_with_invalid_token_manager_type() {
+fn reject_execute_link_token_with_invalid_token_manager_type() {
     // Step 1: Setup gateway with real signers
     let mut fixture = RelayerDiscoveryTestFixture::new();
 

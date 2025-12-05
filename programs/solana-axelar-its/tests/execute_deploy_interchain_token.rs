@@ -23,9 +23,9 @@ use solana_program::program_pack::Pack;
 use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 
 #[test]
-fn test_execute_deploy_interchain_token_success() {
-    let mut fixture = RelayerDiscoveryTestFixture::new();
+fn execute_deploy_interchain_token_success() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let mut fixture = RelayerDiscoveryTestFixture::new();
 
     let init_result = initialize_gateway(&fixture.setup);
     assert!(init_result.program_result.is_ok());
@@ -179,9 +179,10 @@ fn test_execute_deploy_interchain_token_success() {
 }
 
 #[test]
-fn test_execute_deploy_interchain_token_with_large_metadata() {
-    let mut fixture = RelayerDiscoveryTestFixture::new();
+#[allow(clippy::string_slice)]
+fn execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let mut fixture = RelayerDiscoveryTestFixture::new();
 
     let init_result = initialize_gateway(&fixture.setup);
     assert!(init_result.program_result.is_ok());
@@ -315,9 +316,9 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
 }
 
 #[test]
-fn test_execute_deploy_interchain_token_with_minter_success() {
-    let mut fixture = RelayerDiscoveryTestFixture::new();
+fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let mut fixture = RelayerDiscoveryTestFixture::new();
 
     let init_result = initialize_gateway(&fixture.setup);
     assert!(init_result.program_result.is_ok());

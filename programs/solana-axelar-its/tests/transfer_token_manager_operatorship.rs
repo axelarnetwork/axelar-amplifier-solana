@@ -16,7 +16,7 @@ use {
 };
 
 #[test]
-fn test_transfer_token_manager_operatorship_success() {
+fn transfer_token_manager_operatorship_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -174,7 +174,7 @@ fn test_transfer_token_manager_operatorship_success() {
 }
 
 #[test]
-fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
+fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -295,7 +295,7 @@ fn test_reject_transfer_token_manager_operatorship_with_unauthorized_operator() 
 }
 
 #[test]
-fn test_reject_transfer_token_manager_operatorship_without_operator_role() {
+fn reject_transfer_token_manager_operatorship_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 

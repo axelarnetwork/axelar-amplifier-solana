@@ -2,6 +2,9 @@
 #![allow(clippy::little_endian_bytes)]
 #![allow(clippy::missing_asserts_for_indexing)]
 #![allow(clippy::too_many_arguments)]
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 pub mod errors;
 pub mod events;
 pub mod executable;
@@ -316,14 +319,6 @@ pub mod solana_axelar_its {
         instructions::transfer_operatorship_handler(ctx)
     }
 
-    pub fn propose_operatorship(ctx: Context<ProposeOperatorship>) -> Result<()> {
-        instructions::propose_operatorship_handler(ctx)
-    }
-
-    pub fn accept_operatorship(ctx: Context<AcceptOperatorship>) -> Result<()> {
-        instructions::accept_operatorship_handler(ctx)
-    }
-
     pub fn add_token_manager_flow_limiter(ctx: Context<AddTokenManagerFlowLimiter>) -> Result<()> {
         instructions::add_token_manager_flow_limiter_handler(ctx)
     }
@@ -345,18 +340,6 @@ pub mod solana_axelar_its {
         ctx: Context<TransferTokenManagerOperatorship>,
     ) -> Result<()> {
         instructions::transfer_token_manager_operatorship_handler(ctx)
-    }
-
-    pub fn propose_token_manager_operatorship(
-        ctx: Context<ProposeTokenManagerOperatorship>,
-    ) -> Result<()> {
-        instructions::propose_token_manager_operatorship_handler(ctx)
-    }
-
-    pub fn accept_token_manager_operatorship(
-        ctx: Context<AcceptTokenManagerOperatorship>,
-    ) -> Result<()> {
-        instructions::accept_token_manager_operatorship_handler(ctx)
     }
 
     pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
@@ -388,17 +371,5 @@ pub mod solana_axelar_its {
         ctx: Context<TransferInterchainTokenMintership>,
     ) -> Result<()> {
         instructions::transfer_interchain_token_mintership_handler(ctx)
-    }
-
-    pub fn propose_interchain_token_mintership(
-        ctx: Context<ProposeInterchainTokenMintership>,
-    ) -> Result<()> {
-        instructions::propose_token_manager_mintership_handler(ctx)
-    }
-
-    pub fn accept_interchain_token_mintership(
-        ctx: Context<AcceptInterchainTokenMintership>,
-    ) -> Result<()> {
-        instructions::accept_interchain_token_mintership_handler(ctx)
     }
 }

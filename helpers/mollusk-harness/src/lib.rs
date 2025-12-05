@@ -19,8 +19,9 @@ use relayer_discovery_test_fixtures::relayer_execute_with_checks;
 use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
-        make_deploy_interchain_token_instruction, make_interchain_transfer_instruction,
-        make_mint_interchain_token_instruction, make_set_trusted_chain_instruction,
+        execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
+        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
+        make_register_canonical_token_instruction, make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -35,7 +36,7 @@ use solana_sdk::{
 // Gateway
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, Message, VerifierSetTracker,
+    GatewayConfig, IncomingMessage, Message, VerifierSetTracker,
 };
 
 macro_rules! msg {
@@ -76,6 +77,163 @@ pub trait TestHarness {
     fn get_account_as<T: anchor_lang::AccountDeserialize>(&self, address: &Pubkey) -> Option<T> {
         let account = self.get_account(address)?;
         T::try_deserialize(&mut account.data.as_slice()).ok()
+    }
+
+    /// Creates a native SPL Token 2022 mint and stores it in the context.
+    /// Returns the mint pubkey.
+    fn create_spl_token_mint(
+        &self,
+        mint_authority: Pubkey,
+        decimals: u8,
+        supply: Option<u64>,
+    ) -> Pubkey {
+        use solana_sdk::program_pack::Pack;
+
+        let mint = Pubkey::new_unique();
+        let mint_data = {
+            let mut data = [0u8; spl_token_2022::state::Mint::LEN];
+            let mint_state = spl_token_2022::state::Mint {
+                mint_authority: Some(mint_authority).into(),
+                supply: supply.unwrap_or(1_000_000_000),
+                decimals,
+                is_initialized: true,
+                freeze_authority: Some(mint_authority).into(),
+            };
+            spl_token_2022::state::Mint::pack(mint_state, &mut data).unwrap();
+            data.to_vec()
+        };
+
+        let rent = solana_sdk::rent::Rent::default();
+        let mint_account = Account {
+            lamports: rent.minimum_balance(mint_data.len()),
+            data: mint_data,
+            owner: spl_token_2022::ID,
+            executable: false,
+            rent_epoch: 0,
+        };
+
+        self.ctx()
+            .account_store
+            .borrow_mut()
+            .insert(mint, mint_account);
+
+        msg!("Created SPL Token 2022 mint: {}", mint);
+
+        mint
+    }
+
+    /// Creates a native SPL Token 2022 mint with transfer fee extension using real instructions.
+    /// Returns the mint pubkey.
+    fn create_spl_token_mint_with_transfer_fee(
+        &self,
+        mint_authority: Pubkey,
+        decimals: u8,
+        transfer_fee_basis_points: u16,
+        maximum_fee: u64,
+    ) -> Pubkey {
+        use spl_token_2022::extension::ExtensionType;
+        use spl_token_2022::instruction as token_instruction;
+
+        let mint = Pubkey::new_unique();
+
+        // Calculate space needed for mint with transfer fee extension
+        let extension_types = &[ExtensionType::TransferFeeConfig];
+        let space = ExtensionType::try_calculate_account_len::<spl_token_2022::state::Mint>(
+            extension_types,
+        )
+        .unwrap();
+
+        let rent = solana_sdk::rent::Rent::default();
+        let lamports = rent.minimum_balance(space);
+
+        // Pre-create the account with correct size
+        let mint_account = Account {
+            lamports,
+            data: vec![0u8; space],
+            owner: spl_token_2022::ID,
+            executable: false,
+            rent_epoch: 0,
+        };
+
+        self.ctx()
+            .account_store
+            .borrow_mut()
+            .insert(mint, mint_account);
+
+        // 1. Initialize transfer fee config (must happen before mint init)
+        let init_fee_ix =
+            spl_token_2022::extension::transfer_fee::instruction::initialize_transfer_fee_config(
+                &spl_token_2022::ID,
+                &mint,
+                Some(&mint_authority),
+                Some(&mint_authority),
+                transfer_fee_basis_points,
+                maximum_fee,
+            )
+            .unwrap();
+
+        // 2. Initialize the mint
+        let init_mint_ix = token_instruction::initialize_mint2(
+            &spl_token_2022::ID,
+            &mint,
+            &mint_authority,
+            Some(&mint_authority),
+            decimals,
+        )
+        .unwrap();
+
+        // Execute both instructions
+        self.ctx().process_and_validate_instruction_chain(&[
+            (&init_fee_ix, &[Check::success()]),
+            (&init_mint_ix, &[Check::success()]),
+        ]);
+
+        msg!(
+            "Created SPL Token 2022 mint with transfer fee: {} (fee: {} bps, max: {})",
+            mint,
+            transfer_fee_basis_points,
+            maximum_fee
+        );
+
+        mint
+    }
+
+    /// Get a token account (legacy or 2022) from the context's account store.
+    fn get_token_account(
+        &self,
+        address: &Pubkey,
+    ) -> Option<anchor_spl::token_interface::TokenAccount> {
+        self.get_account_as(address)
+    }
+
+    fn update_account<F>(&mut self, address: &Pubkey, updater: F)
+    where
+        F: FnOnce(&mut Account),
+    {
+        let mut account = self.get_account(address).expect("account should exist");
+        updater(&mut account);
+        self.store_account(*address, account);
+    }
+
+    fn update_account_as<T, F>(&mut self, address: &Pubkey, updater: F) -> T
+    where
+        T: anchor_lang::AccountDeserialize
+            + anchor_lang::AnchorSerialize
+            + anchor_lang::Discriminator,
+        F: FnOnce(&mut T),
+    {
+        let mut account = self.get_account(address).expect("account should exist");
+        let mut data = T::try_deserialize(&mut account.data.as_slice())
+            .expect("failed to deserialize account");
+
+        updater(&mut data);
+
+        data.serialize(&mut &mut account.data[T::DISCRIMINATOR.len()..])
+            .expect("failed to serialize account");
+
+        self.store_account(*address, account);
+
+        data
     }
 
     fn get_ata_2022_address(&self, wallet: Pubkey, token_mint: Pubkey) -> Pubkey {
@@ -231,6 +389,60 @@ pub trait TestHarness {
             .borrow_mut()
             .insert(sysvar_instructions_pubkey, sysvar_account);
     }
+
+    /// Creates metadata for a token mint and stores it in the context.
+    /// Returns the metadata PDA.
+    fn create_token_metadata(
+        &self,
+        mint: Pubkey,
+        mint_authority: Pubkey,
+        name: String,
+        symbol: String,
+    ) -> Pubkey {
+        use anchor_lang::AnchorSerialize;
+
+        let (metadata_pda, _) = mpl_token_metadata::accounts::Metadata::find_pda(&mint);
+
+        let uri = format!("https://{}.com", symbol.to_lowercase());
+
+        let metadata = mpl_token_metadata::accounts::Metadata {
+            key: mpl_token_metadata::types::Key::MetadataV1,
+            update_authority: mint_authority,
+            mint,
+            name,
+            symbol,
+            uri,
+            seller_fee_basis_points: 0,
+            creators: None,
+            primary_sale_happened: false,
+            is_mutable: true,
+            edition_nonce: None,
+            token_standard: Some(mpl_token_metadata::types::TokenStandard::Fungible),
+            collection: None,
+            uses: None,
+            collection_details: None,
+            programmable_config: None,
+        };
+
+        let metadata_data = metadata.try_to_vec().unwrap();
+        let rent = solana_sdk::rent::Rent::default();
+        let metadata_account = Account {
+            lamports: rent.minimum_balance(metadata_data.len()),
+            data: metadata_data,
+            owner: mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
+            executable: false,
+            rent_epoch: 0,
+        };
+
+        self.ctx()
+            .account_store
+            .borrow_mut()
+            .insert(metadata_pda, metadata_account);
+
+        msg!("Created token metadata for mint: {}", mint);
+
+        metadata_pda
+    }
 }
 
 pub struct ItsTestHarness {
@@ -252,6 +464,7 @@ impl TestHarness for ItsTestHarness {
     }
 }
 
+#[derive(Default)]
 pub struct GatewayHarnessInfo {
     pub root: Pubkey,
     pub signers: Vec<libsecp256k1::SecretKey>,
@@ -261,17 +474,24 @@ pub struct GatewayHarnessInfo {
 }
 
 impl Default for ItsTestHarness {
+    /// Create a default ITS test harness without initializing ITS.
+    /// Useful for testing initialization itself.
     fn default() -> Self {
-        Self::new()
+        let mollusk = initialize_mollusk_with_programs();
+
+        Self {
+            ctx: mollusk.with_context(HashMap::new()),
+            payer: Pubkey::new_unique(),
+            operator: Pubkey::new_unique(),
+            gateway: GatewayHarnessInfo::default(),
+            its_root: Pubkey::default(),
+        }
     }
 }
 
 impl ItsTestHarness {
     pub fn new() -> Self {
-        let mollusk = initialize_mollusk_with_programs();
-        let payer = Pubkey::new_unique();
-        let operator = Pubkey::new_unique();
-        let ctx = mollusk.with_context(HashMap::new());
+        let mut harness = Self::default();
 
         let mut harness = Self {
             ctx,
@@ -292,6 +512,7 @@ impl ItsTestHarness {
         harness.ensure_its_initialized();
         harness.ensure_its_relayer_transaction_registered();
         harness.ensure_sysvar_instructions_account();
+        harness.ensure_its_initialized();
 
         harness
     }
@@ -356,6 +577,8 @@ impl ItsTestHarness {
                 ],
             ),
         ]);
+
+        msg!("Operators initialized.");
     }
 
     pub fn ensure_gas_service_initialized(&self) {
@@ -391,6 +614,8 @@ impl ItsTestHarness {
                     .build(),
             ],
         )]);
+
+        msg!("Gas service initialized.");
     }
 
     // TODO move to gateway harness
@@ -511,6 +736,8 @@ impl ItsTestHarness {
 
         self.gateway.root = gateway_root_pda;
         self.gateway.verifier_set_tracker = verifier_set_tracker_pda;
+
+        msg!("Gateway initialized.");
     }
 
     #[allow(clippy::too_many_lines)]
@@ -693,47 +920,36 @@ impl ItsTestHarness {
             return;
         }
 
-        let program_data = self.ensure_program_data_account(
+        // operator will also serve as the payer and upgrade authority
+        let upgrade_authority = self.operator;
+
+        self.ensure_program_data_account(
             "solana_axelar_its",
             &solana_axelar_its::ID,
-            self.operator,
+            upgrade_authority,
         );
 
-        let user_roles_pda =
-            solana_axelar_its::UserRoles::find_pda(&its_root_pda, &self.operator).0;
+        let (init_ix, init_accounts) = solana_axelar_its::instructions::make_initialize_instruction(
+            upgrade_authority,
+            self.operator,
+            "solana".to_owned(),
+            "axelar123".to_owned(),
+        );
 
-        let its_init_ix = Instruction {
-            program_id: solana_axelar_its::ID,
-            accounts: solana_axelar_its::accounts::Initialize {
-                payer: self.operator,
-                program_data,
-                its_root_pda,
-                system_program: solana_sdk_ids::system_program::ID,
-                operator: self.operator,
-                user_roles_account: user_roles_pda,
-            }
-            .to_account_metas(None),
-            data: solana_axelar_its::instruction::Initialize {
-                chain_name: "solana".to_owned(),
-                its_hub_address: "axelar123".to_owned(),
-            }
-            .data(),
-        };
-
-        self.ctx.process_and_validate_instruction_chain(&[(
-            &its_init_ix,
+        self.ctx.process_and_validate_instruction(
+            &init_ix,
             &[
                 Check::success(),
                 Check::account(&its_root_pda)
                     .owner(&solana_axelar_its::ID)
                     .rent_exempt()
                     .build(),
-                Check::account(&user_roles_pda)
+                Check::account(&init_accounts.user_roles_account)
                     .owner(&solana_axelar_its::ID)
                     .rent_exempt()
                     .build(),
             ],
-        )]);
+        );
 
         self.its_root = its_root_pda;
     }
@@ -792,6 +1008,11 @@ impl ItsTestHarness {
     }
 
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
+        let its = self.get_its_root();
+        let trusted_chains_before = its.trusted_chains.len();
+
+        msg!("Ensuring trusted chain: {}", trusted_chain_name);
+
         let ix =
             make_set_trusted_chain_instruction(self.operator, trusted_chain_name.to_owned(), false)
                 .0;
@@ -806,7 +1027,11 @@ impl ItsTestHarness {
 
         let its = self.get_its_root();
 
-        assert_eq!(its.trusted_chains.len(), 1, "must have one trusted chain");
+        assert_eq!(
+            its.trusted_chains.len(),
+            trusted_chains_before + 1,
+            "must have the trusted chain appended"
+        );
         assert!(
             its.trusted_chains.iter().any(|x| x == trusted_chain_name),
             "must have the trusted chain added"
@@ -821,22 +1046,56 @@ impl ItsTestHarness {
         )
         .0;
 
+        let old_operator_account =
+            solana_axelar_its::UserRoles::find_pda(&self.its_root, &self.operator).0;
+
+        let old_its_roles: solana_axelar_its::UserRoles = self
+            .get_account_as(&old_operator_account)
+            .expect("old operator roles account should exist before transfer");
+
+        // Check if old operator only had operator role
+        let should_be_closed = old_its_roles.roles == solana_axelar_its::Roles::OPERATOR;
+
+        // Process
         self.ctx
             .process_and_validate_instruction(&ix, &[Check::success()]);
 
-        let new_operator_account =
-            solana_axelar_its::UserRoles::find_pda(&self.its_root, &new_operator).0;
+        // Check old operator
+        {
+            let old_its_roles: Option<solana_axelar_its::UserRoles> =
+                self.get_account_as(&old_operator_account);
 
-        let its_roles: solana_axelar_its::UserRoles = self
-            .get_account_as(&new_operator_account)
-            .expect("new operator roles account should exist");
+            if should_be_closed {
+                assert!(
+                    old_its_roles.is_none(),
+                    "old operator roles account should be closed"
+                );
+            } else {
+                assert!(
+                    !old_its_roles
+                        .expect("old operator account should still have other roles")
+                        .has_operator_role(),
+                    "old operator must not have operator role"
+                );
+            }
+        }
 
-        assert!(
-            its_roles.has_operator_role(),
-            "new operator must have operator role"
-        );
+        // Check new operator
+        {
+            let new_operator_account =
+                solana_axelar_its::UserRoles::find_pda(&self.its_root, &new_operator).0;
 
-        // Update operator
+            let its_roles: solana_axelar_its::UserRoles = self
+                .get_account_as(&new_operator_account)
+                .expect("new operator roles account should exist");
+
+            assert!(
+                its_roles.has_operator_role(),
+                "new operator must have operator role"
+            );
+        }
+
+        // Update operator in harness
         self.operator = new_operator;
     }
 
@@ -901,24 +1160,93 @@ impl ItsTestHarness {
         token_id
     }
 
+    /// Registers a canonical token (existing SPL token) with the ITS.
+    /// Returns the token_id for the registered canonical token.
+    pub fn ensure_register_canonical_token(&self, token_mint: Pubkey) -> [u8; 32] {
+        let token_id = solana_axelar_its::utils::canonical_interchain_token_id(&token_mint);
+        let token_manager_pda =
+            solana_axelar_its::TokenManager::find_pda(token_id, self.its_root).0;
+
+        if self.account_exists(&token_manager_pda) {
+            return token_id;
+        }
+
+        let (ix, accounts) =
+            make_register_canonical_token_instruction(self.payer, token_mint, spl_token_2022::ID);
+
+        msg!(
+            "Registering canonical token {} with ID: {}",
+            token_mint,
+            hex::encode(token_id),
+        );
+
+        let expected_token_id =
+            solana_axelar_its::utils::canonical_interchain_token_id(&token_mint);
+
+        self.ctx.process_and_validate_instruction_chain(&[(
+            &ix,
+            &[
+                Check::success(),
+                Check::return_data(&expected_token_id),
+                Check::account(&accounts.token_manager_pda)
+                    .owner(&solana_axelar_its::ID)
+                    .rent_exempt()
+                    .build(),
+            ],
+        )]);
+
+        token_id
+    }
+
+    pub const TEST_TOKEN_SALT: [u8; 32] = [1u8; 32];
+    pub const TEST_TOKEN_NAME: &'static str = "Test Token";
+    pub const TEST_TOKEN_SYMBOL: &'static str = "TTK";
+    pub const TEST_TOKEN_DECIMALS: u8 = 9;
+    pub const TEST_TOKEN_INITIAL_SUPPLY: u64 = 1_000_000_000_000; // 1,000 TTK
+
     #[must_use]
     pub fn ensure_test_interchain_token(&self) -> [u8; 32] {
-        let salt = [1u8; 32];
-        let name = "Test Token".to_owned();
-        let symbol = "TTK".to_owned();
-        let decimals = 9u8;
-        let initial_supply = 1_000_000_000_000; // 1,000 TTK
+        msg!("Deploying test local interchain token.");
+
         let minter = Some(self.operator);
 
         self.ensure_deploy_local_interchain_token(
             self.operator,
-            salt,
-            name,
-            symbol,
-            decimals,
-            initial_supply,
+            Self::TEST_TOKEN_SALT,
+            Self::TEST_TOKEN_NAME.to_owned(),
+            Self::TEST_TOKEN_SYMBOL.to_owned(),
+            Self::TEST_TOKEN_DECIMALS,
+            Self::TEST_TOKEN_INITIAL_SUPPLY,
             minter,
         )
+    }
+
+    pub const TEST_CANONICAL_TOKEN_NAME: &'static str = "Canonical Token";
+    pub const TEST_CANONICAL_TOKEN_SYMBOL: &'static str = "CTKN";
+    pub const TEST_CANONICAL_TOKEN_DECIMALS: u8 = 9;
+    pub const TEST_CANONICAL_TOKEN_INITIAL_SUPPLY: u64 = 1_000_000_000_000; // 1,000 TTK
+
+    #[must_use]
+    pub fn ensure_test_registered_canonical_token(
+        &self,
+        mint_authority: Pubkey,
+    ) -> (Pubkey, [u8; 32]) {
+        let token_mint = self.create_spl_token_mint(
+            mint_authority,
+            Self::TEST_CANONICAL_TOKEN_DECIMALS,
+            Some(Self::TEST_CANONICAL_TOKEN_INITIAL_SUPPLY),
+        );
+
+        self.create_token_metadata(
+            token_mint,
+            mint_authority,
+            Self::TEST_CANONICAL_TOKEN_NAME.to_owned(),
+            Self::TEST_CANONICAL_TOKEN_SYMBOL.to_owned(),
+        );
+
+        let token_id = self.ensure_register_canonical_token(token_mint);
+
+        (token_mint, token_id)
     }
 
     pub fn ensure_mint_interchain_token(

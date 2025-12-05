@@ -169,7 +169,7 @@ pub(crate) fn init_gas_service(
 // TODO(v2) improve tests and use mollusk checks for more precise assertions
 
 #[test]
-fn test_initialize_success() {
+fn initialize_success() {
     let program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&program_id, "solana_axelar_gas_service");
 
@@ -191,7 +191,7 @@ fn test_initialize_success() {
 #[test]
 #[allow(clippy::should_panic_without_expect)]
 #[should_panic]
-fn test_initialize_unauthorized() {
+fn initialize_unauthorized() {
     let program_id = solana_axelar_gas_service::id();
     let mut mollusk = setup_mollusk(&program_id, "solana_axelar_gas_service");
 

@@ -24,7 +24,7 @@ use solana_sdk::{account::Account, keccak};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
-fn test_execute_interchain_transfer_success() {
+fn execute_interchain_transfer_success() {
     // Step 1: Setup gateway with real signers
     let mut fixture = RelayerDiscoveryTestFixture::new();
 
@@ -290,7 +290,7 @@ fn test_execute_interchain_transfer_success() {
 }
 
 #[test]
-fn test_reject_execute_interchain_transfer_with_zero_amount() {
+fn reject_execute_interchain_transfer_with_zero_amount() {
     // Step 1: Setup gateway with real signers
     let mut fixture = RelayerDiscoveryTestFixture::new();
 
@@ -528,7 +528,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
 }
 
 #[test]
-fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
+fn reject_execute_interchain_transfer_with_invalid_token_id() {
     // Step 1: Setup gateway with real signers
     let mut fixture = RelayerDiscoveryTestFixture::new();
 

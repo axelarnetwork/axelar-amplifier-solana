@@ -12,7 +12,7 @@ mod initialize;
 use initialize::{init_gas_service, setup_mollusk, setup_operator};
 
 #[test]
-fn test_refund_native_fees() {
+fn refund_native_fees() {
     // Setup
 
     let program_id = solana_axelar_gas_service::id();

@@ -11,6 +11,8 @@ use crate::{
 };
 use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 use anchor_spl::token_interface::Mint;
 use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use solana_axelar_gateway::GatewayConfig;
@@ -135,10 +137,10 @@ pub fn deploy_remote_canonical_interchain_token_handler(
 
     emit_cpi!(InterchainTokenDeploymentStarted {
         token_id,
-        token_name: name.clone(),
-        token_symbol: symbol.clone(),
-        token_decimals: decimals,
-        minter: vec![], // Canonical tokens don't have destination minters
+        name: name.clone(),
+        symbol: symbol.clone(),
+        decimals,
+        minter: None, // Canonical tokens don't have destination minters
         destination_chain: destination_chain.clone(),
     });
 
@@ -158,4 +160,69 @@ pub fn deploy_remote_canonical_interchain_token_handler(
     process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
 
     Ok(())
+}
+
+pub fn make_deploy_remote_canonical_token_instruction(
+    payer: Pubkey,
+    token_mint: Pubkey,
+    destination_chain: String,
+    gas_value: u64,
+) -> (
+    Instruction,
+    crate::accounts::DeployRemoteCanonicalInterchainToken,
+) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+
+    let token_id = canonical_interchain_token_id(&token_mint);
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
+
+    let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint);
+
+    let gateway_root_pda = GatewayConfig::find_pda().0;
+
+    let (call_contract_signing_pda, _) = Pubkey::find_program_address(
+        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
+        &crate::ID,
+    );
+
+    let (gateway_event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+
+    let (gas_treasury, _) = solana_axelar_gas_service::state::Treasury::find_pda();
+
+    let (gas_event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+
+    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+
+    let accounts = crate::accounts::DeployRemoteCanonicalInterchainToken {
+        payer,
+        token_mint,
+        metadata_account,
+        token_manager_pda,
+        gateway_root_pda,
+        gateway_program: solana_axelar_gateway::ID,
+        system_program: anchor_lang::system_program::ID,
+        its_root_pda,
+        call_contract_signing_pda,
+        gateway_event_authority,
+        gas_treasury,
+        gas_service: solana_axelar_gas_service::ID,
+        gas_event_authority,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::DeployRemoteCanonicalInterchainToken {
+                destination_chain,
+                gas_value,
+            }
+            .data(),
+        },
+        accounts,
+    )
 }
