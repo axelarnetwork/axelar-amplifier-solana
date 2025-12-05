@@ -149,10 +149,10 @@ pub fn deploy_remote_interchain_token_handler(
 
     emit_cpi!(InterchainTokenDeploymentStarted {
         token_id,
-        token_name: name.clone(),
-        token_symbol: symbol.clone(),
-        token_decimals: decimals,
-        minter: vec![],
+        name: name.clone(),
+        symbol: symbol.clone(),
+        decimals,
+        minter: None,
         destination_chain: destination_chain.clone(),
     });
 
