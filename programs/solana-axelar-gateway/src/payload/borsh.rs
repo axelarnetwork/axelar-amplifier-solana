@@ -131,7 +131,7 @@ mod tests {
     }
 
     #[test]
-    fn test_empty_payload() {
+    fn empty_payload() {
         let payload: &[u8] = &[];
         let accounts = vec![create_test_account()];
 
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_empty_accounts() {
+    fn decode_empty_accounts() {
         let payload = random_payload_bytes(100);
         let accounts: Vec<SolanaAccountRepr> = vec![];
 
@@ -156,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_multiple_accounts() {
+    fn decode_multiple_accounts() {
         let payload = random_payload_bytes(100);
         let accounts: Vec<SolanaAccountRepr> = std::iter::repeat_with(create_test_account)
             .take(12)
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_large_payload() {
+    fn decode_large_payload() {
         let payload = random_payload_bytes(0x0010_0000); // 1MB payload
         let accounts = vec![create_test_account()];
 
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_invalid_input() {
+    fn decode_invalid_input() {
         // Test: input too short: less than 4 bytes, can't read payload size (u32)
         assert!(AxelarMessagePayload::decode_borsh(&[1, 2, 3]).is_err());
 

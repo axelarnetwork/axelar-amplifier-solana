@@ -1,5 +1,8 @@
 //! Axelar Gas Service program for the Solana blockchain
 #![allow(clippy::little_endian_bytes)]
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 pub mod events;
 pub mod instructions;
 pub mod state;

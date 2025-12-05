@@ -3,6 +3,8 @@ use crate::{
     ItsError,
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 #[derive(Accounts)]
 pub struct AcceptOperatorship<'info> {
@@ -95,12 +97,50 @@ pub fn accept_operatorship_handler(ctx: Context<AcceptOperatorship>) -> Result<(
 
     // Close if no remaining roles
     if !origin_roles.has_roles() {
-        anchor_lang::AccountsClose::close(
-            &ctx.accounts.origin_roles_account,
-            ctx.accounts.payer.to_account_info(),
-        )
-        .map_err(|e| e.with_account_name("origin_roles_account"))?;
+        ctx.accounts
+            .origin_roles_account
+            .close(ctx.accounts.payer.to_account_info())
+            .map_err(|e| e.with_account_name("origin_roles_account"))?;
     }
 
     Ok(())
+}
+
+/// Creates an AcceptOperatorship instruction
+pub fn make_accept_operatorship_instruction(
+    payer: Pubkey,
+    origin_user_account: Pubkey,
+    destination_user_account: Pubkey,
+) -> (Instruction, crate::accounts::AcceptOperatorship) {
+    let resource_account = InterchainTokenService::find_pda().0;
+
+    let origin_roles_account = UserRoles::find_pda(&resource_account, &origin_user_account).0;
+    let destination_roles_account =
+        UserRoles::find_pda(&resource_account, &destination_user_account).0;
+    let (proposal_account, _) = RoleProposal::find_pda(
+        &resource_account,
+        &origin_user_account,
+        &destination_user_account,
+        &crate::ID,
+    );
+
+    let accounts = crate::accounts::AcceptOperatorship {
+        system_program: anchor_lang::system_program::ID,
+        payer,
+        destination_user_account,
+        destination_roles_account,
+        resource_account,
+        origin_user_account,
+        origin_roles_account,
+        proposal_account,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::AcceptOperatorship {}.data(),
+        },
+        accounts,
+    )
 }
