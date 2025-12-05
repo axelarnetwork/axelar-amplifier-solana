@@ -159,19 +159,13 @@ pub fn execute_deploy_interchain_token_handler(
             .accounts
             .minter
             .as_ref()
-            .map(|account| account.key().to_bytes().to_vec())
-            .unwrap_or_default(),
+            .map(|account| account.key().to_bytes().to_vec()),
     });
 
     emit_cpi!(InterchainTokenDeployed {
         token_id,
         token_address: ctx.accounts.token_mint.key(),
-        minter: ctx
-            .accounts
-            .minter
-            .as_ref()
-            .map(anchor_lang::Key::key)
-            .unwrap_or_default(),
+        minter: ctx.accounts.minter.as_ref().map(anchor_lang::Key::key),
         name: truncated_name,
         symbol: truncated_symbol,
         decimals,
