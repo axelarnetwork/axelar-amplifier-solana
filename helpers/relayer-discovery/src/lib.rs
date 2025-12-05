@@ -146,12 +146,12 @@ impl RelayerDiscovery {
     pub fn convert_instruction(
         &self,
         instruction: &RelayerInstruction,
+        used_payers: &mut Vec<usize>,
     ) -> Result<Instruction, ConvertError> {
-        let mut used_payers = vec![];
         let accounts: Result<Vec<AccountMeta>, ConvertError> = instruction
             .accounts
             .iter()
-            .map(|account| self.convert_account(account, &mut used_payers))
+            .map(|account| self.convert_account(account, used_payers))
             .collect();
         let data: Result<Vec<Vec<u8>>, ConvertError> = instruction
             .data
@@ -173,14 +173,15 @@ impl RelayerDiscovery {
     ) -> Result<ConvertedTransaction, ConvertError> {
         match transaction {
             RelayerTransaction::Final(instructions) => {
+                let mut used_payers = vec![];
                 let instructions: Result<Vec<Instruction>, ConvertError> = instructions
                     .iter()
-                    .map(|instruction| self.convert_instruction(instruction))
+                    .map(|instruction| self.convert_instruction(instruction, &mut used_payers))
                     .collect();
                 Ok(ConvertedTransaction::Final(instructions?))
             }
             RelayerTransaction::Discovery(instruction) => Ok(ConvertedTransaction::Discovery(
-                self.convert_instruction(instruction)?,
+                self.convert_instruction(instruction, &mut vec![])?,
             )),
         }
     }

@@ -243,7 +243,8 @@ impl RelayerDiscoveryTestFixture {
         loop {
             match relayer_transaction {
                 RelayerTransaction::Discovery(ref relayer_instruction) => {
-                    let instruction = relayer_discovery.convert_instruction(relayer_instruction);
+                    let instruction =
+                        relayer_discovery.convert_instruction(relayer_instruction, &mut vec![]);
                     match instruction {
                         Ok(instruction) => {
                             let result = self
@@ -303,10 +304,12 @@ impl RelayerDiscoveryTestFixture {
                     }
                 }
                 RelayerTransaction::Final(ref relayer_instructions) => {
+                    let mut used_payers = vec![];
                     let instructions: Result<Vec<Instruction>, ConvertError> = relayer_instructions
                         .iter()
                         .map(|relayer_instruction| {
-                            relayer_discovery.convert_instruction(relayer_instruction)
+                            relayer_discovery
+                                .convert_instruction(relayer_instruction, &mut used_payers)
                         })
                         .collect();
                     match instructions {
