@@ -41,7 +41,7 @@ pub struct DeployInterchainToken {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct LinkToken {
     pub token_id: [u8; 32],
-    pub token_manager_type: [u8; 32], // Uint256 as 32-byte little-endian
+    pub token_manager_type: u8,
     pub source_token_address: Vec<u8>,
     pub destination_token_address: Vec<u8>,
     pub params: Option<Vec<u8>>,

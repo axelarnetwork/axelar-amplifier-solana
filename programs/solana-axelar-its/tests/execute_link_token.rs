@@ -75,7 +75,7 @@ fn execute_link_token() {
     // Step 7: Create the GMP payload
     let link_payload = encoding::LinkToken {
         token_id,
-        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        token_manager_type,
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
         params: if link_params.is_empty() {
@@ -216,7 +216,7 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
     // Step 7: Create the GMP payload
     let link_payload = encoding::LinkToken {
         token_id,
-        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        token_manager_type,
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
         params: if link_params.is_empty() {
@@ -359,7 +359,7 @@ fn reject_execute_link_token_with_invalid_destination_token_address() {
     // Step 7: Create the GMP payload
     let link_payload = encoding::LinkToken {
         token_id,
-        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        token_manager_type,
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
         params: if link_params.is_empty() {
@@ -504,7 +504,7 @@ fn reject_execute_link_token_with_invalid_token_id() {
     // Step 7: Create the GMP payload
     let link_payload = encoding::LinkToken {
         token_id: invalid_token_id,
-        token_manager_type: encoding::u64_to_le_bytes_32(token_manager_type as u64),
+        token_manager_type,
         source_token_address: source_token_address.clone(),
         destination_token_address: destination_token_address.clone(),
         params: if link_params.is_empty() {

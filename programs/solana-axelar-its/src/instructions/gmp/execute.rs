@@ -195,7 +195,7 @@ fn cpi_execute_link_token<'info>(
         .try_into()
         .map_err(|_| ItsError::InvalidAccountData)?;
 
-    let token_manager_type: u8 = crate::encoding::u8_from_le_bytes_32(payload.token_manager_type)?;
+    let token_manager_type = payload.token_manager_type;
 
     let link_params = payload.params.unwrap_or_default();
 
