@@ -24,8 +24,7 @@ use solana_sdk::{keccak, pubkey::Pubkey};
 #[test]
 fn execute_link_token() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -104,15 +103,23 @@ fn execute_link_token() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -166,9 +173,8 @@ fn execute_link_token() {
 }
 
 #[test]
-fn reject_execute_link_token_with_invalid_token_manager_type() {
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+fn test_reject_execute_link_token_with_invalid_token_manager_type() {
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -244,15 +250,23 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -306,8 +320,7 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
 #[test]
 fn reject_execute_link_token_with_invalid_destination_token_address() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -386,15 +399,23 @@ fn reject_execute_link_token_with_invalid_destination_token_address() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -448,8 +469,7 @@ fn reject_execute_link_token_with_invalid_destination_token_address() {
 #[test]
 fn reject_execute_link_token_with_invalid_token_id() {
     // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -530,15 +550,23 @@ fn reject_execute_link_token_with_invalid_token_id() {
     // Override the source_address to match its_hub_address
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     // Step 9: Approve message on gateway
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];

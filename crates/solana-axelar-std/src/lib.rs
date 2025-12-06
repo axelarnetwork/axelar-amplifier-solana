@@ -25,5 +25,6 @@ mod error;
 pub use error::EncodingError;
 
 pub mod execute_data;
+pub use execute_data::{MerklizedPayload, Payload, PayloadType};
 
 pub mod merkle;
