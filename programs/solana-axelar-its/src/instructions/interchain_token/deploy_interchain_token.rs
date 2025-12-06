@@ -208,18 +208,12 @@ pub fn deploy_interchain_token_handler(
             .minter
             .as_ref()
             .map(|account| account.key().to_bytes().to_vec())
-            .unwrap_or_default(),
     });
 
     emit_cpi!(InterchainTokenDeployed {
         token_id,
         token_address: ctx.accounts.token_mint.key(),
-        minter: ctx
-            .accounts
-            .minter
-            .as_ref()
-            .map(|account| *account.key)
-            .unwrap_or_default(),
+        minter: ctx.accounts.minter.as_ref().map(|account| *account.key),
         name,
         symbol,
         decimals,

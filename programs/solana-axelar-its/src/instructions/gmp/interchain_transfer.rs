@@ -124,9 +124,9 @@ pub fn execute_interchain_transfer_handler<'info>(
     let transferred_amount = handle_give_token_transfer(&mut ctx, amount)?;
 
     let data_hash = if data.is_empty() {
-        [0; 32]
+        None
     } else {
-        solana_program::keccak::hash(data.as_ref()).0
+        Some(solana_program::keccak::hash(data.as_ref()).0)
     };
 
     emit_cpi!(InterchainTransferReceived {
