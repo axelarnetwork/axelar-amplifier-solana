@@ -21,3 +21,6 @@ pub use rotate_signers::*;
 
 pub mod transfer_operatorship;
 pub use transfer_operatorship::*;
+
+pub mod force_update_verifier_set_hash;
+pub use force_update_verifier_set_hash::*;

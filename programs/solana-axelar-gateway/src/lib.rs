@@ -125,4 +125,10 @@ pub mod solana_axelar_gateway {
     pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {
         instructions::transfer_operatorship_handler(ctx)
     }
+
+    // Temporary one-off instruction to correct the verifier set tracker hash.
+    // Remove after use.
+    pub fn force_update_verifier_set_hash(ctx: Context<ForceUpdateVerifierSetHash>) -> Result<()> {
+        instructions::force_update_verifier_set_hash_handler(ctx)
+    }
 }
