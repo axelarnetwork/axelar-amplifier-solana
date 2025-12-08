@@ -114,7 +114,7 @@ fn initialize_payload_verification_session_works() {
     .unwrap();
 
     let mut expected_verification_account =
-        SignatureVerificationSessionData::new(SignatureVerification::default(), 254);
+        SignatureVerificationSessionData::new(SignatureVerification::default(), 253);
 
     expected_verification_account
         .signature_verification
