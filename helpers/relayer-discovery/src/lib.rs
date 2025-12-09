@@ -11,8 +11,6 @@ use crate::structs::{RelayerAccount, RelayerData, RelayerInstruction, RelayerTra
 
 /// The structs for relayer discovery.
 pub mod structs;
-/// Helper transaction_pda utils.
-pub mod transaction_pda;
 
 /// The global transaction pda seed for all executables.
 pub const TRANSACTION_PDA_SEED: &[u8] = b"relayer-discovery-transaction";
