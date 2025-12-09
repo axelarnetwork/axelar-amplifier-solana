@@ -182,7 +182,7 @@ pretty_assertions = "1"
 # Pinned versions to avoid edition2024 incompatibility with SBF toolchain (Cargo 1.84)
 udigest = { version = "=0.2.0", features = ["derive"] }
 udigest-derive = "=0.2.0"
-base64ct = "=1.7.3"
+base64ct = "=1.7.2"
 ruint = "=1.16.0"
 async-recursion = "1"
 keccak-const = "0.2.0"
@@ -206,6 +206,7 @@ solana-axelar-std = { version = "0.1.2", path = "crates/solana-axelar-std" }
 governance-gmp = { version = "0.1.1", path = "helpers/governance-gmp" }
 interchain-token-transfer-gmp = { version = "0.1.1", path = "helpers/interchain-token-transfer-gmp" }
 program-utils = { version = "0.1.2", path = "helpers/program-utils", default-features = false }
+relayer-discovery = { version = "1.0.0", path = "helpers/relayer-discovery"}
 
 # helper crates (not published - dev-dependencies only)
 solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
@@ -217,7 +218,6 @@ evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 mollusk-harness = { path = "helpers/mollusk-harness" }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 role-management = { path = "helpers/role-management" }
-relayer-discovery = { path = "helpers/relayer-discovery"}
 
 [workspace.metadata.cargo-machete]
 ignored = ["num-traits"]
@@ -231,3 +231,7 @@ codegen-units = 1
 opt-level = 3
 incremental = false
 codegen-units = 1
+
+[patch.crates-io]
+base64ct = { git = "https://github.com/RustCrypto/formats", tag = "base64ct/v1.7.2" }
+ruint = { git = "https://github.com/recmo/uint", tag = "v1.16.0" }

@@ -25,7 +25,7 @@ The destination address will be the program id of a program. However there is no
 
 ## Relayer Discovery
 Relayer discovery does not need to be a specific program on Solana. This is because programs can create accounts with predetermined addresses that 
-Each `program_id` will be assigned a `transaction_pda` which is owned by the executable program and stores the transaction to be executed by the program. The `transaction_pda` should be derived by only a single seed: `keccak256('relayer-discovery-transaction') = 0xa57128349132c58c5700674195df81ef5ee89bc36f0e9676bae7e1479b7fcede`. This contents of this pda should strictly be the Borsh serialised data of the `RelayerTransaction` struct:
+Each `program_id` will be assigned a `transaction_pda` which is owned by the executable program and stores the transaction to be executed by the program. The `transaction_pda` should be derived by only a single seed: `keccak256('relayer-discovery-transaction') = 0xa57128349132c58c5700674195df81ef5ee89bc36f0e9676bae7e1479b7fcede`. The contents of this pda should strictly be the Anchor serialised data of the `RelayerTransaction` struct:
 
 ```rust
 /// A single piece of data to be passed by the relayer. Each of these can be converted to Vec<u8>.
@@ -85,115 +85,30 @@ Each `RelayerInstruction` can be converted into a regular `Instruction` by doing
 
 To figure out what to call the relayer needs to [obtain](https://solana.com/docs/rpc/http/getaccountinfo) this data and then run the following logic, [simulating](https://solana.com/docs/rpc/http/simulatetransaction) transactions when needed:
 ```
+// This is peseudocode.
 while(!relayer_transaction_is_final) {
-	relayer_transaction = relayer_trnasaction.simulate().return_data.decode()
+	relayer_transaction = relayer_trnasaction.simulate()
+		.return_data
+		.decode()
 }
 relayer_transaction.execute()
 ``` 
 
-### An Example: Memo Discoverable
+### An Example: Test Discoverable
 Look at [this](../../programs/solana-axelar-test-discoverable/) for a working example.
 #### Init
-A one time call has to be made to the `Init` instruction to setup the `transaction_pda`.
-```rust
-// The relayer transaction to be stored. This should point to the `GetTransaction` entrypoint.
-RelayerTransaction::Discovery(RelayerInstruction {
-	// We want the relayer to call this program.
-	program_id: crate::ID,
-	// No accounts are required for this.
-	accounts: vec![
-	],
-	// The data we need to find the final transaction.
-	data: vec![
-		// We can easily get the discriminaator thankfully. Note that we need `instruction::GetTransaction` and not `instructions::GetTransaction`.
-		RelayerData::Bytes(Vec::from(GetTransaction::DISCRIMINATOR)),
-		// We do not want to prefix the payload with the length as it is decoded into a struct as opposed to a `Vec<u8>`.
-		RelayerData::PayloadRaw,
-		// The command id, which is the only thing required (alongside this crate's id) to derive all the accounts required by the gateway.
-		RelayerData::CommandId,
-	],
-}).init(
-	&crate::id(),
-	&ctx.accounts.system_program.to_account_info(),
-	&ctx.accounts.payer.to_account_info(),
-	&ctx.accounts.relayer_transaction,
-)?;
-Ok(())
-```
-The stored relayer transaction points to the `GetTransaction` instruction which returns the executable function.
-```rust
-let counter_pda = Counter::get_pda(payload.storage_id).0;
-Ok(RelayerTransaction::Final(
-	// A single instruction is required. Note that we could be fancy and check whether the counter_pda is initialized (which would required one more discovery transaction be performed),
-	// And only if it is not initialized prepend a transaction that initializes it. Then we could omit the `payer` and `system_program` accounts from the actual execute instruction.
-	vec![
-	RelayerInstruction {
-		// We want this program to be the entrypoint.
-		program_id: crate::id(),
-		// The accounts needed.
-		accounts: [
-		// First we need the executable accounts.
-		relayer_discovery::executable_relayer_accounts(&command_id, &crate::id()), 
-		// Followed by the accounts needed to modify storage of the executable.
-		vec![
-			RelayerAccount::Payer(1000000000),
-			RelayerAccount::Account { pubkey: counter_pda, is_writable: true },
-			RelayerAccount::Account { pubkey: system_program::ID, is_writable: false },
-		]
-		].concat(),
-		// The data needed.
-		data: vec! [
-			// We can easily get the discriminaator thankfully. Note that we need `instruction::Execute` and not `instructions::Execute`.
-			RelayerData::Bytes(Vec::from(Execute::DISCRIMINATOR)),
-			// We do not want to prefix the payload with the length as it is decoded into a struct as opposed to a `Vec<u8>`.
-			RelayerData::PayloadRaw,
-			// The message, which is needed for the gateway.
-			RelayerData::Message,
-		],
-	}  
-	]
-))
-```
-This points to the `Execute` instruction which is to be called by the relayer.
-```rust
-#[derive(Accounts)]
-#[instruction(payload: Payload)]
-/// The execute entrypoint.
-pub struct Execute<'info> {
-    // GMP Accounts
-    pub executable: AxelarExecuteAccounts<'info>,
+A one time call has to be made to the [`Init`](../../programs/solana-axelar-test-discoverable/src/instructions/init.rs) instruction to setup the `transaction_pda`.
 
-    #[account(mut)]
-    pub payer: Signer<'info>,
+The stored relayer transaction points to the [`GetTransaction`](../../programs/solana-axelar-test-discoverable/src/instructions/get_transaction.rs) instruction which returns the executable function.
 
-    // The counter account
-    #[account(
-        init_if_needed,
-        space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
-        payer = payer,
-        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()], 
-        bump
-    )]
-    pub counter: Account<'info, Counter>,
+This points to the [`Execute`](../../programs/solana-axelar-test-discoverable/src/instructions/execute.rs) instruction which is to be called by the relayer.
 
-    pub system_program: Program<'info, System>,
-}
-
-/// This function keeps track of how many times a message has been received for a given `payload.storage_id`, and logs the `payload.memo`.
-pub fn execute_handler(
-    ctx: Context<Execute>,
-    payload: Payload,
-    message: Message,
-) -> Result<()> {
-	...
-}
-```
 #### Relayer
-The relayer needs to make a few different calls to an node:
-1. Call `getAccountInfo` for the  `transaction_pda` initiated by the `solana_axelar_memo_executable` 
-2. Parse the response into a `RelayerTransaction` object. Convert this into a regular instruction (`get_transaction`). Call `simulateTransaction` with this information since the `RelayerTransaction` was `Discovery` instead of `Final`.
+The relayer needs to make a few different RPC calls to a node:
+1. Call `getAccountInfo` for the  `transaction_pda` initiated by the `solana_axelar_memo_executable`. [`relayer_discovery::find_transaction_pda`](./src/lib.rs#209) can be used to determine the `transaction_pda`.
+2. Parse the response into a `RelayerTransaction` object. [`relayer_instruction::convert_transaction`](./src/lib.rs#170) can be used to convert this into a Discovery instruction pointing to `get_transaction`. Call `simulateTransaction` with this information since the `RelayerTransaction` was `Discovery` instead of `Final`.
 4. The result data now can be converted to a `RelayerTransaction::Final`. It requires that a `payer` is passed as a signer and some funds are requested. If the gas covers the amount requested alongside what would be needed for the execution (another `simulateTransaction` is needed to determine this, but it is not instrumental for this example) then make sure the `payer` has exactly the funds requested (to ensure loss of additional funds).
 5. Finally execute the `Final` transaction, passing the properly funded `payer`.
 
 ### Explanation
-The reason why we need an intermediate call (`GetTransaction`) is because depending on the `storage_id` a different pda is required for execution, which is calculated there. Also the executable accounts required depend on the `command_id` which is different for every call.
+The reason why we need an intermediate call ([`GetTransaction`](../../programs/solana-axelar-test-discoverable/src/instructions/get_transaction.rs)) is because depending on the `storage_id` a different pda is required for execution, which is calculated there. Also the executable accounts required depend on the `command_id` which is different for every call.

@@ -12,8 +12,6 @@ use solana_axelar_its::seed_prefixes::INTERCHAIN_EXECUTABLE_TRANSACTION_PDA_SEED
 
 use crate::instruction::{GetItsTransaction, GetTransaction};
 
-transaction_pda_accounts!(relayer_transaction());
-
 #[derive(Accounts)]
 pub struct Init<'info> {
     #[account(mut)]
