@@ -1,4 +1,4 @@
-use anchor_lang::{AccountDeserialize, AnchorSerialize};
+use anchor_lang::AccountDeserialize;
 use anchor_lang::{Discriminator, InstructionData, Space, ToAccountMetas};
 use anchor_spl::token::spl_token;
 use anchor_spl::token_2022::spl_token_2022;
@@ -311,7 +311,16 @@ pub fn init_its_service(
     operator_account: &Account,
     chain_name: String,
     its_hub_address: String,
-) -> (Pubkey, Account, Pubkey, Account, Pubkey, Account) {
+) -> (
+    Pubkey,
+    Account,
+    Pubkey,
+    Account,
+    Pubkey,
+    Account,
+    Pubkey,
+    Account,
+) {
     let program_id = solana_axelar_its::id();
 
     // Derive the program data PDA for the upgradeable program
@@ -336,6 +345,8 @@ pub fn init_its_service(
         &program_id,
     );
 
+    let (transaction, _) = relayer_discovery::find_transaction_pda(&program_id);
+
     let its_hub_addr_len = its_hub_address.len();
     let chain_name_len = chain_name.len();
 
@@ -348,6 +359,7 @@ pub fn init_its_service(
             system_program: solana_sdk::system_program::ID,
             operator,
             user_roles_account: user_roles_pda,
+            transaction,
         }
         .to_account_metas(None),
         data: solana_axelar_its::instruction::Initialize {
@@ -364,6 +376,7 @@ pub fn init_its_service(
         keyed_account_for_system_program(),
         (operator, operator_account.clone()),
         (user_roles_pda, new_empty_account()),
+        (transaction, new_empty_account()),
     ];
 
     let checks = vec![
@@ -393,6 +406,10 @@ pub fn init_its_service(
 
     let user_roles_data = UserRoles::try_deserialize(&mut user_roles_account.data.as_slice())
         .expect("Failed to deserialize roles data");
+
+    let transaction_account = result
+        .get_account(&transaction)
+        .expect("RelayerTransaction must exists");
     assert_eq!(
         user_roles_data.roles,
         Roles::OPERATOR,
@@ -406,6 +423,8 @@ pub fn init_its_service(
         user_roles_account.clone(),
         program_data,
         program_data_account,
+        transaction,
+        transaction_account.clone(),
     )
 }
 
@@ -418,7 +437,7 @@ pub fn init_its_service_with_ethereum_trusted(
     operator_account: &Account,
     chain_name: String,
     its_hub_address: String,
-) -> (Pubkey, Account) {
+) -> (Pubkey, Account, Pubkey, Account) {
     let program_id = solana_axelar_its::id();
 
     // First initialize the ITS service
@@ -429,6 +448,8 @@ pub fn init_its_service_with_ethereum_trusted(
         _user_roles_account,
         program_data,
         program_data_account,
+        transaction,
+        transaction_account,
     ) = init_its_service(
         mollusk,
         payer,
@@ -491,73 +512,10 @@ pub fn init_its_service_with_ethereum_trusted(
         "Ethereum should be a trusted chain"
     );
 
-    (its_root_pda, updated_its_account.clone())
-}
-
-pub fn init_its_relayer_transaction(
-    mollusk: &Mollusk,
-    payer: Pubkey,
-    payer_account: &Account,
-) -> (Pubkey, Account) {
-    let program_id = solana_axelar_its::id();
-
-    let transaction_pda = relayer_discovery::find_transaction_pda(&program_id).0;
-    let init_ix = solana_axelar_its::instruction::RegisterDiscoveryTransaction {};
-    let init_accounts = solana_axelar_its::accounts::RegisterDiscoveryTransaction {
-        transaction: solana_axelar_its::accounts::RelayerTransactionAccounts {
-            relayer_transaction: transaction_pda,
-            payer,
-            system_program: solana_sdk::system_program::ID,
-        },
-    };
-    let init_instruction = Instruction {
-        program_id,
-        accounts: init_accounts.to_account_metas(None),
-        data: init_ix.data(),
-    };
-    let init_accounts = vec![
-        (
-            transaction_pda,
-            Account {
-                lamports: 0,
-                data: vec![],
-                owner: solana_sdk::system_program::ID,
-                executable: false,
-                rent_epoch: 0,
-            },
-        ),
-        (payer, payer_account.clone()),
-        (
-            solana_sdk::system_program::ID,
-            Account {
-                lamports: 0,
-                data: vec![],
-                owner: solana_sdk::native_loader::id(),
-                executable: true,
-                rent_epoch: 0,
-            },
-        ),
-    ];
-
-    let relayer_transaction_length = {
-        let mut bytes = Vec::with_capacity(256);
-        solana_axelar_its::utils::relayer_transaction(None, None)
-            .serialize(&mut bytes)
-            .unwrap();
-        bytes.len()
-    };
-    let checks = vec![
-        Check::success(),
-        Check::account(&transaction_pda)
-            .space(relayer_transaction_length)
-            .build(),
-    ];
-
-    let result =
-        mollusk.process_and_validate_instruction(&init_instruction, &init_accounts, &checks);
-
-    let transaction_account = result
-        .get_account(&transaction_pda)
-        .expect("relayer transaction  PDA should exist");
-    (transaction_pda, transaction_account.clone())
+    (
+        its_root_pda,
+        updated_its_account.clone(),
+        transaction,
+        transaction_account.clone(),
+    )
 }

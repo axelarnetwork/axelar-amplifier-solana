@@ -6,7 +6,6 @@ use anchor_lang::Discriminator;
 use anchor_lang::InstructionData;
 use relayer_discovery::structs::RelayerAccount;
 use relayer_discovery::structs::{RelayerData, RelayerInstruction, RelayerTransaction};
-use relayer_discovery::transaction_pda_accounts;
 use relayer_discovery::TRANSACTION_PDA_SEED;
 use solana_axelar_its::seed_prefixes::INTERCHAIN_EXECUTABLE_TRANSACTION_PDA_SEED;
 

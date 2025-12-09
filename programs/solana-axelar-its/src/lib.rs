@@ -346,12 +346,6 @@ pub mod solana_axelar_its {
         instructions::mint_interchain_token_handler(ctx, amount)
     }
 
-    pub fn register_discovery_transaction(
-        ctx: Context<RegisterDiscoveryTransaction>,
-    ) -> Result<()> {
-        instructions::register_discovery_transaction(ctx)
-    }
-
     pub fn get_transaction(
         ctx: Context<GetTransaction>,
         message: solana_axelar_gateway::Message,

@@ -15,6 +15,3 @@ pub use set_flow_limit::*;
 
 pub mod transfer_operatorship;
 pub use transfer_operatorship::*;
-
-pub mod register_discovery_transaction;
-pub use register_discovery_transaction::*;

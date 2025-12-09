@@ -16,8 +16,8 @@ use solana_axelar_gateway::GatewayConfig;
 use solana_axelar_gateway_test_fixtures::{create_test_message, initialize_gateway};
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id, ItsError};
 use solana_axelar_its_test_fixtures::{
-    create_sysvar_instructions_data, get_token_mint_pda, init_its_relayer_transaction,
-    init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs, new_test_account,
+    create_sysvar_instructions_data, get_token_mint_pda, init_its_service_with_ethereum_trusted,
+    initialize_mollusk_with_programs, new_test_account,
 };
 use solana_program::program_pack::{IsInitialized, Pack};
 use solana_sdk::{account::Account, keccak};
@@ -47,19 +47,17 @@ fn execute_interchain_transfer_success() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &fixture.setup.mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&fixture.setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &fixture.setup.mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 5: First deploy a token using helper function with new mollusk
     let salt = [1u8; 32];
@@ -112,10 +110,7 @@ fn execute_interchain_transfer_success() {
 
     let deployer_execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -214,10 +209,7 @@ fn execute_interchain_transfer_success() {
 
     let transfer_execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (gateway_root_pda, gateway_root_pda_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
@@ -313,19 +305,17 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &fixture.setup.mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&fixture.setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &fixture.setup.mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 5: First deploy a token using helper function with new mollusk
     let salt = [1u8; 32];
@@ -370,10 +360,7 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
 
     let deployer_execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -475,10 +462,6 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
 
     let transfer_execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
         (gateway_root_pda, gateway_root_pda_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,
@@ -551,19 +534,17 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &fixture.setup.mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&fixture.setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &fixture.setup.mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 1_000_000u64;
@@ -614,10 +595,7 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
 
     let transfer_execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (gateway_root_pda, gateway_root_pda_account.clone()),
         (
             solana_sdk::sysvar::instructions::ID,

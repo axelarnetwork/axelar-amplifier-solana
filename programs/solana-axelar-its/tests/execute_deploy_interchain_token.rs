@@ -13,7 +13,6 @@ use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 use solana_axelar_gateway_test_fixtures::{create_test_message, initialize_gateway};
 use solana_axelar_its::utils::truncate_utf8;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
-use solana_axelar_its_test_fixtures::init_its_relayer_transaction;
 use solana_axelar_its_test_fixtures::new_test_account;
 use solana_axelar_its_test_fixtures::{
     create_sysvar_instructions_data, get_token_mint_pda, init_its_service_with_ethereum_trusted,
@@ -40,18 +39,17 @@ fn execute_deploy_interchain_token_success() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &setup.mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &setup.mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
@@ -92,10 +90,7 @@ fn execute_deploy_interchain_token_success() {
 
     let execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -197,19 +192,17 @@ fn execute_deploy_interchain_token_with_large_metadata() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &setup.mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &setup.mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
@@ -250,10 +243,7 @@ fn execute_deploy_interchain_token_with_large_metadata() {
 
     let execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {
@@ -333,19 +323,17 @@ fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &setup.mollusk,
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &setup.mollusk,
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 5-7: Create deployment parameters and payload
     let salt = [1u8; 32];
@@ -387,10 +375,7 @@ fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
 
     let execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (
             solana_sdk::sysvar::instructions::ID,
             Account {

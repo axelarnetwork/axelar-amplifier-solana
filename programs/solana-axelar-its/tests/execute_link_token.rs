@@ -10,8 +10,8 @@ use solana_axelar_gateway_test_fixtures::create_test_message;
 use solana_axelar_its::ItsError;
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::{
-    create_test_mint, init_its_relayer_transaction, init_its_service_with_ethereum_trusted,
-    initialize_mollusk_with_programs, new_test_account,
+    create_test_mint, init_its_service_with_ethereum_trusted, initialize_mollusk_with_programs,
+    new_test_account,
 };
 use solana_sdk::account::Account;
 use solana_sdk::keccak;
@@ -36,19 +36,17 @@ fn execute_link_token() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Use our configured mollusk for ITS service initialization too
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
-        &fixture.setup.mollusk, // Now this mollusk has Token2022 properly configured
-        payer,
-        &payer_account,
-        payer,
-        operator,
-        &operator_account,
-        chain_name.clone(),
-        its_hub_address.clone(),
-    );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&fixture.setup.mollusk, payer, &payer_account);
+    let (its_root_pda, its_root_account, transaction, transaction_account) =
+        init_its_service_with_ethereum_trusted(
+            &fixture.setup.mollusk, // Now this mollusk has Token2022 properly configured
+            payer,
+            &payer_account,
+            payer,
+            operator,
+            &operator_account,
+            chain_name.clone(),
+            its_hub_address.clone(),
+        );
 
     // Step 5: Create existing token mint (key difference from deploy test)
     let mint_authority = payer; // Use payer as mint authority for simplicity
@@ -96,10 +94,7 @@ fn execute_link_token() {
 
     let execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
+        (transaction, transaction_account),
         (
             mpl_token_metadata::ID,
             Account {
@@ -167,7 +162,7 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Use our configured mollusk for ITS service initialization too
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &fixture.setup.mollusk, // Now this mollusk has Token2022 properly configured
         payer,
         &payer_account,
@@ -177,9 +172,6 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
         chain_name.clone(),
         its_hub_address.clone(),
     );
-
-    let (its_relayer_transaction_pda, its_relayer_transaction_account) =
-        init_its_relayer_transaction(&fixture.setup.mollusk, payer, &payer_account);
 
     // Step 5: Create existing token mint (key difference from deploy test)
     let mint_authority = payer; // Use payer as mint authority for simplicity
@@ -227,10 +219,6 @@ fn reject_execute_link_token_with_invalid_token_manager_type() {
 
     let execute_accounts = vec![
         (its_root_pda, its_root_account.clone()),
-        (
-            its_relayer_transaction_pda,
-            its_relayer_transaction_account.clone(),
-        ),
         (
             mpl_token_metadata::ID,
             Account {

@@ -2,7 +2,7 @@
 #![allow(clippy::too_many_arguments)]
 use std::collections::HashMap;
 
-use anchor_lang::{AnchorSerialize, InstructionData, ToAccountMetas};
+use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::{self, get_associated_token_address_with_program_id},
     token_2022::spl_token_2022,
@@ -19,9 +19,9 @@ use relayer_discovery_test_fixtures::relayer_execute_with_checks;
 use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
-        execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
-        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
-        make_register_canonical_token_instruction, make_set_trusted_chain_instruction,
+        make_deploy_interchain_token_instruction, make_interchain_transfer_instruction,
+        make_mint_interchain_token_instruction, make_register_canonical_token_instruction,
+        make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -36,7 +36,7 @@ use solana_sdk::{
 // Gateway
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, IncomingMessage, Message, VerifierSetTracker,
+    GatewayConfig, Message, VerifierSetTracker,
 };
 
 macro_rules! msg {
@@ -493,24 +493,8 @@ impl ItsTestHarness {
     pub fn new() -> Self {
         let mut harness = Self::default();
 
-        let mut harness = Self {
-            ctx,
-            payer,
-            operator,
-            gateway: GatewayHarnessInfo {
-                root: Pubkey::new_from_array([0u8; 32]),
-                signers: vec![],
-                verifier_set_tracker: Pubkey::new_from_array([0u8; 32]),
-                verifier_set_leaves: vec![],
-                verifier_merkle_tree: MerkleTree::new(),
-            },
-            its_root: Pubkey::new_from_array([0u8; 32]),
-        };
-
-        harness.ensure_account_exists_with_lamports(payer, LAMPORTS_PER_SOL * 100);
-        harness.ensure_account_exists_with_lamports(operator, LAMPORTS_PER_SOL * 100);
-        harness.ensure_its_initialized();
-        harness.ensure_its_relayer_transaction_registered();
+        harness.ensure_account_exists_with_lamports(harness.payer, LAMPORTS_PER_SOL * 100);
+        harness.ensure_account_exists_with_lamports(harness.operator, LAMPORTS_PER_SOL * 100);
         harness.ensure_sysvar_instructions_account();
         harness.ensure_its_initialized();
 
@@ -952,54 +936,6 @@ impl ItsTestHarness {
         );
 
         self.its_root = its_root_pda;
-    }
-
-    pub fn ensure_its_relayer_transaction_registered(&self) -> (Pubkey, Account) {
-        let program_id = solana_axelar_its::id();
-
-        let transaction_pda = relayer_discovery::find_transaction_pda(&program_id).0;
-
-        if let Some(account) = self.get_account(&transaction_pda) {
-            return (transaction_pda, account);
-        }
-
-        let init_ix = solana_axelar_its::instruction::RegisterDiscoveryTransaction {};
-        let init_accounts = solana_axelar_its::accounts::RegisterDiscoveryTransaction {
-            transaction: solana_axelar_its::accounts::RelayerTransactionAccounts {
-                relayer_transaction: transaction_pda,
-                payer: self.payer,
-                system_program: solana_sdk::system_program::ID,
-            },
-        };
-        let init_instruction = Instruction {
-            program_id,
-            accounts: init_accounts.to_account_metas(None),
-            data: init_ix.data(),
-        };
-
-        let relayer_transaction_length = {
-            let mut bytes = Vec::with_capacity(256);
-            solana_axelar_its::utils::relayer_transaction(None, None)
-                .serialize(&mut bytes)
-                .unwrap();
-            bytes.len()
-        };
-        let checks = vec![
-            Check::success(),
-            Check::account(&transaction_pda)
-                .space(relayer_transaction_length)
-                .build(),
-        ];
-
-        let result = self
-            .ctx
-            .process_and_validate_instruction(&init_instruction, &checks);
-
-        let transaction_account = result
-            .get_account(&transaction_pda)
-            .expect("relayer transaction  PDA should exist");
-
-        (transaction_pda, transaction_account.clone())
     }
 
     /// Shortcut function to get the token mint for a given token ID.
