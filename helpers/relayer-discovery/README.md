@@ -171,7 +171,7 @@ pub struct Execute<'info> {
         init_if_needed,
         space = Counter::DISCRIMINATOR.len() + Counter::INIT_SPACE,
         payer = payer,
-        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_le_bytes()], 
+        seeds = [Counter::SEED_PREFIX, &payload.storage_id.to_ne_bytes()], 
         bump
     )]
     pub counter: Account<'info, Counter>,

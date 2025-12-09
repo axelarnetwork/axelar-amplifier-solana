@@ -205,6 +205,7 @@ solana-axelar-std = { version = "0.1.2", path = "crates/solana-axelar-std" }
 governance-gmp = { version = "0.1.1", path = "helpers/governance-gmp" }
 interchain-token-transfer-gmp = { version = "0.1.1", path = "helpers/interchain-token-transfer-gmp" }
 program-utils = { version = "0.1.2", path = "helpers/program-utils", default-features = false }
+relayer-discovery = { version = "1.0.0", path = "helpers/relayer-discovery"}
 
 # helper crates (not published - dev-dependencies only)
 solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
@@ -216,7 +217,6 @@ evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 mollusk-harness = { path = "helpers/mollusk-harness" }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 role-management = { path = "helpers/role-management" }
-relayer-discovery = { path = "helpers/relayer-discovery"}
 
 [workspace.metadata.cargo-machete]
 ignored = ["num-traits"]

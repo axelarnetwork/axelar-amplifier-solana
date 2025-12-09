@@ -1,8 +1,9 @@
 [package]
 name = "relayer-discovery"
-version = "0.0.0"
+version = "1.0.0"
 edition = "2021"
 license.workspace = true
+description = "Utility functions and helpers for Solana Relayer Discovery"
 
 [lints]
 workspace = true
