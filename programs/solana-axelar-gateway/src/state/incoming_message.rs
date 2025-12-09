@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use bytemuck::{Pod, Zeroable};
 
+use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+
 #[account(zero_copy)]
 #[derive(Debug, PartialEq, Eq)]
 #[allow(clippy::pub_underscore_fields)]
@@ -15,13 +17,19 @@ pub struct IncomingMessage {
 
 impl IncomingMessage {
     pub const SEED_PREFIX: &'static [u8] = b"incoming message";
+    // ValidateMessage
+    pub const VALIDATE_MESSAGE_SEED_PREFIX: &'static [u8] = b"gtw-validate-msg";
 
     pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
         Pubkey::find_program_address(&[Self::SEED_PREFIX, command_id], &crate::ID)
     }
 
-    // ValidateMessage
-    pub const VALIDATE_MESSAGE_SEED_PREFIX: &'static [u8] = b"gtw-validate-msg";
+    pub fn find_signing_pda(command_id: &[u8; 32], destination_address: &Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[VALIDATE_MESSAGE_SIGNING_SEED, command_id],
+            destination_address,
+        )
+    }
 
     // Returns the PDA address that must sign to validate
     // the incoming message
