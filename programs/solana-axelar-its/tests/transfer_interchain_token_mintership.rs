@@ -27,7 +27,7 @@ fn transfer_interchain_token_mintership_success() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -159,7 +159,7 @@ fn reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -258,7 +258,7 @@ fn reject_transfer_interchain_token_mintership_without_minter_role() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -363,7 +363,7 @@ fn reject_transfer_interchain_token_mintership_same_sender_destination() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,

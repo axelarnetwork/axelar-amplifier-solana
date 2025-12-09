@@ -30,7 +30,7 @@ fn transfer_token_manager_operatorship_success() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -188,7 +188,7 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -309,7 +309,7 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,

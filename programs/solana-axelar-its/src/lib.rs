@@ -95,6 +95,9 @@ pub mod seed_prefixes {
     /// The seed prefix for deriving the interchain transfer execute signing PDA
     pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] =
         state::InterchainTransferExecute::SEED_PREFIX;
+
+    /// The seed prefix for deriving the interchain executable transaction pda
+    pub const INTERCHAIN_EXECUTABLE_TRANSACTION_PDA_SEED: &[u8] = b"interchain-executable";
 }
 
 #[program]
@@ -229,47 +232,62 @@ pub mod solana_axelar_its {
         symbol: String,
         decimals: u8,
         minter: Vec<u8>,
+        source_chain: String,
+        message: solana_axelar_gateway::Message,
     ) -> Result<()> {
         instructions::execute_deploy_interchain_token_handler(
-            ctx, token_id, name, symbol, decimals, minter,
+            ctx,
+            token_id,
+            name,
+            symbol,
+            decimals,
+            minter,
+            source_chain,
+            message,
         )
     }
 
     pub fn execute_link_token(
         ctx: Context<ExecuteLinkToken>,
         token_id: [u8; 32],
-        destination_token_address: [u8; 32],
         token_manager_type: u8,
+        source_token_address: Vec<u8>,
+        destination_token_address: Vec<u8>,
         link_params: Vec<u8>,
+        source_chain: String,
+        message: solana_axelar_gateway::Message,
     ) -> Result<()> {
         instructions::execute_link_token_handler(
             ctx,
             token_id,
-            destination_token_address,
             token_manager_type,
+            source_token_address,
+            destination_token_address,
             link_params,
+            source_chain,
+            message,
         )
     }
 
     pub fn execute_interchain_transfer<'info>(
         ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
-        message: solana_axelar_gateway::Message,
-        source_chain: String,
+        token_id: [u8; 32],
         source_address: Vec<u8>,
         destination_address: Pubkey,
-        token_id: [u8; 32],
         amount: u64,
         data: Vec<u8>,
+        source_chain: String,
+        message: solana_axelar_gateway::Message,
     ) -> Result<()> {
         instructions::execute_interchain_transfer_handler(
             ctx,
-            message,
-            source_chain,
+            token_id,
             source_address,
             destination_address,
-            token_id,
             amount,
             data,
+            source_chain,
+            message,
         )
     }
 
@@ -326,6 +344,14 @@ pub mod solana_axelar_its {
 
     pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
         instructions::mint_interchain_token_handler(ctx, amount)
+    }
+
+    pub fn get_transaction(
+        ctx: Context<GetTransaction>,
+        message: solana_axelar_gateway::Message,
+        payload: Vec<u8>,
+    ) -> Result<relayer_discovery::structs::RelayerTransaction> {
+        instructions::get_transaction_handler(ctx, message, payload)
     }
 
     pub fn handover_mint_authority(

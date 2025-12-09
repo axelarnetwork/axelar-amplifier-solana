@@ -70,7 +70,7 @@ fn interchain_transfer_mint_burn() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -201,7 +201,7 @@ fn interchain_transfer_lock_unlock() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -361,7 +361,7 @@ fn reject_interchain_transfer_with_invalid_token_id() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -518,7 +518,7 @@ fn reject_interchain_transfer_if_sender_has_no_tokens() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -674,7 +674,7 @@ fn reject_interchain_transfer_if_amount_is_0() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -830,7 +830,7 @@ fn reject_interchain_transfer_if_destination_address_is_empty() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,

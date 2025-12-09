@@ -1,29 +1,41 @@
 use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
+    instructions::gmp::*,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
     utils::truncate_utf8,
 };
+use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
 use anchor_spl::{token_2022::Token2022, token_interface::TokenAccount};
+use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
+use solana_axelar_gateway::Message;
 
 #[derive(Accounts)]
 #[event_cpi]
-#[instruction(token_id: [u8; 32], name: String, symbol: String, decimals: u8)]
+#[instruction(
+    token_id: [u8; 32],
+    name: String,
+    symbol: String,
+    decimals: u8,
+    minter: Vec<u8>,
+    source_chain: String,
+)]
 pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 
+    pub executable: AxelarExecuteAccounts<'info>,
+
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused @ ItsError::Paused,
-        signer // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -111,7 +123,28 @@ pub fn execute_deploy_interchain_token_handler(
     symbol: String,
     decimals: u8,
     minter: Vec<u8>,
+    source_chain: String,
+    message: Message,
 ) -> Result<()> {
+    let deploy = DeployInterchainToken {
+        selector: DeployInterchainToken::MESSAGE_TYPE_ID
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        token_id: token_id.into(),
+        name: name.clone(),
+        symbol: symbol.clone(),
+        decimals,
+        minter: Bytes::from(minter.clone()),
+    };
+    let inner_payload = GMPPayload::DeployInterchainToken(deploy);
+    validate_message(
+        &ctx.accounts.executable,
+        &ctx.accounts.its_root_pda,
+        message,
+        inner_payload,
+        source_chain,
+    )?;
+
     // Truncate name and symbol for incoming deployments
     // to prevent metadata CPI failure
     let mut truncated_name = name;
@@ -174,7 +207,7 @@ pub fn execute_deploy_interchain_token_handler(
     Ok(())
 }
 
-pub fn process_inbound_deploy(
+fn process_inbound_deploy(
     ctx: &mut ExecuteDeployInterchainToken,
     token_id: [u8; 32],
     name: &str,
@@ -182,6 +215,7 @@ pub fn process_inbound_deploy(
     token_manager_pda_bump: u8,
     minter_roles_pda_bump: Option<u8>,
 ) -> Result<()> {
+    // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
 
     TokenManager::init_account(
