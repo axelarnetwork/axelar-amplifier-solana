@@ -135,10 +135,10 @@ pub fn deploy_remote_canonical_interchain_token_handler(
 
     emit_cpi!(InterchainTokenDeploymentStarted {
         token_id,
-        token_name: name.clone(),
-        token_symbol: symbol.clone(),
-        token_decimals: decimals,
-        minter: vec![], // Canonical tokens don't have destination minters
+        name: name.clone(),
+        symbol: symbol.clone(),
+        decimals,
+        minter: None, // Canonical tokens don't have destination minters
         destination_chain: destination_chain.clone(),
     });
 

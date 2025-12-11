@@ -237,9 +237,9 @@ fn process_outbound_transfer(
     let data_hash = data
         .as_ref()
         .filter(|d| !d.is_empty())
-        .map_or([0; 32], |d| solana_program::keccak::hash(d).0);
+        .map(|d| solana_program::keccak::hash(d).0);
 
-    emit_cpi!(crate::events::InterchainTransfer {
+    emit_cpi!(crate::events::InterchainTransferSent {
         token_id,
         source_address,
         source_token_account: ctx.accounts.authority_token_account.key(),

@@ -132,7 +132,11 @@ pub fn link_token_handler(
         source_token_address: ctx.accounts.token_manager_pda.token_address,
         destination_token_address: destination_token_address.clone(),
         token_manager_type: token_manager_type.into(),
-        params: link_params.clone(),
+        params: if link_params.is_empty() {
+            None
+        } else {
+            Some(link_params.clone())
+        },
     });
 
     let payload = encoding::Message::LinkToken(encoding::LinkToken {

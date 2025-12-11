@@ -136,9 +136,7 @@ pub fn register_custom_token_handler(
         token_id,
         token_manager: ctx.accounts.token_manager_pda.key(),
         token_manager_type: token_manager_type.into(),
-        params: operator
-            .map(|op| op.to_bytes().to_vec())
-            .unwrap_or_default(),
+        params: operator.map(|op| op.to_bytes().to_vec()),
     });
 
     Ok(token_id)
