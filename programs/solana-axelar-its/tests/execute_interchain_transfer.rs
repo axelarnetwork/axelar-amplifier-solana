@@ -199,7 +199,7 @@ fn execute_interchain_transfer_success() {
         token_id,
         source_address: source_address_bytes.clone(),
         destination_address: destination_address.clone(),
-        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        amount: transfer_amount,
         data: None,
     };
 
@@ -498,7 +498,7 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
         token_id,
         source_address: source_address_bytes.clone(),
         destination_address: destination_address.clone(),
-        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        amount: transfer_amount,
         data: None,
     };
 
@@ -775,7 +775,7 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
         token_id: invalid_token_id,
         source_address: source_address_bytes.clone(),
         destination_address: destination_address.clone(),
-        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        amount: transfer_amount,
         data: None,
     };
 
@@ -1052,7 +1052,7 @@ fn reject_execute_interchain_transfer_with_mismatched_destination() {
         token_id,
         source_address: source_address_bytes.clone(),
         destination_address: destination_address.clone(),
-        amount: encoding::u64_to_le_bytes_32(transfer_amount),
+        amount: transfer_amount,
         data: None,
     };
 

@@ -19,11 +19,7 @@ pub struct InterchainTransfer {
     pub token_id: [u8; 32],
     pub source_address: Vec<u8>,
     pub destination_address: Vec<u8>,
-    // Our program will convert this to u64, error
-    // if too large
-    // NOTE: this could be handled by the ITS cosmwasm contract
-    // for more compact representation
-    pub amount: [u8; 32], // Uint256 as 32-byte little-endian
+    pub amount: u64,
     pub data: Option<Vec<u8>>,
 }
 

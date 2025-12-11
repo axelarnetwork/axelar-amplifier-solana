@@ -253,7 +253,7 @@ fn process_outbound_transfer(
         token_id,
         source_address: source_address.to_bytes().to_vec(),
         destination_address,
-        amount: encoding::u64_to_le_bytes_32(amount),
+        amount,
         data,
     });
 

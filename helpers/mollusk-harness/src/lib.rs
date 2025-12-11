@@ -1465,7 +1465,7 @@ impl ItsTestHarness {
             token_id,
             source_address: source_address.as_bytes().to_vec(),
             destination_address: destination_address.to_bytes().to_vec(),
-            amount: encoding::u64_to_le_bytes_32(amount),
+            amount,
             data: data.clone().map(|(d, _)| d),
         };
 

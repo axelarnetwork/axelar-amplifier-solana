@@ -100,18 +100,13 @@ fn cpi_execute_interchain_transfer<'info>(
         .map_err(|_| ItsError::InvalidAccountData)?;
     let destination_address = Pubkey::new_from_array(destination_address);
 
-    // Convert amount from [u8; 32] LE to u64
-    // NOTE: this could be handled by the ITS cosmwasm contract
-    // for more compact representation
-    let amount = crate::encoding::u64_from_le_bytes_32(transfer.amount)?;
-
     let data = transfer.data.unwrap_or_default();
 
     let instruction_data = crate::instruction::ExecuteInterchainTransfer {
         token_id,
         source_address: transfer.source_address,
         destination_address,
-        amount,
+        amount: transfer.amount,
         data,
         message,
         source_chain: source_chain.to_owned(),
