@@ -4,6 +4,7 @@ version = "0.1.2"
 edition = "2021"
 description = "Utility functions and helpers for Solana program development"
 license.workspace = true
+repository.workspace = true
 
 [lints]
 workspace = true
