@@ -765,6 +765,7 @@ impl ItsTestHarness {
         let verification_session_account =
             solana_axelar_gateway::SignatureVerificationSessionData::find_pda(
                 &payload_merkle_root,
+                solana_axelar_std::PayloadType::ApproveMessages,
                 &verifier_set_hash,
             )
             .0;
@@ -781,6 +782,7 @@ impl ItsTestHarness {
             .to_account_metas(None),
             data: solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
                 merkle_root: payload_merkle_root,
+                payload_type: solana_axelar_std::PayloadType::ApproveMessages,
             }
             .data(),
         };
@@ -807,6 +809,7 @@ impl ItsTestHarness {
                     l,
                     idx,
                     &self.gateway.verifier_merkle_tree,
+                    solana_axelar_std::PayloadType::ApproveMessages,
                 )
             })
             .map(|verifier_info| Instruction {
