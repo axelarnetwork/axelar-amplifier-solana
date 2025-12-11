@@ -66,6 +66,8 @@ pub enum ItsError {
     NotEnoughAccountKeys,
     #[msg("Invalid token manager type")]
     InvalidTokenManagerType,
+    #[msg("Data serialization error")]
+    SerializationError,
 }
 
 impl From<ItsError> for ProgramError {

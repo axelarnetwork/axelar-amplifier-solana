@@ -1,4 +1,4 @@
-use crate::gmp::*;
+use crate::{encoding, gmp::*};
 use crate::{
     errors::ItsError,
     events::InterchainTokenDeploymentStarted,
@@ -6,7 +6,6 @@ use crate::{
     state::{InterchainTokenService, TokenManager},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
-use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
@@ -15,7 +14,6 @@ use anchor_spl::token_2022::spl_token_2022::{
     state::Mint as SplMint,
 };
 use anchor_spl::token_interface::Mint;
-use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use mpl_token_metadata::accounts::Metadata;
 use solana_axelar_gateway::program::SolanaAxelarGateway;
 use solana_axelar_gateway::GatewayConfig;
@@ -137,7 +135,7 @@ pub fn deploy_remote_interchain_token_handler(
     let deploy_salt = interchain_token_deployer_salt(ctx.accounts.deployer.key, &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
 
-    msg!("Instruction: OutboundDeploy");
+    msg!("Instruction: DeployRemoteInterchainToken");
 
     // get token metadata
     let (name, symbol) = get_token_metadata(
@@ -156,19 +154,18 @@ pub fn deploy_remote_interchain_token_handler(
         destination_chain: destination_chain.clone(),
     });
 
-    let inner_payload = GMPPayload::DeployInterchainToken(DeployInterchainToken {
-        selector: DeployInterchainToken::MESSAGE_TYPE_ID
-            .try_into()
-            .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_id: token_id.into(),
+    let payload = encoding::Message::DeployInterchainToken(encoding::DeployInterchainToken {
+        token_id,
         name,
         symbol,
         decimals,
-        minter: Bytes::default(),
+        // Remote minters are currently disabled
+        minter: None,
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
-    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
+
+    send_to_hub_wrap(gmp_accounts, payload, destination_chain, gas_value)?;
 
     Ok(())
 }
