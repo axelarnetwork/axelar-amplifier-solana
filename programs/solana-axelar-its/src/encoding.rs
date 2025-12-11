@@ -14,7 +14,7 @@ use crate::ItsError;
 use anchor_lang::prelude::*;
 
 // Borsh-serializable mirror of interchain_token_service_std::InterchainTransfer
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct InterchainTransfer {
     pub token_id: [u8; 32],
     pub source_address: Vec<u8>,
@@ -24,7 +24,7 @@ pub struct InterchainTransfer {
 }
 
 /// Borsh-serializable mirror of interchain_token_service_std::DeployInterchainToken
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct DeployInterchainToken {
     pub token_id: [u8; 32],
     pub name: String,
@@ -34,7 +34,7 @@ pub struct DeployInterchainToken {
 }
 
 /// Borsh-serializable mirror of interchain_token_service_std::LinkToken
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct LinkToken {
     pub token_id: [u8; 32],
     pub token_manager_type: u8,
@@ -44,7 +44,7 @@ pub struct LinkToken {
 }
 
 /// Borsh-serializable mirror of interchain_token_service_std::RegisterTokenMetadata
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub struct RegisterTokenMetadata {
     pub decimals: u8,
     pub token_address: Vec<u8>,
@@ -52,7 +52,7 @@ pub struct RegisterTokenMetadata {
 
 /// Borsh-serializable mirror of interchain_token_service_std::Message
 /// Note: Borsh enums automatically serialize with a discriminant byte
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub enum Message {
     InterchainTransfer(InterchainTransfer),
     DeployInterchainToken(DeployInterchainToken),
@@ -60,7 +60,7 @@ pub enum Message {
 }
 
 /// Borsh-serializable mirror of interchain_token_service_std::HubMessage
-#[derive(AnchorSerialize, AnchorDeserialize)]
+#[derive(Clone, Debug, AnchorSerialize, AnchorDeserialize)]
 pub enum HubMessage {
     SendToHub {
         destination_chain: String,
