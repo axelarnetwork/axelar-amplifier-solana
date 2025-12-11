@@ -927,12 +927,12 @@ pub fn create_execute_data_with_signatures(
     // Create signatures for both signers
     let (sig1, recovery_id1) = libsecp256k1::sign(&message, secret_key_1);
     let mut sig1_bytes = sig1.serialize().to_vec();
-    sig1_bytes.push(recovery_id1.serialize());
+    sig1_bytes.push(recovery_id1.serialize() + 27);
     let signature1 = Signature(sig1_bytes.try_into().unwrap());
 
     let (sig2, recovery_id2) = libsecp256k1::sign(&message, secret_key_2);
     let mut sig2_bytes = sig2.serialize().to_vec();
-    sig2_bytes.push(recovery_id2.serialize());
+    sig2_bytes.push(recovery_id2.serialize() + 27);
     let signature2 = Signature(sig2_bytes.try_into().unwrap());
 
     let mut signatures = BTreeMap::new();
