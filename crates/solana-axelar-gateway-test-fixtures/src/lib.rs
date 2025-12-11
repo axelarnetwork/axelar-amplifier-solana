@@ -422,7 +422,7 @@ pub fn create_verifier_info(
     let message = libsecp256k1::Message::parse(&hashed_message);
     let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
     let mut signature_bytes = signature.serialize().to_vec();
-    signature_bytes.push(recovery_id.serialize());
+    signature_bytes.push(recovery_id.serialize() + 27);
     let signature_array: [u8; 65] = signature_bytes.try_into().unwrap();
     let signature = Signature(signature_array);
 
