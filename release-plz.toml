@@ -90,6 +90,14 @@ git_release_enable = true
 publish = true
 publish_no_verify = true
 
+# Skip mollusk-test-utils - published with orphaned commit, not actively released
+[[package]]
+name = "mollusk-test-utils"
+release = false
+publish = false
+changelog_update = false
+git_release_enable = false
+
 [changelog]
 header = """# Changelog
 
