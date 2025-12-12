@@ -10,7 +10,6 @@
 //! WARNING: These mirrors must be kept in sync with the cosmwasm contract!
 //! https://github.com/axelarnetwork/axelar-amplifier/tree/main/contracts/its-borsh-translator
 
-use crate::ItsError;
 use anchor_lang::prelude::*;
 
 // Borsh-serializable mirror of interchain_token_service_std::InterchainTransfer
@@ -71,33 +70,4 @@ pub enum HubMessage {
         message: Message,
     },
     RegisterTokenMetadata(RegisterTokenMetadata),
-}
-
-//
-// Utils
-//
-
-/// Convert a 32-byte little-endian array to u64, returning error if it overflows
-pub fn u64_from_le_bytes_32(bytes: [u8; 32]) -> Result<u64> {
-    // Check that upper 24 bytes are zero (value fits in u64)
-    if bytes[8..].iter().any(|&b| b != 0) {
-        return err!(ItsError::ArithmeticOverflow);
-    }
-    Ok(u64::from_le_bytes(bytes[..8].try_into().unwrap()))
-}
-
-/// Convert a 32-byte little-endian array to u8, returning error if it overflows
-pub fn u8_from_le_bytes_32(bytes: [u8; 32]) -> Result<u8> {
-    // Check that upper 31 bytes are zero (value fits in u8)
-    if bytes[1..].iter().any(|&b| b != 0) {
-        return err!(ItsError::ArithmeticOverflow);
-    }
-    Ok(bytes[0])
-}
-
-/// Convert a u64 to a 32-byte little-endian array
-pub fn u64_to_le_bytes_32(value: u64) -> [u8; 32] {
-    let mut bytes = [0u8; 32];
-    bytes[..8].copy_from_slice(&value.to_le_bytes());
-    bytes
 }
