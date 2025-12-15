@@ -26,69 +26,51 @@ Changes:
 {% endfor -%}
 """
 
+# TEMPORARILY skip ALL packages to debug 0000000 error
 [[package]]
 name = "solana-axelar-std"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "program-utils"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "governance-gmp"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "interchain-token-transfer-gmp"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "solana-axelar-operators"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "solana-axelar-gateway"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "solana-axelar-gas-service"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "solana-axelar-its"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+release = false
+publish = false
 
 [[package]]
 name = "solana-axelar-governance"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
-publish_no_verify = true
+release = false
+publish = false
 
 # Skip mollusk-test-utils - published with orphaned commit, not actively released
 [[package]]
