@@ -98,6 +98,14 @@ publish = false
 changelog_update = false
 git_release_enable = false
 
+# Skip xtask - published with orphaned commit, not actively released
+[[package]]
+name = "xtask"
+release = false
+publish = false
+changelog_update = false
+git_release_enable = false
+
 [changelog]
 header = """# Changelog
 
