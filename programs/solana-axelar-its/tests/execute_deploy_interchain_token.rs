@@ -31,8 +31,7 @@ use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 #[test]
 fn execute_deploy_interchain_token_success() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -96,14 +95,22 @@ fn execute_deploy_interchain_token_success() {
     );
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -203,10 +210,9 @@ fn execute_deploy_interchain_token_success() {
 
 #[test]
 #[allow(clippy::string_slice)]
-fn execute_deploy_interchain_token_with_large_metadata() {
+fn test_execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -270,14 +276,22 @@ fn execute_deploy_interchain_token_with_large_metadata() {
     );
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
@@ -355,8 +369,7 @@ fn execute_deploy_interchain_token_with_large_metadata() {
 #[test]
 fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     let (gateway_root_pda, _) = GatewayConfig::find_pda();
@@ -422,14 +435,22 @@ fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
     );
     message.source_address = its_hub_address.clone();
 
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, incoming_message_pda, incoming_message_account_data) = &incoming_messages[0];
