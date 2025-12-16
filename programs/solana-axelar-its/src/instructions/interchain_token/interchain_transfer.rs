@@ -235,7 +235,7 @@ fn process_outbound_transfer(
     let data_hash = data
         .as_ref()
         .filter(|d| !d.is_empty())
-        .map_or([0; 32], |d| solana_program::keccak::hash(d).0);
+        .map_or([0; 32], |d| solana_keccak_hasher::hash(d).0);
 
     emit_cpi!(crate::events::InterchainTransfer {
         token_id,

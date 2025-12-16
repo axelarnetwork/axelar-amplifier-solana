@@ -110,8 +110,8 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 
 
 [workspace.dependencies]
-anchor-lang = { version = "0.31.1", features = ["event-cpi"] }
-anchor-spl = "0.31.1"
+anchor-lang = { version = "0.32.1", features = ["event-cpi"] }
+anchor-spl = "0.32.1"
 alloy-primitives = "0.7"
 alloy-sol-types = "0.7"
 anyhow = "1"
@@ -163,12 +163,12 @@ solana-test-validator = "~2.3"
 solana-transaction-status = "~2.3"
 solana-banks-interface = "~2.3"
 solana-keccak-hasher = "~2.2.1"
-spl-associated-token-account = "6.0.0"
-spl-pod = "0.4.0"
-spl-token = "6.0.0"
-spl-token-2022 = "6.0.0"
-spl-token-metadata-interface = "0.6.0"
-spl-type-length-value = "0.7.0"
+spl-associated-token-account = "7.0.0"
+spl-pod = "0.5.1"
+spl-token = "8.0.0"
+spl-token-2022 = "8.0.1"
+spl-token-metadata-interface = "0.7.0"
+spl-type-length-value = "0.8.0"
 static_assertions = "1"
 test-context = "0.4"
 test-log = { version = "0.2", features = ["trace"], default-features = false }

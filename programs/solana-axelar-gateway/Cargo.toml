@@ -14,6 +14,8 @@ anchor-lang.workspace = true
 solana-axelar-std = { workspace = true, features = ["anchor"] }
 libsecp256k1.workspace = true
 bitvec.workspace = true
+solana-keccak-hasher.workspace = true
+solana-secp256k1-recover = "~2.2.1"
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 num-derive.workspace = true

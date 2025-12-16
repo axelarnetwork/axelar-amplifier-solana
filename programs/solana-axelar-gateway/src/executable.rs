@@ -247,7 +247,7 @@ pub fn validate_message_raw<'info>(
     message: solana_axelar_gateway::Message,
     payload: &[u8],
 ) -> Result<()> {
-    let computed_payload_hash = anchor_lang::solana_program::keccak::hash(payload).to_bytes();
+    let computed_payload_hash = solana_keccak_hasher::hash(payload).0;
     if computed_payload_hash != message.payload_hash {
         return err!(solana_axelar_gateway::executable::ExecutableError::InvalidPayloadHash);
     }

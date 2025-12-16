@@ -127,7 +127,7 @@ pub fn execute_interchain_transfer_handler<'info>(
     let data_hash = if data.is_empty() {
         [0; 32]
     } else {
-        solana_program::keccak::hash(data.as_ref()).0
+        solana_keccak_hasher::hash(data.as_ref()).0
     };
 
     emit_cpi!(InterchainTransferReceived {

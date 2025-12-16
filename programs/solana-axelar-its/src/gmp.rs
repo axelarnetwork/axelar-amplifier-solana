@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program;
+
 use interchain_token_transfer_gmp::{GMPPayload, SendToHub};
 use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
 use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
@@ -75,7 +75,7 @@ pub fn process_outbound(
         wrapped.encode()
     };
 
-    let payload_hash = solana_program::keccak::hash(&payload).to_bytes();
+    let payload_hash = solana_keccak_hasher::hash(&payload).0;
     let destination_address = gmp_accounts.its_hub_address;
     let refund_address = gmp_accounts.payer.key();
 

@@ -30,9 +30,11 @@ pub struct ProcessGmp<'info> {
     pub governance_config: Account<'info, GovernanceConfig>,
 
     // Variable accounts are kept as unchecked. We self-CPI and check them for each separate instruction
+    /// CHECK: This account is verified through self-CPI calls in each instruction handler
     #[account(mut)]
     pub proposal_pda: UncheckedAccount<'info>,
 
+    /// CHECK: This account is verified through self-CPI calls in each instruction handler
     #[account(mut)]
     pub operator_proposal_pda: UncheckedAccount<'info>,
 
@@ -64,8 +66,7 @@ pub fn process_gmp_handler(
 
 fn ensure_authorized_gmp_command(config: &GovernanceConfig, message: &Message) -> Result<()> {
     // Ensure the incoming address matches stored configuration.
-    let address_hash =
-        solana_program::keccak::hashv(&[message.source_address.as_bytes()]).to_bytes();
+    let address_hash = solana_keccak_hasher::hashv(&[message.source_address.as_bytes()]).0;
     if address_hash != config.address_hash {
         msg!(
             "Incoming governance GMP message came with non authorized address: {}",
@@ -75,7 +76,7 @@ fn ensure_authorized_gmp_command(config: &GovernanceConfig, message: &Message) -
     }
 
     // Ensure the incoming chain matches stored configuration.
-    let chain_hash = solana_program::keccak::hashv(&[message.cc_id.chain.as_bytes()]).to_bytes();
+    let chain_hash = solana_keccak_hasher::hashv(&[message.cc_id.chain.as_bytes()]).0;
     if chain_hash != config.chain_hash {
         msg!(
             "Incoming governance GMP message came with non authorized chain: {}",

@@ -1,7 +1,7 @@
 use alloy_sol_types::SolValue;
 use anchor_lang::prelude::AccountMeta;
 use anchor_lang::AnchorSerialize;
-use anchor_lang::{solana_program, AccountDeserialize, ToAccountMetas};
+use anchor_lang::{AccountDeserialize, ToAccountMetas};
 use governance_gmp::alloy_primitives::U256;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway_test_fixtures::{
@@ -64,7 +64,7 @@ fn should_execute_operator_proposal() {
         eta,
     };
     let schedule_payload = schedule_gmp_payload.abi_encode();
-    let schedule_payload_hash = solana_program::keccak::hashv(&[&schedule_payload]).to_bytes();
+    let schedule_payload_hash = solana_keccak_hasher::hashv(&[&schedule_payload]).to_bytes();
 
     // Approve operator proposal payload (same target/call_data/native_value)
     let approve_operator_gmp_payload = governance_gmp::GovernanceCommandPayload {
@@ -76,7 +76,7 @@ fn should_execute_operator_proposal() {
     };
     let approve_operator_payload = approve_operator_gmp_payload.abi_encode();
     let approve_operator_payload_hash =
-        solana_program::keccak::hashv(&[&approve_operator_payload]).to_bytes();
+        solana_keccak_hasher::hashv(&[&approve_operator_payload]).to_bytes();
 
     let messages = vec![
         create_test_message(
@@ -137,9 +137,9 @@ fn should_execute_operator_proposal() {
         event_authority_bump,
     };
 
-    let chain_hash = solana_program::keccak::hashv(&[b"ethereum"]).to_bytes();
+    let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();
     let address_hash =
-        solana_program::keccak::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
+        solana_keccak_hasher::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
     let minimum_proposal_eta_delay = 3600;
 
     let governance_config_data = GovernanceConfigInit::new(

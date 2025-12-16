@@ -123,7 +123,7 @@ impl SignatureVerificationSessionData {
         prefixed_message.extend_from_slice(message);
 
         // Hash the prefixed message to get a 32-byte digest
-        solana_program::keccak::hash(&prefixed_message).to_bytes()
+        solana_keccak_hasher::hash(&prefixed_message).0
     }
 
     pub fn verify_ecdsa_signature(
@@ -142,11 +142,8 @@ impl SignatureVerificationSessionData {
         };
 
         // This is results in a Solana syscall.
-        let secp256k1_recover = solana_program::secp256k1_recover::secp256k1_recover(
-            &hashed_message,
-            *recovery_id,
-            signature,
-        );
+        let secp256k1_recover =
+            solana_secp256k1_recover::secp256k1_recover(&hashed_message, *recovery_id, signature);
         let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
             solana_program::msg!("Failed to recover ECDSA signature");
             return false;

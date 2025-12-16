@@ -1,5 +1,4 @@
 use anchor_lang::error_code;
-use anchor_lang::solana_program;
 use anchor_lang::solana_program::instruction::AccountMeta;
 
 mod abi;
@@ -61,7 +60,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
     }
 
     pub fn hash_payload(payload: &[u8]) -> [u8; 32] {
-        solana_program::keccak::hash(payload).to_bytes()
+        solana_keccak_hasher::hash(payload).0
     }
 
     /// Get the payload without accounts.

@@ -4,9 +4,7 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::AccountDeserialize;
-use anchor_lang::{
-    prelude::UpgradeableLoaderState, solana_program, InstructionData, ToAccountMetas,
-};
+use anchor_lang::{prelude::UpgradeableLoaderState, InstructionData, ToAccountMetas};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::seed_prefixes::{
@@ -994,7 +992,7 @@ pub fn approve_message_helper(
 
     let cc_id = &messages[position].cc_id;
     let command_id =
-        solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
+        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
 
     let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
         &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],

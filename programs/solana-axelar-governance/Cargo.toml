@@ -40,6 +40,7 @@ governance-gmp.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 anchor-lang.workspace = true
 program-utils.workspace = true
+solana-keccak-hasher.workspace = true
 
 [dev-dependencies]
 libsecp256k1.workspace = true

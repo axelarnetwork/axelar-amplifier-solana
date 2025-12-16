@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program;
 
 #[derive(Debug, InitSpace)]
 #[account]
@@ -41,14 +40,14 @@ impl ExecutableProposal {
             .expect("Solana native value receiver account serialization failed");
         let call_data_ser = &call_data.call_data;
 
-        solana_program::keccak::hashv(&[
+        solana_keccak_hasher::hashv(&[
             &target.to_bytes(),
             sol_accounts_ser.as_ref(),
             native_value_ser.as_ref(),
             call_data_ser,
             native_value,
         ])
-        .to_bytes()
+        .0
     }
 }
 
