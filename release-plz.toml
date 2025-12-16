@@ -90,6 +90,27 @@ git_release_enable = true
 publish = true
 publish_no_verify = true
 
+[[package]]
+name = "solana-axelar-memo"
+release = false
+publish = false
+changelog_update = false
+git_release_enable = false
+
+[[package]]
+name = "mollusk-test-utils"
+release = false
+publish = false
+changelog_update = false
+git_release_enable = false
+
+[[package]]
+name = "xtask"
+release = false
+publish = false
+changelog_update = false
+git_release_enable = false
+
 [changelog]
 header = """# Changelog
 
