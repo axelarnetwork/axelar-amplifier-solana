@@ -29,15 +29,15 @@ Changes:
 # TEMPORARILY skip ALL packages to debug 0000000 error
 [[package]]
 name = "solana-axelar-std"
+release = false
+publish = false
+
+[[package]]
+name = "program-utils"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
 publish = true
-
-[[package]]
-name = "program-utils"
-release = false
-publish = false
 
 [[package]]
 name = "governance-gmp"
