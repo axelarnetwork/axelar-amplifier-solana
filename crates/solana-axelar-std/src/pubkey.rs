@@ -6,6 +6,9 @@
 //! unified interface for public key and signature management.
 use udigest::Digestable;
 
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::borsh;
+
 //
 // Pubkey
 //

@@ -110,7 +110,6 @@ pub(crate) mod tests {
                     &mut [],
                     &key,
                     false,
-                    0,
                 );
                 SolanaAccountRepr::from(&account)
             },
@@ -128,7 +127,6 @@ pub(crate) mod tests {
             &mut [],
             &key,
             false,
-            0,
         );
         SolanaAccountRepr::from(&account)
     }

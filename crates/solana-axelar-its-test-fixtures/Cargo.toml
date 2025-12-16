@@ -14,6 +14,7 @@ solana-axelar-gas-service = { workspace = true, features = ["no-entrypoint"] }
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"] }
 solana-axelar-its = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"] }
 solana-program.workspace = true
+solana-sdk-ids.workspace = true
 solana-axelar-operators.workspace = true
 bincode.workspace = true
 solana-sdk.workspace = true

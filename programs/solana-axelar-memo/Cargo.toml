@@ -20,6 +20,7 @@ solana-axelar-its = { workspace = true, features = ["cpi"] }
 solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
+solana-sdk-ids.workspace = true
 bincode.workspace = true
 solana-axelar-std.workspace = true
 hex.workspace = true

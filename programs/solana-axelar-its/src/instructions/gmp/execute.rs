@@ -357,7 +357,7 @@ pub fn execute_interchain_transfer_extra_accounts(
     transfer_has_data: Option<bool>,
 ) -> Vec<AccountMeta> {
     let mut accounts = vec![
-        AccountMeta::new(destination, false),
+        AccountMeta::new_readonly(destination, false),
         AccountMeta::new(destination_ata, false),
     ];
 

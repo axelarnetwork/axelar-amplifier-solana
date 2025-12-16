@@ -7,14 +7,17 @@ use crate::{
 };
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::{prelude::*, InstructionData};
-use anchor_spl::token_2022::{
-    spl_token_2022::{self, extension::BaseStateWithExtensions},
-    Token2022,
-};
 use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
     associated_token::AssociatedToken,
     token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
+};
+use anchor_spl::{
+    associated_token::spl_associated_token_account,
+    token_2022::{
+        spl_token_2022::{self, extension::BaseStateWithExtensions},
+        Token2022,
+    },
 };
 use anchor_spl::{
     token_2022::spl_token_2022::extension::ExtensionType,
@@ -82,7 +85,7 @@ pub struct DeployInterchainToken<'info> {
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
+    #[account(address = solana_sdk_ids::sysvar::instructions::id())]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
@@ -246,11 +249,8 @@ fn mint_initial_supply(
         &bump_seed,
     ]];
 
-    let cpi_context = CpiContext::new_with_signer(
-        accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
+    let cpi_context =
+        CpiContext::new_with_signer(accounts.token_program.key(), cpi_accounts, signer_seeds);
 
     token_interface::mint_to(cpi_context, initial_supply)?;
 
@@ -351,8 +351,8 @@ pub fn make_deploy_interchain_token_instruction(
         token_mint,
         token_manager_ata,
         token_program: anchor_spl::token_2022::spl_token_2022::ID,
-        associated_token_program: anchor_spl::associated_token::spl_associated_token_account::ID,
-        sysvar_instructions: anchor_lang::solana_program::sysvar::instructions::id(),
+        associated_token_program: spl_associated_token_account::program::ID,
+        sysvar_instructions: solana_sdk_ids::sysvar::instructions::ID,
         mpl_token_metadata_program: mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
         mpl_token_metadata_account,
         deployer_ata,

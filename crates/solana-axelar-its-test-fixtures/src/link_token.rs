@@ -70,7 +70,7 @@ pub fn execute_link_token_helper(
         token_manager_pda: ctx.token_manager.0,
         gateway_root_pda: ctx.gateway_root.0,
         gateway_program: solana_axelar_gateway::ID,
-        system_program: solana_sdk::system_program::ID,
+        system_program: solana_sdk_ids::system_program::ID,
         call_contract_signing_pda,
         gateway_event_authority,
         gas_treasury: ctx.gas_treasury.0,
@@ -98,7 +98,7 @@ pub fn execute_link_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
+                owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
                 executable: true,
                 rent_epoch: 0,
             },
@@ -109,7 +109,7 @@ pub fn execute_link_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
+                owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
                 executable: true,
                 rent_epoch: 0,
             },
@@ -118,24 +118,24 @@ pub fn execute_link_token_helper(
         (ctx.its_root.0, ctx.its_root.1),
         (
             call_contract_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             gas_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         // For event CPI
         (
             event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
     ];
 

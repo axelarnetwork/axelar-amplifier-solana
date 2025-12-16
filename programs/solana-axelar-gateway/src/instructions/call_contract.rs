@@ -1,7 +1,6 @@
 use crate::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
 use crate::{CallContractEvent, GatewayConfig, GatewayError};
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::keccak;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -59,7 +58,7 @@ pub fn call_contract_handler(
 
     // A valid signing PDA was provided and it's a signer, continue
 
-    let payload_hash = keccak::hash(&payload);
+    let payload_hash = solana_keccak_hasher::hash(&payload);
 
     emit_cpi!(CallContractEvent {
         sender: caller.key(),

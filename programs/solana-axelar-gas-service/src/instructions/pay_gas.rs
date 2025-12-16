@@ -39,7 +39,7 @@ pub fn pay_gas(
 
     system_program::transfer(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             system_program::Transfer {
                 from: sender,
                 to: treasury_account_info,

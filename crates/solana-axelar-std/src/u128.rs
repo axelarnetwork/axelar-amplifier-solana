@@ -1,7 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
 #[cfg(feature = "anchor")]
-use anchor_lang::prelude::*;
+use anchor_lang::prelude::{borsh, zero_copy};
+
 #[cfg(not(feature = "anchor"))]
 use bytemuck::{Pod, Zeroable};
 

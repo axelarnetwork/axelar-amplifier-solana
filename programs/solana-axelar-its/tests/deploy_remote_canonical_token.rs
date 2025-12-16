@@ -1,8 +1,8 @@
 #![cfg(test)]
 #![allow(clippy::too_many_lines)]
 
+use anchor_lang::prelude::borsh;
 use anchor_lang::solana_program;
-use anchor_lang::AnchorSerialize;
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::setup_mollusk;
@@ -145,7 +145,7 @@ fn deploy_remote_canonical_token() {
         programmable_config: None,
     };
 
-    let metadata_data = metadata.try_to_vec().unwrap();
+    let metadata_data = borsh::to_vec(&metadata).unwrap();
     let metadata_account = Account {
         lamports: anchor_lang::prelude::Rent::default().minimum_balance(metadata_data.len()),
         data: metadata_data,
@@ -305,7 +305,7 @@ fn reject_deploy_remote_canonical_token_with_mismatched_token_id() {
         programmable_config: None,
     };
 
-    let metadata_data = metadata.try_to_vec().unwrap();
+    let metadata_data = borsh::to_vec(&metadata).unwrap();
     let metadata_account = Account {
         lamports: anchor_lang::prelude::Rent::default().minimum_balance(metadata_data.len()),
         data: metadata_data,

@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program;
 use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
 use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 
@@ -55,10 +54,8 @@ pub fn send_to_hub(
         return Err(ItsError::InvalidInstructionData.into());
     }
 
-    let payload = payload
-        .try_to_vec()
-        .map_err(|_| ItsError::SerializationError)?;
-    let payload_hash = solana_program::keccak::hash(&payload).to_bytes();
+    let payload = borsh::to_vec(&payload).map_err(|_| ItsError::SerializationError)?;
+    let payload_hash = solana_keccak_hasher::hash(&payload).to_bytes();
     let destination_address = gmp_accounts.its_hub_address;
     let refund_address = gmp_accounts.payer.key();
 
@@ -71,7 +68,7 @@ pub fn send_to_hub(
             program: gmp_accounts.gas_service.clone(),
         };
 
-        let cpi_ctx = CpiContext::new(gmp_accounts.gas_service, cpi_accounts);
+        let cpi_ctx = CpiContext::new(solana_axelar_gas_service::ID, cpi_accounts);
 
         pay_gas(
             cpi_ctx,
@@ -105,7 +102,7 @@ pub fn send_to_hub(
     };
 
     let cpi_ctx = CpiContext::new_with_signer(
-        gmp_accounts.gateway_program.to_account_info(),
+        gmp_accounts.gateway_program.key(),
         cpi_accounts,
         signer_seeds,
     );

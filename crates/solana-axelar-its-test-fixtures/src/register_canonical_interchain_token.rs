@@ -1,6 +1,5 @@
 use crate::create_rent_sysvar_data;
-use anchor_lang::prelude::Rent;
-use anchor_lang::AnchorSerialize;
+use anchor_lang::prelude::{borsh, Rent};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::{
@@ -72,7 +71,7 @@ pub fn register_canonical_interchain_token_helper(
         programmable_config: None,
     };
 
-    let metadata_data = metadata.try_to_vec().unwrap();
+    let metadata_data = borsh::to_vec(&metadata).unwrap();
     let metadata_account = Account {
         lamports: Rent::default().minimum_balance(metadata_data.len()),
         data: metadata_data,
@@ -98,13 +97,13 @@ pub fn register_canonical_interchain_token_helper(
         accounts: solana_axelar_its::accounts::RegisterCanonicalInterchainToken {
             payer: payer.0,
             metadata_account: metadata_account_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             its_root_pda: its_root.0,
             token_manager_pda,
             token_mint: mint_pubkey,
             token_manager_ata,
             token_program: spl_token_2022::ID,
-            associated_token_program: spl_associated_token_account::ID,
+            associated_token_program: spl_associated_token_account::program::ID,
             // for event cpi
             event_authority,
             program: program_id,
@@ -121,12 +120,12 @@ pub fn register_canonical_interchain_token_helper(
         (its_root.0, its_root.1),
         (
             token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (mint_pubkey, mint_account),
         (
             token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
