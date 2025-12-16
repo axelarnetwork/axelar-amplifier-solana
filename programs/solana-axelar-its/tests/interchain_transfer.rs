@@ -38,7 +38,7 @@ use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
 fn interchain_transfer_mint_burn() {
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -168,7 +168,7 @@ fn interchain_transfer_mint_burn() {
 
 #[test]
 fn interchain_transfer_lock_unlock() {
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -329,7 +329,7 @@ fn interchain_transfer_lock_unlock() {
 
 #[test]
 fn reject_interchain_transfer_with_invalid_token_id() {
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -486,7 +486,7 @@ fn reject_interchain_transfer_with_invalid_token_id() {
 
 #[test]
 fn reject_interchain_transfer_if_sender_has_no_tokens() {
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -641,7 +641,7 @@ fn reject_interchain_transfer_if_sender_has_no_tokens() {
 
 #[test]
 fn reject_interchain_transfer_if_amount_is_0() {
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -797,7 +797,7 @@ fn reject_interchain_transfer_if_amount_is_0() {
 
 #[test]
 fn reject_interchain_transfer_if_destination_address_is_empty() {
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());

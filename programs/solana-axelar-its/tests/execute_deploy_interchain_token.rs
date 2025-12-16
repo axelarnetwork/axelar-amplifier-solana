@@ -175,7 +175,7 @@ fn execute_deploy_interchain_token_success() {
 
 #[test]
 #[allow(clippy::string_slice)]
-fn execute_deploy_interchain_token_with_large_metadata() {
+fn test_execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let mut fixture = RelayerDiscoveryTestFixture::new();
 

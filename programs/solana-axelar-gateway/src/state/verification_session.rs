@@ -2,7 +2,9 @@ use crate::GatewayError;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use bitvec::prelude::*;
+use solana_axelar_std::execute_data::prefixed_message_hash_payload_type;
 use solana_axelar_std::hasher::LeafHash;
+use solana_axelar_std::PayloadType;
 use solana_axelar_std::{
     EcdsaRecoverableSignature, MerkleProof, Secp256k1Pubkey, SigningVerifierSetInfo,
     VerifierSetLeaf, U128,
@@ -26,12 +28,14 @@ impl SignatureVerificationSessionData {
 
     pub fn find_pda(
         payload_merkle_root: &[u8; 32],
+        payload_type: PayloadType,
         signing_verifier_set_hash: &[u8; 32],
     ) -> (Pubkey, u8) {
         Pubkey::find_program_address(
             &[
                 Self::SEED_PREFIX,
                 payload_merkle_root,
+                &[payload_type.into()],
                 signing_verifier_set_hash,
             ],
             &crate::ID,
@@ -78,6 +82,7 @@ impl SignatureVerificationSessionData {
         if !Self::verify_ecdsa_signature(
             &verifier_info.leaf.signer_pubkey.0,
             &verifier_info.signature.0,
+            verifier_info.payload_type,
             &payload_merkle_root,
         ) {
             return err!(GatewayError::SignatureVerificationFailed);
@@ -91,26 +96,14 @@ impl SignatureVerificationSessionData {
         Ok(())
     }
 
-    /// Prefix and hash the given message
-    pub fn prefixed_message_hash(message: &[u8; 32]) -> [u8; 32] {
-        // Add Solana offchain prefix to the message before verification
-        // This follows the Axelar convention for prefixing signed messages
-        const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
-        let mut prefixed_message = Vec::with_capacity(SOLANA_OFFCHAIN_PREFIX.len() + message.len());
-        prefixed_message.extend_from_slice(SOLANA_OFFCHAIN_PREFIX);
-        prefixed_message.extend_from_slice(message);
-
-        // Hash the prefixed message to get a 32-byte digest
-        solana_program::keccak::hash(&prefixed_message).to_bytes()
-    }
-
     pub fn verify_ecdsa_signature(
         pubkey: &Secp256k1Pubkey,
         signature: &EcdsaRecoverableSignature,
+        payload_type: PayloadType,
         message: &[u8; 32],
     ) -> bool {
-        // Hash the prefixed message to get a 32-byte digest
-        let hashed_message = Self::prefixed_message_hash(message);
+        // Reconstruct and hash the prefixed message to get a 32-byte digest
+        let hashed_message = prefixed_message_hash_payload_type(payload_type, message);
 
         // The recovery bit in the signature's bytes is placed at the end, as per the
         // 'multisig-prover' contract by Axelar. Unwrap: we know the 'signature'
@@ -119,10 +112,20 @@ impl SignatureVerificationSessionData {
             [first_64 @ .., recovery_id] => (first_64, recovery_id),
         };
 
+        // Transform from Ethereum recovery_id (27, 28) to a range accepted by
+        // secp256k1_recover (0, 1, 2, 3)
+        // Only values 27 and 28 are valid Ethereum recovery IDs
+        let recovery_id = if *recovery_id == 27 || *recovery_id == 28 {
+            recovery_id.saturating_sub(27)
+        } else {
+            solana_program::msg!("Invalid recovery ID: {} (must be 27 or 28)", recovery_id);
+            return false;
+        };
+
         // This is results in a Solana syscall.
         let secp256k1_recover = solana_program::secp256k1_recover::secp256k1_recover(
             &hashed_message,
-            *recovery_id,
+            recovery_id,
             signature,
         );
         let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
