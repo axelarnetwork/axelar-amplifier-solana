@@ -1,5 +1,6 @@
 [toolchain]
 package_manager = "npm"
+anchor_version = "1.0.0-rc.1"
 
 [features]
 resolution = true
