@@ -16,6 +16,8 @@ anchor-spl.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
 solana-program.workspace = true
+relayer-discovery.workspace = true
+relayer-discovery-test-fixtures.workspace = true
 mpl-token-metadata.workspace = true
 
 rand.workspace = true
@@ -29,11 +31,24 @@ mollusk-test-utils.workspace = true
 solana-axelar-std.workspace = true
 interchain-token-transfer-gmp.workspace = true
 
-solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
-solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint"] }
-solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint"] }
+solana-axelar-gas-service = { workspace = true, features = [
+    "cpi",
+    "no-entrypoint",
+] }
+solana-axelar-operators = { workspace = true, features = [
+    "cpi",
+    "no-entrypoint",
+] }
+solana-axelar-gateway = { workspace = true, features = [
+    "cpi",
+    "no-entrypoint",
+] }
 solana-axelar-its = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-memo = { workspace = true, features = ["cpi", "no-entrypoint"] }
+solana-axelar-test-discoverable = { workspace = true, features = [
+    "no-entrypoint",
+    "devnet-amplifier",
+] }
 
 # temp
 solana-axelar-gateway-test-fixtures.workspace = true

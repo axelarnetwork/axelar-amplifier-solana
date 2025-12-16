@@ -29,7 +29,7 @@ fn handover_mint_authority_success() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -128,7 +128,7 @@ fn handover_mint_authority_wrong_token_id() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -211,7 +211,7 @@ fn handover_mint_authority_not_mint_authority() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -298,7 +298,7 @@ fn handover_mint_authority_wrong_token_manager() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -386,7 +386,7 @@ fn handover_mint_authority_non_mint_burn_token() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,

@@ -26,7 +26,7 @@ fn remove_token_manager_flow_limiter() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -200,7 +200,7 @@ fn reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,
@@ -374,7 +374,7 @@ fn reject_remove_token_manager_flow_limiter_without_operator_role() {
     let its_hub_address = "0x123456789abcdef".to_owned();
 
     // Initialize ITS service first
-    let (its_root_pda, its_root_account, _, _, _, _) = init_its_service(
+    let (its_root_pda, its_root_account, _, _, _, _, _, _) = init_its_service(
         &mollusk,
         payer,
         &payer_account,

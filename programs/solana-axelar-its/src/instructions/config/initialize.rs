@@ -1,6 +1,7 @@
 #![allow(clippy::missing_asserts_for_indexing)]
 use crate::{
     state::{InterchainTokenService, Roles, UserRoles},
+    utils::relayer_transaction,
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -8,6 +9,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::bpf_loader_upgradeable;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
+use relayer_discovery::TRANSACTION_PDA_SEED;
 
 /// Initialize the configuration PDA.
 #[derive(Accounts)]
@@ -51,6 +53,22 @@ pub struct Initialize<'info> {
 	 	bump,
     )]
     pub user_roles_account: Account<'info, UserRoles>,
+
+    // IncomingMessage PDA account
+    // needs to be mutable as the validate_message CPI
+    // updates its state
+    #[account(
+        init,
+        seeds = [TRANSACTION_PDA_SEED],
+        bump,
+        payer = payer,
+        space = {
+            let mut bytes = Vec::with_capacity(256);
+            relayer_transaction(None, None).serialize(&mut bytes)?;
+            bytes.len()
+        }
+    )]
+    pub transaction: AccountInfo<'info>,
 }
 
 pub fn initialize(
@@ -65,6 +83,9 @@ pub fn initialize(
     // Initialize and assign OPERATOR role to the operator account.
     ctx.accounts.user_roles_account.roles = Roles::OPERATOR;
     ctx.accounts.user_roles_account.bump = ctx.bumps.user_roles_account;
+
+    relayer_transaction(None, None)
+        .serialize(&mut &mut ctx.accounts.transaction.data.borrow_mut()[..])?;
 
     Ok(())
 }
@@ -82,6 +103,8 @@ pub fn make_initialize_instruction(
 
     let user_roles_account = UserRoles::find_pda(&its_root_pda, &operator).0;
 
+    let transaction = relayer_discovery::find_transaction_pda(&crate::ID).0;
+
     let accounts = crate::accounts::Initialize {
         payer,
         program_data,
@@ -89,6 +112,7 @@ pub fn make_initialize_instruction(
         system_program: anchor_lang::system_program::ID,
         operator,
         user_roles_account,
+        transaction,
     };
 
     (

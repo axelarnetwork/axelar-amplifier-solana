@@ -1,22 +1,27 @@
 use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
-    instructions::validate_mint_extensions,
+    instructions::{gmp::*, validate_mint_extensions},
     state::{token_manager, InterchainTokenService, Roles, TokenManager, UserRoles},
 };
+use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
+use interchain_token_transfer_gmp::{GMPPayload, LinkToken};
+use solana_axelar_gateway::Message;
 
 #[derive(Accounts)]
 #[event_cpi]
 #[instruction(
-	token_id: [u8; 32],
-	destination_token_address: [u8; 32],
-	token_manager_type: u8,
-	link_params: Vec<u8>,
+    token_id: [u8; 32],
+    token_manager_type: u8,
+    source_token_address: Vec<u8>,
+    destination_token_address: Vec<u8>,
+    link_params: Vec<u8>,
+    source_chain: String,
 )]
 pub struct ExecuteLinkToken<'info> {
     #[account(mut)]
@@ -24,11 +29,12 @@ pub struct ExecuteLinkToken<'info> {
 
     pub system_program: Program<'info, System>,
 
+    pub executable: AxelarExecuteAccounts<'info>,
+
     #[account(
         seeds = [InterchainTokenService::SEED_PREFIX],
         bump = its_root_pda.bump,
         constraint = !its_root_pda.paused @ ItsError::Paused,
-        signer, // important: only ITS can call this
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -80,10 +86,33 @@ pub struct ExecuteLinkToken<'info> {
 pub fn execute_link_token_handler(
     ctx: Context<ExecuteLinkToken>,
     token_id: [u8; 32],
-    destination_token_address: [u8; 32],
     token_manager_type: u8,
+    source_token_address: Vec<u8>,
+    destination_token_address: Vec<u8>,
     link_params: Vec<u8>,
+    source_chain: String,
+    message: Message,
 ) -> Result<()> {
+    let link_token = LinkToken {
+        selector: LinkToken::MESSAGE_TYPE_ID
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        token_id: token_id.into(),
+        token_manager_type: token_manager_type
+            .try_into()
+            .map_err(|_err| ItsError::ArithmeticOverflow)?,
+        source_token_address: Bytes::from(source_token_address.clone()),
+        destination_token_address: Bytes::from(destination_token_address.clone()),
+        link_params: Bytes::from(link_params.clone()),
+    };
+    validate_message(
+        &ctx.accounts.executable,
+        &ctx.accounts.its_root_pda,
+        message,
+        GMPPayload::LinkToken(link_token),
+        source_chain,
+    )?;
+
     let token_manager_type: token_manager::Type = token_manager_type
         .try_into()
         .map_err(|_| ItsError::InvalidInstructionData)?;
@@ -93,7 +122,6 @@ pub fn execute_link_token_handler(
 
     let token_address = Pubkey::new_from_array(
         destination_token_address
-            .as_ref()
             .try_into()
             .map_err(|_err| ItsError::InvalidAccountData)?,
     );

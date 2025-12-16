@@ -2,7 +2,7 @@
 #![allow(clippy::too_many_arguments)]
 use std::collections::HashMap;
 
-use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
+use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::{self, get_associated_token_address_with_program_id},
     token_2022::spl_token_2022,
@@ -15,12 +15,13 @@ use mollusk_svm::{
 use mollusk_test_utils::system_account_with_lamports;
 use mollusk_test_utils::{create_program_data_account, get_event_authority_and_program_accounts};
 use rand::Rng;
+use relayer_discovery_test_fixtures::relayer_execute_with_checks;
 use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
     instructions::{
-        execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
-        make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
-        make_register_canonical_token_instruction, make_set_trusted_chain_instruction,
+        make_deploy_interchain_token_instruction, make_interchain_transfer_instruction,
+        make_mint_interchain_token_instruction, make_register_canonical_token_instruction,
+        make_set_trusted_chain_instruction,
     },
     InterchainTokenService,
 };
@@ -35,7 +36,7 @@ use solana_sdk::{
 // Gateway
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, IncomingMessage, Message, VerifierSetTracker,
+    GatewayConfig, Message, VerifierSetTracker,
 };
 
 macro_rules! msg {
@@ -1357,13 +1358,7 @@ impl ItsTestHarness {
         );
     }
 
-    pub fn execute_gmp(
-        &self,
-        token_id: [u8; 32],
-        source_chain: &str,
-        payload: GMPPayload,
-        extra_accounts: Vec<AccountMeta>,
-    ) -> InstructionResult {
+    pub fn execute_gmp(&self, source_chain: &str, payload: GMPPayload) -> InstructionResult {
         let encoded_payload = payload.encode();
         let payload_hash = solana_sdk::keccak::hashv(&[&encoded_payload]).to_bytes();
 
@@ -1392,64 +1387,16 @@ impl ItsTestHarness {
 
         self.ensure_approved_incoming_messages(&[message.clone()]);
 
-        let incoming_message_pda =
-            solana_axelar_gateway::IncomingMessage::find_pda(&message.command_id()).0;
-        let incoming_message = self
-            .get_account_as::<solana_axelar_gateway::IncomingMessage>(&incoming_message_pda)
-            .expect("incoming message account should exist");
-
-        let token_manager_pda =
-            solana_axelar_its::TokenManager::find_pda(token_id, self.its_root).0;
-        let token_mint =
-            solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0;
-        let token_manager_ata = get_associated_token_address_with_program_id(
-            &token_manager_pda,
-            &token_mint,
-            &spl_token_2022::ID,
+        let result = relayer_execute_with_checks(
+            self.ctx(),
+            &message,
+            payload.encode(),
+            Some(vec![vec![Check::success()]]),
         );
 
-        // TODO extract to helper
-        let executable = solana_axelar_its::accounts::AxelarExecuteAccounts {
-            incoming_message_pda,
-            signing_pda: IncomingMessage::get_validate_signing_pda(
-                &message.command_id(),
-                incoming_message.signing_pda_bump,
-                &solana_axelar_its::ID,
-            )
-            .expect("valid signing PDA"),
-            gateway_root_pda: self.gateway.root,
-            event_authority: get_event_authority_and_program_accounts(&solana_axelar_gateway::ID).0,
-            axelar_gateway_program: solana_axelar_gateway::ID,
-        };
+        assert!(result.is_ok(), "relayer discovery failed: {result:?}");
 
-        let mut accounts = solana_axelar_its::accounts::Execute {
-            executable,
-            payer: self.payer,
-            system_program: solana_sdk_ids::system_program::ID,
-            its_root_pda: self.its_root,
-            token_mint,
-            token_manager_pda,
-            token_manager_ata,
-            token_program: spl_token_2022::ID,
-            associated_token_program: associated_token::ID,
-            event_authority: get_event_authority_and_program_accounts(&solana_axelar_its::ID).0,
-            program: solana_axelar_its::ID,
-        }
-        .to_account_metas(None);
-        accounts.extend(extra_accounts);
-
-        let ix = Instruction {
-            program_id: solana_axelar_its::ID,
-            accounts,
-            data: solana_axelar_its::instruction::Execute {
-                message,
-                payload: encoded_payload,
-            }
-            .data(),
-        };
-
-        self.ctx
-            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])])
+        result.unwrap()
     }
 
     pub fn execute_gmp_transfer(
@@ -1459,10 +1406,8 @@ impl ItsTestHarness {
         source_address: &str,
         destination_address: Pubkey,
         amount: u64,
-        data: Option<(Vec<u8>, Vec<AccountMeta>)>,
+        data: Option<Vec<u8>>,
     ) -> InstructionResult {
-        let has_data = data.is_some();
-
         let transfer_payload = InterchainTransfer {
             selector: InterchainTransfer::MESSAGE_TYPE_ID_UINT,
             token_id: alloy_primitives::FixedBytes::from(token_id),
@@ -1473,27 +1418,8 @@ impl ItsTestHarness {
             amount: alloy_primitives::U256::from(amount),
             data: data
                 .as_ref()
-                .map_or(alloy_primitives::Bytes::new(), |(d, _)| d.clone().into()),
+                .map_or(alloy_primitives::Bytes::new(), |d| d.clone().into()),
         };
-
-        let token_mint =
-            solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0;
-
-        let destination_ata = get_associated_token_address_with_program_id(
-            &destination_address,
-            &token_mint,
-            &spl_token_2022::ID,
-        );
-
-        let mut extra_accounts = execute_interchain_transfer_extra_accounts(
-            destination_address,
-            destination_ata,
-            Some(has_data),
-        );
-        if let Some((_, data_accounts)) = data {
-            extra_accounts.extend(data_accounts);
-        }
-
         let transfer_payload_wrapped = GMPPayload::ReceiveFromHub(ReceiveFromHub {
             selector: ReceiveFromHub::MESSAGE_TYPE_ID_UINT,
             source_chain: source_chain.to_owned(),
@@ -1502,12 +1428,7 @@ impl ItsTestHarness {
                 .into(),
         });
 
-        self.execute_gmp(
-            token_id,
-            source_chain,
-            transfer_payload_wrapped,
-            extra_accounts,
-        )
+        self.execute_gmp(source_chain, transfer_payload_wrapped)
     }
 
     //
@@ -1541,5 +1462,37 @@ impl ItsTestHarness {
         );
 
         msg!("Memo program initialized.");
+    }
+
+    pub fn ensure_test_discoverable_program_initialized(&mut self) {
+        let transaction_pda =
+            relayer_discovery::find_transaction_pda(&solana_axelar_test_discoverable::ID).0;
+        let its_transaction_pda =
+            solana_axelar_its::utils::find_interchain_executable_transaction_pda(
+                &solana_axelar_test_discoverable::ID,
+            )
+            .0;
+        if self.account_exists(&transaction_pda) {
+            return;
+        }
+
+        // Add memo program to the harness context
+        self.ctx.mollusk.add_program(
+            &solana_axelar_test_discoverable::ID,
+            "solana_axelar_test_discoverable",
+            &solana_sdk_ids::bpf_loader_upgradeable::ID,
+        );
+
+        self.ctx.process_and_validate_instruction(
+            &solana_axelar_test_discoverable::make_init_ix(self.payer),
+            &[Check::success()],
+        );
+
+        self.get_account(&transaction_pda)
+            .expect("transaction account should exist");
+        self.get_account(&its_transaction_pda)
+            .expect("transaction account should exist");
+
+        msg!("Test discoverable program initialized",);
     }
 }
