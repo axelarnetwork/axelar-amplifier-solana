@@ -57,7 +57,7 @@ fn test_deploy_remote_interchain_token() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -165,7 +165,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_token_manager() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -280,7 +280,7 @@ fn test_reject_deploy_remote_interchain_token_with_no_metadata() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
@@ -392,7 +392,7 @@ fn test_reject_deploy_remote_interchain_token_for_mismatched_mint() {
     let chain_name = "solana".to_owned();
     let its_hub_address = "0x123456789abcdef".to_owned();
 
-    let (its_root_pda, its_root_account) = init_its_service_with_ethereum_trusted(
+    let (its_root_pda, its_root_account, _, _) = init_its_service_with_ethereum_trusted(
         &mollusk,
         payer,
         &payer_account,
