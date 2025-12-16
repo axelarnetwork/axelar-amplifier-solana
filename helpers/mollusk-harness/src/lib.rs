@@ -1386,7 +1386,7 @@ impl ItsTestHarness {
             payload_hash,
         };
 
-        self.ensure_approved_incoming_messages(&[message.clone()]);
+        self.ensure_approved_incoming_messages(std::slice::from_ref(&message));
 
         let incoming_message_pda =
             solana_axelar_gateway::IncomingMessage::find_pda(&message.command_id()).0;

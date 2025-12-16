@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, roles, TokenManager, Type, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, Type, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;

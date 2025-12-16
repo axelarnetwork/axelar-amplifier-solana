@@ -1,6 +1,6 @@
 use crate::{
     events::TrustedChainSet,
-    state::{InterchainTokenService, roles, RolesError, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, UserRoles},
     ItsError,
 };
 #[allow(deprecated)]

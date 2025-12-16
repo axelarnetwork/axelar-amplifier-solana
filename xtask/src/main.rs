@@ -254,7 +254,7 @@ type WorkspaceCrateInfo<'a> = (&'a str, PathBuf);
 /// - (solana program crates, native crates)
 fn workspace_crates_by_category(
     sh: &Shell,
-) -> Result<(Vec<WorkspaceCrateInfo>, Vec<WorkspaceCrateInfo>), eyre::Error> {
+) -> Result<(Vec<WorkspaceCrateInfo<'_>>, Vec<WorkspaceCrateInfo<'_>>), eyre::Error> {
     let crates_in_repo = cmd!(sh, "cargo tree --workspace --depth 0")
         .output()
         .map(|o| String::from_utf8(o.stdout))??
