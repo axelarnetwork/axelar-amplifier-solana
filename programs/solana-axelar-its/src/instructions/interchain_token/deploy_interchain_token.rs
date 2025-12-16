@@ -1,6 +1,6 @@
 use crate::{
     errors::ItsError,
-    events::{InterchainTokenDeployed, InterchainTokenIdClaimed, TokenManagerDeployed},
+    events::{InterchainTokenDeployed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
     state::{roles, token_manager, InterchainTokenService, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
@@ -147,12 +147,6 @@ pub fn deploy_interchain_token_handler(
         return err!(ItsError::InvalidArgument);
     }
 
-    emit_cpi!(InterchainTokenIdClaimed {
-        token_id,
-        deployer: *ctx.accounts.deployer.key,
-        salt: deploy_salt,
-    });
-
     // Validate minter accounts and initial supply
     match (
         &ctx.accounts.minter,
@@ -216,18 +210,12 @@ pub fn deploy_interchain_token_handler(
             .minter
             .as_ref()
             .map(|account| account.key().to_bytes().to_vec())
-            .unwrap_or_default(),
     });
 
     emit_cpi!(InterchainTokenDeployed {
         token_id,
         token_address: ctx.accounts.token_mint.key(),
-        minter: ctx
-            .accounts
-            .minter
-            .as_ref()
-            .map(|account| *account.key)
-            .unwrap_or_default(),
+        minter: ctx.accounts.minter.as_ref().map(|account| *account.key),
         name,
         symbol,
         decimals,
@@ -236,8 +224,8 @@ pub fn deploy_interchain_token_handler(
     Ok(token_id)
 }
 
-fn mint_initial_supply<'info>(
-    accounts: &DeployInterchainToken<'info>,
+fn mint_initial_supply(
+    accounts: &DeployInterchainToken<'_>,
     token_id: [u8; 32],
     initial_supply: u64,
     token_manager_bump: u8,
@@ -271,8 +259,8 @@ fn mint_initial_supply<'info>(
     Ok(())
 }
 
-fn create_token_metadata<'info>(
-    accounts: &DeployInterchainToken<'info>,
+fn create_token_metadata(
+    accounts: &DeployInterchainToken<'_>,
     name: String,
     symbol: String,
     token_id: [u8; 32],

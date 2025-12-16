@@ -70,11 +70,10 @@ pub fn remove_token_manager_flow_limiter_handler(
 
     // Close if no remaining roles
     if !target_roles.has_roles() {
-        anchor_lang::AccountsClose::close(
-            &ctx.accounts.target_roles_account,
-            ctx.accounts.payer.to_account_info(),
-        )
-        .map_err(|e| e.with_account_name("target_roles_account"))?;
+        ctx.accounts
+            .target_roles_account
+            .close(ctx.accounts.payer.to_account_info())
+            .map_err(|e| e.with_account_name("target_roles_account"))?;
     }
 
     Ok(())

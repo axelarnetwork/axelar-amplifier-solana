@@ -1,6 +1,6 @@
 use crate::{
     errors::ItsError,
-    events::{InterchainTokenIdClaimed, TokenManagerDeployed},
+    events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
     seed_prefixes::TOKEN_MANAGER_SEED,
     state::{token_manager::Type, InterchainTokenService, roles, TokenManager, UserRoles},
@@ -107,13 +107,6 @@ pub fn register_custom_token_handler(
     let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
 
-    // Emit InterchainTokenIdClaimed event
-    emit_cpi!(InterchainTokenIdClaimed {
-        token_id,
-        deployer: ctx.accounts.deployer.key(),
-        salt: deploy_salt,
-    });
-
     validate_mint_extensions(
         token_manager_type,
         &ctx.accounts.token_mint.to_account_info(),
@@ -143,9 +136,7 @@ pub fn register_custom_token_handler(
         token_id,
         token_manager: ctx.accounts.token_manager_pda.key(),
         token_manager_type: token_manager_type.into(),
-        params: operator
-            .map(|op| op.to_bytes().to_vec())
-            .unwrap_or_default(),
+        params: operator.map(|op| op.to_bytes().to_vec()),
     });
 
     Ok(token_id)

@@ -1,9 +1,9 @@
 use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
-    instructions::validate_mint_extensions,
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{InterchainTokenService, roles, TokenManager, Type, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, Type, UserRoles},
+    utils::truncate_utf8,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token_interface::Mint};
@@ -16,8 +16,6 @@ use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard}
 pub struct ExecuteDeployInterchainToken<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
-
-    pub deployer: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 
@@ -92,15 +90,6 @@ pub struct ExecuteDeployInterchainToken<'info> {
     )]
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
-    #[account(
-        init_if_needed,
-        payer = payer,
-        associated_token::mint = token_mint,
-        associated_token::authority = deployer,
-        associated_token::token_program = token_program
-    )]
-    pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
-
     // Optional accounts
     pub minter: Option<UncheckedAccount<'info>>,
 
@@ -126,12 +115,12 @@ pub fn execute_deploy_interchain_token_handler(
     decimals: u8,
     minter: Vec<u8>,
 ) -> Result<()> {
-    if name.len() > mpl_token_metadata::MAX_NAME_LENGTH
-        || symbol.len() > mpl_token_metadata::MAX_SYMBOL_LENGTH
-    {
-        msg!("Name and/or symbol length too long");
-        return err!(ItsError::InvalidArgument);
-    }
+    // Truncate name and symbol for incoming deployments
+    // to prevent metadata CPI failure
+    let mut truncated_name = name;
+    let mut truncated_symbol = symbol;
+    truncate_utf8(&mut truncated_name, mpl_token_metadata::MAX_NAME_LENGTH);
+    truncate_utf8(&mut truncated_symbol, mpl_token_metadata::MAX_SYMBOL_LENGTH);
 
     match (
         minter.is_empty(),
@@ -159,9 +148,8 @@ pub fn execute_deploy_interchain_token_handler(
     process_inbound_deploy(
         ctx.accounts,
         token_id,
-        &name,
-        &symbol,
-        0,
+        &truncated_name,
+        &truncated_symbol,
         ctx.bumps.token_manager_pda,
         ctx.bumps.minter_roles_pda,
     )?;
@@ -174,21 +162,15 @@ pub fn execute_deploy_interchain_token_handler(
             .accounts
             .minter
             .as_ref()
-            .map(|account| account.key().to_bytes().to_vec())
-            .unwrap_or_default(),
+            .map(|account| account.key().to_bytes().to_vec()),
     });
 
     emit_cpi!(InterchainTokenDeployed {
         token_id,
         token_address: ctx.accounts.token_mint.key(),
-        minter: ctx
-            .accounts
-            .minter
-            .as_ref()
-            .map(anchor_lang::Key::key)
-            .unwrap_or_default(),
-        name,
-        symbol,
+        minter: ctx.accounts.minter.as_ref().map(anchor_lang::Key::key),
+        name: truncated_name,
+        symbol: truncated_symbol,
         decimals,
     });
 
@@ -200,23 +182,10 @@ pub fn process_inbound_deploy(
     token_id: [u8; 32],
     name: &str,
     symbol: &str,
-    initial_supply: u64,
     token_manager_pda_bump: u8,
     minter_roles_pda_bump: Option<u8>,
 ) -> Result<()> {
-    // setup_mint
-    if initial_supply > 0 {
-        mint_initial_supply(ctx, token_id, initial_supply, token_manager_pda_bump)?;
-    }
-
-    // setup_metadata
     create_token_metadata(ctx, name, symbol, token_id, token_manager_pda_bump)?;
-
-    // super::token_manager::deploy(...)
-    validate_mint_extensions(
-        Type::NativeInterchainToken,
-        &ctx.token_mint.to_account_info(),
-    )?;
 
     TokenManager::init_account(
         &mut ctx.token_manager_pda,
@@ -237,41 +206,6 @@ pub fn process_inbound_deploy(
             minter_roles_pda_bump.ok_or(ItsError::MinterRolesPdaBumpNotProvided)?;
         minter_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER | roles::MINTER;
     }
-
-    Ok(())
-}
-
-fn mint_initial_supply<'info>(
-    accounts: &ExecuteDeployInterchainToken<'info>,
-    token_id: [u8; 32],
-    initial_supply: u64,
-    token_manager_bump: u8,
-) -> Result<()> {
-    use anchor_spl::token_interface;
-
-    let cpi_accounts = token_interface::MintTo {
-        mint: accounts.token_mint.to_account_info(),
-        to: accounts.deployer_ata.to_account_info(),
-        authority: accounts.token_manager_pda.to_account_info(),
-    };
-
-    // Create signer seeds with proper lifetimes
-    let its_root_key = accounts.its_root_pda.key();
-    let bump_seed = [token_manager_bump];
-    let signer_seeds: &[&[&[u8]]] = &[&[
-        TOKEN_MANAGER_SEED,
-        its_root_key.as_ref(),
-        token_id.as_ref(),
-        &bump_seed,
-    ]];
-
-    let cpi_context = CpiContext::new_with_signer(
-        accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
-
-    token_interface::mint_to(cpi_context, initial_supply)?;
 
     Ok(())
 }

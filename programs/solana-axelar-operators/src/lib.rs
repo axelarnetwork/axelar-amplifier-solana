@@ -1,4 +1,7 @@
 //! Axelar Operators program for the Solana blockchain
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 pub mod instructions;
@@ -12,7 +15,7 @@ use program_utils::ensure_single_feature;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("oprqSRXsywUWMHSLcsLNwYBW3uq4miVq8THceDLcQh8");
+declare_id!("oprgv1Fc3i2tRLGpKtbMB8oKnQHtWyossGYUfpfPzN6");
 
 #[cfg(feature = "stagenet")]
 declare_id!("oprXXJdUK7Nru5JvRvGYq4v13m6WyHukWthrDHjD4wN");

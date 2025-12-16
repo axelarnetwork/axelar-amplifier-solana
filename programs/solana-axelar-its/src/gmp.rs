@@ -11,15 +11,15 @@ use crate::ITS_HUB_CHAIN_NAME;
 #[derive(Clone)]
 pub struct GMPAccounts<'info> {
     pub payer: AccountInfo<'info>,
-    pub gateway_root_pda: AccountInfo<'info>,
-    pub gateway_program: AccountInfo<'info>,
-    pub gas_treasury: AccountInfo<'info>,
-    pub gas_service: AccountInfo<'info>,
     pub system_program: AccountInfo<'info>,
-    pub its_hub_address: String,
+    pub gateway_program: AccountInfo<'info>,
+    pub gateway_root_pda: AccountInfo<'info>,
+    pub gateway_event_authority: AccountInfo<'info>,
     pub call_contract_signing_pda: AccountInfo<'info>,
     pub its_program: AccountInfo<'info>,
-    pub gateway_event_authority: AccountInfo<'info>,
+    pub its_hub_address: String,
+    pub gas_service: AccountInfo<'info>,
+    pub gas_treasury: AccountInfo<'info>,
     pub gas_event_authority: AccountInfo<'info>,
 }
 
@@ -103,8 +103,12 @@ pub fn process_outbound(
     // Call contract instruction
 
     // NOTE: this could be calculated at compile time
-    let (_, signing_pda_bump) =
+    let (expected_signing_pda, signing_pda_bump) =
         Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &crate::ID);
+
+    if expected_signing_pda != *gmp_accounts.call_contract_signing_pda.key {
+        return Err(ItsError::InvalidAccountData.into());
+    }
 
     let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
 

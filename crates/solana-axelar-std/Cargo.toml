@@ -1,9 +1,10 @@
 [package]
 name = "solana-axelar-std"
-version = "0.1.0"
+version = "0.1.4"
 edition = "2021"
 description = "Primitive types, encoding and hashing utilities for Axelar Solana integration"
 license.workspace = true
+repository.workspace = true
 
 [lints]
 workspace = true

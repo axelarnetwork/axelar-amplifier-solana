@@ -17,7 +17,7 @@ use solana_program::program_pack::Pack;
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_handover_mint_authority_success() {
+fn handover_mint_authority_success() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -116,7 +116,7 @@ fn test_handover_mint_authority_success() {
 }
 
 #[test]
-fn test_handover_mint_authority_wrong_token_id() {
+fn handover_mint_authority_wrong_token_id() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -198,7 +198,7 @@ fn test_handover_mint_authority_wrong_token_id() {
 }
 
 #[test]
-fn test_handover_mint_authority_not_mint_authority() {
+fn handover_mint_authority_not_mint_authority() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -286,7 +286,7 @@ fn test_handover_mint_authority_not_mint_authority() {
 }
 
 #[test]
-fn test_handover_mint_authority_wrong_token_manager() {
+fn handover_mint_authority_wrong_token_manager() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();
@@ -374,7 +374,7 @@ fn test_handover_mint_authority_wrong_token_manager() {
 }
 
 #[test]
-fn test_handover_mint_authority_non_mint_burn_token() {
+fn handover_mint_authority_non_mint_burn_token() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (payer, payer_account) = new_test_account();

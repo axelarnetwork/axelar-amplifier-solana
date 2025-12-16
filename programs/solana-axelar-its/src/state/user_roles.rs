@@ -90,6 +90,12 @@ pub enum RolesError {
     ProposalMissingFlowLimiterRole,
 }
 
+impl From<RolesError> for anchor_lang::prelude::ProgramError {
+    fn from(val: RolesError) -> Self {
+        anchor_lang::error::Error::from(val).into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use borsh::to_vec;
@@ -97,7 +103,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_user_roles_round_trip() {
+    fn user_roles_round_trip() {
         let original = UserRoles {
             roles: roles::MINTER | roles::OPERATOR,
             bump: 42,
@@ -113,7 +119,7 @@ mod tests {
     }
 
     #[test]
-    fn test_roles_bitflags() {
+    fn roles_bitflags() {
         let roles_list = vec![
             roles::MINTER,
             roles::OPERATOR,

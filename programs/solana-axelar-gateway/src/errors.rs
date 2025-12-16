@@ -29,4 +29,5 @@ pub enum GatewayError {
     CallerNotSigner,
     UnsupportedSignatureScheme,
     InvalidSigningPDABump,
+    InvalidTimestamp,
 }

@@ -11,7 +11,7 @@ impl rs_merkle::Hasher for Hasher {
     type Hash = [u8; 32];
 
     fn hash(data: &[u8]) -> Self::Hash {
-        solana_keccak_hasher::hash(data).0
+        solana_keccak_hasher::hash(data).to_bytes()
     }
 
     /// This implementation deviates from the default for several reasons:
@@ -28,7 +28,7 @@ impl rs_merkle::Hasher for Hasher {
         prefix[0] = 1;
         left_node.copy_from_slice(left);
         right_node.copy_from_slice(right.unwrap_or(left));
-        solana_keccak_hasher::hash(&concatenated).0
+        solana_keccak_hasher::hash(&concatenated).to_bytes()
     }
 }
 
@@ -47,6 +47,6 @@ pub trait LeafHash: udigest::Digestable {
     fn hash(&self) -> [u8; 32] {
         let mut buffer = VecBuf(vec![]);
         self.unambiguously_encode(EncodeValue::new(&mut buffer));
-        solana_keccak_hasher::hash(&buffer.0).0
+        solana_keccak_hasher::hash(&buffer.0).to_bytes()
     }
 }

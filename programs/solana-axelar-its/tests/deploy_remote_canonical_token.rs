@@ -25,9 +25,9 @@ use solana_sdk::signer::Signer;
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
 #[test]
-fn test_deploy_remote_canonical_token() {
+fn deploy_remote_canonical_token() {
     // Initialize gateway
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -185,9 +185,9 @@ fn test_deploy_remote_canonical_token() {
 }
 
 #[test]
-fn test_reject_deploy_remote_canonical_token_with_mismatched_token_id() {
+fn reject_deploy_remote_canonical_token_with_mismatched_token_id() {
     // Initialize gateway
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());

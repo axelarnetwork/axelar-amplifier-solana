@@ -7,6 +7,7 @@ homepage = { workspace = true }
 license = { workspace = true }
 edition = { workspace = true }
 description = "Build automation and development task runner"
+publish = false
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }

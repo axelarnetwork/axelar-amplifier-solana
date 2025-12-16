@@ -56,14 +56,16 @@ jobs:
         id: prepare-matrix
         run: |
           if [ "${{ steps.publish-release.outputs.releases }}" == "[]" ]; then
-            echo "release-plz output contains an empty release list — exiting early."
-            exit 1
+            echo "release-plz output contains an empty release list — nothing to release."
+            echo "releases=[]" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           echo "releases=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT
 
   build:
     needs: publish-release
+    if: needs.publish-release.outputs.releases != '[]'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       commit-hash: ${{ needs.publish-release.outputs.commit_hash }}
@@ -71,6 +73,7 @@ jobs:
 
   upload:
     needs: [publish-release, build]
+    if: needs.publish-release.outputs.releases != '[]'
     strategy:
       matrix:
         releases: ${{ fromJson(needs.publish-release.outputs.releases) }}

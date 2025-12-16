@@ -13,7 +13,7 @@ use solana_axelar_its_test_fixtures::{
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_transfer_interchain_token_mintership_success() {
+fn transfer_interchain_token_mintership_success() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -145,7 +145,7 @@ fn test_transfer_interchain_token_mintership_success() {
 }
 
 #[test]
-fn test_reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
+fn reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -244,7 +244,7 @@ fn test_reject_transfer_interchain_token_mintership_with_unauthorized_minter() {
 }
 
 #[test]
-fn test_reject_transfer_interchain_token_mintership_without_minter_role() {
+fn reject_transfer_interchain_token_mintership_without_minter_role() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();
@@ -350,7 +350,7 @@ fn test_reject_transfer_interchain_token_mintership_without_minter_role() {
 }
 
 #[test]
-fn test_reject_transfer_interchain_token_mintership_same_sender_destination() {
+fn reject_transfer_interchain_token_mintership_same_sender_destination() {
     let mollusk = initialize_mollusk_with_programs();
 
     let (upgrade_authority, _) = new_test_account();

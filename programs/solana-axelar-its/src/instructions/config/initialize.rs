@@ -6,9 +6,12 @@ use crate::{
 use anchor_lang::prelude::*;
 #[allow(deprecated)]
 use anchor_lang::solana_program::bpf_loader_upgradeable;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 /// Initialize the configuration PDA.
 #[derive(Accounts)]
+#[instruction(chain_name: String, its_hub_address: String)]
 pub struct Initialize<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -23,11 +26,11 @@ pub struct Initialize<'info> {
     pub program_data: Account<'info, ProgramData>,
 
     #[account(
-    	init,
-      	payer = payer,
-     	space = InterchainTokenService::DISCRIMINATOR.len() + InterchainTokenService::INIT_SPACE,
-     	seeds = [InterchainTokenService::SEED_PREFIX],
-     	bump,
+        init,
+        payer = payer,
+        space = InterchainTokenService::space_for(its_hub_address.len(), chain_name.len(), 0),
+        seeds = [InterchainTokenService::SEED_PREFIX],
+        bump,
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
@@ -64,4 +67,40 @@ pub fn initialize(
     ctx.accounts.user_roles_account.bump = ctx.bumps.user_roles_account;
 
     Ok(())
+}
+
+/// Creates an Initialize instruction
+pub fn make_initialize_instruction(
+    payer: Pubkey,
+    operator: Pubkey,
+    chain_name: String,
+    its_hub_address: String,
+) -> (Instruction, crate::accounts::Initialize) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+
+    let program_data = bpf_loader_upgradeable::get_program_data_address(&crate::ID);
+
+    let user_roles_account = UserRoles::find_pda(&its_root_pda, &operator).0;
+
+    let accounts = crate::accounts::Initialize {
+        payer,
+        program_data,
+        its_root_pda,
+        system_program: anchor_lang::system_program::ID,
+        operator,
+        user_roles_account,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::Initialize {
+                chain_name,
+                its_hub_address,
+            }
+            .data(),
+        },
+        accounts,
+    )
 }

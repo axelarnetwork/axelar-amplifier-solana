@@ -5,7 +5,7 @@ use solana_axelar_std::U256;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MessageApprovedEvent {
     pub command_id: [u8; 32],
-    pub destination_address: Pubkey,
+    pub destination_address: String,
     pub payload_hash: [u8; 32],
     pub source_chain: String,
     pub cc_id: String,

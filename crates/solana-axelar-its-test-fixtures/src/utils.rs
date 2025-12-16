@@ -336,6 +336,9 @@ pub fn init_its_service(
         &program_id,
     );
 
+    let its_hub_addr_len = its_hub_address.len();
+    let chain_name_len = chain_name.len();
+
     let ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::Initialize {
@@ -366,7 +369,11 @@ pub fn init_its_service(
     let checks = vec![
         Check::success(),
         Check::account(&its_root_pda)
-            .space(InterchainTokenService::DISCRIMINATOR.len() + InterchainTokenService::INIT_SPACE)
+            .space(InterchainTokenService::space_for(
+                its_hub_addr_len,
+                chain_name_len,
+                0,
+            ))
             .build(),
         Check::account(&user_roles_pda)
             .space(UserRoles::DISCRIMINATOR.len() + UserRoles::INIT_SPACE)

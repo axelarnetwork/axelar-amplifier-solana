@@ -28,7 +28,7 @@ fn test_init_gives_user_role_to_operator() {
 fn test_local_deploy_interchain_token() {
     let its_harness = ItsTestHarness::new();
 
-    its_harness.ensure_test_interchain_token();
+    let _ = its_harness.ensure_test_interchain_token();
 }
 
 #[test]

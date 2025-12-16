@@ -93,11 +93,10 @@ pub fn transfer_interchain_token_mintership_handler(
 
     // Close sender roles account if no remaining roles
     if !sender_roles.has_roles() {
-        anchor_lang::AccountsClose::close(
-            &ctx.accounts.sender_roles_account,
-            ctx.accounts.payer.to_account_info(),
-        )
-        .map_err(|e| e.with_account_name("sender_roles_account"))?;
+        ctx.accounts
+            .sender_roles_account
+            .close(ctx.accounts.payer.to_account_info())
+            .map_err(|e| e.with_account_name("sender_roles_account"))?;
     }
 
     Ok(())

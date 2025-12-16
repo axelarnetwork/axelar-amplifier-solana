@@ -23,7 +23,7 @@ pub struct SendInterchainTransfer<'info> {
     /// CHECK:
     pub gateway_program: UncheckedAccount<'info>,
     /// CHECK:
-    pub signing_pda: UncheckedAccount<'info>,
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     //
     // Gas Service
@@ -94,7 +94,7 @@ pub fn send_interchain_transfer_handler(
         gateway_root_pda: ctx.accounts.gateway_root_pda.to_account_info(),
         gateway_event_authority: ctx.accounts.gateway_event_authority.to_account_info(),
         gateway_program: ctx.accounts.gateway_program.to_account_info(),
-        signing_pda: ctx.accounts.signing_pda.to_account_info(),
+        call_contract_signing_pda: ctx.accounts.call_contract_signing_pda.to_account_info(),
         gas_treasury: ctx.accounts.gas_treasury.to_account_info(),
         gas_service: ctx.accounts.gas_service.to_account_info(),
         gas_event_authority: ctx.accounts.gas_event_authority.to_account_info(),

@@ -242,8 +242,8 @@ pub fn validate_message<'info, T: HasAxelarExecutable<'info> + ToAccountMetas>(
 ///
 /// Use this function when you have already encoded your payload or when you're
 /// not using the standard Axelar payload encoding with account metadata.
-pub fn validate_message_raw<'info>(
-    executable_accounts: &AxelarExecutableAccountRefs<'_, 'info>,
+pub fn validate_message_raw(
+    executable_accounts: &AxelarExecutableAccountRefs<'_, '_>,
     message: solana_axelar_gateway::Message,
     payload: &[u8],
 ) -> Result<()> {

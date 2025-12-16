@@ -1,7 +1,6 @@
-use std::collections::BTreeMap;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
+use std::collections::BTreeMap;
 use udigest::encoding::EncodeValue;
 
 use crate::{
@@ -10,6 +9,9 @@ use crate::{
     verifier_set::{self, verifier_set_hash, SigningVerifierSetInfo},
     EncodingError, PublicKey, Signature, VerifierSet, VerifierSetLeaf,
 };
+
+/// Prefix used for off-chain Solana message signing
+pub const SOLANA_OFFCHAIN_PREFIX: &[u8] = b"\xffsolana offchain";
 
 /// Represents the complete set of execution data required for verification and
 /// processing.
@@ -58,6 +60,12 @@ pub enum Payload {
 pub enum PayloadType {
     ApproveMessages = 0,
     RotateSigners = 1,
+}
+
+impl From<PayloadType> for u8 {
+    fn from(payload_type: PayloadType) -> Self {
+        payload_type as u8
+    }
 }
 
 /// Represents the payload data in a Merkle tree structure.
@@ -172,6 +180,25 @@ fn estimate_size(execute_data: &ExecuteData) -> usize {
                 })
                 .sum::<usize>(),
         )
+}
+
+#[allow(clippy::indexing_slicing)]
+pub fn prefixed_message_hash_payload_type(
+    payload_type: PayloadType,
+    message: &[u8; 32],
+) -> [u8; 32] {
+    // Hash the prefixed message to get a 32-byte digest
+    solana_keccak_hasher::hashv(&[
+        // 1. Add Solana offchain prefix to the message
+        SOLANA_OFFCHAIN_PREFIX,
+        // 2. Add payload type prefix to the message to indicate the intent of the signer
+        // this prevents rotating signers with a payload_merkle_root intended for approving
+        // messages and vice versa
+        &[payload_type.into()],
+        // 3. Add the original message
+        message,
+    ])
+    .to_bytes()
 }
 
 /// Hashes a payload, generating a unique root hash for payload validation.

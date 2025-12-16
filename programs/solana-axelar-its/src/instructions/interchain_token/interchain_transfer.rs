@@ -9,7 +9,10 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
+use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::system_program;
+use anchor_lang::InstructionData;
+use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_interface::TokenInterface;
 use anchor_spl::token_interface::{Mint, TokenAccount};
 use interchain_token_transfer_gmp::GMPPayload;
@@ -34,7 +37,7 @@ pub struct InterchainTransfer<'info> {
     //
     // Sender of the tokens
     //
-    /// The account that wants to transfer - can be a direct signer or program PDA
+    /// The authoriy over the token account sending the tokens
     pub authority: Signer<'info>,
 
     //
@@ -50,7 +53,7 @@ pub struct InterchainTransfer<'info> {
     pub gateway_program: Program<'info, SolanaAxelarGateway>,
 
     /// CHECK: signing PDA checked by gateway program
-    pub signing_pda: UncheckedAccount<'info>,
+    pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     //
     // Gas Service
@@ -128,15 +131,15 @@ impl<'info> ToGMPAccounts<'info> for InterchainTransfer<'info> {
     fn to_gmp_accounts(&self) -> GMPAccounts<'info> {
         GMPAccounts {
             payer: self.payer.to_account_info(),
-            gateway_root_pda: self.gateway_root_pda.to_account_info(),
-            gateway_program: self.gateway_program.to_account_info(),
-            gas_treasury: self.gas_treasury.to_account_info(),
-            gas_service: self.gas_service.to_account_info(),
             system_program: self.system_program.to_account_info(),
-            its_hub_address: self.its_root_pda.its_hub_address.clone(),
-            call_contract_signing_pda: self.signing_pda.to_account_info(),
-            its_program: self.program.to_account_info(),
+            gateway_program: self.gateway_program.to_account_info(),
+            gateway_root_pda: self.gateway_root_pda.to_account_info(),
             gateway_event_authority: self.gateway_event_authority.to_account_info(),
+            call_contract_signing_pda: self.call_contract_signing_pda.to_account_info(),
+            its_program: self.program.to_account_info(),
+            its_hub_address: self.its_root_pda.its_hub_address.clone(),
+            gas_service: self.gas_service.to_account_info(),
+            gas_treasury: self.gas_treasury.to_account_info(),
             gas_event_authority: self.gas_event_authority.to_account_info(),
         }
     }
@@ -163,7 +166,6 @@ pub fn interchain_transfer_handler(
         return err!(ItsError::InvalidDestinationAddress);
     }
 
-    // TODO check security implications of the checks here
     // Determine the source address based on whether this is a CPI or direct call
     // If it is a CPI, use the caller program id as the source address
     // otherwise use the user's address
@@ -237,14 +239,14 @@ fn process_outbound_transfer(
         .filter(|d| !d.is_empty())
         .map_or([0; 32], |d| solana_keccak_hasher::hash(d).0);
 
-    emit_cpi!(crate::events::InterchainTransfer {
+    emit_cpi!(crate::events::InterchainTransferSent {
         token_id,
         source_address,
         source_token_account: ctx.accounts.authority_token_account.key(),
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         amount,
-        data_hash,
+        data_hash: Some(data_hash),
     });
 
     let inner_payload =
@@ -323,11 +325,7 @@ fn transfer_with_fee_to(
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        &[],
-    );
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
 
     token_interface::transfer_checked_with_fee(cpi_context, amount, decimals, fee)?;
 
@@ -344,11 +342,7 @@ fn transfer_to(ctx: &Context<InterchainTransfer>, amount: u64, decimals: u8) -> 
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        &[],
-    );
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
 
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
 
@@ -364,11 +358,7 @@ fn burn_from_source(ctx: &Context<InterchainTransfer>, amount: u64) -> Result<()
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        &[],
-    );
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
 
     token_interface::burn(cpi_context, amount)?;
 
@@ -405,4 +395,92 @@ fn track_token_flow(
         .add_flow(amount, direction)?;
 
     Ok(())
+}
+
+/// Creates an InterchainTransfer instruction
+pub fn make_interchain_transfer_instruction(
+    token_id: [u8; 32],
+    amount: u64,
+    token_program: Pubkey,
+    payer: Pubkey,
+    authority: Pubkey,
+    destination_chain: String,
+    destination_address: Vec<u8>,
+    gas_value: u64,
+    caller_program_id: Option<Pubkey>,
+    caller_pda_seeds: Option<Vec<Vec<u8>>>,
+    data: Option<Vec<u8>>,
+) -> (Instruction, crate::accounts::InterchainTransfer) {
+    let its_root = InterchainTokenService::find_pda().0;
+
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root).0;
+    let token_mint = TokenManager::find_token_mint(token_id, its_root).0;
+
+    let authority_token_account =
+        get_associated_token_address_with_program_id(&authority, &token_mint, &token_program);
+    let token_manager_ata = get_associated_token_address_with_program_id(
+        &token_manager_pda,
+        &token_mint,
+        &token_program,
+    );
+
+    let gateway_root_pda = solana_axelar_gateway::GatewayConfig::find_pda().0;
+
+    let (call_contract_signing_pda, _) = Pubkey::find_program_address(
+        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
+        &crate::ID,
+    );
+
+    let (gateway_event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+
+    let (gas_treasury, _) = Pubkey::find_program_address(
+        &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
+        &solana_axelar_gas_service::ID,
+    );
+
+    let (gas_event_authority, _) =
+        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+
+    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+
+    let accounts = crate::accounts::InterchainTransfer {
+        payer,
+        authority,
+        gateway_root_pda,
+        gateway_event_authority,
+        gateway_program: solana_axelar_gateway::ID,
+        call_contract_signing_pda,
+        gas_treasury,
+        gas_service: solana_axelar_gas_service::ID,
+        gas_event_authority,
+        its_root_pda: its_root,
+        token_manager_pda,
+        token_program,
+        token_mint,
+        authority_token_account,
+        token_manager_ata,
+        system_program: anchor_lang::system_program::ID,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::InterchainTransfer {
+                token_id,
+                destination_chain,
+                destination_address,
+                amount,
+                gas_value,
+                caller_program_id,
+                caller_pda_seeds,
+                data,
+            }
+            .data(),
+        },
+        accounts,
+    )
 }

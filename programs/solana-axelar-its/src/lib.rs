@@ -2,6 +2,9 @@
 #![allow(clippy::little_endian_bytes)]
 #![allow(clippy::missing_asserts_for_indexing)]
 #![allow(clippy::too_many_arguments)]
+// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
+#![allow(deprecated)]
+
 pub mod errors;
 pub mod events;
 pub mod executable;
@@ -24,7 +27,7 @@ ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 // Program ID
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("itsmM2AJ27dSAXVhCfj34MtnFqyUmnLF7kbKbmyqRQA");
+declare_id!("itspcPS5zL941gd6jJfEAk8NjfzbanDFKtNQCNppVtJ");
 
 #[cfg(feature = "stagenet")]
 declare_id!("itsediSVCwwKc6UuxfrsEiF8AEuEFk34RFAscPEDEpJ");
@@ -277,8 +280,8 @@ pub mod solana_axelar_its {
         destination_address: Vec<u8>,
         amount: u64,
         gas_value: u64,
-        source_id: Option<Pubkey>,
-        pda_seeds: Option<Vec<Vec<u8>>>,
+        caller_program_id: Option<Pubkey>,
+        caller_pda_seeds: Option<Vec<Vec<u8>>>,
         data: Option<Vec<u8>>,
     ) -> Result<()> {
         instructions::interchain_transfer_handler(
@@ -288,22 +291,14 @@ pub mod solana_axelar_its {
             destination_address,
             amount,
             gas_value,
-            source_id,
-            pda_seeds,
+            caller_program_id,
+            caller_pda_seeds,
             data,
         )
     }
 
     pub fn transfer_operatorship(ctx: Context<TransferOperatorship>) -> Result<()> {
         instructions::transfer_operatorship_handler(ctx)
-    }
-
-    pub fn propose_operatorship(ctx: Context<ProposeOperatorship>) -> Result<()> {
-        instructions::propose_operatorship_handler(ctx)
-    }
-
-    pub fn accept_operatorship(ctx: Context<AcceptOperatorship>) -> Result<()> {
-        instructions::accept_operatorship_handler(ctx)
     }
 
     pub fn add_token_manager_flow_limiter(ctx: Context<AddTokenManagerFlowLimiter>) -> Result<()> {
@@ -329,18 +324,6 @@ pub mod solana_axelar_its {
         instructions::transfer_token_manager_operatorship_handler(ctx)
     }
 
-    pub fn propose_token_manager_operatorship(
-        ctx: Context<ProposeTokenManagerOperatorship>,
-    ) -> Result<()> {
-        instructions::propose_token_manager_operatorship_handler(ctx)
-    }
-
-    pub fn accept_token_manager_operatorship(
-        ctx: Context<AcceptTokenManagerOperatorship>,
-    ) -> Result<()> {
-        instructions::accept_token_manager_operatorship_handler(ctx)
-    }
-
     pub fn mint_interchain_token(ctx: Context<MintInterchainToken>, amount: u64) -> Result<()> {
         instructions::mint_interchain_token_handler(ctx, amount)
     }
@@ -356,17 +339,5 @@ pub mod solana_axelar_its {
         ctx: Context<TransferInterchainTokenMintership>,
     ) -> Result<()> {
         instructions::transfer_interchain_token_mintership_handler(ctx)
-    }
-
-    pub fn propose_interchain_token_mintership(
-        ctx: Context<ProposeInterchainTokenMintership>,
-    ) -> Result<()> {
-        instructions::propose_token_manager_mintership_handler(ctx)
-    }
-
-    pub fn accept_interchain_token_mintership(
-        ctx: Context<AcceptInterchainTokenMintership>,
-    ) -> Result<()> {
-        instructions::accept_interchain_token_mintership_handler(ctx)
     }
 }

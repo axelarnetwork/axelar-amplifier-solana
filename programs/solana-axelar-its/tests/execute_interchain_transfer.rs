@@ -30,9 +30,8 @@ use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022
 
 #[test]
 fn test_execute_interchain_transfer_success() {
-    // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -106,14 +105,22 @@ fn test_execute_interchain_transfer_success() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -180,11 +187,7 @@ fn test_execute_interchain_transfer_success() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -238,11 +241,10 @@ fn test_execute_interchain_transfer_success() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
@@ -342,9 +344,8 @@ fn test_execute_interchain_transfer_success() {
 
 #[test]
 fn test_reject_execute_interchain_transfer_with_zero_amount() {
-    // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -419,14 +420,22 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -493,11 +502,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -551,11 +556,10 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
@@ -631,9 +635,8 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
 
 #[test]
 fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
-    // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -708,14 +711,22 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -782,11 +793,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -842,11 +849,10 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =
@@ -924,9 +930,8 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
 
 #[test]
 fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
-    // Step 1: Setup gateway with real signers
-    let (mut setup, verifier_leaves, verifier_merkle_tree, secret_key_1, secret_key_2) =
-        setup_test_with_real_signers();
+    // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
+    let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -1001,14 +1006,22 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     deploy_message.source_address = its_hub_address.clone();
 
     // Approve deploy message on gateway
+    let gateway_account = init_result
+        .get_account(&setup.gateway_root_pda)
+        .unwrap()
+        .clone();
+    let verifier_set_tracker_account = init_result
+        .get_account(&setup.verifier_set_tracker_pda)
+        .unwrap()
+        .clone();
+
     let deploy_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![deploy_message.clone()],
-        init_result.clone(),
+        gateway_account.clone(),
+        verifier_set_tracker_account.clone(),
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves.clone(),
-        verifier_merkle_tree.clone(),
     );
 
     let (_, deploy_incoming_message_pda, deploy_incoming_message_account_data) =
@@ -1075,11 +1088,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
             ),
             (metadata_account, new_empty_account()),
         ],
-        extra_account_metas: deploy_interchain_token_extra_accounts(
-            deployer_ata,
-            payer,
-            metadata_account,
-        ),
+        extra_account_metas: deploy_interchain_token_extra_accounts(metadata_account),
         token_manager_account: None,
     };
 
@@ -1133,11 +1142,10 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
     let transfer_incoming_messages = approve_messages_on_gateway(
         &setup,
         vec![transfer_message.clone()],
-        init_result.clone(),
+        gateway_account,
+        verifier_set_tracker_account,
         &secret_key_1,
         &secret_key_2,
-        verifier_leaves,
-        verifier_merkle_tree,
     );
 
     let (_, transfer_incoming_message_pda, transfer_incoming_message_account_data) =

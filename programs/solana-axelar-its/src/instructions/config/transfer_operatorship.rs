@@ -2,7 +2,8 @@ use crate::{
     state::{InterchainTokenService, roles, RolesError, UserRoles},
     ItsError,
 };
-use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::{prelude::*, InstructionData};
 
 #[derive(Accounts)]
 pub struct TransferOperatorship<'info> {
@@ -75,12 +76,43 @@ pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Resu
 
     // Close if no remaining roles
     if !origin_roles.has_roles() {
-        anchor_lang::AccountsClose::close(
-            &ctx.accounts.origin_roles_account,
-            ctx.accounts.payer.to_account_info(),
-        )
-        .map_err(|e| e.with_account_name("origin_roles_account"))?;
+        ctx.accounts
+            .origin_roles_account
+            .close(ctx.accounts.payer.to_account_info())
+            .map_err(|e| e.with_account_name("origin_roles_account"))?;
     }
 
     Ok(())
+}
+
+/// Creates a TransferOperatorship instruction
+pub fn make_transfer_operatorship_instruction(
+    payer: Pubkey,
+    origin_user_account: Pubkey,
+    destination_user_account: Pubkey,
+) -> (Instruction, crate::accounts::TransferOperatorship) {
+    let resource_account = InterchainTokenService::find_pda().0;
+
+    let origin_roles_account = UserRoles::find_pda(&resource_account, &origin_user_account).0;
+    let destination_roles_account =
+        UserRoles::find_pda(&resource_account, &destination_user_account).0;
+
+    let accounts = crate::accounts::TransferOperatorship {
+        system_program: anchor_lang::system_program::ID,
+        payer,
+        origin_user_account,
+        origin_roles_account,
+        resource_account,
+        destination_user_account,
+        destination_roles_account,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::TransferOperatorship {}.data(),
+        },
+        accounts,
+    )
 }

@@ -25,7 +25,7 @@ pub struct ApproveMessage<'info> {
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
             payload_merkle_root.as_ref(),
-            &[PayloadType::ApproveMessages as u8],
+            &[PayloadType::ApproveMessages.into()],
             verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref()
         ],
         bump = verification_session_account.load()?.bump,
@@ -78,18 +78,22 @@ pub fn approve_message_handler(
 
     let command_id = merklized_message.leaf.message.command_id();
 
-    // Parse destination address
-    let destination_address = Pubkey::from_str(&merklized_message.leaf.message.destination_address)
-        .map_err(|_| GatewayError::InvalidDestinationAddress)?;
-
-    // Create a new Signing PDA that is used for validating that a message has
-    // reached the destination program
-    //
     // Calculate signing PDA bump
-    let (_, signing_pda_bump) = Pubkey::find_program_address(
-        &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
-        &destination_address,
-    );
+    // If the destination address is an invalid pubkey, the message is
+    // practically invalid, so we default to bump 0 to not return an error
+    let signing_pda_bump = if let Ok(destination_address_pubkey) =
+        Pubkey::from_str(&merklized_message.leaf.message.destination_address)
+    {
+        // Create a new Signing PDA that is used for validating that a message has
+        // reached the destination program
+        let (_, bump) = Pubkey::find_program_address(
+            &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
+            &destination_address_pubkey,
+        );
+        bump
+    } else {
+        0
+    };
 
     // Store data in the PDA
     incoming_message_pda.bump = ctx.bumps.incoming_message_pda;
@@ -102,7 +106,7 @@ pub fn approve_message_handler(
 
     emit_cpi!(MessageApprovedEvent {
         command_id,
-        destination_address,
+        destination_address: merklized_message.leaf.message.destination_address,
         payload_hash: merklized_message.leaf.message.payload_hash,
         source_chain: cc_id.chain.clone(),
         cc_id: cc_id.id.clone(),

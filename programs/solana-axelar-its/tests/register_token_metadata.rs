@@ -24,9 +24,9 @@ use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
 use spl_token_2022::state::Mint;
 
 #[test]
-fn test_register_token_metadata() {
+fn register_token_metadata() {
     // Initialize gateway
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -127,11 +127,9 @@ fn test_register_token_metadata() {
             its_root_pda,
             call_contract_signing_pda,
             gateway_event_authority,
-            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-                gas_treasury: treasury_pda,
-                gas_service: solana_axelar_gas_service::ID,
-                gas_event_authority,
-            },
+            gas_treasury: treasury_pda,
+            gas_service: solana_axelar_gas_service::ID,
+            gas_event_authority,
             event_authority,
             program: program_id,
         }
@@ -169,9 +167,9 @@ fn test_register_token_metadata() {
 }
 
 #[test]
-fn test_register_token_metadata_failure_for_empty_mint() {
+fn register_token_metadata_failure_for_empty_mint() {
     // Initialize gateway
-    let (setup, _, _, _, _) = setup_test_with_real_signers();
+    let (setup, _, _) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -257,11 +255,9 @@ fn test_register_token_metadata_failure_for_empty_mint() {
             its_root_pda,
             call_contract_signing_pda,
             gateway_event_authority,
-            gas_service_accounts: solana_axelar_its::accounts::GasServiceAccounts {
-                gas_treasury: treasury_pda,
-                gas_service: solana_axelar_gas_service::ID,
-                gas_event_authority,
-            },
+            gas_treasury: treasury_pda,
+            gas_service: solana_axelar_gas_service::ID,
+            gas_event_authority,
             event_authority,
             program: program_id,
         }

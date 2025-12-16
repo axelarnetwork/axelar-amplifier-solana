@@ -19,7 +19,7 @@ use solana_program::instruction::Instruction;
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_set_token_manager_flow_limit_success() {
+fn set_token_manager_flow_limit_success() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -201,7 +201,7 @@ fn test_set_token_manager_flow_limit_success() {
 }
 
 #[test]
-fn test_reject_set_token_manager_flow_limit_with_unauthorized_operator() {
+fn reject_set_token_manager_flow_limit_with_unauthorized_operator() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 
@@ -370,7 +370,7 @@ fn test_reject_set_token_manager_flow_limit_with_unauthorized_operator() {
 }
 
 #[test]
-fn test_reject_set_token_manager_flow_limit_without_operator_role() {
+fn reject_set_token_manager_flow_limit_without_operator_role() {
     let program_id = solana_axelar_its::id();
     let mollusk = initialize_mollusk_with_programs();
 

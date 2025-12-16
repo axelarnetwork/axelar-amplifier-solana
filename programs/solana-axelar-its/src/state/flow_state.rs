@@ -2,7 +2,7 @@ use crate::errors::ItsError;
 use anchor_lang::prelude::*;
 use std::time::Duration;
 
-const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60);
+const EPOCH_TIME: Duration = Duration::from_secs(6 * 60 * 60); // 6 hours
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum FlowDirection {
@@ -11,10 +11,7 @@ pub(crate) enum FlowDirection {
 }
 
 /// Struct containing flow information for a specific epoch.
-// TODO should this be an account? for now it's only used
-// as a value in ITS and TokenManager accounts
-#[account]
-#[derive(Debug, Eq, PartialEq, InitSpace)]
+#[derive(Clone, Debug, Eq, PartialEq, InitSpace, AnchorSerialize, AnchorDeserialize)]
 pub struct FlowState {
     pub flow_limit: Option<u64>,
     pub flow_in: u64,
@@ -60,11 +57,7 @@ impl FlowState {
         // Calculate net flow: |new_flow - to_compare|
         // The flow limit is interpreted as a limit over the net amount of tokens
         // transferred from one chain to another within a six hours time window.
-        let net_flow = if new_flow >= to_compare {
-            new_flow - to_compare
-        } else {
-            to_compare - new_flow
-        };
+        let net_flow = new_flow.abs_diff(to_compare);
 
         // Check if net flow exceeds the limit
         if net_flow > flow_limit {

@@ -23,7 +23,7 @@ pub struct RotateSigners<'info> {
             SignatureVerificationSessionData::SEED_PREFIX,
             // New verifier set merkle root is used directly as the payload hash.
             &new_verifier_set_merkle_root,
-            &[PayloadType::RotateSigners as u8],
+            &[PayloadType::RotateSigners.into()],
             verification_session_account.load()?.signature_verification
             .signing_verifier_set_hash.as_ref(),
         ],
