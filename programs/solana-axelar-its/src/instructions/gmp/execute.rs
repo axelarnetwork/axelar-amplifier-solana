@@ -390,7 +390,7 @@ pub fn execute_link_token_extra_accounts(
     let mut accounts = Vec::with_capacity(2);
 
     if let Some(key) = operator {
-        accounts.push(AccountMeta::new(key, false));
+        accounts.push(AccountMeta::new_readonly(key, false));
     }
 
     if let Some(pda_key) = operator_roles_pda {
