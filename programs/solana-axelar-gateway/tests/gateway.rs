@@ -18,8 +18,8 @@ use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::U256;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
 fn initialize_config() {
@@ -625,7 +625,7 @@ fn call_contract_direct_signer() {
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

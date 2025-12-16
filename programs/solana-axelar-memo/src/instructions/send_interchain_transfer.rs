@@ -99,11 +99,8 @@ pub fn send_interchain_transfer_handler(
     let signer_seeds_arg: Vec<Vec<u8>> = signer_seeds.iter().map(|seed| seed.to_vec()).collect();
     let signer_seeds = &[&signer_seeds[..]];
 
-    let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.its_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
+    let cpi_ctx =
+        CpiContext::new_with_signer(ctx.accounts.its_program.key(), cpi_accounts, signer_seeds);
 
     solana_axelar_its::cpi::interchain_transfer(
         cpi_ctx,

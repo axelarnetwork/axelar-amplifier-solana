@@ -19,8 +19,8 @@ use solana_sdk::{
     account::Account,
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
-    system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -42,11 +42,9 @@ fn execute() {
         setup_test_with_real_signers();
 
     // Add the memo program to the Mollusk instance
-    setup.mollusk.add_program(
-        &MEMO_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_memo",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    setup
+        .mollusk
+        .add_program(&MEMO_PROGRAM_ID, "../../target/deploy/solana_axelar_memo");
 
     // Step 2: Initialize gateway
     let init_result = initialize_gateway(&setup);
@@ -258,7 +256,7 @@ fn execute() {
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -279,7 +277,7 @@ fn execute() {
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

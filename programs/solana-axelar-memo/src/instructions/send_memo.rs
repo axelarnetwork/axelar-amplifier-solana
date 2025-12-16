@@ -65,7 +65,7 @@ pub fn send_memo_handler(
     };
 
     let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.gateway_program.to_account_info(),
+        ctx.accounts.gateway_program.key(),
         cpi_accounts,
         signer_seeds,
     );

@@ -156,7 +156,7 @@ fn execute_interchain_transfer_success() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -166,7 +166,7 @@ fn execute_interchain_transfer_success() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -455,7 +455,7 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -465,7 +465,7 @@ fn reject_execute_interchain_transfer_with_zero_amount() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -730,7 +730,7 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -740,7 +740,7 @@ fn reject_execute_interchain_transfer_with_invalid_token_id() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -1009,7 +1009,7 @@ fn reject_execute_interchain_transfer_with_mismatched_destination() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -1019,7 +1019,7 @@ fn reject_execute_interchain_transfer_with_mismatched_destination() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },

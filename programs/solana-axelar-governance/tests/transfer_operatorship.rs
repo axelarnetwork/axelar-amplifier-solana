@@ -10,7 +10,7 @@ use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::pubkey::Pubkey;
-use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
 fn should_transfer_operatorship() {
@@ -79,7 +79,7 @@ fn should_transfer_operatorship() {
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

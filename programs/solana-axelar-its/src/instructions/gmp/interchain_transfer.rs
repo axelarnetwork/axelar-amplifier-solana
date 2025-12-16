@@ -126,7 +126,7 @@ pub fn execute_interchain_transfer_handler<'info>(
     let data_hash = if data.is_empty() {
         None
     } else {
-        Some(solana_program::keccak::hash(data.as_ref()).0)
+        Some(solana_keccak_hasher::hash(data.as_ref()).to_bytes())
     };
 
     emit_cpi!(InterchainTransferReceived {
@@ -335,11 +335,8 @@ fn transfer_to(
         authority: ctx.accounts.token_manager_pda.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
+    let cpi_context =
+        CpiContext::new_with_signer(ctx.accounts.token_program.key(), cpi_accounts, signer_seeds);
 
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
 
@@ -363,11 +360,8 @@ fn transfer_with_fee_to(
         authority: ctx.accounts.token_manager_pda.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
+    let cpi_context =
+        CpiContext::new_with_signer(ctx.accounts.token_program.key(), cpi_accounts, signer_seeds);
 
     token_interface::transfer_checked_with_fee(cpi_context, amount, decimals, fee)?;
 
@@ -404,11 +398,8 @@ fn mint_to_receiver(
         &bump_seed,
     ]];
 
-    let cpi_context = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        cpi_accounts,
-        signer_seeds,
-    );
+    let cpi_context =
+        CpiContext::new_with_signer(ctx.accounts.token_program.key(), cpi_accounts, signer_seeds);
 
     token_interface::mint_to(cpi_context, initial_supply)?;
 

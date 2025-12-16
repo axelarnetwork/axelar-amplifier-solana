@@ -141,7 +141,7 @@ fn execute_deploy_interchain_token_success() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -151,7 +151,7 @@ fn execute_deploy_interchain_token_success() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -310,7 +310,7 @@ fn execute_deploy_interchain_token_with_large_metadata() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -320,7 +320,7 @@ fn execute_deploy_interchain_token_with_large_metadata() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -457,7 +457,7 @@ fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
                 Account {
                     lamports: 1_000_000_000,
                     data: create_sysvar_instructions_data(),
-                    owner: solana_program::sysvar::id(),
+                    owner: solana_sdk_ids::sysvar::ID,
                     executable: false,
                     rent_epoch: 0,
                 },
@@ -467,7 +467,7 @@ fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
                 Account {
                     lamports: 1,
                     data: vec![],
-                    owner: solana_sdk::bpf_loader_upgradeable::id(),
+                    owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                     executable: true,
                     rent_epoch: 0,
                 },

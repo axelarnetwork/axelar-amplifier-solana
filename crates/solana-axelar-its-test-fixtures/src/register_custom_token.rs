@@ -75,7 +75,7 @@ pub fn execute_register_custom_token_helper(
     let accounts = solana_axelar_its::accounts::RegisterCustomToken {
         payer: ctx.payer.0,
         deployer: ctx.deployer.0,
-        system_program: solana_sdk::system_program::ID,
+        system_program: solana_sdk_ids::system_program::ID,
         its_root_pda: ctx.its_root.0,
         token_manager_pda,
         token_mint: ctx.token_mint.0,
@@ -103,12 +103,12 @@ pub fn execute_register_custom_token_helper(
         (ctx.its_root.0, ctx.its_root.1),
         (
             token_manager_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (ctx.token_mint.0, ctx.token_mint.1),
         (
             token_manager_ata,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         mollusk_svm_programs_token::token2022::keyed_account(),
         mollusk_svm_programs_token::associated_token::keyed_account(),
@@ -117,7 +117,7 @@ pub fn execute_register_custom_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
+                owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
                 executable: true,
                 rent_epoch: 0,
             },
@@ -138,11 +138,11 @@ pub fn execute_register_custom_token_helper(
         // For event CPI
         (
             event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             program_id,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
     ];
 
@@ -150,7 +150,7 @@ pub fn execute_register_custom_token_helper(
     if let Some(operator) = params.operator {
         mollusk_accounts.push((
             operator,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ));
     }
 
@@ -158,7 +158,7 @@ pub fn execute_register_custom_token_helper(
     if let Some(operator_roles_pda) = operator_roles_pda {
         mollusk_accounts.push((
             operator_roles_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ));
     }
 

@@ -4,8 +4,7 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::{
-    prelude::UpgradeableLoaderState, solana_program, AccountDeserialize, InstructionData,
-    ToAccountMetas,
+    prelude::UpgradeableLoaderState, AccountDeserialize, InstructionData, ToAccountMetas,
 };
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
@@ -28,8 +27,8 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
     pubkey::Pubkey,
-    system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 pub struct TestSetup {
     pub mollusk: Mollusk,
@@ -75,7 +74,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::id(),
+        &solana_sdk_ids::bpf_loader_upgradeable::id(),
     );
 
     let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
@@ -197,7 +196,7 @@ pub fn setup_test_with_real_signers() -> (
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::id(),
+        &solana_sdk_ids::bpf_loader_upgradeable::id(),
     );
 
     let (verifier_set_tracker_pda, verifier_bump) = Pubkey::find_program_address(
@@ -282,7 +281,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: serialized_program_data,
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: false,
                 rent_epoch: 0,
             },
@@ -624,7 +623,7 @@ pub fn call_contract_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -804,7 +803,7 @@ pub fn rotate_signers_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -897,7 +896,7 @@ pub fn transfer_operatorship_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -986,7 +985,8 @@ pub fn approve_message_helper(
 
     let cc_id = &messages[position].cc_id;
     let command_id =
-        solana_program::keccak::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()]).0;
+        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()])
+            .to_bytes();
 
     let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
         &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
@@ -1066,7 +1066,7 @@ pub fn approve_message_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

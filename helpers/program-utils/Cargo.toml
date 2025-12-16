@@ -21,4 +21,3 @@ spl-associated-token-account = { workspace = true, features = [
 
 [dev-dependencies]
 solana-sdk.workspace = true
-solana-program-test.workspace = true

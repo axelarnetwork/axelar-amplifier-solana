@@ -1,5 +1,8 @@
 use std::collections::BTreeMap;
 
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::borsh;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
 use udigest::encoding::EncodeValue;
