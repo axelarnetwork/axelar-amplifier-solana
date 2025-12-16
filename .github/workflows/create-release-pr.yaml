@@ -24,7 +24,7 @@ jobs:
         with:
           # Run `release-plz release-pr` command.
           command: release-pr
-          # Removed version pin - using latest to debug 0000000 error
+          version: "0.3.150"
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
