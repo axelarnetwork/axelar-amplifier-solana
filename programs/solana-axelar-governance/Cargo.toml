@@ -8,6 +8,9 @@ license.workspace = true
 edition.workspace = true
 description = "Axelar Governance Anchor program for Solana"
 
+[package.metadata.cargo-machete]
+ignored = ["anchor-spl"]
+
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "solana_axelar_governance"

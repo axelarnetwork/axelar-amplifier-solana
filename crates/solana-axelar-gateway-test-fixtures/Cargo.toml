@@ -6,6 +6,9 @@ description = "Test fixtures and utilities for solana-axelar-gateway"
 license.workspace = true
 publish = false
 
+[package.metadata.cargo-machete]
+ignored = ["solana-keccak-hasher"]
+
 [dependencies]
 anchor-lang.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "devnet-amplifier"], default-features = false }
