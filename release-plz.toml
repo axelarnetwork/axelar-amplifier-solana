@@ -1,13 +1,13 @@
 [workspace]
 allow_dirty = false # allow updating repositories with uncommitted changes
-changelog_update = false # TEMPORARILY disabled to debug 0000000 error
+changelog_update = true # enables changelog updates
 dependencies_update = false # update dependencies with `cargo update`
-git_release_enable = false # TEMPORARILY disabled to debug 0000000 error
-git_tag_enable = false # TEMPORARILY disabled to debug 0000000 error
+git_release_enable = true # enable GitHub/Gitea releases
+git_tag_enable = true # enable GitHub/Gitea tag
 pr_branch_prefix = "release-" # PR branch prefix
 pr_labels = ["release"] # add the `release` label to the release Pull Request
 publish_allow_dirty = false # removes `--allow-dirty` to `cargo publish`
-semver_check = false # TEMPORARILY disabled to debug 0000000 error
+semver_check = true # enable API breaking changes checks
 publish_timeout = "10m" # set a timeout for `cargo publish`
 publish = true
 publish_no_verify=false
@@ -26,11 +26,12 @@ Changes:
 {% endfor -%}
 """
 
-# TEMPORARILY skip ALL packages to debug 0000000 error
 [[package]]
 name = "solana-axelar-std"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "program-utils"
@@ -41,38 +42,53 @@ publish = true
 
 [[package]]
 name = "governance-gmp"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "interchain-token-transfer-gmp"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "solana-axelar-operators"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "solana-axelar-gateway"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "solana-axelar-gas-service"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "solana-axelar-its"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
 
 [[package]]
 name = "solana-axelar-governance"
-release = false
-publish = false
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+publish_no_verify = true
 
 # Skip mollusk-test-utils - published with orphaned commit, not actively released
 [[package]]
@@ -136,7 +152,12 @@ body = """
     {% endfor -%}
 {% endfor %}\n
 
-{# Contributors section disabled for debugging #}
+{%- if remote.contributors %}
+### Contributors
+{% for contributor in remote.contributors %}
+    * @{{ contributor.username }}
+{%- endfor %}
+{% endif -%}
 {%- macro username(commit) -%}
     {% if commit.remote.username %} (by @{{ commit.remote.username }}){% endif -%}
 {% endmacro -%}
