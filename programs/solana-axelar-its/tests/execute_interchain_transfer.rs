@@ -196,7 +196,7 @@ fn test_execute_interchain_transfer_success() {
 
     // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 1_000_000u64;
-    let destination_pubkey = payer; // Transfer to same user for simplicity
+    let (destination_pubkey, destination_account) = new_test_account();
     let destination_address = destination_pubkey.to_bytes().to_vec(); // 32 bytes for Solana Pubkey
     let source_address = "ethereum_address_123".to_owned(); // some valid UTF-8 string
 
@@ -281,7 +281,7 @@ fn test_execute_interchain_transfer_success() {
             (token_manager_ata, token_manager_ata_after_deploy.clone()),
         ],
         extra_accounts: vec![
-            (destination_pubkey, payer_account.clone()),
+            (destination_pubkey, destination_account.clone()),
             (destination_ata, deployer_ata_account_after_deploy.clone()),
         ],
         extra_account_metas: interchain_transfer_extra_accounts(
@@ -501,7 +501,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
 
     // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 0u64;
-    let destination_pubkey = payer; // Transfer to same user for simplicity
+    let (destination_pubkey, destination_account) = new_test_account(); // Transfer to same user for simplicity
     let destination_address = destination_pubkey.to_bytes().to_vec(); // 32 bytes for Solana Pubkey
     let source_address = "ethereum_address_123".to_owned(); // some valid UTF-8 string
 
@@ -586,7 +586,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
             (token_manager_ata, token_manager_ata_after_deploy.clone()),
         ],
         extra_accounts: vec![
-            (destination_pubkey, payer_account.clone()),
+            (destination_pubkey, destination_account.clone()),
             (destination_ata, deployer_ata_account_after_deploy.clone()),
         ],
         extra_account_metas: interchain_transfer_extra_accounts(
@@ -782,7 +782,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
 
     // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 1_000_000u64;
-    let destination_pubkey = payer; // Transfer to same user for simplicity
+    let (destination_pubkey, destination_account) = new_test_account();
     let destination_address = destination_pubkey.to_bytes().to_vec(); // 32 bytes for Solana Pubkey
     let source_address = "ethereum_address_123".to_owned(); // some valid UTF-8 string
 
@@ -871,7 +871,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
             (token_manager_ata, token_manager_ata_after_deploy.clone()),
         ],
         extra_accounts: vec![
-            (destination_pubkey, payer_account.clone()),
+            (destination_pubkey, destination_account.clone()),
             (destination_ata, deployer_ata_account_after_deploy.clone()),
         ],
         extra_account_metas: interchain_transfer_extra_accounts(
@@ -1067,7 +1067,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
 
     // Step 6: Create the interchain transfer using the deployed token
     let transfer_amount = 1_000_000u64;
-    let destination_pubkey = payer; // Transfer to same user for simplicity
+    let (destination_pubkey, destination_account) = new_test_account(); // Transfer to same user for simplicity
     let destination_address = Pubkey::new_unique().to_bytes().to_vec();
     let source_address = "ethereum_address_123".to_owned(); // some valid UTF-8 string
 
@@ -1152,7 +1152,7 @@ fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
             (token_manager_ata, token_manager_ata_after_deploy.clone()),
         ],
         extra_accounts: vec![
-            (destination_pubkey, payer_account.clone()),
+            (destination_pubkey, destination_account.clone()),
             (destination_ata, deployer_ata_account_after_deploy.clone()),
         ],
         extra_account_metas: interchain_transfer_extra_accounts(
