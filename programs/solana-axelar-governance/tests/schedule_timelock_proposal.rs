@@ -1,4 +1,4 @@
-use anchor_lang::{solana_program, AccountDeserialize};
+use anchor_lang::AccountDeserialize;
 use hex::FromHex;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,

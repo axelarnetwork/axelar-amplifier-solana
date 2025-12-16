@@ -125,7 +125,7 @@ fn initialize_payload_verification_session_works() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_approve_message_with_dual_signers_and_merkle_proof() {
+fn approve_message_with_dual_signers_and_merkle_proof() {
     // Step 1: Setup gateway with real signers
     let (setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -318,7 +318,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_rotate_signers() {
+fn rotate_signers() {
     // Step 1: Setup gateway with real signers (current verifier set)
     let (setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -682,7 +682,7 @@ fn call_contract_direct_signer() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_fails_when_verifier_submits_signature_twice() {
+fn fails_when_verifier_submits_signature_twice() {
     // Setup
     let (setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -781,7 +781,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_fails_when_approving_message_with_insufficient_signatures() {
+fn fails_when_approving_message_with_insufficient_signatures() {
     // Step 1: Setup gateway with real signers
     let (setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -882,7 +882,7 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_fails_when_verifying_invalid_signature() {
+fn fails_when_verifying_invalid_signature() {
     // Step 1: Setup gateway with real signers
     let (setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -964,7 +964,7 @@ fn test_fails_when_verifying_invalid_signature() {
 
 #[test]
 #[allow(clippy::indexing_slicing)]
-fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
+fn fails_when_using_approve_messages_payload_for_rotate_signers() {
     // Step 1: Setup gateway with real signers
     let (setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 

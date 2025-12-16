@@ -29,7 +29,7 @@ use solana_sdk::{account::Account, keccak, pubkey::Pubkey};
 use spl_token_2022::{extension::StateWithExtensions, state::Account as Token2022Account};
 
 #[test]
-fn test_execute_interchain_transfer_success() {
+fn execute_interchain_transfer_success() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -343,7 +343,7 @@ fn test_execute_interchain_transfer_success() {
 }
 
 #[test]
-fn test_reject_execute_interchain_transfer_with_zero_amount() {
+fn reject_execute_interchain_transfer_with_zero_amount() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -634,7 +634,7 @@ fn test_reject_execute_interchain_transfer_with_zero_amount() {
 }
 
 #[test]
-fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
+fn reject_execute_interchain_transfer_with_invalid_token_id() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
@@ -929,7 +929,7 @@ fn test_reject_execute_interchain_transfer_with_invalid_token_id() {
 }
 
 #[test]
-fn test_reject_execute_interchain_transfer_with_mismatched_destination() {
+fn reject_execute_interchain_transfer_with_mismatched_destination() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 

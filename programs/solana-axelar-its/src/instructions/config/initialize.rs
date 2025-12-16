@@ -1,6 +1,6 @@
 #![allow(clippy::missing_asserts_for_indexing)]
 use crate::{
-    state::{InterchainTokenService, roles, UserRoles},
+    state::{roles, InterchainTokenService, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;

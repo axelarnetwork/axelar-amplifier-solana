@@ -12,7 +12,7 @@ use solana_program::program_pack::IsInitialized;
 // Outbound transfers
 
 #[test]
-fn test_user_interchain_transfer() {
+fn user_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
     // Create token
@@ -49,7 +49,7 @@ fn test_user_interchain_transfer() {
 }
 
 #[test]
-fn test_cpi_interchain_transfer() {
+fn cpi_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 
@@ -96,7 +96,7 @@ fn test_cpi_interchain_transfer() {
 }
 
 #[test]
-fn test_cpi_interchain_transfer_invalid_pda_arguments() {
+fn cpi_interchain_transfer_invalid_pda_arguments() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 
@@ -149,7 +149,7 @@ fn test_cpi_interchain_transfer_invalid_pda_arguments() {
 // Inbound transfers
 
 #[test]
-fn test_execute_interchain_transfer() {
+fn execute_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
     let token_id = its_harness.ensure_test_interchain_token();
@@ -181,7 +181,7 @@ fn test_execute_interchain_transfer() {
 }
 
 #[test]
-fn test_execute_interchain_transfer_with_data() {
+fn execute_interchain_transfer_with_data() {
     let mut its_harness = ItsTestHarness::new();
 
     // Init memo

@@ -173,7 +173,7 @@ fn execute_link_token() {
 }
 
 #[test]
-fn test_reject_execute_link_token_with_invalid_token_manager_type() {
+fn reject_execute_link_token_with_invalid_token_manager_type() {
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 
     let init_result = initialize_gateway(&setup);

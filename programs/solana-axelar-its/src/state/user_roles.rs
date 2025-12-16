@@ -21,17 +21,17 @@ impl UserRoles {
 
     pub fn has_minter_role(&self) -> bool {
         let res = self.roles & roles::MINTER;
-        return res == roles::MINTER;
+        res == roles::MINTER
     }
 
     pub fn has_operator_role(&self) -> bool {
         let res = self.roles & roles::OPERATOR;
-        return res == roles::OPERATOR;
+        res == roles::OPERATOR
     }
 
     pub fn has_flow_limiter_role(&self) -> bool {
         let res = self.roles & roles::FLOW_LIMITER;
-        return res == roles::FLOW_LIMITER;
+        res == roles::FLOW_LIMITER
     }
 
     pub fn has_roles(&self) -> bool {
@@ -40,7 +40,7 @@ impl UserRoles {
 
     pub fn contains(&self, role: u8) -> bool {
         let res = self.roles & role;
-        return res == role;
+        res == role
     }
 
     pub fn insert(&mut self, new_role: u8) {

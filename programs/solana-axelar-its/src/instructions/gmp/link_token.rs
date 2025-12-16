@@ -2,7 +2,7 @@ use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
-    state::{token_manager, InterchainTokenService, roles, TokenManager, UserRoles},
+    state::{roles, token_manager, InterchainTokenService, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{

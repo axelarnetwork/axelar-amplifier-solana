@@ -210,7 +210,7 @@ fn execute_deploy_interchain_token_success() {
 
 #[test]
 #[allow(clippy::string_slice)]
-fn test_execute_deploy_interchain_token_with_large_metadata() {
+fn execute_deploy_interchain_token_with_large_metadata() {
     // Step 1-4: Common setup - gateway, mollusk, and ITS service initialization
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
 

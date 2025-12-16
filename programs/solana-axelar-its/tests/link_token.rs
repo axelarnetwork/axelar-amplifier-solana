@@ -25,7 +25,7 @@ use solana_axelar_its_test_fixtures::{setup_operator, RegisterCustomTokenParams}
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_link_token() {
+fn link_token() {
     let (setup, _, _) = setup_test_with_real_signers();
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -148,7 +148,7 @@ fn test_link_token() {
 }
 
 #[test]
-fn test_reject_link_token_untrusted_destination_chain() {
+fn reject_link_token_untrusted_destination_chain() {
     let (setup, _, _) = setup_test_with_real_signers();
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
@@ -269,7 +269,7 @@ fn test_reject_link_token_untrusted_destination_chain() {
 }
 
 #[test]
-fn test_reject_link_token_invalid_destination_chain() {
+fn reject_link_token_invalid_destination_chain() {
     let (setup, _, _) = setup_test_with_real_signers();
     let init_result = initialize_gateway(&setup);
     assert!(init_result.program_result.is_ok());
