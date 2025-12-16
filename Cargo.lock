@@ -6603,6 +6603,7 @@ version = "0.1.1"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
+ "anchor-spl",
  "bincode",
  "governance-gmp",
  "hex",
