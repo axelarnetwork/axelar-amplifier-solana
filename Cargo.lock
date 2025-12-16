@@ -5551,7 +5551,7 @@ dependencies = [
 
 [[package]]
 name = "relayer-discovery-test-fixtures"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "libsecp256k1",
@@ -6759,7 +6759,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-test-discoverable"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "bincode",
