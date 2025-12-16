@@ -237,7 +237,7 @@ fn process_outbound_transfer(
     let data_hash = data
         .as_ref()
         .filter(|d| !d.is_empty())
-        .map_or([0; 32], |d| solana_keccak_hasher::hash(d).0);
+        .map(|d| solana_keccak_hasher::hash(d).0);
 
     emit_cpi!(crate::events::InterchainTransferSent {
         token_id,
@@ -246,7 +246,7 @@ fn process_outbound_transfer(
         destination_chain: destination_chain.clone(),
         destination_address: destination_address.clone(),
         amount,
-        data_hash: Some(data_hash),
+        data_hash,
     });
 
     let inner_payload =
