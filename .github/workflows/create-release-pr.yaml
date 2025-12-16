@@ -22,7 +22,6 @@ jobs:
       - name: Run release-plz
         uses: MarcoIeni/release-plz-action@v0.5.82
         with:
-          # Run `release-plz release-pr` command.
           command: release-pr
           version: "0.3.150"
         env:
