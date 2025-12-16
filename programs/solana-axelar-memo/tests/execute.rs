@@ -1,7 +1,6 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -15,9 +14,7 @@ use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_axelar_std::{CrossChainId, Message, Messages, Payload, PayloadType};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
-    account::Account,
-    instruction::{AccountMeta, Instruction},
-    native_token::LAMPORTS_PER_SOL,
+    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
     system_program::ID as SYSTEM_PROGRAM_ID,
 };
 
@@ -28,13 +25,8 @@ fn execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
     let (counter_pda, _counter_pda_bump) = Counter::get_pda();
-    let encoding_scheme = ExecutablePayloadEncodingScheme::AbiEncoding;
-    let test_payload = ExecutablePayload::new(
-        memo_string.as_bytes(),
-        &[AccountMeta::new(counter_pda, false)],
-        encoding_scheme,
-    );
-    let test_payload_hash: [u8; 32] = test_payload.hash().unwrap();
+    let test_payload = Vec::from(memo_string.as_bytes());
+    let test_payload_hash: [u8; 32] = solana_sdk::keccak::hash(test_payload.as_slice()).to_bytes();
 
     // Step 1: Setup test with real signers
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
@@ -244,8 +236,7 @@ fn execute() {
 
     let execute_instruction_data = solana_axelar_memo::instruction::Execute {
         message: message.clone(),
-        payload: test_payload.payload_without_accounts().to_vec(),
-        encoding_scheme,
+        payload: test_payload,
     }
     .data();
 
