@@ -27,19 +27,25 @@ pub struct Execute<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_manager_pda: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_mint: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_manager_ata: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub token_program: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub associated_token_program: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub system_program: UncheckedAccount<'info>,
 }
 

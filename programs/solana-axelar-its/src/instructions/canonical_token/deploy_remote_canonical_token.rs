@@ -24,8 +24,6 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     pub payer: Signer<'info>,
 
     /// CHECK: we can't check this mint since we didn't deploy it
-    /// The check happens in the token_manager, where we know that its a valid
-    /// token manager deployed for this token_mint
     pub token_mint: InterfaceAccount<'info, Mint>,
 
     /// CHECK: decoded using get_token_metadata
@@ -80,6 +78,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(
         seeds = [b"__event_authority"],
         bump,

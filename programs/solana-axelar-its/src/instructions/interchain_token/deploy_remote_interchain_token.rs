@@ -95,6 +95,7 @@ pub struct DeployRemoteInterchainToken<'info> {
         bump,
         seeds::program = solana_axelar_gateway::ID,
     )]
+    /// CHECK:
     pub gateway_event_authority: AccountInfo<'info>,
 
     /// CHECK: checked by the gas service program

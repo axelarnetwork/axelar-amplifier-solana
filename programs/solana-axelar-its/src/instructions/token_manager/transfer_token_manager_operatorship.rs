@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, roles, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -47,6 +47,7 @@ pub struct TransferTokenManagerOperatorship<'info> {
     pub token_manager_account: Account<'info, TokenManager>,
 
     /// Destination user account (will receive OPERATOR role)
+    /// CHECK: Validated through constraint ensuring it's different from origin user
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]

@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, roles, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -46,6 +46,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
     pub token_manager_pda: Account<'info, TokenManager>,
 
     /// The user account that will receive the FLOW_LIMITER role
+    /// CHECK:
     pub target_user_account: AccountInfo<'info>,
 
     /// Target user roles account

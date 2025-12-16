@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, roles, RolesError, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, UserRoles},
     ItsError,
 };
 use anchor_lang::solana_program::instruction::Instruction;
@@ -36,7 +36,7 @@ pub struct TransferOperatorship<'info> {
     )]
     pub resource_account: Account<'info, InterchainTokenService>,
 
-    /// Destination user account (will receive OPERATOR role)
+    /// CHECK: Destination user account (will receive OPERATOR role)
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]

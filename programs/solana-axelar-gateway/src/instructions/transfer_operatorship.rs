@@ -29,6 +29,7 @@ pub struct TransferOperatorship<'info> {
 	)]
     pub program_data: Account<'info, ProgramData>,
 
+    /// CHECK: The new operator account is validated through constraint - must be different from current operator
     #[account(
     	// CHECK: The new operator must be different
     	constraint = new_operator.key() != gateway_root_pda.load()?.operator.key()

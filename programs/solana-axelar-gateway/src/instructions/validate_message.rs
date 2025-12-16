@@ -23,6 +23,7 @@ pub struct ValidateMessage<'info> {
     pub incoming_message_pda: AccountLoader<'info, IncomingMessage>,
 
     /// The caller must be a PDA derived from the destination program using command_id and signing_pda_bump
+    /// CHECK: Validated through constraint that checks signing PDA derivation
     #[account(
         signer,
         constraint = validate_caller_pda(&caller, &message, &incoming_message_pda)?

@@ -988,7 +988,7 @@ impl ItsTestHarness {
             .expect("old operator roles account should exist before transfer");
 
         // Check if old operator only had operator role
-        let should_be_closed = old_its_roles.roles == solana_axelar_its::Roles::OPERATOR;
+        let should_be_closed = old_its_roles.roles == solana_axelar_its::roles::OPERATOR;
 
         // Process
         self.ctx

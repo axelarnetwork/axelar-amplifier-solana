@@ -94,6 +94,7 @@ pub struct ExecuteInterchainTransfer<'info> {
         ],
         bump,
     )]
+    /// CHECK:
     pub interchain_transfer_execute: Option<UncheckedAccount<'info>>,
 }
 

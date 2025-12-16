@@ -281,7 +281,7 @@ pub fn validate_message_raw(
     let ix = anchor_lang::solana_program::instruction::Instruction {
         program_id: executable_accounts.axelar_gateway_program.key(),
         accounts: cpi_accounts.to_account_metas(None),
-        data: solana_axelar_gateway::instruction::ValidateMessage { message }.data(),
+        data: crate::instruction::ValidateMessage { message }.data(),
     };
 
     let ix_accounts = cpi_accounts.to_account_infos();

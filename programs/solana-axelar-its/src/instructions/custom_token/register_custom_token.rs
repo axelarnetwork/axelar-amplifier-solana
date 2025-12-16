@@ -3,7 +3,7 @@ use crate::{
     events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
     seed_prefixes::TOKEN_MANAGER_SEED,
-    state::{token_manager::Type, InterchainTokenService, roles, TokenManager, UserRoles},
+    state::{roles, token_manager::Type, InterchainTokenService, TokenManager, UserRoles},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
@@ -59,6 +59,7 @@ pub struct RegisterCustomToken<'info> {
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
+    /// CHECK:
     pub operator: Option<UncheckedAccount<'info>>,
 
     #[account(

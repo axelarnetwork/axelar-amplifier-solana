@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, roles, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -45,7 +45,8 @@ pub struct TransferInterchainTokenMintership<'info> {
     )]
     pub sender_roles_account: Account<'info, UserRoles>,
 
-    /// Destination user account (will receive MINTER role)
+    /// Destination user account (who will receive the MINTER role)
+    /// CHECK: Validated through constraint ensuring it's different from sender
     #[account(
         constraint = destination_user_account.key() != sender_user_account.key()
             @ ItsError::InvalidArgument,

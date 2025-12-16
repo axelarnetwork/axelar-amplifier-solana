@@ -90,6 +90,12 @@ pub enum RolesError {
     ProposalMissingFlowLimiterRole,
 }
 
+impl From<RolesError> for ProgramError {
+    fn from(val: RolesError) -> Self {
+        anchor_lang::error::Error::from(val).into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use borsh::to_vec;

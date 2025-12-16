@@ -16,6 +16,7 @@ pub struct TransferOwner<'info> {
     	// Ensure the new owner is not the same as the current owner
 		constraint = new_owner.key() != registry.owner @ ErrorCode::SameMaster
     )]
+    /// CHECK:
     pub new_owner: UncheckedAccount<'info>,
 
     #[account(

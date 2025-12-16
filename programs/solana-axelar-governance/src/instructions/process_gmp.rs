@@ -30,9 +30,11 @@ pub struct ProcessGmp<'info> {
     pub governance_config: Account<'info, GovernanceConfig>,
 
     // Variable accounts are kept as unchecked. We self-CPI and check them for each separate instruction
+    /// CHECK:
     #[account(mut)]
     pub proposal_pda: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub operator_proposal_pda: UncheckedAccount<'info>,
 
