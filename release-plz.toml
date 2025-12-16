@@ -90,6 +90,14 @@ git_release_enable = true
 publish = true
 publish_no_verify = true
 
+# Skip solana-axelar-memo - has publish = false in Cargo.toml, creates circular dep with solana-axelar-its
+[[package]]
+name = "solana-axelar-memo"
+release = false
+publish = false
+changelog_update = false
+git_release_enable = false
+
 # Skip mollusk-test-utils - published with orphaned commit, not actively released
 [[package]]
 name = "mollusk-test-utils"
