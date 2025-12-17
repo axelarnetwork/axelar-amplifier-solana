@@ -9,8 +9,6 @@ use anchor_lang::ToAccountMetas;
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::{get_event_authority_and_program_accounts, setup_mollusk};
-use solana_axelar_gateway::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
-use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::initialize_gateway;
 use solana_axelar_gateway_test_fixtures::setup_test_with_real_signers;
 use solana_axelar_its_test_fixtures::init_gas_service;
@@ -48,7 +46,7 @@ fn register_token_metadata() {
         &operator_pda_account,
     );
 
-    let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
+    let (gateway_root_pda, _) = solana_axelar_gateway::GatewayConfig::find_pda();
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
@@ -101,7 +99,7 @@ fn register_token_metadata() {
 
     // Derive signing PDA for call contract
     let (call_contract_signing_pda, _signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &program_id);
+        solana_axelar_gateway::CallContractSigner::find_pda(&program_id);
 
     // Get event authority accounts
     let (gateway_event_authority, gateway_event_authority_account, gateway_program_account) =
@@ -191,7 +189,7 @@ fn register_token_metadata_failure_for_empty_mint() {
         &operator_pda_account,
     );
 
-    let (gateway_root_pda, _) = Pubkey::find_program_address(&[GATEWAY_SEED], &GATEWAY_PROGRAM_ID);
+    let (gateway_root_pda, _) = solana_axelar_gateway::GatewayConfig::find_pda();
     let gateway_root_pda_account = init_result.get_account(&gateway_root_pda).unwrap();
 
     let program_id = solana_axelar_its::id();
@@ -229,7 +227,7 @@ fn register_token_metadata_failure_for_empty_mint() {
 
     // Derive signing PDA for call contract
     let (call_contract_signing_pda, _signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &program_id);
+        solana_axelar_gateway::CallContractSigner::find_pda(&program_id);
 
     // Get event authority accounts
     let (gateway_event_authority, gateway_event_authority_account, gateway_program_account) =

@@ -1,7 +1,6 @@
-use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use crate::{
     GatewayConfig, GatewayError, IncomingMessage, MessageApprovedEvent, MessageStatus,
-    SignatureVerificationSessionData,
+    SignatureVerificationSessionData, ValidateMessageSigner,
 };
 use anchor_lang::prelude::*;
 use solana_axelar_std::hasher::LeafHash;
@@ -86,10 +85,7 @@ pub fn approve_message_handler(
     {
         // Create a new Signing PDA that is used for validating that a message has
         // reached the destination program
-        let (_, bump) = Pubkey::find_program_address(
-            &[VALIDATE_MESSAGE_SIGNING_SEED, command_id.as_ref()],
-            &destination_address_pubkey,
-        );
+        let (_, bump) = ValidateMessageSigner::find_pda(&command_id, &destination_address_pubkey);
         bump
     } else {
         0

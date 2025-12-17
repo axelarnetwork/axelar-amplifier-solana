@@ -57,14 +57,7 @@ impl TokenManager {
     pub fn find_token_metadata(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
         let token_mint = Self::find_token_mint(token_id, its_root_pda).0;
 
-        Pubkey::find_program_address(
-            &[
-                b"metadata",
-                mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-                token_mint.as_ref(),
-            ],
-            &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        )
+        mpl_token_metadata::accounts::Metadata::find_pda(&token_mint)
     }
 
     /// Initializes a `TokenManager` account with given values.

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
 use interchain_token_transfer_gmp::{GMPPayload, SendToHub};
 use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
-use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
+use solana_axelar_gateway::CallContractSigner;
 
 use crate::ItsError;
 use crate::ITS_HUB_CHAIN_NAME;
@@ -80,14 +80,13 @@ pub fn process_outbound(
     // Call contract instruction
 
     // NOTE: this could be calculated at compile time
-    let (expected_signing_pda, signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &crate::ID);
+    let (expected_signing_pda, signing_pda_bump) = CallContractSigner::find_pda(&crate::ID);
 
     if expected_signing_pda != *gmp_accounts.call_contract_signing_pda.key {
         return Err(ItsError::InvalidAccountData.into());
     }
 
-    let signer_seeds: &[&[&[u8]]] = &[&[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]]];
+    let signer_seeds: &[&[&[u8]]] = &[&[CallContractSigner::SEED_PREFIX, &[signing_pda_bump]]];
 
     let cpi_accounts = solana_axelar_gateway::cpi::accounts::CallContract {
         caller: gmp_accounts.its_program.to_account_info(),

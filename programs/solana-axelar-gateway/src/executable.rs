@@ -126,7 +126,7 @@ macro_rules! executable_accounts {
         pub incoming_message_pda: AccountLoader<'info, solana_axelar_gateway::IncomingMessage>,
 
         #[account(
-            seeds = [solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, message.command_id().as_ref()],
+            seeds = [solana_axelar_gateway::ValidateMessageSigner::SEED_PREFIX, message.command_id().as_ref()],
             bump = incoming_message_pda.load()?.signing_pda_bump,
         )]
         pub signing_pda: AccountInfo<'info>,
@@ -255,8 +255,8 @@ pub fn validate_message_raw(
     // Prepare signer seeds
     let command_id = message.command_id();
     let signer_seeds = &[
-        solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-        &command_id,
+        solana_axelar_gateway::ValidateMessageSigner::SEED_PREFIX,
+        &command_id[..],
         &[executable_accounts
             .incoming_message_pda
             .load()?

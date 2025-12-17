@@ -2,7 +2,7 @@
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
-use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
+use solana_axelar_gateway::ValidateMessageSigner;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
@@ -229,12 +229,9 @@ fn execute() {
     let message = &messages[0];
     let command_id = message.command_id();
 
-    let signing_pda = Pubkey::create_program_address(
-        &[
-            VALIDATE_MESSAGE_SIGNING_SEED,
-            command_id.as_ref(),
-            &[incoming_message.signing_pda_bump],
-        ],
+    let signing_pda = ValidateMessageSigner::create_pda(
+        &command_id,
+        incoming_message.signing_pda_bump,
         &MEMO_PROGRAM_ID,
     )
     .unwrap();

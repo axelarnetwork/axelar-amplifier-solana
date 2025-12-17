@@ -4,7 +4,7 @@ use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_test_utils::get_event_authority_and_program_accounts;
-use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
+use solana_axelar_gateway::CallContractSigner;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
@@ -61,8 +61,7 @@ pub fn perform_interchain_transfer(
     checks: Vec<Check>,
 ) -> (InstructionResult, Mollusk) {
     let program_id = solana_axelar_its::ID;
-    let (call_contract_signing_pda, _) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &solana_axelar_its::ID);
+    let (call_contract_signing_pda, _) = CallContractSigner::find_pda(&solana_axelar_its::ID);
 
     let (gas_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gas_service::ID);
