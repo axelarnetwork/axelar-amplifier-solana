@@ -26,18 +26,39 @@ pub struct SignatureVerificationSessionData {
 impl SignatureVerificationSessionData {
     pub const SEED_PREFIX: &'static [u8] = b"gtw-sig-verif";
 
+    pub fn pda_seeds<'a>(
+        payload_merkle_root: &'a [u8; 32],
+        payload_type_byte: &'a [u8; 1],
+        signing_verifier_set_hash: &'a [u8; 32],
+    ) -> [&'a [u8]; 4] {
+        [
+            Self::SEED_PREFIX,
+            payload_merkle_root,
+            payload_type_byte,
+            signing_verifier_set_hash,
+        ]
+    }
+
+    pub fn try_find_pda(
+        payload_merkle_root: &[u8; 32],
+        payload_type: PayloadType,
+        signing_verifier_set_hash: &[u8; 32],
+    ) -> Option<(Pubkey, u8)> {
+        let payload_type_byte: [u8; 1] = [payload_type.into()];
+        Pubkey::try_find_program_address(
+            &Self::pda_seeds(payload_merkle_root, &payload_type_byte, signing_verifier_set_hash),
+            &crate::ID,
+        )
+    }
+
     pub fn find_pda(
         payload_merkle_root: &[u8; 32],
         payload_type: PayloadType,
         signing_verifier_set_hash: &[u8; 32],
     ) -> (Pubkey, u8) {
+        let payload_type_byte: [u8; 1] = [payload_type.into()];
         Pubkey::find_program_address(
-            &[
-                Self::SEED_PREFIX,
-                payload_merkle_root,
-                &[payload_type.into()],
-                signing_verifier_set_hash,
-            ],
+            &Self::pda_seeds(payload_merkle_root, &payload_type_byte, signing_verifier_set_hash),
             &crate::ID,
         )
     }

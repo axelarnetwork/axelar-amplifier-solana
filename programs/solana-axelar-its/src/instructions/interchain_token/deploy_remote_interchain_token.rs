@@ -231,14 +231,7 @@ pub fn make_deploy_remote_interchain_token_instruction(
     let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
     let token_mint = TokenManager::find_token_mint(token_id, its_root_pda).0;
 
-    let (metadata_account, _) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint.as_ref(),
-        ],
-        &mpl_token_metadata::ID,
-    );
+    let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint);
 
     let gateway_root_pda = GatewayConfig::find_pda().0;
 

@@ -16,8 +16,16 @@ pub struct IncomingMessage {
 impl IncomingMessage {
     pub const SEED_PREFIX: &'static [u8] = b"incoming message";
 
+    pub fn pda_seeds<'a>(command_id: &'a [u8; 32]) -> [&'a [u8]; 2] {
+        [Self::SEED_PREFIX, command_id]
+    }
+
+    pub fn try_find_pda(command_id: &[u8; 32]) -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(&Self::pda_seeds(command_id), &crate::ID)
+    }
+
     pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[Self::SEED_PREFIX, command_id], &crate::ID)
+        Pubkey::find_program_address(&Self::pda_seeds(command_id), &crate::ID)
     }
 
     // ValidateMessage

@@ -27,7 +27,7 @@ use solana_sdk::{
 fn execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
-    let (counter_pda, _counter_pda_bump) = Counter::get_pda();
+    let (counter_pda, _counter_pda_bump) = Counter::find_pda();
     let encoding_scheme = ExecutablePayloadEncodingScheme::AbiEncoding;
     let test_payload = ExecutablePayload::new(
         memo_string.as_bytes(),

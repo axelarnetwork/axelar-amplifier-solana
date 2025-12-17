@@ -1515,7 +1515,7 @@ impl ItsTestHarness {
     //
 
     pub fn ensure_memo_program_initialized(&mut self) {
-        let counter_pda = solana_axelar_memo::Counter::get_pda().0;
+        let counter_pda = solana_axelar_memo::Counter::find_pda().0;
         if self.account_exists(&counter_pda) {
             return;
         }

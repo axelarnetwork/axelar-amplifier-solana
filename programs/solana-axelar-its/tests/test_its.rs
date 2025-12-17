@@ -59,7 +59,7 @@ fn test_cpi_interchain_transfer() {
 
     // Mint tokens to the CPI caller PDA
     let mint_amount = 500_000u64;
-    let sender = solana_axelar_memo::Counter::get_pda().0;
+    let sender = solana_axelar_memo::Counter::find_pda().0;
     let sender_ata = its_harness
         .get_or_create_ata_2022_account(its_harness.payer, sender, token_mint)
         .0;
@@ -106,7 +106,7 @@ fn test_cpi_interchain_transfer_invalid_pda_arguments() {
 
     // Mint tokens to the CPI caller PDA
     let mint_amount = 500_000u64;
-    let sender = solana_axelar_memo::Counter::get_pda().0;
+    let sender = solana_axelar_memo::Counter::find_pda().0;
     let sender_ata = its_harness
         .get_or_create_ata_2022_account(its_harness.payer, sender, token_mint)
         .0;
@@ -186,7 +186,7 @@ fn test_execute_interchain_transfer_with_data() {
 
     // Init memo
     its_harness.ensure_memo_program_initialized();
-    let counter_pda = solana_axelar_memo::Counter::get_pda().0;
+    let counter_pda = solana_axelar_memo::Counter::find_pda().0;
 
     // Transfer
 
