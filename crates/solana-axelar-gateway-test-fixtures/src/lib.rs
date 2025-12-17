@@ -3,6 +3,9 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
+use std::collections::BTreeMap;
+
+use anchor_lang::AnchorDeserialize;
 use anchor_lang::{
     prelude::UpgradeableLoaderState, AccountDeserialize, InstructionData, ToAccountMetas,
 };
@@ -745,15 +748,7 @@ pub fn approve_message_helper_from_merklized(
 ) -> (InstructionResult, Pubkey) {
     let command_id = merklized_message.leaf.message.command_id();
 
-    let cc_id = &messages[position].cc_id;
-    let command_id =
-        solana_keccak_hasher::hashv(&[cc_id.chain.as_bytes(), b"-", cc_id.id.as_bytes()])
-            .to_bytes();
-
-    let (incoming_message_pda, _incoming_message_bump) = Pubkey::find_program_address(
-        &[seed_prefixes::INCOMING_MESSAGE_SEED, &command_id],
-        &GATEWAY_PROGRAM_ID,
-    );
+    let (incoming_message_pda, _) = IncomingMessage::find_pda(&command_id);
 
     let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);

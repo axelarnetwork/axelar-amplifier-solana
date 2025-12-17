@@ -4,7 +4,7 @@ use udigest::Digestable;
 #[cfg(feature = "anchor")]
 use anchor_lang::prelude::borsh;
 
-use crate::{hasher::LeafHash, EncodingError, PublicKey, Signature};
+use crate::{hasher::LeafHash, EncodingError, PayloadType, PublicKey, Signature};
 
 /// Represents a set of verifiers, each with an associated weight, and a quorum
 /// value.

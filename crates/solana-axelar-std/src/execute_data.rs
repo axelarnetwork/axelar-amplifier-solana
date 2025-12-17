@@ -5,7 +5,6 @@ use anchor_lang::prelude::borsh;
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
-use std::collections::BTreeMap;
 use udigest::encoding::EncodeValue;
 
 use crate::{
