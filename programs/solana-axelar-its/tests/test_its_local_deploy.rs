@@ -136,7 +136,7 @@ fn local_deploy_long_name_symbol() {
 
 #[test]
 fn local_deploy_minter_roles() {
-    use solana_axelar_its::{Roles, UserRoles};
+    use solana_axelar_its::{roles, UserRoles};
 
     let its_harness = ItsTestHarness::new();
     let deployer = its_harness.get_new_wallet();

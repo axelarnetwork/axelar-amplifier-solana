@@ -3,7 +3,7 @@
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_set_flow_limit_instruction;
-use solana_axelar_its::{ItsError, Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::{roles, ItsError, RolesError, TokenManager, UserRoles};
 
 #[test]
 fn set_flow_limit() {
