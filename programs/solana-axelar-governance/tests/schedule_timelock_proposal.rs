@@ -7,6 +7,7 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_governance::state::GovernanceConfigInit;
 use solana_axelar_governance::ExecutableProposal;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
+use solana_axelar_governance_test_fixtures::create_operator_proposal_pda;
 use solana_axelar_governance_test_fixtures::{
     create_gateway_event_authority_pda, create_governance_config_pda,
     create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
@@ -129,6 +130,7 @@ fn should_schedule_timelock_proposal() {
     let (event_authority_pda_governance, _) = create_governance_event_authority_pda();
     let proposal_hash = extract_proposal_hash_unchecked(&schedule_payload);
     let proposal_pda = create_proposal_pda(&proposal_hash);
+    let operator_proposal_pda = create_operator_proposal_pda(&proposal_hash);
 
     let gmp_context = GmpContext::new()
         .with_incoming_message(
@@ -143,7 +145,8 @@ fn should_schedule_timelock_proposal() {
         .with_signing_pda(signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
-        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID);
+        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID)
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send schedule timelock proposal
     let result = process_gmp_helper(
@@ -189,7 +192,8 @@ fn should_schedule_timelock_proposal() {
             proposal_pda,
             proposal_pda_account.data,
             GOVERNANCE_PROGRAM_ID,
-        );
+        )
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send cancel timelock proposal
     let result = process_gmp_helper(

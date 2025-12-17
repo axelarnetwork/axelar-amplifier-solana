@@ -11,10 +11,10 @@ use solana_axelar_governance::state::GovernanceConfigInit;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_axelar_governance_test_fixtures::{
     create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
-    create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
-    create_signing_pda_from_message, extract_proposal_hash_unchecked,
-    get_withdraw_tokens_instruction_data, initialize_governance, mock_setup_test,
-    process_gmp_helper, GmpContext, TestSetup,
+    create_governance_event_authority_pda, create_governance_program_data_pda,
+    create_operator_proposal_pda, create_proposal_pda, create_signing_pda_from_message,
+    extract_proposal_hash_unchecked, get_withdraw_tokens_instruction_data, initialize_governance,
+    mock_setup_test, process_gmp_helper, GmpContext, TestSetup,
 };
 use solana_sdk::account::Account;
 use solana_sdk::clock::Clock;
@@ -156,6 +156,7 @@ fn should_execute_withdraw_tokens_through_proposal() {
     let event_authority_pda_gateway = create_gateway_event_authority_pda();
     let proposal_hash = extract_proposal_hash_unchecked(&schedule_payload);
     let proposal_pda = create_proposal_pda(&proposal_hash);
+    let operator_proposal_pda = create_operator_proposal_pda(&proposal_hash);
 
     let gmp_context = GmpContext::new()
         .with_incoming_message(incoming_message.1, incoming_message.2.clone())
@@ -167,7 +168,8 @@ fn should_execute_withdraw_tokens_through_proposal() {
         .with_signing_pda(signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
-        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID);
+        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID)
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send schedule timelock proposal
     let schedule_result = process_gmp_helper(

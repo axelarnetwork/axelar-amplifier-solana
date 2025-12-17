@@ -56,12 +56,12 @@ impl GmpContext {
             proposal: AccountWithData {
                 pubkey: Pubkey::default(),
                 data: vec![],
-                owner: Pubkey::default(),
+                owner: GOVERNANCE_PROGRAM_ID,
             },
             operator_proposal: AccountWithData {
                 pubkey: Pubkey::default(),
                 data: vec![],
-                owner: Pubkey::default(),
+                owner: GOVERNANCE_PROGRAM_ID,
             },
         }
     }

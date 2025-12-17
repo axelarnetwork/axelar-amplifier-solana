@@ -161,6 +161,7 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
     let event_authority_pda_gateway = create_gateway_event_authority_pda();
     let proposal_hash = extract_proposal_hash_unchecked(&schedule_payload);
     let proposal_pda = create_proposal_pda(&proposal_hash);
+    let operator_proposal_pda = create_operator_proposal_pda(&proposal_hash);
 
     let gmp_context = GmpContext::new()
         .with_incoming_message(
@@ -175,7 +176,8 @@ fn should_full_governance_workflow_schedule_and_approve_operator() {
         .with_signing_pda(schedule_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
-        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID);
+        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID)
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send schedule timelock proposal
     let schedule_result = process_gmp_helper(
