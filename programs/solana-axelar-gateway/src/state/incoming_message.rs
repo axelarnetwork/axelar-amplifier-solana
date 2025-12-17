@@ -27,27 +27,6 @@ impl IncomingMessage {
     pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
         Pubkey::find_program_address(&Self::pda_seeds(command_id), &crate::ID)
     }
-
-    // ValidateMessage
-    pub const VALIDATE_MESSAGE_SEED_PREFIX: &'static [u8] = b"gtw-validate-msg";
-
-    // Returns the PDA address that must sign to validate
-    // the incoming message
-    pub fn get_validate_signing_pda(
-        command_id: &[u8; 32],
-        signing_pda_bump: u8,
-        program_id: &Pubkey,
-    ) -> Result<Pubkey> {
-        Pubkey::create_program_address(
-            &[
-                Self::VALIDATE_MESSAGE_SEED_PREFIX,
-                command_id,
-                &[signing_pda_bump],
-            ],
-            program_id,
-        )
-        .map_err(|_| ProgramError::InvalidSeeds.into())
-    }
 }
 
 #[repr(C)]

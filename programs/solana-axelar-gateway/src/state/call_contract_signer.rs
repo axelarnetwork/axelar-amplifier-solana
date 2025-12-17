@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
-/// Signing PDA to prove/verify a program-initiated call_contract instruction
+/// PDA signed by the programs to authorize a
+/// call contract on the gateway.
 pub struct CallContractSigner {}
 
 impl CallContractSigner {

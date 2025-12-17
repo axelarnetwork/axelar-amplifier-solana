@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
-/// Signing PDA to prove/verify that ITS called an executable.
+/// PDA signed by the programs to validate incoming
+/// messages on the gateway.
 pub struct ValidateMessageSigner {}
 
 impl ValidateMessageSigner {
