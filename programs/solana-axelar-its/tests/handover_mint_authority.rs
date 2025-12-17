@@ -5,7 +5,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::result::Check;
 use solana_axelar_its::{
-    state::{Roles, Type, UserRoles},
+    state::{roles, Type, UserRoles},
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{

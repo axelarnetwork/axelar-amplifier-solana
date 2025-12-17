@@ -9,7 +9,7 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::{
     make_initialize_instruction, make_set_pause_status_instruction,
 };
-use solana_axelar_its::{ItsError, Roles, RolesError, UserRoles};
+use solana_axelar_its::{roles, ItsError, RolesError, UserRoles};
 
 //
 // Initialize

@@ -4,7 +4,8 @@
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::roles;
+use solana_axelar_its::state::{RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
@@ -373,7 +374,7 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
     let mut current_operator_token_roles =
         UserRoles::try_deserialize(&mut current_operator_token_roles_account_clone.data.as_ref())
             .expect("Failed to deserialize flow limiter roles");
-    current_operator_token_roles.roles = Roles::empty();
+    current_operator_token_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
