@@ -387,7 +387,7 @@ pub fn init_its_service(
         .expect("Failed to deserialize roles data");
     assert_eq!(
         user_roles_data.roles,
-        Roles::OPERATOR,
+        roles::OPERATOR,
         "user should be an operator"
     );
 

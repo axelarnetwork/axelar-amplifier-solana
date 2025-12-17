@@ -2,7 +2,7 @@ use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
-    state::{token_manager, InterchainTokenService, Roles, TokenManager, UserRoles},
+    state::{roles, token_manager, InterchainTokenService, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -60,7 +60,7 @@ pub struct ExecuteLinkToken<'info> {
     pub token_program: Interface<'info, TokenInterface>,
 
     pub associated_token_program: Program<'info, AssociatedToken>,
-
+    /// CHECK:
     pub operator: Option<UncheckedAccount<'info>>,
 
     #[account(
@@ -145,7 +145,7 @@ pub fn execute_link_token_handler(
             .bumps
             .operator_roles_pda
             .ok_or(ItsError::OperatorRolesPdaNotProvided)?;
-        operator_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
+        operator_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER;
     }
 
     emit_cpi!(TokenManagerDeployed {

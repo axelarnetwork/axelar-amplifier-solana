@@ -112,7 +112,7 @@ fn handover_mint_authority_success() {
     let minter_roles_account = result.get_account(&minter_roles_pda).unwrap();
     let user_roles = UserRoles::try_deserialize(&mut minter_roles_account.data.as_ref()).unwrap();
 
-    assert!(user_roles.roles.contains(Roles::MINTER));
+    assert!(user_roles.contains(roles::MINTER));
 }
 
 #[test]

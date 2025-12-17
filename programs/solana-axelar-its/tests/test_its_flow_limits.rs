@@ -118,7 +118,7 @@ fn set_flow_limit_without_operator_role_fails() {
     // Remove operator role
     let its_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
     harness.update_account_as::<UserRoles, _>(&its_roles_pda, |ur| {
-        ur.roles.remove(Roles::OPERATOR);
+        ur.remove(roles::OPERATOR);
     });
 
     let (ix, _) = make_set_flow_limit_instruction(
