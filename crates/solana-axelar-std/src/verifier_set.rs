@@ -94,6 +94,10 @@ pub struct SigningVerifierSetInfo {
     /// The Merkle proof demonstrating the verifier's inclusion in the signing
     /// verifier set.
     pub merkle_proof: Vec<u8>,
+
+    /// The command type indicating what the signed message is for
+    /// MessageApproval or SignerRotation
+    pub payload_type: PayloadType,
 }
 
 /// Generates the Merkle root hash for a given verifier set.

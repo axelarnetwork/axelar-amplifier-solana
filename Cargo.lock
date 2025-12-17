@@ -1194,9 +1194,9 @@ dependencies = [
 
 [[package]]
 name = "camino"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "276a59bf2b2c967788139340c9f0c5b12d7fd6630315c15c217e559de85d2609"
+checksum = "e629a66d692cb9ff1a1c664e41771b3dcaf961985a9774c0eb0bd1b51cf60a48"
 dependencies = [
  "serde_core",
 ]
@@ -1236,9 +1236,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.48"
+version = "1.2.49"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c481bdbf0ed3b892f6f806287d72acd515b352a4ec27a208489b8c1bc839633a"
+checksum = "90583009037521a116abf44494efecd645ba48b6622457080f080b85544e2215"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -2675,7 +2675,7 @@ dependencies = [
 
 [[package]]
 name = "governance-gmp"
-version = "0.1.1"
+version = "0.1.3"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -2947,9 +2947,9 @@ checksum = "7aedcccd01fc5fe81e6b489c15b247b8b0690feb23304303a9e560f37efc560a"
 
 [[package]]
 name = "icu_properties"
-version = "2.1.1"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e93fcd3157766c0c8da2f8cff6ce651a31f0810eaa1c51ec363ef790bbb5fb99"
+checksum = "020bfc02fe870ec3a66d93e677ccca0562506e5872c650f893269e08615d74ec"
 dependencies = [
  "icu_collections",
  "icu_locale_core",
@@ -2961,9 +2961,9 @@ dependencies = [
 
 [[package]]
 name = "icu_properties_data"
-version = "2.1.1"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02845b3647bb045f1100ecd6480ff52f34c35f82d9880e029d329c21d1054899"
+checksum = "616c294cf8d725c6afcd8f55abc17c56464ef6211f9ed59cccffe534129c77af"
 
 [[package]]
 name = "icu_provider"
@@ -4159,7 +4159,7 @@ version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "219cb19e96be00ab2e37d6e299658a0cfa83e52429179969b0f0121b4ac46983"
 dependencies = [
- "toml_edit 0.23.7",
+ "toml_edit 0.23.9",
 ]
 
 [[package]]
@@ -4197,7 +4197,7 @@ dependencies = [
 
 [[package]]
 name = "program-utils"
-version = "0.1.2"
+version = "0.1.4"
 dependencies = [
  "mpl-token-metadata",
  "solana-program",
@@ -5049,9 +5049,9 @@ dependencies = [
 
 [[package]]
 name = "simd-adler32"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
+checksum = "e320a6c5ad31d271ad523dcf3ad13e2767ad8b1cb8f047f75a8aeaf8da139da2"
 
 [[package]]
 name = "simple_asn1"
@@ -5195,7 +5195,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-gas-service"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "borsh 0.10.4",
@@ -5210,7 +5210,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-gateway"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
@@ -5255,7 +5255,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-governance"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
@@ -5277,7 +5277,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-governance-test-fixtures"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "bincode",
@@ -5291,7 +5291,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-its"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -5323,7 +5323,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-its-test-fixtures"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -5343,7 +5343,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-memo"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -5361,7 +5361,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-operators"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "anchor-lang",
  "mollusk-svm",
@@ -5372,7 +5372,7 @@ dependencies = [
 
 [[package]]
 name = "solana-axelar-std"
-version = "0.1.2"
+version = "0.1.4"
 dependencies = [
  "alloy-primitives",
  "anchor-lang",
@@ -7327,9 +7327,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.23.7"
+version = "0.23.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6485ef6d0d9b5d0ec17244ff7eb05310113c3f316f2d14200d4de56b3cb98f8d"
+checksum = "5d7cbc3b4b49633d57a0509303158ca50de80ae32c265093b24c414705807832"
 dependencies = [
  "indexmap",
  "toml_datetime 0.7.3",
@@ -8077,7 +8077,7 @@ checksum = "32ac00cd3f8ec9c1d33fb3e7958a82df6989c42d747bd326c822b1d625283547"
 
 [[package]]
 name = "xtask"
-version = "0.1.4"
+version = "0.1.6"
 dependencies = [
  "clap",
  "color-eyre",

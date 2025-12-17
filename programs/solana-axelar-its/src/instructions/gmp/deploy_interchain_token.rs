@@ -211,8 +211,8 @@ pub fn process_inbound_deploy(
     Ok(())
 }
 
-fn create_token_metadata(
-    accounts: &ExecuteDeployInterchainToken<'_>,
+fn create_token_metadata<'info>(
+    accounts: &ExecuteDeployInterchainToken<'info>,
     name: &str,
     symbol: &str,
     token_id: [u8; 32],

@@ -17,8 +17,7 @@ fn send_memo_to_gateway() {
     let memo_string = "🐪🐪🐪🐪";
 
     // Step 1: Setup test with real signers
-    let (mut setup, _verifier_leaves, _verifier_merkle_tree, _secret_key_1, _secret_key_2) =
-        setup_test_with_real_signers();
+    let (mut setup, _, _) = setup_test_with_real_signers();
 
     // Add the memo program to the Mollusk instance
     setup

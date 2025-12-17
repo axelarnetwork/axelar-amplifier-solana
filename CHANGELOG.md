@@ -7,6 +7,140 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/interchain-token-transfer-gmp-v0.1.1...interchain-token-transfer-gmp-v0.1.2)
+
+### 🐛 Bug Fixes
+
+- Ensure all crates have repository field - ([d247152](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/d24715242e621d2540fcb00ddef1742fb529e08a))
+
+### Contributors
+
+* @nbayindirli
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.4...solana-axelar-its-v0.1.5)
+
+### 🐛 Bug Fixes
+
+- Address Arda's ITS comments ([#101](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/101)) - ([90d8b9e](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/90d8b9e8b1ae6f714667f524d4b53e5a90a95b1a))
+
+### 🚜 Refactor
+
+- Make certain event values optional + minter as pubkey ([#116](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/116)) - ([78ffd7e](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/78ffd7ef6cdfbbf651b3e611c793e21cc7ce52ec))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(devnet-amplifier)* Add solana-13 IDs ([#118](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/118)) - ([9f33615](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/9f33615e51f0076f74597165a7049c1a0bb4a598))
+- Remove two-step role transfers ([#117](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/117)) - ([b290000](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b2900004c829118344156441d4f13322bb8d6d50))
+- Minor refactors and cleanup ([#111](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/111)) - ([723592e](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/723592e6effc2bec5a5a448092d752d4c2ca0e4a))
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @nbayindirli
+* @rista404
+
+## [0.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/governance-gmp-v0.1.1...governance-gmp-v0.1.2)
+
+### 🐛 Bug Fixes
+
+- Ensure all crates have repository field - ([d247152](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/d24715242e621d2540fcb00ddef1742fb529e08a))
+
+### Contributors
+
+* @nbayindirli
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.1.4...solana-axelar-governance-v0.1.5)
+
+### 🐛 Bug Fixes
+
+- Exvul issues go-01, gw-05 ([#109](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/109)) - ([bd2a42b](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/bd2a42b7ea29d38c5c0809eb2072673f34a4216a))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(devnet-amplifier)* Add solana-13 IDs ([#118](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/118)) - ([9f33615](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/9f33615e51f0076f74597165a7049c1a0bb4a598))
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @nbayindirli
+* @MakisChristou
+
+## [0.1.3](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-std-v0.1.2...solana-axelar-std-v0.1.3)
+
+### 🐛 Bug Fixes
+
+- Ensure all crates have repository field - ([d247152](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/d24715242e621d2540fcb00ddef1742fb529e08a))
+
+### ⚙️ Miscellaneous Tasks
+
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @nbayindirli
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.1.4...solana-axelar-gateway-v0.1.5)
+
+### ⛰️ Features
+
+- *(gateway)* Expect eth recovery IDs on signatures ([#119](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/119)) - ([ca56de6](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/ca56de6e0a3987b5b28c297b7aaab226a2ef5745))
+
+### 🐛 Bug Fixes
+
+- *(gateway)* Don't error on invalid destination address while approving ([#112](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/112)) - ([2d1f4e1](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d1f4e12041046b1713f26d1c4307106f65e7352))
+- Exvul issues go-01, gw-05 ([#109](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/109)) - ([bd2a42b](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/bd2a42b7ea29d38c5c0809eb2072673f34a4216a))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(devnet-amplifier)* Add solana-13 IDs ([#118](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/118)) - ([9f33615](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/9f33615e51f0076f74597165a7049c1a0bb4a598))
+- Minor refactors and cleanup ([#111](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/111)) - ([723592e](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/723592e6effc2bec5a5a448092d752d4c2ca0e4a))
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @themicp
+* @nbayindirli
+* @rista404
+* @MakisChristou
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.1.4...solana-axelar-operators-v0.1.5)
+
+### ⚙️ Miscellaneous Tasks
+
+- *(devnet-amplifier)* Add solana-13 IDs ([#118](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/118)) - ([9f33615](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/9f33615e51f0076f74597165a7049c1a0bb4a598))
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @nbayindirli
+
+## [0.1.3](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/program-utils-v0.1.2...program-utils-v0.1.3)
+
+### 🐛 Bug Fixes
+
+- Ensure all crates have repository field - ([d247152](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/d24715242e621d2540fcb00ddef1742fb529e08a))
+
+### ⚙️ Miscellaneous Tasks
+
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @nbayindirli
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.1.4...solana-axelar-gas-service-v0.1.5)
+
+### ⚙️ Miscellaneous Tasks
+
+- *(devnet-amplifier)* Add solana-13 IDs ([#118](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/118)) - ([9f33615](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/9f33615e51f0076f74597165a7049c1a0bb4a598))
+- Minor refactors and cleanup ([#111](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/111)) - ([723592e](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/723592e6effc2bec5a5a448092d752d4c2ca0e4a))
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+
+### Contributors
+
+* @nbayindirli
+* @rista404
+
 ## [0.1.1](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/interchain-token-transfer-gmp-v0.1.0...interchain-token-transfer-gmp-v0.1.1)
 
 ### ⛰️ Features
