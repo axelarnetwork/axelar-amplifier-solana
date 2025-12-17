@@ -94,7 +94,7 @@ fn mint_interchain_token_no_minter_role_fails() {
 
     // Remove minter role from operator
     harness.update_account_as::<UserRoles, _>(&minter_roles_pda, |ur| {
-        ur.roles.remove(Roles::MINTER);
+        ur.remove(roles::MINTER);
     });
 
     let destination = harness.get_new_wallet();

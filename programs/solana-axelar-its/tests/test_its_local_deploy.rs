@@ -172,7 +172,7 @@ fn local_deploy_minter_roles() {
 
     assert_eq!(
         user_roles.roles,
-        Roles::MINTER | Roles::FLOW_LIMITER | Roles::OPERATOR,
+        roles::MINTER | roles::FLOW_LIMITER | roles::OPERATOR,
         "minter should have minter role"
     );
 }

@@ -16,17 +16,23 @@ pub struct SendInterchainTransfer<'info> {
     //
     // Gateway
     //
+    /// CHECK:
     pub gateway_root_pda: UncheckedAccount<'info>,
+    /// CHECK:
     pub gateway_event_authority: UncheckedAccount<'info>,
+    /// CHECK:
     pub gateway_program: UncheckedAccount<'info>,
+    /// CHECK:
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     //
     // Gas Service
     //
     /// The GMP gas treasury account
+    /// CHECK:
     #[account(mut)]
     pub gas_treasury: UncheckedAccount<'info>,
+    /// CHECK:
     pub gas_service: UncheckedAccount<'info>,
     /// CHECK: checked by the gas service program
     pub gas_event_authority: UncheckedAccount<'info>,
@@ -34,29 +40,37 @@ pub struct SendInterchainTransfer<'info> {
     //
     // ITS
     //
+    /// CHECK:
     pub its_root_pda: UncheckedAccount<'info>,
     pub its_program: Program<'info, SolanaAxelarIts>,
+    /// CHECK:
     pub its_event_authority: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_manager_pda: UncheckedAccount<'info>,
 
     //
     // Token Info
     //
+    /// CHECK:
     pub token_program: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_mint: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub counter_pda_ata: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub token_manager_ata: UncheckedAccount<'info>,
 
     //
     // Misc
     //
+    /// CHECK:
     pub system_program: UncheckedAccount<'info>,
 }
 

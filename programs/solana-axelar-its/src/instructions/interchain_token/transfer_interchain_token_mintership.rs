@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -40,7 +40,7 @@ pub struct TransferInterchainTokenMintership<'info> {
             sender_user_account.key().as_ref(),
         ],
         bump = sender_roles_account.bump,
-        constraint = sender_roles_account.roles.contains(Roles::MINTER)
+        constraint = sender_roles_account.contains(roles::MINTER)
             @ RolesError::MissingMinterRole,
     )]
     pub sender_roles_account: Account<'info, UserRoles>,
@@ -78,10 +78,10 @@ pub fn transfer_interchain_token_mintership_handler(
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
     // Remove MINTER role from sender user
-    sender_roles.roles.remove(Roles::MINTER);
+    sender_roles.remove(roles::MINTER);
 
     // Add MINTER role to destination user
-    destination_roles.roles.insert(Roles::MINTER);
+    destination_roles.insert(roles::MINTER);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(

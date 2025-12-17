@@ -6,7 +6,7 @@ use anchor_lang::{
     InstructionData, ToAccountMetas,
 };
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::state::{RolesError, TokenManager, UserRoles};
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
     new_default_account, new_empty_account, new_test_account, DeployInterchainTokenContext,

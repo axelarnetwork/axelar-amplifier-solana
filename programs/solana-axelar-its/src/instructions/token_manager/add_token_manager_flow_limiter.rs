@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -23,7 +23,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
             authority_user_account.key().as_ref(),
         ],
         bump = authority_roles_account.bump,
-        constraint = authority_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = authority_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
     )]
     pub authority_roles_account: Account<'info, UserRoles>,
 
@@ -59,7 +59,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
             target_user_account.key().as_ref(),
         ],
         bump,
-        constraint = !target_roles_account.roles.contains(Roles::FLOW_LIMITER) @ ItsError::InvalidArgument,
+        constraint = !target_roles_account.contains(roles::FLOW_LIMITER) @ ItsError::InvalidArgument,
     )]
     pub target_roles_account: Account<'info, UserRoles>,
 }
@@ -71,7 +71,7 @@ pub fn add_token_manager_flow_limiter_handler(
 
     let target_roles = &mut ctx.accounts.target_roles_account;
 
-    target_roles.roles.insert(Roles::FLOW_LIMITER);
+    target_roles.insert(roles::FLOW_LIMITER);
     target_roles.bump = ctx.bumps.target_roles_account;
 
     Ok(())

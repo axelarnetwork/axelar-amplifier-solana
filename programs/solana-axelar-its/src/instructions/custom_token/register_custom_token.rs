@@ -2,8 +2,9 @@ use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
     instructions::validate_mint_extensions,
+    roles,
     seed_prefixes::TOKEN_MANAGER_SEED,
-    state::{token_manager::Type, InterchainTokenService, Roles, TokenManager, UserRoles},
+    state::{token_manager::Type, InterchainTokenService, TokenManager, UserRoles},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
@@ -59,6 +60,7 @@ pub struct RegisterCustomToken<'info> {
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
+    /// CHECK:
     pub operator: Option<UncheckedAccount<'info>>,
 
     #[account(
@@ -128,7 +130,7 @@ pub fn register_custom_token_handler(
         ctx.bumps.operator_roles_pda,
     ) {
         operator_roles_pda.bump = bump;
-        operator_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
+        operator_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER;
     }
 
     // Emit TokenManagerDeployed event

@@ -2,7 +2,7 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{token_manager, InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    state::{roles, token_manager, InterchainTokenService, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::solana_program::instruction::Instruction;
@@ -88,6 +88,7 @@ pub struct DeployInterchainToken<'info> {
     #[account(address = solana_sdk_ids::sysvar::instructions::ID)]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
 
@@ -114,6 +115,7 @@ pub struct DeployInterchainToken<'info> {
     pub deployer_ata: InterfaceAccount<'info, TokenAccount>,
 
     // Optional accounts
+    /// CHECK:
     pub minter: Option<UncheckedAccount<'info>>,
 
     #[account(
@@ -158,7 +160,7 @@ pub fn deploy_interchain_token_handler(
         // Both minter accounts provided - initialize roles
         (Some(_minter), Some(minter_roles_pda), Some(bump), _supply) => {
             minter_roles_pda.bump = bump;
-            minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
+            minter_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER | roles::MINTER;
         }
         // No minter provided and zero supply
         (None, None, None, 0) => {

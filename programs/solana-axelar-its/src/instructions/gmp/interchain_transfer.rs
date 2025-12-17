@@ -47,6 +47,7 @@ pub struct ExecuteInterchainTransfer<'info> {
     )]
     pub destination: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(
         init_if_needed,
         payer = payer,
@@ -87,6 +88,7 @@ pub struct ExecuteInterchainTransfer<'info> {
 
     pub system_program: Program<'info, System>,
 
+    /// CHECK:
     #[account(
         seeds = [
             InterchainTransferExecute::SEED_PREFIX,
