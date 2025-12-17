@@ -36,6 +36,7 @@ pub struct TransferOperatorship<'info> {
     )]
     pub resource_account: Account<'info, InterchainTokenService>,
 
+    /// CHECK:
     /// Destination user account (will receive OPERATOR role)
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,

@@ -45,6 +45,7 @@ pub struct TransferInterchainTokenMintership<'info> {
     )]
     pub sender_roles_account: Account<'info, UserRoles>,
 
+    /// CHECK:
     /// Destination user account (will receive MINTER role)
     #[account(
         constraint = destination_user_account.key() != sender_user_account.key()

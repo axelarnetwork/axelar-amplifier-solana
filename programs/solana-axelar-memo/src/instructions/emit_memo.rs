@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct EmitMemo<'info> {
+    /// CHECK:
     // TODO remove unused account
     pub some_account: UncheckedAccount<'info>,
 }

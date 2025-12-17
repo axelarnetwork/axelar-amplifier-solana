@@ -45,6 +45,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
+    /// CHECK:
     /// The user account that will receive the FLOW_LIMITER role
     pub target_user_account: AccountInfo<'info>,
 
