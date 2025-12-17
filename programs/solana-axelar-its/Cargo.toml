@@ -18,7 +18,6 @@ solana-axelar-operators = { workspace = true, features = ["no-entrypoint"] }
 solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint"] }
 program-utils.workspace = true
 bytemuck.workspace = true
-bitflags.workspace = true
 mpl-token-metadata.workspace = true
 spl-token-metadata-interface.workspace = true
 

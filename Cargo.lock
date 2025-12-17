@@ -5295,7 +5295,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bincode",
- "bitflags 2.10.0",
  "bytemuck",
  "hex",
  "libsecp256k1",
