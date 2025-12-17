@@ -46,7 +46,11 @@ impl SignatureVerificationSessionData {
     ) -> Option<(Pubkey, u8)> {
         let payload_type_byte: [u8; 1] = [payload_type.into()];
         Pubkey::try_find_program_address(
-            &Self::pda_seeds(payload_merkle_root, &payload_type_byte, signing_verifier_set_hash),
+            &Self::pda_seeds(
+                payload_merkle_root,
+                &payload_type_byte,
+                signing_verifier_set_hash,
+            ),
             &crate::ID,
         )
     }
@@ -58,7 +62,11 @@ impl SignatureVerificationSessionData {
     ) -> (Pubkey, u8) {
         let payload_type_byte: [u8; 1] = [payload_type.into()];
         Pubkey::find_program_address(
-            &Self::pda_seeds(payload_merkle_root, &payload_type_byte, signing_verifier_set_hash),
+            &Self::pda_seeds(
+                payload_merkle_root,
+                &payload_type_byte,
+                signing_verifier_set_hash,
+            ),
             &crate::ID,
         )
     }

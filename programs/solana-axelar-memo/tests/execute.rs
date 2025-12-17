@@ -2,8 +2,8 @@
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
-use solana_axelar_gateway::ValidateMessageSigner;
 use solana_axelar_gateway::IncomingMessage;
+use solana_axelar_gateway::ValidateMessageSigner;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, create_merklized_messages_from_std, create_signing_verifier_set_leaves,
