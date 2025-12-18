@@ -1,5 +1,7 @@
-use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
-use crate::{GatewayConfig, GatewayError, IncomingMessage, MessageExecutedEvent, MessageStatus};
+use crate::{
+    GatewayConfig, GatewayError, IncomingMessage, MessageExecutedEvent, MessageStatus,
+    ValidateMessageSigner,
+};
 use anchor_lang::prelude::*;
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::Message;
@@ -75,15 +77,11 @@ fn validate_caller_pda(
 
     // Pubkey::create_program_address(&[prefix, command_id, &[signing_pda_bump]], destination_address)
     // each message has its own signing pda for a given executable
-    let expected_signing_pda = Pubkey::create_program_address(
-        &[
-            VALIDATE_MESSAGE_SIGNING_SEED,
-            command_id.as_ref(),
-            &[incoming_message.load()?.signing_pda_bump],
-        ],
+    let expected_signing_pda = ValidateMessageSigner::create_pda(
+        &command_id,
+        incoming_message.load()?.signing_pda_bump,
         &destination_address,
-    )
-    .map_err(|_| GatewayError::InvalidSigningPDA)?;
+    )?;
 
     Ok(caller.key == &expected_signing_pda)
 }

@@ -2,8 +2,8 @@
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
-use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use solana_axelar_gateway::IncomingMessage;
+use solana_axelar_gateway::ValidateMessageSigner;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{
     approve_message_helper, create_merklized_messages_from_std, create_signing_verifier_set_leaves,
@@ -27,7 +27,7 @@ use solana_sdk::{
 fn execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
-    let (counter_pda, _counter_pda_bump) = Counter::get_pda();
+    let (counter_pda, _counter_pda_bump) = Counter::find_pda();
     let encoding_scheme = ExecutablePayloadEncodingScheme::AbiEncoding;
     let test_payload = ExecutablePayload::new(
         memo_string.as_bytes(),
@@ -229,12 +229,9 @@ fn execute() {
     let message = &messages[0];
     let command_id = message.command_id();
 
-    let signing_pda = Pubkey::create_program_address(
-        &[
-            VALIDATE_MESSAGE_SIGNING_SEED,
-            command_id.as_ref(),
-            &[incoming_message.signing_pda_bump],
-        ],
+    let signing_pda = ValidateMessageSigner::create_pda(
+        &command_id,
+        incoming_message.signing_pda_bump,
         &MEMO_PROGRAM_ID,
     )
     .unwrap();

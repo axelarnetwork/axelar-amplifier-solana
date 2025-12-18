@@ -4,7 +4,7 @@ use mollusk_svm::result::Check;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gas_service::state::Treasury;
-use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
+use solana_axelar_gateway::CallContractSigner;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
@@ -113,7 +113,7 @@ pub fn deploy_remote_interchain_token_helper(
         Pubkey::find_program_address(&[Treasury::SEED_PREFIX], &solana_axelar_gas_service::ID);
 
     let (call_contract_signing_pda, _signing_pda_bump) =
-        Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &ctx.program_id);
+        CallContractSigner::find_pda(&ctx.program_id);
 
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);

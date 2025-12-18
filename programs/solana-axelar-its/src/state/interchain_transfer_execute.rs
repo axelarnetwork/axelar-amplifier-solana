@@ -10,6 +10,10 @@ impl InterchainTransferExecute {
         [Self::SEED_PREFIX, destination_program.as_ref()]
     }
 
+    pub fn try_find_pda(destination_program: &Pubkey) -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(&Self::pda_seeds(destination_program)[..], &crate::ID)
+    }
+
     pub fn find_pda(destination_program: &Pubkey) -> (Pubkey, u8) {
         Pubkey::find_program_address(&Self::pda_seeds(destination_program)[..], &crate::ID)
     }

@@ -7,10 +7,9 @@ use anchor_lang::{prelude::UpgradeableLoaderState, InstructionData, ToAccountMet
 use anchor_lang::{AccountDeserialize, AnchorDeserialize};
 use libsecp256k1::SecretKey;
 use mollusk_svm::{result::InstructionResult, Mollusk};
-use solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED;
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    ID as GATEWAY_PROGRAM_ID,
+    CallContractSigner, ID as GATEWAY_PROGRAM_ID,
 };
 use solana_axelar_gateway::{
     GatewayConfig, IncomingMessage, SignatureVerificationSessionData, VerifierSetTracker,
@@ -96,7 +95,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
         Some(program_id) => {
             // Derive PDAs specific to memo program
             let (gateway_caller_pda, gateway_caller_bump) =
-                Pubkey::find_program_address(&[CALL_CONTRACT_SIGNING_SEED], &program_id);
+                CallContractSigner::find_pda(&program_id);
 
             let (event_authority_pda, event_authority_bump) =
                 Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);

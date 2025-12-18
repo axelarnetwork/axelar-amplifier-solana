@@ -422,10 +422,8 @@ pub fn make_interchain_transfer_instruction(
 
     let gateway_root_pda = solana_axelar_gateway::GatewayConfig::find_pda().0;
 
-    let (call_contract_signing_pda, _) = Pubkey::find_program_address(
-        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        &crate::ID,
-    );
+    let (call_contract_signing_pda, _) =
+        solana_axelar_gateway::CallContractSigner::find_pda(&crate::ID);
 
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);

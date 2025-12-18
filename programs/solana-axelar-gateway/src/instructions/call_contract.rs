@@ -1,5 +1,5 @@
-use crate::seed_prefixes::{CALL_CONTRACT_SIGNING_SEED, GATEWAY_SEED};
-use crate::{CallContractEvent, GatewayConfig, GatewayError};
+use crate::seed_prefixes::GATEWAY_SEED;
+use crate::{CallContractEvent, CallContractSigner, GatewayConfig, GatewayError};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::keccak;
 
@@ -36,10 +36,7 @@ pub fn call_contract_handler(
         // Direct signer, so not a program, continue
     } else {
         // Case of a program, validate and use signing PDA
-        let expected_signing_pda = Pubkey::create_program_address(
-            &[CALL_CONTRACT_SIGNING_SEED, &[signing_pda_bump]],
-            caller.key,
-        )
+        let expected_signing_pda = CallContractSigner::create_pda(signing_pda_bump, caller.key)
         .map_err(|_| {
             msg!("Invalid call: sender must be a direct signer or a valid signing PDA must be provided");
             GatewayError::InvalidSigningPDABump

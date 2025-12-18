@@ -79,14 +79,7 @@ pub fn deploy_interchain_token_helper(
         &spl_token_2022::ID,
     );
 
-    let (metadata_account, _) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint_pda.as_ref(),
-        ],
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-    );
+    let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint_pda);
 
     let (event_authority, event_authority_account, program_account) =
         get_event_authority_and_program_accounts(&program_id);

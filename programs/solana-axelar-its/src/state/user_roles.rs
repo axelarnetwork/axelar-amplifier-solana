@@ -20,6 +20,10 @@ impl UserRoles {
         [Self::SEED_PREFIX, resource.as_ref(), user.as_ref()]
     }
 
+    pub fn try_find_pda(resource: &Pubkey, user: &Pubkey) -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(&Self::pda_seeds(resource, user), &crate::ID)
+    }
+
     pub fn has_minter_role(&self) -> bool {
         self.roles.contains(Roles::MINTER)
     }

@@ -39,10 +39,8 @@ pub fn execute_link_token_helper(
     let program_id = solana_axelar_its::id();
 
     // Derive required PDAs
-    let (call_contract_signing_pda, _) = Pubkey::find_program_address(
-        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        &program_id,
-    );
+    let (call_contract_signing_pda, _) =
+        solana_axelar_gateway::CallContractSigner::find_pda(&program_id);
 
     let (gateway_event_authority, _, _) =
         get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
