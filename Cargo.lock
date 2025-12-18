@@ -5198,7 +5198,7 @@ name = "solana-axelar-gas-service"
 version = "0.1.6"
 dependencies = [
  "anchor-lang",
- "borsh 0.10.4",
+ "borsh 1.6.0",
  "bytemuck",
  "mollusk-svm",
  "mollusk-test-utils",
@@ -5376,7 +5376,7 @@ dependencies = [
  "anchor-lang",
  "arrayref",
  "bnum",
- "borsh 0.10.4",
+ "borsh 1.6.0",
  "bytemuck",
  "hex",
  "rand 0.8.5",

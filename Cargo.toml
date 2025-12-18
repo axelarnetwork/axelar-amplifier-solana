@@ -122,7 +122,7 @@ bincode = "1"
 bitflags = "2.6"
 bitvec = "1.0.1"
 bnum = { version = "0.10", features = ["serde"] }
-borsh = { version = "0.10.4" }
+borsh = { version = "1.6.0" }
 bs58 = "0.5.1"
 bytemuck = { version = "1", features = ["derive", "min_const_generics"] }
 cosmwasm-schema = "2"
