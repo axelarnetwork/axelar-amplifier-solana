@@ -85,7 +85,7 @@ pub struct DeployInterchainToken<'info> {
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    #[account(address = solana_sdk_ids::sysvar::instructions::id())]
+    #[account(address = solana_sdk_ids::sysvar::instructions::ID)]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
