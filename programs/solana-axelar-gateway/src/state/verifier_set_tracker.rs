@@ -21,7 +21,15 @@ pub struct VerifierSetTracker {
 impl VerifierSetTracker {
     pub const SEED_PREFIX: &'static [u8] = b"ver-set-tracker";
 
+    pub fn pda_seeds<'a>(verifier_set_hash: &'a VerifierSetHash) -> [&'a [u8]; 2] {
+        [Self::SEED_PREFIX, verifier_set_hash]
+    }
+
+    pub fn try_find_pda(verifier_set_hash: &VerifierSetHash) -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(&Self::pda_seeds(verifier_set_hash), &crate::ID)
+    }
+
     pub fn find_pda(verifier_set_hash: &VerifierSetHash) -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[Self::SEED_PREFIX, verifier_set_hash], &crate::ID)
+        Pubkey::find_program_address(&Self::pda_seeds(verifier_set_hash), &crate::ID)
     }
 }

@@ -2,9 +2,7 @@ use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::Message;
-use solana_axelar_gateway::{
-    seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED, IncomingMessage, ID as GATEWAY_PROGRAM_ID,
-};
+use solana_axelar_gateway::{IncomingMessage, ValidateMessageSigner, ID as GATEWAY_PROGRAM_ID};
 use solana_axelar_governance::seed_prefixes;
 use solana_axelar_governance::{payload_conversions, state::proposal::ExecutableProposal};
 use solana_axelar_governance::{
@@ -433,12 +431,9 @@ pub fn create_signing_pda_from_message(
 ) -> Pubkey {
     let command_id = message.command_id();
 
-    Pubkey::create_program_address(
-        &[
-            VALIDATE_MESSAGE_SIGNING_SEED,
-            command_id.as_ref(),
-            &[incoming_message.signing_pda_bump],
-        ],
+    ValidateMessageSigner::create_pda(
+        &command_id,
+        incoming_message.signing_pda_bump,
         &GOVERNANCE_PROGRAM_ID,
     )
     .unwrap()

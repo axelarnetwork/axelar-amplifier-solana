@@ -116,14 +116,8 @@ fn deploy_remote_canonical_token() {
     let (token_manager_pda, _) = TokenManager::find_pda(token_id, its_root_pda);
 
     // Get metadata account PDA
-    let (metadata_account_pda, _metadata_bump) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            mint_pubkey.as_ref(),
-        ],
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-    );
+    let (metadata_account_pda, _metadata_bump) =
+        mpl_token_metadata::accounts::Metadata::find_pda(&mint_pubkey);
 
     // Create metadata account data
     let metadata = mpl_token_metadata::accounts::Metadata {
@@ -276,14 +270,8 @@ fn reject_deploy_remote_canonical_token_with_mismatched_token_id() {
     let (mismatched_token_manager_pda, _) = TokenManager::find_pda(invalid_token_id, its_root_pda);
 
     // Get metadata account PDA
-    let (metadata_account_pda, _metadata_bump) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            mint_pubkey.as_ref(),
-        ],
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-    );
+    let (metadata_account_pda, _metadata_bump) =
+        mpl_token_metadata::accounts::Metadata::find_pda(&mint_pubkey);
 
     // Create metadata account data
     let metadata = mpl_token_metadata::accounts::Metadata {

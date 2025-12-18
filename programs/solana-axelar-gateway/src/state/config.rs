@@ -34,8 +34,16 @@ pub struct GatewayConfig {
 impl GatewayConfig {
     pub const SEED_PREFIX: &'static [u8] = b"gateway";
 
+    pub fn pda_seeds<'a>() -> [&'a [u8]; 1] {
+        [Self::SEED_PREFIX]
+    }
+
+    pub fn try_find_pda() -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(&Self::pda_seeds(), &crate::ID)
+    }
+
     pub fn find_pda() -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[Self::SEED_PREFIX], &crate::ID)
+        Pubkey::find_program_address(&Self::pda_seeds(), &crate::ID)
     }
 
     pub fn assert_valid_epoch(&self, epoch: U256) -> Result<()> {

@@ -52,10 +52,8 @@ pub fn deploy_remote_canonical_token_helper(
     let program_id = solana_axelar_its::id();
 
     // Get call contract signing PDA
-    let (call_contract_signing_pda, _) = Pubkey::find_program_address(
-        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        &program_id,
-    );
+    let (call_contract_signing_pda, _) =
+        solana_axelar_gateway::CallContractSigner::find_pda(&program_id);
 
     // Get event authorities
     let (gateway_event_authority, _, _) =

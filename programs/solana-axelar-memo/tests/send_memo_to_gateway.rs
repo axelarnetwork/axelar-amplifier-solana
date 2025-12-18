@@ -35,10 +35,8 @@ fn send_memo_to_gateway() {
         destination_address: "0xDestinationAddress".to_owned(),
         memo: memo_string.to_owned(),
     };
-    let (signing_pda, _signing_pda_bump) = Pubkey::find_program_address(
-        &[solana_axelar_gateway::seed_prefixes::CALL_CONTRACT_SIGNING_SEED],
-        &MEMO_PROGRAM_ID,
-    );
+    let (signing_pda, _signing_pda_bump) =
+        solana_axelar_gateway::CallContractSigner::find_pda(&MEMO_PROGRAM_ID);
 
     let (gateway_event_authority, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);

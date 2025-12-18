@@ -30,11 +30,16 @@ pub struct TokenManager {
 impl TokenManager {
     pub const SEED_PREFIX: &'static [u8] = b"token-manager";
 
+    pub fn pda_seeds<'a>(token_id: &'a [u8; 32], its_root_pda: &'a Pubkey) -> [&'a [u8]; 3] {
+        [Self::SEED_PREFIX, its_root_pda.as_ref(), token_id]
+    }
+
+    pub fn try_find_pda(token_id: [u8; 32], its_root_pda: Pubkey) -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(&Self::pda_seeds(&token_id, &its_root_pda), &crate::ID)
+    }
+
     pub fn find_pda(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
-        Pubkey::find_program_address(
-            &[Self::SEED_PREFIX, its_root_pda.as_ref(), &token_id],
-            &crate::ID,
-        )
+        Pubkey::find_program_address(&Self::pda_seeds(&token_id, &its_root_pda), &crate::ID)
     }
 
     pub fn find_token_mint(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
@@ -51,14 +56,7 @@ impl TokenManager {
     pub fn find_token_metadata(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
         let token_mint = Self::find_token_mint(token_id, its_root_pda).0;
 
-        Pubkey::find_program_address(
-            &[
-                b"metadata",
-                mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-                token_mint.as_ref(),
-            ],
-            &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-        )
+        mpl_token_metadata::accounts::Metadata::find_pda(&token_mint)
     }
 
     /// Initializes a `TokenManager` account with given values.

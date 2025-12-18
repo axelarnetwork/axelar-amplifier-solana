@@ -45,13 +45,7 @@ pub fn new_empty_account() -> Account {
 
 pub fn get_message_signing_pda(message: &Message) -> (Pubkey, u8) {
     let program_id = solana_axelar_its::id();
-    Pubkey::find_program_address(
-        &[
-            solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED,
-            message.command_id().as_ref(),
-        ],
-        &program_id,
-    )
+    solana_axelar_gateway::ValidateMessageSigner::find_pda(&message.command_id(), &program_id)
 }
 
 pub fn get_token_mint_pda(token_id: [u8; 32]) -> (Pubkey, u8) {

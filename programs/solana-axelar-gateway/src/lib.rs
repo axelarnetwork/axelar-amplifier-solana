@@ -57,12 +57,11 @@ pub mod seed_prefixes {
     pub const SIGNATURE_VERIFICATION_SEED: &[u8] =
         state::SignatureVerificationSessionData::SEED_PREFIX;
     /// The seed prefix for deriving call contract signature verification PDAs
-    pub const CALL_CONTRACT_SIGNING_SEED: &[u8] = b"gtw-call-contract";
+    pub const CALL_CONTRACT_SIGNING_SEED: &[u8] = state::CallContractSigner::SEED_PREFIX;
     /// The seed prefix for deriving incoming message PDAs
     pub const INCOMING_MESSAGE_SEED: &[u8] = state::IncomingMessage::SEED_PREFIX;
     /// The seed prefix for deriving validate message signing PDAs
-    pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] =
-        state::IncomingMessage::VALIDATE_MESSAGE_SEED_PREFIX;
+    pub const VALIDATE_MESSAGE_SIGNING_SEED: &[u8] = state::ValidateMessageSigner::SEED_PREFIX;
 }
 
 #[program]

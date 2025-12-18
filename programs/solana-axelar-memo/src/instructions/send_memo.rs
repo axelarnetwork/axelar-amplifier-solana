@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_axelar_gateway::{
-    cpi::accounts::CallContract, program::SolanaAxelarGateway,
-    seed_prefixes::CALL_CONTRACT_SIGNING_SEED, GatewayConfig,
+    cpi::accounts::CallContract, program::SolanaAxelarGateway, CallContractSigner, GatewayConfig,
 };
 
 #[derive(Accounts)]
@@ -11,7 +10,7 @@ pub struct SendMemo<'info> {
 
     /// Our standardized PDA for calling the gateway
     #[account(
-        seeds = [CALL_CONTRACT_SIGNING_SEED],
+        seeds = [CallContractSigner::SEED_PREFIX],
         bump,
     )]
     pub signing_pda: AccountInfo<'info>,
@@ -52,7 +51,7 @@ pub fn send_memo_handler(
     let payload = memo.as_bytes().to_vec();
     let bump = ctx.bumps.signing_pda;
 
-    let signer_seeds = &[CALL_CONTRACT_SIGNING_SEED, &[bump]];
+    let signer_seeds = &[CallContractSigner::SEED_PREFIX, &[bump]];
     let signer_seeds = &[&signer_seeds[..]];
 
     let cpi_accounts = CallContract {
