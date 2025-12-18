@@ -5248,7 +5248,6 @@ dependencies = [
  "rand 0.8.5",
  "solana-axelar-gateway",
  "solana-axelar-std",
- "solana-keccak-hasher",
  "solana-sdk",
  "solana-sdk-ids",
 ]

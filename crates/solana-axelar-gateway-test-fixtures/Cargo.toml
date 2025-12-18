@@ -13,7 +13,6 @@ solana-axelar-std.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
-solana-keccak-hasher.workspace = true
 libsecp256k1 = { workspace = true, features = ["hmac", "static-context"] } # features needed for signing
 bincode.workspace = true
 rand.workspace = true
