@@ -1,5 +1,4 @@
 use crate::{errors::ItsError, state::FlowState};
-use alloy_primitives::U256;
 use anchor_lang::prelude::*;
 use anchor_spl::token_2022::spl_token_2022::{
     extension::{BaseStateWithExtensions, ExtensionType::TransferFeeConfig, StateWithExtensions},
@@ -176,36 +175,18 @@ impl TryFrom<u8> for Type {
     }
 }
 
-impl TryFrom<U256> for Type {
-    type Error = ProgramError;
-
-    fn try_from(value: U256) -> std::result::Result<Self, Self::Error> {
-        let value: u64 = value
-            .try_into()
-            .map_err(|_err| ProgramError::InvalidInstructionData)?;
-
-        let converted = match value {
-            0 => Self::NativeInterchainToken,
-            1 => Self::MintBurnFrom,
-            2 => Self::LockUnlock,
-            3 => Self::LockUnlockFee,
-            4 => Self::MintBurn,
-            _ => return Err(ProgramError::InvalidInstructionData),
-        };
-
-        Ok(converted)
-    }
-}
-
-impl From<Type> for U256 {
+// 32-byte little-endian representation
+impl From<Type> for [u8; 32] {
     fn from(value: Type) -> Self {
-        match value {
-            Type::NativeInterchainToken => Self::from(0_u8),
-            Type::MintBurnFrom => Self::from(1_u8),
-            Type::LockUnlock => Self::from(2_u8),
-            Type::LockUnlockFee => Self::from(3_u8),
-            Type::MintBurn => Self::from(4_u8),
-        }
+        let mut bytes = [0u8; 32];
+        bytes[0] = match value {
+            Type::NativeInterchainToken => 0,
+            Type::MintBurnFrom => 1,
+            Type::LockUnlock => 2,
+            Type::LockUnlockFee => 3,
+            Type::MintBurn => 4,
+        };
+        bytes
     }
 }
 

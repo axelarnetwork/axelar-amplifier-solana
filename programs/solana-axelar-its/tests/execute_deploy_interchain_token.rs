@@ -2,11 +2,11 @@
 #![allow(clippy::too_many_lines)]
 #![allow(clippy::indexing_slicing)]
 
+use anchor_lang::prelude::borsh;
 use anchor_lang::solana_program;
 use anchor_lang::AccountDeserialize;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022;
-use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload, ReceiveFromHub};
 use mollusk_svm::result::Check;
 use mpl_token_metadata::accounts::Metadata;
 use mpl_token_metadata::MAX_NAME_LENGTH;
@@ -16,7 +16,7 @@ use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use solana_axelar_its::ItsError;
+use solana_axelar_its::{encoding, ItsError};
 use solana_axelar_its::{state::TokenManager, utils::interchain_token_id};
 use solana_axelar_its_test_fixtures::new_empty_account;
 use solana_axelar_its_test_fixtures::new_test_account;
@@ -65,25 +65,20 @@ fn execute_deploy_interchain_token_success() {
     let symbol = "TEST".to_owned();
     let decimals = 9u8;
 
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::new(), // Empty bytes for no minter
+        minter: None,
     };
 
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8-9: Create and approve message
@@ -246,25 +241,20 @@ fn test_execute_deploy_interchain_token_with_large_metadata() {
     let symbol = "TEST".repeat(10).to_owned();
     let decimals = 9u8;
 
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::new(), // Empty bytes for no minter
+        minter: None,
     };
 
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8-9: Create and approve message
@@ -405,25 +395,20 @@ fn reject_execute_deploy_interchain_token_with_mismatched_minter() {
 
     let minter = Pubkey::new_unique().to_bytes();
 
-    let deploy_payload = DeployInterchainToken {
-        selector: alloy_primitives::U256::from(1), // MESSAGE_TYPE_ID for DeployInterchainToken
-        token_id: alloy_primitives::FixedBytes::from(token_id),
+    let deploy_payload = encoding::DeployInterchainToken {
+        token_id,
         name: name.clone(),
         symbol: symbol.clone(),
         decimals,
-        minter: alloy_primitives::Bytes::from(minter),
+        minter: Some(minter.to_vec()),
     };
 
-    let receive_from_hub_payload = ReceiveFromHub {
-        selector: alloy_primitives::U256::from(4), // MESSAGE_TYPE_ID for ReceiveFromHub
+    let hub_message = encoding::HubMessage::ReceiveFromHub {
         source_chain: "ethereum".to_owned(),
-        payload: GMPPayload::DeployInterchainToken(deploy_payload)
-            .encode()
-            .into(),
+        message: encoding::Message::DeployInterchainToken(deploy_payload),
     };
 
-    let gmp_payload = GMPPayload::ReceiveFromHub(receive_from_hub_payload);
-    let encoded_payload = gmp_payload.encode();
+    let encoded_payload = borsh::to_vec(&hub_message).unwrap();
     let payload_hash = keccak::hashv(&[&encoded_payload]).to_bytes();
 
     // Step 8-9: Create and approve message

@@ -2,12 +2,12 @@
 #![allow(clippy::too_many_arguments)]
 use std::collections::HashMap;
 
+use anchor_lang::prelude::borsh;
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::{self, get_associated_token_address_with_program_id},
     token_2022::spl_token_2022,
 };
-use interchain_token_transfer_gmp::{GMPPayload, InterchainTransfer, ReceiveFromHub};
 use mollusk_svm::{
     result::{Check, InstructionResult},
     MolluskContext,
@@ -17,6 +17,7 @@ use mollusk_test_utils::{create_program_data_account, get_event_authority_and_pr
 use rand::Rng;
 use solana_axelar_gateway_test_fixtures::create_verifier_info;
 use solana_axelar_its::{
+    encoding,
     instructions::{
         execute_interchain_transfer_extra_accounts, make_deploy_interchain_token_instruction,
         make_interchain_transfer_instruction, make_mint_interchain_token_instruction,
@@ -35,7 +36,7 @@ use solana_sdk::{
 // Gateway
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, Message, VerifierSetTracker,
+    GatewayConfig, Message as CrossChainMessage, VerifierSetTracker,
 };
 
 macro_rules! msg {
@@ -725,7 +726,7 @@ impl ItsTestHarness {
 
     #[allow(clippy::too_many_lines)]
     #[allow(clippy::cast_possible_truncation)]
-    pub fn ensure_approved_incoming_messages(&self, messages: &[Message]) {
+    pub fn ensure_approved_incoming_messages(&self, messages: &[CrossChainMessage]) {
         let GatewayConfig {
             domain_separator, ..
         } = self
@@ -1357,14 +1358,14 @@ impl ItsTestHarness {
         );
     }
 
-    pub fn execute_gmp(
+    pub fn execute_hub_message(
         &self,
         token_id: [u8; 32],
         source_chain: &str,
-        payload: GMPPayload,
+        payload: encoding::HubMessage,
         extra_accounts: Vec<AccountMeta>,
     ) -> InstructionResult {
-        let encoded_payload = payload.encode();
+        let encoded_payload = borsh::to_vec(&payload).expect("payload should serialize");
         let payload_hash = solana_sdk::keccak::hashv(&[&encoded_payload]).to_bytes();
 
         let rand_message_id: String = rand::thread_rng()
@@ -1379,7 +1380,7 @@ impl ItsTestHarness {
             .get_account_as(&self.its_root)
             .expect("its config should exist");
 
-        let message = solana_axelar_gateway::Message {
+        let message = CrossChainMessage {
             cc_id: solana_axelar_std::CrossChainId {
                 chain: source_chain.to_owned(),
                 id: rand_message_id,
@@ -1463,17 +1464,12 @@ impl ItsTestHarness {
     ) -> InstructionResult {
         let has_data = data.is_some();
 
-        let transfer_payload = InterchainTransfer {
-            selector: InterchainTransfer::MESSAGE_TYPE_ID_UINT,
-            token_id: alloy_primitives::FixedBytes::from(token_id),
-            source_address: alloy_primitives::Bytes::from(source_address.as_bytes().to_vec()),
-            destination_address: alloy_primitives::Bytes::from(
-                destination_address.to_bytes().to_vec(),
-            ),
-            amount: alloy_primitives::U256::from(amount),
-            data: data
-                .as_ref()
-                .map_or(alloy_primitives::Bytes::new(), |(d, _)| d.clone().into()),
+        let transfer_payload = encoding::InterchainTransfer {
+            token_id,
+            source_address: source_address.as_bytes().to_vec(),
+            destination_address: destination_address.to_bytes().to_vec(),
+            amount,
+            data: data.clone().map(|(d, _)| d),
         };
 
         let token_mint =
@@ -1494,15 +1490,12 @@ impl ItsTestHarness {
             extra_accounts.extend(data_accounts);
         }
 
-        let transfer_payload_wrapped = GMPPayload::ReceiveFromHub(ReceiveFromHub {
-            selector: ReceiveFromHub::MESSAGE_TYPE_ID_UINT,
+        let transfer_payload_wrapped = encoding::HubMessage::ReceiveFromHub {
             source_chain: source_chain.to_owned(),
-            payload: GMPPayload::InterchainTransfer(transfer_payload)
-                .encode()
-                .into(),
-        });
+            message: encoding::Message::InterchainTransfer(transfer_payload),
+        };
 
-        self.execute_gmp(
+        self.execute_hub_message(
             token_id,
             source_chain,
             transfer_payload_wrapped,

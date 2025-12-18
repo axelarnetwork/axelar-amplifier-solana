@@ -21,13 +21,11 @@ mpl-token-metadata.workspace = true
 rand.workspace = true
 hex.workspace = true
 libsecp256k1.workspace = true
-alloy-primitives.workspace = true
 
 mollusk-svm.workspace = true
 
 mollusk-test-utils.workspace = true
 solana-axelar-std.workspace = true
-interchain-token-transfer-gmp.workspace = true
 
 solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
 solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint"] }

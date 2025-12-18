@@ -1,6 +1,5 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use interchain_token_transfer_gmp::{GMPPayload, SendToHub};
 use solana_axelar_gas_service::cpi::{accounts::PayGas, pay_gas};
 use solana_axelar_gateway::CallContractSigner;
 
@@ -31,27 +30,34 @@ pub trait ToGMPAccounts<'info> {
 // Outbound GMP payloads
 //
 
-pub fn process_outbound(
+pub fn send_to_hub_wrap(
     gmp_accounts: GMPAccounts,
+    message: crate::encoding::Message,
     destination_chain: String,
     gas_value: u64,
-    payload: GMPPayload,
 ) -> Result<()> {
-    // All outbound payloads except RegisterTokenMetadata need to be wrapped in SendToHub
-    // See https://github.com/axelarnetwork/axelar-amplifier/blob/main/packages/interchain-token-service-std/src/primitives.rs#L107-L121
-    let payload = if matches!(payload, GMPPayload::RegisterTokenMetadata(_)) {
-        payload.encode()
-    } else {
-        let wrapped = GMPPayload::SendToHub(SendToHub {
-            selector: SendToHub::MESSAGE_TYPE_ID
-                .try_into()
-                .map_err(|_err| ItsError::ArithmeticOverflow)?,
-            destination_chain,
-            payload: payload.encode().into(),
-        });
-        wrapped.encode()
+    use crate::encoding::HubMessage;
+
+    let payload = HubMessage::SendToHub {
+        destination_chain,
+        message,
     };
 
+    send_to_hub(gmp_accounts, payload, gas_value)
+}
+
+pub fn send_to_hub(
+    gmp_accounts: GMPAccounts,
+    payload: crate::encoding::HubMessage,
+    gas_value: u64,
+) -> Result<()> {
+    if matches!(payload, crate::encoding::HubMessage::ReceiveFromHub { .. }) {
+        return Err(ItsError::InvalidInstructionData.into());
+    }
+
+    let payload = payload
+        .try_to_vec()
+        .map_err(|_| ItsError::SerializationError)?;
     let payload_hash = solana_program::keccak::hash(&payload).to_bytes();
     let destination_address = gmp_accounts.its_hub_address;
     let refund_address = gmp_accounts.payer.key();

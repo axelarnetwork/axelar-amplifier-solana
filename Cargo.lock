@@ -3689,15 +3689,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "interchain-token-transfer-gmp"
-version = "0.1.3"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-types",
- "hex",
-]
-
-[[package]]
 name = "io-uring"
 version = "0.7.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4206,11 +4197,9 @@ dependencies = [
 name = "mollusk-harness"
 version = "0.1.0"
 dependencies = [
- "alloy-primitives",
  "anchor-lang",
  "anchor-spl",
  "hex",
- "interchain-token-transfer-gmp",
  "libsecp256k1",
  "mollusk-svm 0.5.1",
  "mollusk-test-utils",
@@ -6637,14 +6626,12 @@ dependencies = [
 name = "solana-axelar-its"
 version = "0.1.6"
 dependencies = [
- "alloy-primitives",
  "anchor-lang",
  "anchor-spl",
  "bincode",
  "bitflags 2.10.0",
  "bytemuck",
  "hex",
- "interchain-token-transfer-gmp",
  "libsecp256k1",
  "mollusk-harness",
  "mollusk-svm 0.5.1",
