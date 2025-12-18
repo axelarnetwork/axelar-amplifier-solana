@@ -1,5 +1,5 @@
-use crate::gmp::*;
 use crate::instructions::deploy_remote_interchain_token::get_token_metadata;
+use crate::{encoding, gmp::*};
 use crate::{
     errors::ItsError,
     events::InterchainTokenDeploymentStarted,
@@ -9,12 +9,10 @@ use crate::{
         interchain_token_id_internal,
     },
 };
-use alloy_primitives::Bytes;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
 use anchor_spl::token_interface::Mint;
-use interchain_token_transfer_gmp::{DeployInterchainToken, GMPPayload};
 use solana_axelar_gateway::GatewayConfig;
 
 /// Accounts required for deploying a remote canonical interchain token
@@ -144,20 +142,17 @@ pub fn deploy_remote_canonical_interchain_token_handler(
         destination_chain: destination_chain.clone(),
     });
 
-    let inner_payload = GMPPayload::DeployInterchainToken(DeployInterchainToken {
-        selector: DeployInterchainToken::MESSAGE_TYPE_ID
-            .try_into()
-            .map_err(|_err| ItsError::ArithmeticOverflow)?,
-        token_id: token_id.into(),
+    let payload = encoding::Message::DeployInterchainToken(encoding::DeployInterchainToken {
+        token_id,
         name,
         symbol,
         decimals,
-        minter: Bytes::new(), // Canonical tokens don't have destination minters
+        minter: None, // Canonical tokens don't have destination minters
     });
 
     let gmp_accounts = ctx.accounts.to_gmp_accounts();
 
-    process_outbound(gmp_accounts, destination_chain, gas_value, inner_payload)?;
+    send_to_hub_wrap(gmp_accounts, payload, destination_chain, gas_value)?;
 
     Ok(())
 }
