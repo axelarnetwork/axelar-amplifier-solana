@@ -10,7 +10,7 @@ use mollusk_test_utils::{
 };
 use solana_axelar_gas_service::state::Treasury;
 use solana_axelar_gateway::Message;
-use solana_axelar_its::state::{roles, InterchainTokenService, UserRoles};
+use solana_axelar_its::state::{InterchainTokenService, UserRoles};
 use solana_axelar_operators::{OperatorAccount, OperatorRegistry};
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::program_pack::Pack;
