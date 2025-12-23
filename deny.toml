@@ -153,11 +153,6 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "interchain-token-transfer-gmp"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
 crate = "solana-axelar-its"
 expression = "MIT"
 license-files = []

@@ -154,7 +154,12 @@ fn main() -> eyre::Result<()> {
         }
         Commands::Audit { args } => {
             println!("cargo audit");
-            cmd!(sh, "cargo install cargo-audit --locked").run()?;
+            cmd!(
+                sh,
+                "cargo install cargo-audit --version 0.22.0 --force --locked"
+            )
+            .run()?;
+            cmd!(sh, "cargo audit --version").run()?;
             cmd!(sh, "cargo audit {args...}").run()?;
         }
         Commands::Deny { args } => {

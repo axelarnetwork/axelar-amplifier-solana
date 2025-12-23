@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.6...solana-axelar-its-v0.1.7)
+
+### ⛰️ Features
+
+- Use Borsh encoding for ITS messages ([#115](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/115)) - ([3fe1550](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/3fe15500d7f890259015880ee32d1eeb1461866e))
+
+### 🚜 Refactor
+
+- Add try_find_pda to accounts ([#133](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/133)) - ([cfc83c8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cfc83c802560373bcef747ebb680cff6db2b9e4b))
+
+### Contributors
+
+* @rista404
+
+## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.1.6...solana-axelar-governance-v0.1.7)
+
+### 🚜 Refactor
+
+- Add try_find_pda to accounts ([#133](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/133)) - ([cfc83c8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cfc83c802560373bcef747ebb680cff6db2b9e4b))
+
+### Contributors
+
+* @rista404
+
+## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.1.6...solana-axelar-gateway-v0.1.7)
+
+### 🚜 Refactor
+
+- Add try_find_pda to accounts ([#133](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/133)) - ([cfc83c8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cfc83c802560373bcef747ebb680cff6db2b9e4b))
+
+### Contributors
+
+* @rista404
+
+## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.1.6...solana-axelar-gas-service-v0.1.7)
+
+### 🚜 Refactor
+
+- Add try_find_pda to accounts ([#133](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/133)) - ([cfc83c8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cfc83c802560373bcef747ebb680cff6db2b9e4b))
+
+### Contributors
+
+* @rista404
+
+## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.1.6...solana-axelar-operators-v0.1.7)
+
+### 🚜 Refactor
+
+- Add try_find_pda to accounts ([#133](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/133)) - ([cfc83c8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cfc83c802560373bcef747ebb680cff6db2b9e4b))
+
+### Contributors
+
+* @rista404
+
 ## [0.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/interchain-token-transfer-gmp-v0.1.1...interchain-token-transfer-gmp-v0.1.2)
 
 ### 🐛 Bug Fixes
