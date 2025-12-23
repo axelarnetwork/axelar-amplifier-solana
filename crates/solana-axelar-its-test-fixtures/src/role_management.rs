@@ -67,7 +67,7 @@ pub fn handover_mint_authority_helper(
             token_manager: ctx.token_manager.0,
             minter_roles: ctx.minter_roles.0,
             token_program: spl_token_2022::ID,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
         }
         .to_account_metas(None),
         data: solana_axelar_its::instruction::HandoverMintAuthority {
@@ -149,7 +149,7 @@ pub fn transfer_interchain_token_mintership_helper(
         program_id,
         accounts: solana_axelar_its::accounts::TransferInterchainTokenMintership {
             its_root_pda: ctx.its_root_pda.0,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer: ctx.payer.0,
             sender_user_account: ctx.sender_user_account.0,
             sender_roles_account: ctx.sender_roles_account.0,

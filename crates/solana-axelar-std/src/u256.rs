@@ -3,6 +3,9 @@ use std::fmt::Display;
 
 use bytemuck::{Pod, Zeroable};
 
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::borsh;
+
 /// [U256] represents uint256.
 #[derive(Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable)]
 #[cfg_attr(

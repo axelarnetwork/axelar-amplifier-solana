@@ -28,8 +28,8 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     native_token::LAMPORTS_PER_SOL,
     pubkey::Pubkey,
-    system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 use std::collections::BTreeMap;
 
 pub struct TestSetup {
@@ -85,7 +85,7 @@ pub fn mock_setup_test(gateway_caller_program_id: Option<Pubkey>) -> TestSetup {
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::id(),
+        &solana_sdk_ids::bpf_loader_upgradeable::id(),
     );
 
     let (verifier_set_tracker_pda, verifier_bump) =
@@ -173,7 +173,7 @@ pub fn setup_test_with_real_signers() -> (TestSetup, SecretKey, SecretKey) {
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GATEWAY_PROGRAM_ID.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::id(),
+        &solana_sdk_ids::bpf_loader_upgradeable::id(),
     );
 
     let (verifier_set_tracker_pda, verifier_bump) =
@@ -251,7 +251,7 @@ pub fn initialize_gateway(setup: &TestSetup) -> InstructionResult {
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: serialized_program_data,
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: false,
                 rent_epoch: 0,
             },
@@ -481,7 +481,7 @@ pub fn call_contract_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -632,7 +632,7 @@ pub fn rotate_signers_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -710,7 +710,7 @@ pub fn transfer_operatorship_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -803,7 +803,7 @@ pub fn approve_message_helper_from_merklized(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

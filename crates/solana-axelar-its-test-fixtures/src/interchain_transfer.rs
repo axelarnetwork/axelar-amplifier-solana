@@ -87,7 +87,7 @@ pub fn perform_interchain_transfer(
         gas_treasury: ctx.treasury_pda.0,
         gas_service: solana_axelar_gas_service::ID,
         gas_event_authority,
-        system_program: solana_sdk::system_program::ID,
+        system_program: solana_sdk_ids::system_program::ID,
         call_contract_signing_pda,
         event_authority: its_event_authority,
         program: program_id,
@@ -122,14 +122,14 @@ pub fn perform_interchain_transfer(
         ctx.gateway_root_pda,
         (
             gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             solana_axelar_gateway::ID,
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -140,19 +140,19 @@ pub fn perform_interchain_transfer(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
         ),
         (
             gas_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         keyed_account_for_system_program(),
         (
             call_contract_signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (program_id, its_program_account.clone()),
         (its_event_authority, event_authority_account),

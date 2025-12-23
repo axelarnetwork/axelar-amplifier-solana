@@ -101,7 +101,7 @@ fn transfer_token_manager_operatorship_success() {
     let ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::TransferTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             origin_user_account: current_operator,
             origin_roles_account: minter_roles_pda,
@@ -260,7 +260,7 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
     let ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::TransferTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             origin_user_account: malicious_operator,
             origin_roles_account: minter_roles_pda,
@@ -387,7 +387,7 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
     let ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::TransferTokenManagerOperatorship {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             origin_user_account: current_operator,
             origin_roles_account: minter_roles_pda,

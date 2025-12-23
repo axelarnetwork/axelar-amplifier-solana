@@ -1,4 +1,4 @@
-use anchor_lang::{solana_program, AccountDeserialize};
+use anchor_lang::AccountDeserialize;
 use hex::FromHex;
 use solana_axelar_gateway_test_fixtures::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
@@ -7,6 +7,7 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_governance::state::GovernanceConfigInit;
 use solana_axelar_governance::ExecutableProposal;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
+use solana_axelar_governance_test_fixtures::create_operator_proposal_pda;
 use solana_axelar_governance_test_fixtures::{
     create_gateway_event_authority_pda, create_governance_config_pda,
     create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
@@ -14,7 +15,7 @@ use solana_axelar_governance_test_fixtures::{
     process_gmp_helper, GmpContext, TestSetup,
 };
 use solana_sdk::pubkey::Pubkey;
-use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
 fn should_schedule_timelock_proposal() {
@@ -30,10 +31,10 @@ fn should_schedule_timelock_proposal() {
         .clone();
 
     let schedule_payload: Vec<u8> = Vec::from_hex("0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000068d40fa100000000000000000000000000000000000000000000000000000000000000208e3ada0bc9a65c73374363655898f17ad104ea9822d37be8d954e72b2dcb0a36000000000000000000000000000000000000000000000000000000000000004e010000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000").unwrap();
-    let schedule_payload_hash = solana_program::keccak::hashv(&[&schedule_payload]).to_bytes();
+    let schedule_payload_hash = solana_keccak_hasher::hashv(&[&schedule_payload]).to_bytes();
 
     let cancel_payload: Vec<u8> = Vec::from_hex("0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000068d40fa100000000000000000000000000000000000000000000000000000000000000208e3ada0bc9a65c73374363655898f17ad104ea9822d37be8d954e72b2dcb0a36000000000000000000000000000000000000000000000000000000000000004e010000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000").unwrap();
-    let cancel_payload_hash = solana_program::keccak::hashv(&[&cancel_payload]).to_bytes();
+    let cancel_payload_hash = solana_keccak_hasher::hashv(&[&cancel_payload]).to_bytes();
 
     let messages = vec![
         create_test_message(
@@ -73,7 +74,6 @@ fn should_schedule_timelock_proposal() {
     setup.mollusk.add_program(
         &GOVERNANCE_PROGRAM_ID,
         "../../target/deploy/solana_axelar_governance",
-        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     let payer = Pubkey::new_unique();
@@ -85,9 +85,9 @@ fn should_schedule_timelock_proposal() {
     let (event_authority_pda_governance, event_authority_bump) =
         create_governance_event_authority_pda();
 
-    let chain_hash = solana_program::keccak::hashv(&[b"ethereum"]).to_bytes();
+    let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();
     let address_hash =
-        solana_program::keccak::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
+        solana_keccak_hasher::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
     let minimum_proposal_eta_delay = 3600;
 
     let governance_setup = TestSetup {
@@ -130,6 +130,7 @@ fn should_schedule_timelock_proposal() {
     let (event_authority_pda_governance, _) = create_governance_event_authority_pda();
     let proposal_hash = extract_proposal_hash_unchecked(&schedule_payload);
     let proposal_pda = create_proposal_pda(&proposal_hash);
+    let operator_proposal_pda = create_operator_proposal_pda(&proposal_hash);
 
     let gmp_context = GmpContext::new()
         .with_incoming_message(
@@ -144,7 +145,8 @@ fn should_schedule_timelock_proposal() {
         .with_signing_pda(signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
-        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID);
+        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID)
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send schedule timelock proposal
     let result = process_gmp_helper(
@@ -190,7 +192,8 @@ fn should_schedule_timelock_proposal() {
             proposal_pda,
             proposal_pda_account.data,
             GOVERNANCE_PROGRAM_ID,
-        );
+        )
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send cancel timelock proposal
     let result = process_gmp_helper(

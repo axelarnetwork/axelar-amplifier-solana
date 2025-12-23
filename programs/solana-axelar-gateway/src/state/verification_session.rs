@@ -152,11 +152,8 @@ impl SignatureVerificationSessionData {
         };
 
         // This is results in a Solana syscall.
-        let secp256k1_recover = solana_program::secp256k1_recover::secp256k1_recover(
-            &hashed_message,
-            recovery_id,
-            signature,
-        );
+        let secp256k1_recover =
+            solana_secp256k1_recover::secp256k1_recover(&hashed_message, recovery_id, signature);
         let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
             solana_program::msg!("Failed to recover ECDSA signature");
             return false;

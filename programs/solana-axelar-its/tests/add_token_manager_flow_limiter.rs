@@ -84,7 +84,7 @@ fn add_token_manager_flow_limiter() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -225,7 +225,7 @@ fn reject_add_flow_limiter_with_unauthorized_authority() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: malicious_minter, // malicious user: not a minter or operator
             authority_roles_account: minter_roles_pda,
@@ -345,7 +345,7 @@ fn reject_add_flow_limiter_without_operator_role() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,

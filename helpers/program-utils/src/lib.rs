@@ -267,7 +267,8 @@ pub fn validate_mpl_token_metadata_key(key: &Pubkey) -> Result<(), ProgramError>
 #[cfg(test)]
 mod tests {
     #[allow(deprecated)]
-    use solana_program::{system_program, sysvar};
+    use solana_program::sysvar;
+    use solana_sdk_ids::system_program;
 
     use crate::{
         validate_mpl_token_metadata_key, validate_rent_key,

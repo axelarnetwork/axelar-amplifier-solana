@@ -100,7 +100,6 @@ mod tests {
                 &mut [],
                 &key,
                 false,
-                0,
             );
             let repr = SolanaAccountRepr::from(&account);
             assert_eq!(repr.is_signer, *is_singer, "Signer flag is gone!");

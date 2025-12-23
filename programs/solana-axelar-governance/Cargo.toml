@@ -38,6 +38,7 @@ mainnet = [
 alloy-sol-types.workspace = true
 governance-gmp.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
+solana-keccak-hasher.workspace = true
 anchor-lang.workspace = true
 program-utils.workspace = true
 
@@ -46,6 +47,7 @@ libsecp256k1.workspace = true
 bincode.workspace = true
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 solana-sdk.workspace = true
+solana-sdk-ids.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
 solana-axelar-governance-test-fixtures.workspace = true
 mollusk-svm.workspace = true

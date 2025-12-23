@@ -12,7 +12,9 @@ use crate::{
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
-use anchor_spl::associated_token::get_associated_token_address_with_program_id;
+use anchor_spl::associated_token::{
+    get_associated_token_address_with_program_id, spl_associated_token_account,
+};
 use anchor_spl::token_2022::spl_token_2022::extension::{
     BaseStateWithExtensions, ExtensionType, StateWithExtensions,
 };
@@ -161,7 +163,7 @@ pub fn make_register_canonical_token_instruction(
         token_mint,
         token_manager_ata,
         token_program,
-        associated_token_program: anchor_spl::associated_token::spl_associated_token_account::ID,
+        associated_token_program: spl_associated_token_account::program::ID,
         event_authority,
         program: crate::ID,
     };

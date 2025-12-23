@@ -115,7 +115,6 @@ impl InterchainTokenService {
 #[allow(clippy::str_to_string)]
 mod tests {
     use super::*;
-    use anchor_lang::AnchorSerialize;
 
     #[test]
     fn space_function_matches_actual_size() {
@@ -128,7 +127,7 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = its_empty.try_to_vec().expect("Failed to serialize");
+        let serialized = borsh::to_vec(&its_empty).expect("Failed to serialize");
         let calculated_space = its_empty.space();
 
         assert!(
@@ -151,7 +150,7 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = its.try_to_vec().expect("Failed to serialize");
+        let serialized = borsh::to_vec(&its).expect("Failed to serialize");
         let calculated_space = its.space();
 
         assert!(
@@ -172,7 +171,7 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = its.try_to_vec().expect("Failed to serialize");
+        let serialized = borsh::to_vec(&its).expect("Failed to serialize");
         let calculated_space = its.space();
 
         assert!(

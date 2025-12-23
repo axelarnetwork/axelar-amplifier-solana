@@ -1,5 +1,8 @@
 use udigest::Digestable;
 
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::borsh;
+
 use crate::{hasher::LeafHash, EncodingError};
 
 /// Identifies a specific blockchain and its unique identifier within that

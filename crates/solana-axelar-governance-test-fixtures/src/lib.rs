@@ -11,8 +11,8 @@ use solana_axelar_governance::{
 };
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 mod gmp;
 pub use gmp::*;
@@ -45,7 +45,7 @@ pub fn mock_setup_test() -> TestSetup {
 
     let (program_data_pda, _) = Pubkey::find_program_address(
         &[GOVERNANCE_PROGRAM_ID.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::id(),
+        &solana_sdk_ids::bpf_loader_upgradeable::id(),
     );
 
     let (event_authority_pda, event_authority_bump) =
@@ -101,7 +101,7 @@ pub fn initialize_governance(setup: &TestSetup, params: GovernanceConfigInit) ->
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: serialized_program_data,
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: false,
                 rent_epoch: 0,
             },
@@ -234,7 +234,7 @@ pub fn process_gmp_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -254,7 +254,7 @@ pub fn process_gmp_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -271,7 +271,7 @@ pub fn process_gmp_helper(
         ),
         // GMP Accounts
         (
-            solana_sdk::system_program::ID,
+            solana_sdk_ids::system_program::ID,
             Account {
                 lamports: 0,
                 data: vec![],
@@ -333,7 +333,7 @@ pub fn process_gmp_helper(
                 axelar_gateway_program: GATEWAY_PROGRAM_ID,
                 event_authority: context.event_authority_pda.pubkey,
             },
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer: setup.payer,
             governance_config: setup.governance_config,
             proposal_pda: context.proposal.pubkey,
@@ -458,7 +458,7 @@ pub fn create_operator_proposal_pda(proposal_hash: &[u8]) -> Pubkey {
 pub fn create_governance_program_data_pda() -> Pubkey {
     Pubkey::find_program_address(
         &[GOVERNANCE_PROGRAM_ID.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::id(),
+        &solana_sdk_ids::bpf_loader_upgradeable::id(),
     )
     .0
 }

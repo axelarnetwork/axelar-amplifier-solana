@@ -11,7 +11,6 @@ use {
     },
     mollusk_svm::Mollusk,
     solana_sdk::{account::Account, pubkey::Pubkey},
-    solana_sdk_ids::bpf_loader_upgradeable,
 };
 
 // TODO(v2) extract to a common test utils crate
@@ -29,11 +28,7 @@ pub(crate) fn setup_operator(
     let program_id = solana_axelar_operators::id();
 
     // Load the operators program into mollusk
-    mollusk.add_program(
-        &program_id,
-        "solana_axelar_operators",
-        &bpf_loader_upgradeable::ID,
-    );
+    mollusk.add_program(&program_id, "solana_axelar_operators");
 
     // Derive the registry PDA
     let (registry, _bump) = Pubkey::find_program_address(

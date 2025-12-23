@@ -284,7 +284,7 @@ fn reject_register_custom_token_with_mismatched_operator() {
     let accounts = solana_axelar_its::accounts::RegisterCustomToken {
         payer,
         deployer,
-        system_program: solana_sdk::system_program::ID,
+        system_program: solana_sdk_ids::system_program::ID,
         its_root_pda,
         token_manager_pda,
         token_mint,

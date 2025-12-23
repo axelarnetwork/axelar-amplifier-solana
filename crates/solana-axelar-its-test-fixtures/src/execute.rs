@@ -1,5 +1,6 @@
 use crate::get_message_signing_pda;
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
+use anchor_spl::associated_token::spl_associated_token_account;
 use mollusk_svm::result::{Check, InstructionResult};
 use mollusk_svm::Mollusk;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
@@ -95,8 +96,8 @@ pub fn execute_its_instruction(
         token_mint: core_accounts[0].0, // First core account should be token_mint
         token_manager_ata: core_accounts[1].0, // Second should be token_manager_ata
         token_program: anchor_spl::token_2022::spl_token_2022::id(),
-        associated_token_program: anchor_spl::associated_token::spl_associated_token_account::id(),
-        system_program: solana_sdk::system_program::ID,
+        associated_token_program: spl_associated_token_account::program::ID,
+        system_program: solana_sdk_ids::system_program::ID,
         event_authority: its_event_authority,
         program: program_id,
     };
@@ -129,19 +130,19 @@ pub fn execute_its_instruction(
         (incoming_message_pda, incoming_message_account),
         (
             signing_pda,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (context.gateway_root.0, context.gateway_root.1),
         (
             gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             GATEWAY_PROGRAM_ID,
             Account {
                 lamports: solana_sdk::native_token::LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -154,7 +155,7 @@ pub fn execute_its_instruction(
         (
             token_manager_pda,
             token_manager_account
-                .unwrap_or_else(|| Account::new(0, 0, &solana_sdk::system_program::ID)),
+                .unwrap_or_else(|| Account::new(0, 0, &solana_sdk_ids::system_program::ID)),
         ),
     ];
 

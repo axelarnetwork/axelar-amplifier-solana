@@ -4,6 +4,10 @@
 #![allow(clippy::too_many_arguments)]
 // Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
 #![allow(deprecated)]
+#![allow(
+    clippy::diverging_sub_expression,
+    reason = "Anchor generates such code"
+)]
 
 pub mod encoding;
 pub mod errors;

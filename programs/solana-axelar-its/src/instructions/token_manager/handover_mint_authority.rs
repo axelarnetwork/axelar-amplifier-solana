@@ -83,7 +83,7 @@ pub fn handover_mint_authority_handler(
     // The given authority is the mint authority. Transfer it to the TokenManager
 
     let cpi_context = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         anchor_spl::token_interface::SetAuthority {
             current_authority: authority.to_account_info(),
             account_or_mint: mint.to_account_info(),

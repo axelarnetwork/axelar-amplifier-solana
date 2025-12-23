@@ -1,7 +1,6 @@
 use alloy_sol_types::SolValue;
-use anchor_lang::prelude::AccountMeta;
-use anchor_lang::AnchorSerialize;
-use anchor_lang::{solana_program, AccountDeserialize, ToAccountMetas};
+use anchor_lang::prelude::{borsh, AccountMeta};
+use anchor_lang::{AccountDeserialize, ToAccountMetas};
 use governance_gmp::alloy_primitives::U256;
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway_test_fixtures::{
@@ -23,7 +22,7 @@ use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::pubkey::Pubkey;
-use solana_sdk::system_program::ID as SYSTEM_PROGRAM_ID;
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
 fn should_execute_operator_proposal() {
@@ -58,24 +57,24 @@ fn should_execute_operator_proposal() {
     let schedule_gmp_payload = governance_gmp::GovernanceCommandPayload {
         command: governance_gmp::GovernanceCommand::ScheduleTimeLockProposal,
         target: target_bytes.to_vec().into(),
-        call_data: call_data.try_to_vec().unwrap().into(),
+        call_data: borsh::to_vec(&call_data).unwrap().into(),
         native_value,
         eta,
     };
     let schedule_payload = schedule_gmp_payload.abi_encode();
-    let schedule_payload_hash = solana_program::keccak::hashv(&[&schedule_payload]).to_bytes();
+    let schedule_payload_hash = solana_keccak_hasher::hashv(&[&schedule_payload]).to_bytes();
 
     // Approve operator proposal payload (same target/call_data/native_value)
     let approve_operator_gmp_payload = governance_gmp::GovernanceCommandPayload {
         command: governance_gmp::GovernanceCommand::ApproveOperatorProposal,
         target: target_bytes.to_vec().into(),
-        call_data: call_data.try_to_vec().unwrap().into(),
+        call_data: borsh::to_vec(&call_data).unwrap().into(),
         native_value,
         eta,
     };
     let approve_operator_payload = approve_operator_gmp_payload.abi_encode();
     let approve_operator_payload_hash =
-        solana_program::keccak::hashv(&[&approve_operator_payload]).to_bytes();
+        solana_keccak_hasher::hashv(&[&approve_operator_payload]).to_bytes();
 
     let messages = vec![
         create_test_message(
@@ -114,14 +113,11 @@ fn should_execute_operator_proposal() {
     setup.mollusk.add_program(
         &GOVERNANCE_PROGRAM_ID,
         "../../target/deploy/solana_axelar_governance",
-        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
-    setup.mollusk.add_program(
-        &MEMO_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_memo",
-        &solana_sdk::bpf_loader_upgradeable::id(),
-    );
+    setup
+        .mollusk
+        .add_program(&MEMO_PROGRAM_ID, "../../target/deploy/solana_axelar_memo");
 
     let payer = Pubkey::new_unique();
     let upgrade_authority = Pubkey::new_unique();
@@ -144,9 +140,9 @@ fn should_execute_operator_proposal() {
         event_authority_bump,
     };
 
-    let chain_hash = solana_program::keccak::hashv(&[b"ethereum"]).to_bytes();
+    let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();
     let address_hash =
-        solana_program::keccak::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
+        solana_keccak_hasher::hashv(&["0xSourceAddress".to_string().as_bytes()]).to_bytes();
     let minimum_proposal_eta_delay = 3600;
 
     let governance_config_data = GovernanceConfigInit::new(
@@ -178,6 +174,7 @@ fn should_execute_operator_proposal() {
     let event_authority_pda_gateway = create_gateway_event_authority_pda();
     let proposal_hash = extract_proposal_hash_unchecked(&schedule_payload);
     let proposal_pda = create_proposal_pda(&proposal_hash);
+    let operator_proposal_pda = create_operator_proposal_pda(&proposal_hash);
 
     let gmp_context = GmpContext::new()
         .with_incoming_message(
@@ -192,7 +189,8 @@ fn should_execute_operator_proposal() {
         .with_signing_pda(schedule_signing_pda)
         .with_event_authority_pda(event_authority_pda_gateway)
         .with_event_authority_pda_governance(event_authority_pda_governance)
-        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID);
+        .with_proposal(proposal_pda, vec![], SYSTEM_PROGRAM_ID)
+        .with_operator_proposal(operator_proposal_pda, vec![], SYSTEM_PROGRAM_ID);
 
     // Send schedule timelock proposal
     let schedule_result = process_gmp_helper(
@@ -221,8 +219,6 @@ fn should_execute_operator_proposal() {
         &approve_operator_message,
         &approve_operator_incoming_message,
     );
-
-    let operator_proposal_pda = create_operator_proposal_pda(&proposal_hash);
 
     let gmp_context = GmpContext::new()
         .with_incoming_message(
@@ -319,7 +315,7 @@ fn should_execute_operator_proposal() {
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -330,7 +326,7 @@ fn should_execute_operator_proposal() {
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

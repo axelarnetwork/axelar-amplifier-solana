@@ -2,7 +2,7 @@
 #![allow(clippy::too_many_arguments)]
 use std::collections::HashMap;
 
-use anchor_lang::prelude::borsh;
+use anchor_lang::prelude::{borsh, bpf_loader_upgradeable};
 use anchor_lang::{prelude::AccountMeta, InstructionData, ToAccountMetas};
 use anchor_spl::{
     associated_token::{self, get_associated_token_address_with_program_id},
@@ -350,7 +350,7 @@ pub trait TestHarness {
         program: &Pubkey,
         upgrade_authority_address: Pubkey,
     ) -> Pubkey {
-        let program_data = solana_sdk::bpf_loader_upgradeable::get_program_data_address(program);
+        let program_data = bpf_loader_upgradeable::get_program_data_address(program);
         if self.account_exists(&program_data) {
             return program_data;
         }
@@ -379,7 +379,7 @@ pub trait TestHarness {
         let sysvar_account = Account {
             lamports: 1_000_000_000,
             data: construct_instructions_data(instructions),
-            owner: solana_program::sysvar::id(),
+            owner: solana_sdk_ids::sysvar::ID,
             executable: false,
             rent_epoch: 0,
         };
@@ -399,8 +399,6 @@ pub trait TestHarness {
         name: String,
         symbol: String,
     ) -> Pubkey {
-        use anchor_lang::AnchorSerialize;
-
         let (metadata_pda, _) = mpl_token_metadata::accounts::Metadata::find_pda(&mint);
 
         let uri = format!("https://{}.com", symbol.to_lowercase());
@@ -424,7 +422,7 @@ pub trait TestHarness {
             programmable_config: None,
         };
 
-        let metadata_data = metadata.try_to_vec().unwrap();
+        let metadata_data = borsh::to_vec(&metadata).unwrap();
         let rent = solana_sdk::rent::Rent::default();
         let metadata_account = Account {
             lamports: rent.minimum_balance(metadata_data.len()),
@@ -1513,11 +1511,9 @@ impl ItsTestHarness {
             return;
         }
 
-        self.ctx.mollusk.add_program(
-            &solana_axelar_memo::ID,
-            "solana_axelar_memo",
-            &solana_sdk_ids::bpf_loader_upgradeable::ID,
-        );
+        self.ctx
+            .mollusk
+            .add_program(&solana_axelar_memo::ID, "solana_axelar_memo");
 
         self.ctx.process_and_validate_instruction(
             &solana_axelar_memo::make_init_ix(self.payer),

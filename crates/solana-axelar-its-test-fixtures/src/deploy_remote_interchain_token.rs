@@ -144,7 +144,7 @@ pub fn deploy_remote_interchain_token_helper(
             gas_service: solana_axelar_gas_service::ID,
             gas_treasury,
             gas_event_authority,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             its_root_pda: ctx.its_root.0,
             call_contract_signing_pda,
             gateway_event_authority,
@@ -160,7 +160,11 @@ pub fn deploy_remote_interchain_token_helper(
         (ctx.payer.0, ctx.payer.1),
         (
             ctx.deployer,
-            Account::new(10 * LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID),
+            Account::new(
+                10 * LAMPORTS_PER_SOL,
+                0,
+                &solana_sdk_ids::system_program::ID,
+            ),
         ),
         (ctx.token_mint.0, ctx.token_mint.1),
         (ctx.metadata.0, ctx.metadata.1),
@@ -168,14 +172,14 @@ pub fn deploy_remote_interchain_token_helper(
         // Optional minter accounts
         (
             ctx.minter.unwrap_or(ctx.program_id),
-            Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID),
+            Account::new(1_000_000_000, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             ctx.deploy_approval_pda.unwrap_or(ctx.program_id),
             ctx.deploy_approval_pda_account.unwrap_or(Account::new(
                 1_000_000_000,
                 0,
-                &solana_sdk::system_program::ID,
+                &solana_sdk_ids::system_program::ID,
             )),
         ),
         (
@@ -183,7 +187,7 @@ pub fn deploy_remote_interchain_token_helper(
             ctx.minter_roles_account.unwrap_or(Account::new(
                 1_000_000_000,
                 0,
-                &solana_sdk::system_program::ID,
+                &solana_sdk_ids::system_program::ID,
             )),
         ),
         //
@@ -193,7 +197,7 @@ pub fn deploy_remote_interchain_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
+                owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
                 executable: true,
                 rent_epoch: 0,
             },
@@ -204,7 +208,7 @@ pub fn deploy_remote_interchain_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
+                owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
                 executable: true,
                 rent_epoch: 0,
             },
@@ -220,18 +224,18 @@ pub fn deploy_remote_interchain_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::ID,
+                owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
                 executable: true,
                 rent_epoch: 0,
             },
         ),
         (
             gateway_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             gas_event_authority,
-            Account::new(0, 0, &solana_sdk::system_program::ID),
+            Account::new(0, 0, &solana_sdk_ids::system_program::ID),
         ),
         // For event cpi
         (its_event_authority, its_event_authority_account),

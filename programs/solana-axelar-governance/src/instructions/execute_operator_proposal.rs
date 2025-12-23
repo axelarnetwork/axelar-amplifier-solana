@@ -13,6 +13,7 @@ pub struct ExecuteOperatorProposal<'info> {
 
     #[account(
         mut,
+        dup,
         seeds = [GovernanceConfig::SEED_PREFIX],
         bump = governance_config.bump,
     )]
