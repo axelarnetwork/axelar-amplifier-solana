@@ -5258,6 +5258,7 @@ version = "0.1.7"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
+ "anchor-spl",
  "bincode",
  "governance-gmp",
  "hex",
@@ -5294,7 +5295,6 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "bincode",
- "bitflags 2.10.0",
  "bytemuck",
  "hex",
  "libsecp256k1",

@@ -4,7 +4,8 @@
 use anchor_lang::{AccountDeserialize, AnchorSerialize, Discriminator};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
-use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::roles;
+use solana_axelar_its::state::{RolesError, TokenManager, UserRoles};
 use solana_axelar_its::utils::interchain_token_id;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
@@ -91,7 +92,7 @@ fn transfer_token_manager_operatorship_success() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
     assert!(
-        current_operator_token_roles.roles.contains(Roles::OPERATOR),
+        current_operator_token_roles.contains(roles::OPERATOR),
         "Current operator should have OPERATOR role for token manager"
     );
 
@@ -140,7 +141,7 @@ fn transfer_token_manager_operatorship_success() {
         UserRoles::try_deserialize(&mut old_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
     assert!(
-        !old_operator_token_roles.roles.contains(Roles::OPERATOR),
+        !old_operator_token_roles.contains(roles::OPERATOR),
         "Old operator should not have OPERATOR role for token manager"
     );
 
@@ -153,7 +154,7 @@ fn transfer_token_manager_operatorship_success() {
             .expect("Failed to deserialize updated current operator token roles");
 
     assert!(
-        !updated_current_token_roles.roles.contains(Roles::OPERATOR),
+        !updated_current_token_roles.contains(roles::OPERATOR),
         "Current operator should no longer have OPERATOR role for token manager"
     );
 
@@ -170,7 +171,7 @@ fn transfer_token_manager_operatorship_success() {
         new_operator_token_roles_pda_bump
     );
 
-    assert!(new_operator_token_roles.roles.contains(Roles::OPERATOR));
+    assert!(new_operator_token_roles.contains(roles::OPERATOR));
 }
 
 #[test]
@@ -249,7 +250,7 @@ fn reject_transfer_token_manager_operatorship_with_unauthorized_operator() {
         UserRoles::try_deserialize(&mut current_operator_token_roles_account.data.as_slice())
             .expect("Failed to deserialize current operator token roles");
     assert!(
-        current_operator_token_roles.roles.contains(Roles::OPERATOR),
+        current_operator_token_roles.contains(roles::OPERATOR),
         "Current operator should have OPERATOR role for token manager"
     );
 
@@ -373,7 +374,7 @@ fn reject_transfer_token_manager_operatorship_without_operator_role() {
     let mut current_operator_token_roles =
         UserRoles::try_deserialize(&mut current_operator_token_roles_account_clone.data.as_ref())
             .expect("Failed to deserialize flow limiter roles");
-    current_operator_token_roles.roles = Roles::empty();
+    current_operator_token_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);

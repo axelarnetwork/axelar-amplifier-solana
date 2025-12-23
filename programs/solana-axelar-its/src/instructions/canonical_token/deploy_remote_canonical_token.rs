@@ -80,6 +80,7 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(
         seeds = [b"__event_authority"],
         bump,

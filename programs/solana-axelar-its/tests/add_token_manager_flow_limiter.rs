@@ -6,7 +6,7 @@ use anchor_lang::{
     InstructionData, ToAccountMetas,
 };
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::state::{roles, RolesError, TokenManager, UserRoles};
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
     new_default_account, new_empty_account, new_test_account, DeployInterchainTokenContext,
@@ -368,7 +368,7 @@ fn reject_add_flow_limiter_without_operator_role() {
     let mut minter_roles =
         UserRoles::try_deserialize(&mut minter_roles_account_clone.data.as_ref())
             .expect("Failed to deserialize flow limiter roles");
-    minter_roles.roles = Roles::empty();
+    minter_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
