@@ -53,6 +53,17 @@ impl TokenManager {
         )
     }
 
+    pub fn try_find_token_mint(token_id: [u8; 32], its_root_pda: Pubkey) -> Option<(Pubkey, u8)> {
+        Pubkey::try_find_program_address(
+            &[
+                crate::seed_prefixes::INTERCHAIN_TOKEN_SEED,
+                its_root_pda.as_ref(),
+                &token_id,
+            ],
+            &crate::ID,
+        )
+    }
+
     pub fn find_token_metadata(token_id: [u8; 32], its_root_pda: Pubkey) -> (Pubkey, u8) {
         let token_mint = Self::find_token_mint(token_id, its_root_pda).0;
 
