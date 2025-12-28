@@ -80,13 +80,7 @@ pub struct ExecuteDeployInterchainToken<'info> {
     /// CHECK:
     #[account(
         mut,
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
 

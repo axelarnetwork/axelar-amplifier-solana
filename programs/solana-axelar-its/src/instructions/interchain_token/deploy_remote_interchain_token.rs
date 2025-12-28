@@ -41,13 +41,7 @@ pub struct DeployRemoteInterchainToken<'info> {
 
     /// CHECK: Decoded using get_token_metadata
     #[account(
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        seeds::program = mpl_token_metadata::ID,
-        bump
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
     pub metadata_account: AccountInfo<'info>,
 
