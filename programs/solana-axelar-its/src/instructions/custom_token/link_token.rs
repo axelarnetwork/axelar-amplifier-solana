@@ -64,14 +64,8 @@ pub struct LinkToken<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
-    // Event authority accounts
-    /// CHECK:
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = solana_axelar_gateway::ID,
-    )]
-    pub gateway_event_authority: AccountInfo<'info>,
+    /// CHECK: checked by the gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by the gas service program
     #[account(mut)]
