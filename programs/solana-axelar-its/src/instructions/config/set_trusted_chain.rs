@@ -1,6 +1,6 @@
 use crate::{
     events::TrustedChainSet,
-    state::{roles, InterchainTokenService, RolesError, UserRoles},
+    state::{InterchainTokenService, RolesError, UserRoles},
     ItsError,
 };
 #[allow(deprecated)]
@@ -29,7 +29,7 @@ pub struct SetTrustedChain<'info> {
 		],
 	 	bump = user_roles.bump,
 		// Require the payer to have the OPERATOR role.
-		constraint = user_roles.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
+		constraint = user_roles.has_operator_role() @ RolesError::MissingOperatorRole,
     )]
     pub user_roles: Option<Account<'info, UserRoles>>,
 

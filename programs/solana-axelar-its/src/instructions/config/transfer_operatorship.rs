@@ -25,7 +25,7 @@ pub struct TransferOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.has_operator_role() @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 

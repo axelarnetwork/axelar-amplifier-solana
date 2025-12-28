@@ -29,7 +29,7 @@ pub struct SetFlowLimit<'info> {
             operator.key().as_ref(),
         ],
         bump = its_roles_pda.bump,
-        constraint = its_roles_pda.contains(roles::OPERATOR)
+        constraint = its_roles_pda.has_operator_role()
             @ RolesError::MissingOperatorRole,
     )]
     pub its_roles_pda: Account<'info, UserRoles>,

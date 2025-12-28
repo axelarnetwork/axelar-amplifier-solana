@@ -40,7 +40,7 @@ pub struct TransferInterchainTokenMintership<'info> {
             sender_user_account.key().as_ref(),
         ],
         bump = sender_roles_account.bump,
-        constraint = sender_roles_account.contains(roles::MINTER)
+        constraint = sender_roles_account.has_minter_role()
             @ RolesError::MissingMinterRole,
     )]
     pub sender_roles_account: Account<'info, UserRoles>,
