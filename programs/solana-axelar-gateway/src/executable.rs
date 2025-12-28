@@ -322,7 +322,6 @@ pub mod helpers {
     //
 
     /// Generated client accounts for [`AxelarExecuteAccounts`].
-    // TODO impl AccountInfos and AccountMetas
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct AxelarExecuteAccounts {
         pub incoming_message_pda: Pubkey,
