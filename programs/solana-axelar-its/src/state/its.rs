@@ -127,12 +127,17 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = borsh::to_vec(&its_empty).expect("Failed to serialize");
+        let mut serialized = Vec::new();
+        its_empty
+            .try_serialize(&mut serialized)
+            .expect("Failed to serialize");
+
         let calculated_space = its_empty.space();
 
-        assert!(
-            calculated_space >= serialized.len(),
-            "Space function should account for at least the actual size"
+        assert_eq!(
+            calculated_space,
+            serialized.len(),
+            "Space function should account for the actual size"
         );
     }
 
@@ -150,12 +155,15 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = borsh::to_vec(&its).expect("Failed to serialize");
+        let mut serialized = Vec::new();
+        its.try_serialize(&mut serialized)
+            .expect("Failed to serialize");
         let calculated_space = its.space();
 
-        assert!(
-            calculated_space >= serialized.len(),
-            "Space function should account for at least the actual size"
+        assert_eq!(
+            calculated_space,
+            serialized.len(),
+            "Space function should account for the actual size"
         );
     }
 
@@ -171,12 +179,15 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = borsh::to_vec(&its).expect("Failed to serialize");
+        let mut serialized = Vec::new();
+        its.try_serialize(&mut serialized)
+            .expect("Failed to serialize");
         let calculated_space = its.space();
 
-        assert!(
-            calculated_space >= serialized.len(),
-            "Space function should account for at least the actual size"
+        assert_eq!(
+            calculated_space,
+            serialized.len(),
+            "Space function should account for the actual size"
         );
     }
 }
