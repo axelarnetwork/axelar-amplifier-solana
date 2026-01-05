@@ -57,14 +57,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub token_manager_pda: Account<'info, TokenManager>,
 
     // GMP Accounts
-    #[account(
-        seeds = [
-            solana_axelar_gateway::seed_prefixes::GATEWAY_SEED
-        ],
-        seeds::program = solana_axelar_gateway::ID,
-        bump = gateway_root_pda.load()?.bump,
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+    /// CHECK: checked by the gateway program
+    pub gateway_root_pda: UncheckedAccount<'info>,
 
     /// The GMP gateway program account
     pub gateway_program: Program<'info, SolanaAxelarGateway>,
