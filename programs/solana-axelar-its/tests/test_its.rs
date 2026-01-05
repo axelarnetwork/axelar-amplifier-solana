@@ -181,6 +181,57 @@ fn test_execute_interchain_transfer() {
 }
 
 #[test]
+fn test_execute_interchain_transfer_existing_ata() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    let source_chain = "ethereum";
+    let source_address = "ethereum_address_123";
+    let receiver = its_harness.get_new_wallet();
+    let transfer_amount = 1_000_000u64;
+    let data = None;
+    let token_mint =
+        solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
+
+    // Create ATA
+
+    let (destination_ata, _) =
+        its_harness.get_or_create_ata_2022_account(its_harness.payer, receiver, token_mint);
+
+    // Pre-mint some tokens to the destination ATA
+
+    let initial_amount = 500_000u64;
+    its_harness.ensure_mint_test_interchain_token(token_id, initial_amount, destination_ata);
+
+    let destination_ata_data = its_harness.get_ata_2022_data(receiver, token_mint);
+    assert_eq!(destination_ata_data.amount, initial_amount);
+    assert!(destination_ata_data.is_initialized());
+
+    // Execute transfer
+
+    its_harness.ensure_trusted_chain(source_chain);
+    its_harness.execute_gmp_transfer(
+        token_id,
+        source_chain,
+        source_address,
+        receiver,
+        transfer_amount,
+        data,
+    );
+
+    // Check final balance
+
+    let destination_ata_data = its_harness.get_ata_2022_data(receiver, token_mint);
+    assert_eq!(
+        destination_ata_data.amount,
+        initial_amount + transfer_amount
+    );
+    assert_eq!(destination_ata_data.mint, token_mint);
+    assert_eq!(destination_ata_data.owner, receiver);
+    assert!(destination_ata_data.is_initialized());
+}
+
+#[test]
 #[ignore = "TODO: should work, check if this is an Anchor bug"]
 fn execute_interchain_transfer_payer_equals_destination() {
     let mut its_harness = ItsTestHarness::new();
