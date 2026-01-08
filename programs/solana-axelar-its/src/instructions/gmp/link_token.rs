@@ -1,7 +1,6 @@
 use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
-    instructions::validate_mint_extensions,
     state::{roles, token_manager, InterchainTokenService, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
@@ -126,10 +125,8 @@ pub fn execute_link_token_handler(
         _ => return err!(ItsError::InvalidArgument),
     }
 
-    validate_mint_extensions(
-        token_manager_type,
-        &ctx.accounts.token_mint.to_account_info(),
-    )?;
+    token_manager_type
+        .validate_mint_extension_account(&ctx.accounts.token_mint.to_account_info())?;
 
     TokenManager::init_account(
         &mut ctx.accounts.token_manager_pda,

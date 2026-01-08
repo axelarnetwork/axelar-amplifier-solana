@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_axelar_gateway::{
-    cpi::accounts::CallContract, program::SolanaAxelarGateway, CallContractSigner, GatewayConfig,
+    cpi::accounts::CallContract, program::SolanaAxelarGateway, CallContractSigner,
 };
 
 #[derive(Accounts)]
@@ -17,20 +17,12 @@ pub struct SendMemo<'info> {
     pub signing_pda: AccountInfo<'info>,
 
     /// The gateway configuration PDA
-    #[account(
-        seeds = [GatewayConfig::SEED_PREFIX],
-        bump = gateway_root_pda.load()?.bump,
-        seeds::program = gateway_program.key()
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+    /// CHECK: checked by the gateway program
+    pub gateway_root_pda: UncheckedAccount<'info>,
 
     /// Event authority - derived from gateway program
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = solana_axelar_gateway::ID,
-    )]
-    pub gateway_event_authority: SystemAccount<'info>,
+    /// CHECK: checked by the gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
 
     /// Reference to the axelar gateway program
     pub gateway_program: Program<'info, SolanaAxelarGateway>,

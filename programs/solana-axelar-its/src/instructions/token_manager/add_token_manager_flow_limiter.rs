@@ -23,7 +23,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
             authority_user_account.key().as_ref(),
         ],
         bump = authority_roles_account.bump,
-        constraint = authority_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = authority_roles_account.has_operator_role() @ RolesError::MissingOperatorRole,
     )]
     pub authority_roles_account: Account<'info, UserRoles>,
 
@@ -60,7 +60,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
             target_user_account.key().as_ref(),
         ],
         bump,
-        constraint = !target_roles_account.contains(roles::FLOW_LIMITER) @ ItsError::InvalidArgument,
+        constraint = !target_roles_account.has_flow_limiter_role() @ ItsError::InvalidArgument,
     )]
     pub target_roles_account: Account<'info, UserRoles>,
 }

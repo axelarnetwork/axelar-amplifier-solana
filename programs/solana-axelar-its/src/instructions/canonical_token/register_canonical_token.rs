@@ -33,15 +33,9 @@ pub struct RegisterCanonicalInterchainToken<'info> {
 
     /// CHECK: decoded using get_token_metadata
     #[account(
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
-    pub metadata_account: AccountInfo<'info>,
+    pub metadata_account: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 
@@ -152,7 +146,7 @@ pub fn make_register_canonical_token_instruction(
     );
 
     let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint);
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::RegisterCanonicalInterchainToken {
         payer,

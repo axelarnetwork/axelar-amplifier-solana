@@ -158,7 +158,7 @@ impl Type {
         }
     }
 
-    pub fn assert_supports_mint_extensions(
+    pub fn validate_mint_extension(
         &self,
         token_mint: StateWithExtensions<'_, SplMint>,
     ) -> Result<()> {
@@ -166,6 +166,13 @@ impl Type {
             return Err(error!(ItsError::TokenManagerMintExtensionMismatch));
         }
         Ok(())
+    }
+
+    pub fn validate_mint_extension_account(&self, token_mint: &AccountInfo<'_>) -> Result<()> {
+        let mint_data = token_mint.try_borrow_data()?;
+        let mint = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
+
+        self.validate_mint_extension(mint)
     }
 }
 

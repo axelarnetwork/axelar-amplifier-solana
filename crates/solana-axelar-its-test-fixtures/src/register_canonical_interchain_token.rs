@@ -39,14 +39,8 @@ pub fn register_canonical_interchain_token_helper(
     };
 
     // Create metadata for the token
-    let (metadata_account_pda, _metadata_bump) = Pubkey::find_program_address(
-        &[
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            mint_pubkey.as_ref(),
-        ],
-        &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
-    );
+    let (metadata_account_pda, _metadata_bump) =
+        mpl_token_metadata::accounts::Metadata::find_pda(&mint_pubkey);
 
     let (event_authority, event_authority_account, program_account) =
         mollusk_test_utils::get_event_authority_and_program_accounts(&program_id);

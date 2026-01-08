@@ -30,7 +30,6 @@ pub fn call_contract_handler(
     let caller = &ctx.accounts.caller;
     let signing_pda = &ctx.accounts.signing_pda;
 
-    // TODO we must check the caller's key is on the curve
     if caller.is_signer {
         // Direct signer, so not a program, continue
     } else {

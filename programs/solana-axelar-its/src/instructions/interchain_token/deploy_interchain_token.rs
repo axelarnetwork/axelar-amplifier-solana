@@ -2,26 +2,19 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{roles, token_manager, InterchainTokenService, TokenManager, Type, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, Type, UserRoles},
     utils::{interchain_token_deployer_salt, interchain_token_id, interchain_token_id_internal},
 };
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::{prelude::*, InstructionData};
+use anchor_spl::token_interface::{Mint, TokenAccount};
 use anchor_spl::{
     associated_token::get_associated_token_address_with_program_id,
     associated_token::AssociatedToken,
-    token_2022::spl_token_2022::{extension::StateWithExtensions, state::Mint as SplMint},
 };
 use anchor_spl::{
     associated_token::spl_associated_token_account,
-    token_2022::{
-        spl_token_2022::{self, extension::BaseStateWithExtensions},
-        Token2022,
-    },
-};
-use anchor_spl::{
-    token_2022::spl_token_2022::extension::ExtensionType,
-    token_interface::{Mint, TokenAccount},
+    token_2022::{spl_token_2022, Token2022},
 };
 use mpl_token_metadata::{instructions::CreateV1CpiBuilder, types::TokenStandard};
 
@@ -96,15 +89,9 @@ pub struct DeployInterchainToken<'info> {
     /// CHECK: delegated to mpl_token_metadata_program
     #[account(
         mut,
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint.key().as_ref(),
-        ],
-        bump,
-        seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
-    pub mpl_token_metadata_account: AccountInfo<'info>,
+    pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
     #[account(
         init_if_needed,
@@ -292,29 +279,6 @@ fn create_token_metadata(
     Ok(())
 }
 
-// TODO: deprecate this, replace with Type::assert_supports_mint_extensions
-pub fn validate_mint_extensions(
-    ty: token_manager::Type,
-    token_mint: &AccountInfo<'_>,
-) -> Result<()> {
-    let mint_data = token_mint.try_borrow_data()?;
-    let mint = StateWithExtensions::<SplMint>::unpack(&mint_data)?;
-
-    if matches!(
-        (
-            ty,
-            mint.get_extension_types()?
-                .contains(&ExtensionType::TransferFeeConfig)
-        ),
-        (token_manager::Type::LockUnlock, true) | (token_manager::Type::LockUnlockFee, false)
-    ) {
-        msg!("The mint extension is not compatible with the TokenManager type");
-        return err!(ItsError::InvalidInstructionData);
-    }
-
-    Ok(())
-}
-
 /// Creates a DeployInterchainToken instruction
 pub fn make_deploy_interchain_token_instruction(
     payer: Pubkey,
@@ -342,8 +306,7 @@ pub fn make_deploy_interchain_token_instruction(
     let minter_roles_pda =
         minter.map(|minter_key| crate::UserRoles::find_pda(&token_manager_pda, &minter_key).0);
 
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _bump) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::DeployInterchainToken {
         payer,

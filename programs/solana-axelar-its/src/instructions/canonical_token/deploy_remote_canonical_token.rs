@@ -30,15 +30,9 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
 
     /// CHECK: decoded using get_token_metadata
     #[account(
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        seeds::program = mpl_token_metadata::ID,
-        bump
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
-    pub metadata_account: AccountInfo<'info>,
+    pub metadata_account: UncheckedAccount<'info>,
 
     #[account(
         seeds = [
@@ -80,13 +74,8 @@ pub struct DeployRemoteCanonicalInterchainToken<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
-    /// CHECK:
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = solana_axelar_gateway::ID,
-    )]
-    pub gateway_event_authority: AccountInfo<'info>,
+    /// CHECK: checked by the gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by the gas service program
     #[account(mut)]
@@ -179,15 +168,13 @@ pub fn make_deploy_remote_canonical_token_instruction(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway::CallContractSigner::find_pda(&crate::ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     let (gas_treasury, _) = solana_axelar_gas_service::state::Treasury::find_pda();
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::DeployRemoteCanonicalInterchainToken {
         payer,
