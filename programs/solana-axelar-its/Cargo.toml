@@ -29,7 +29,6 @@ solana-axelar-memo.workspace = true
 solana-axelar-gas-service.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
 solana-axelar-its-test-fixtures.workspace = true
-bincode.workspace = true
 solana-sdk.workspace = true
 mollusk-svm.workspace = true
 mollusk-harness.workspace = true
