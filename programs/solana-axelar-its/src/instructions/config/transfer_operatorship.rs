@@ -36,12 +36,12 @@ pub struct TransferOperatorship<'info> {
     )]
     pub resource_account: Account<'info, InterchainTokenService>,
 
-    /// CHECK:
     /// Destination user account (will receive OPERATOR role)
+    /// CHECK: This is treated as an arbitrary user account and is only used for its public key.
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]
-    pub destination_user_account: AccountInfo<'info>,
+    pub destination_user_account: UncheckedAccount<'info>,
 
     /// Destination user roles account
     #[account(

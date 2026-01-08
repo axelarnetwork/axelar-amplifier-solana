@@ -46,8 +46,8 @@ pub struct TransferTokenManagerOperatorship<'info> {
     )]
     pub token_manager_account: Account<'info, TokenManager>,
 
-    /// CHECK:
     /// Destination user account (will receive OPERATOR role)
+    /// CHECK: This is treated as an arbitrary user account and is only used for its public key.
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]

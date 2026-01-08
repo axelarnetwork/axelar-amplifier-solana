@@ -134,8 +134,11 @@ mod tests {
             roles::MINTER | roles::OPERATOR | roles::FLOW_LIMITER,
         ];
 
-        for roles in roles_list {
-            let original = UserRoles { roles, bump: 0 };
+        for role in roles_list {
+            let original = UserRoles {
+                roles: role,
+                bump: 0,
+            };
 
             let serialized = to_vec(&original).unwrap();
             let deserialized = UserRoles::try_from_slice(&serialized).unwrap();
