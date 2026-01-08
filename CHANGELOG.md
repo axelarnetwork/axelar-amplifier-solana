@@ -7,6 +7,107 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.7...solana-axelar-its-v0.1.8)
+
+### 🐛 Bug Fixes
+
+- Idl build generation ([#132](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/132)) - ([cf1bcbb](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cf1bcbb9b9e49dcb36178316cbf6f861a8ef92dc))
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(its)* Add try_find_token_mint function ([#136](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/136)) - ([e735faa](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/e735faa152f5d6414bdabdc64ff11f8633d4a465))
+- Address ITS audit findings ([#137](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/137)) - ([7ecef46](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/7ecef460aec97b2d22ad5894caeec7d5a3f170b6))
+- Ignore bincode advisory ([#138](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/138)) - ([b4531b7](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b4531b781a2d971b8c3541b3f8d49ba58180805f))
+
+### Contributors
+
+* @rista404
+* @MakisChristou
+* @Deiadara
+
+## [0.1.8](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.1.7...solana-axelar-governance-v0.1.8)
+
+### 🐛 Bug Fixes
+
+- Idl build generation ([#132](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/132)) - ([cf1bcbb](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cf1bcbb9b9e49dcb36178316cbf6f861a8ef92dc))
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+
+### ⚙️ Miscellaneous Tasks
+
+- Address ITS audit findings ([#137](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/137)) - ([7ecef46](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/7ecef460aec97b2d22ad5894caeec7d5a3f170b6))
+- Ignore bincode advisory ([#138](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/138)) - ([b4531b7](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b4531b781a2d971b8c3541b3f8d49ba58180805f))
+
+### Contributors
+
+* @rista404
+* @MakisChristou
+
+## [0.1.8](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.1.7...solana-axelar-gateway-v0.1.8)
+
+### 🐛 Bug Fixes
+
+- Idl build generation ([#132](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/132)) - ([cf1bcbb](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cf1bcbb9b9e49dcb36178316cbf6f861a8ef92dc))
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+
+### ⚙️ Miscellaneous Tasks
+
+- Address ITS audit findings ([#137](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/137)) - ([7ecef46](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/7ecef460aec97b2d22ad5894caeec7d5a3f170b6))
+
+### Contributors
+
+* @rista404
+* @MakisChristou
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-std-v0.1.4...solana-axelar-std-v0.1.5)
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+
+### Contributors
+
+* @rista404
+
+## [0.1.8](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.1.7...solana-axelar-gas-service-v0.1.8)
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+
+### ⚙️ Miscellaneous Tasks
+
+- Address ITS audit findings ([#137](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/137)) - ([7ecef46](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/7ecef460aec97b2d22ad5894caeec7d5a3f170b6))
+
+### Contributors
+
+* @rista404
+
+## [0.1.8](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.1.7...solana-axelar-operators-v0.1.8)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update Cargo.toml dependencies - ([0000000](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/0000000))
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/program-utils-v0.1.4...program-utils-v0.1.5)
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+
+### Contributors
+
+* @rista404
+
 ## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.6...solana-axelar-its-v0.1.7)
 
 ### ⛰️ Features
