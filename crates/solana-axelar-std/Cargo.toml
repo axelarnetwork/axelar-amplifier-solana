@@ -16,8 +16,8 @@ hex.workspace = true
 rs_merkle.workspace = true
 udigest.workspace = true
 thiserror.workspace = true
-borsh.workspace = true
-anchor-lang = {workspace = true, optional = true }
+borsh = { workspace = true, features = ["derive"] }
+anchor-lang = { workspace = true, optional = true }
 solana-keccak-hasher.workspace = true
 bytemuck.workspace = true
 bnum.workspace = true

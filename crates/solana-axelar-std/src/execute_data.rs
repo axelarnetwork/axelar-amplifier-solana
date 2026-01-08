@@ -56,6 +56,7 @@ pub enum Payload {
     not(feature = "anchor"),
     derive(borsh::BorshDeserialize, borsh::BorshSerialize)
 )]
+#[cfg_attr(not(feature = "anchor"), borsh(use_discriminant = false))]
 #[cfg_attr(
     feature = "anchor",
     derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
