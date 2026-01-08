@@ -44,7 +44,6 @@ program-utils.workspace = true
 
 [dev-dependencies]
 libsecp256k1.workspace = true
-bincode.workspace = true
 solana-axelar-memo = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
