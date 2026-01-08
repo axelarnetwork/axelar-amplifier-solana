@@ -1,5 +1,9 @@
 // Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
 #![allow(deprecated)]
+#![allow(
+    clippy::diverging_sub_expression,
+    reason = "Anchor generates such code"
+)]
 
 use anchor_lang::prelude::*;
 

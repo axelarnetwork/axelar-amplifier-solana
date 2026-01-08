@@ -181,7 +181,42 @@ fn test_execute_interchain_transfer() {
 }
 
 #[test]
-fn test_execute_interchain_transfer_with_data() {
+#[ignore = "TODO: should work, check if this is an Anchor bug"]
+fn execute_interchain_transfer_payer_equals_destination() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    let source_chain = "ethereum";
+    let source_address = "ethereum_address_123";
+    // Receiver is the payer of the transaction
+    // Useful if the user wants to relay the message themselves
+    let receiver = its_harness.payer;
+    let transfer_amount = 1_000_000u64;
+    let data = None;
+
+    its_harness.ensure_trusted_chain(source_chain);
+
+    its_harness.execute_gmp_transfer(
+        token_id,
+        source_chain,
+        source_address,
+        receiver,
+        transfer_amount,
+        data,
+    );
+
+    let token_mint =
+        solana_axelar_its::TokenManager::find_token_mint(token_id, its_harness.its_root).0;
+    let destination_ata_data = its_harness.get_ata_2022_data(receiver, token_mint);
+
+    assert_eq!(destination_ata_data.amount, transfer_amount);
+    assert_eq!(destination_ata_data.mint, token_mint);
+    assert_eq!(destination_ata_data.owner, receiver);
+    assert!(destination_ata_data.is_initialized());
+}
+
+#[test]
+fn execute_interchain_transfer_with_data() {
     let mut its_harness = ItsTestHarness::new();
 
     // Init memo

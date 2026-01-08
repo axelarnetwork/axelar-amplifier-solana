@@ -22,7 +22,7 @@ pub fn keyed_account_for_program(program_id: Pubkey) -> (Pubkey, Account) {
         Account {
             lamports: LAMPORTS_PER_SOL,
             data: vec![],
-            owner: solana_sdk::bpf_loader_upgradeable::id(),
+            owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
             executable: true,
             rent_epoch: 0,
         },
@@ -36,11 +36,11 @@ pub fn new_test_account() -> (Pubkey, Account) {
 }
 
 pub fn new_default_account() -> Account {
-    Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk::system_program::ID)
+    Account::new(LAMPORTS_PER_SOL, 0, &solana_sdk_ids::system_program::ID)
 }
 
 pub fn new_empty_account() -> Account {
-    Account::new(0, 0, &solana_sdk::system_program::ID)
+    Account::new(0, 0, &solana_sdk_ids::system_program::ID)
 }
 
 pub fn get_message_signing_pda(message: &Message) -> (Pubkey, u8) {
@@ -114,7 +114,6 @@ pub fn initialize_mollusk_with_programs() -> Mollusk {
     mollusk.add_program(
         &solana_axelar_operators::ID,
         "../../target/deploy/solana_axelar_operators",
-        &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     // Gas Service
@@ -122,7 +121,6 @@ pub fn initialize_mollusk_with_programs() -> Mollusk {
     mollusk.add_program(
         &solana_axelar_gas_service::ID,
         "../../target/deploy/solana_axelar_gas_service",
-        &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     // Gateway
@@ -130,30 +128,28 @@ pub fn initialize_mollusk_with_programs() -> Mollusk {
     mollusk.add_program(
         &solana_axelar_gateway::ID,
         "../../target/deploy/solana_axelar_gateway",
-        &solana_sdk::bpf_loader_upgradeable::ID,
     );
 
     // Token Programs
 
-    mollusk.add_program_with_elf_and_loader(
+    mollusk.add_program_with_loader_and_elf(
         &spl_token::ID,
+        &solana_sdk_ids::bpf_loader_upgradeable::ID,
         mollusk_svm_programs_token::token::ELF,
-        &solana_sdk::bpf_loader_upgradeable::ID,
     );
-    mollusk.add_program_with_elf_and_loader(
+    mollusk.add_program_with_loader_and_elf(
         &spl_token_2022::ID,
+        &solana_sdk_ids::bpf_loader_upgradeable::ID,
         mollusk_svm_programs_token::token2022::ELF,
-        &solana_sdk::bpf_loader_upgradeable::ID,
     );
-    mollusk.add_program_with_elf_and_loader(
+    mollusk.add_program_with_loader_and_elf(
         &anchor_spl::associated_token::ID,
+        &solana_sdk_ids::bpf_loader_upgradeable::ID,
         mollusk_svm_programs_token::associated_token::ELF,
-        &solana_sdk::bpf_loader_upgradeable::ID,
     );
     mollusk.add_program(
         &mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID,
         "../../programs/solana-axelar-its/tests/mpl_token_metadata",
-        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     mollusk
@@ -167,11 +163,7 @@ pub fn setup_operator(
     let program_id = solana_axelar_operators::id();
 
     // Load the operators program into mollusk
-    mollusk.add_program(
-        &program_id,
-        "solana_axelar_operators",
-        &solana_sdk::bpf_loader_upgradeable::ID,
-    );
+    mollusk.add_program(&program_id, "solana_axelar_operators");
 
     // Derive the registry PDA
     let (registry, _bump) = solana_axelar_operators::OperatorRegistry::find_pda();
@@ -185,7 +177,7 @@ pub fn setup_operator(
             payer: operator,
             owner: operator,
             registry,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
         }
         .to_account_metas(None),
         data: solana_axelar_operators::instruction::Initialize {}.data(),
@@ -207,7 +199,7 @@ pub fn setup_operator(
             operator_to_add: operator,
             registry,
             operator_account: operator_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
         }
         .to_account_metas(None),
         data: solana_axelar_operators::instruction::AddOperator {}.data(),
@@ -265,7 +257,7 @@ pub fn init_gas_service(
             operator,
             operator_pda,
             treasury,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
         }
         .to_account_metas(None),
         data: solana_axelar_gas_service::instruction::Initialize {}.data(),
@@ -311,7 +303,7 @@ pub fn init_its_service(
     // Derive the program data PDA for the upgradeable program
     let (program_data, _bump) = Pubkey::find_program_address(
         &[program_id.as_ref()],
-        &solana_sdk::bpf_loader_upgradeable::ID,
+        &solana_sdk_ids::bpf_loader_upgradeable::ID,
     );
     let its_elf = mollusk_svm::file::load_program_elf("solana_axelar_its");
     let program_data_account = create_program_data_account(&its_elf, upgrade_authority);
@@ -339,7 +331,7 @@ pub fn init_its_service(
             payer,
             program_data,
             its_root_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             operator,
             user_roles_account: user_roles_pda,
         }
@@ -447,7 +439,7 @@ pub fn init_its_service_with_ethereum_trusted(
             user_roles: None,
             program_data: Some(program_data),
             its_root_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             event_authority,
             program: program_id,
         }

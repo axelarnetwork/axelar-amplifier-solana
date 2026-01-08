@@ -82,7 +82,7 @@ pub fn mint_interchain_token_handler(ctx: Context<MintInterchainToken>, amount: 
     let signer_seeds = &[&seeds[..]];
 
     let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         anchor_spl::token_interface::MintTo {
             mint: ctx.accounts.mint.to_account_info(),
             to: ctx.accounts.destination_account.to_account_info(),

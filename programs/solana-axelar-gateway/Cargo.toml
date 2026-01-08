@@ -12,6 +12,8 @@ description = "Axelar Gateway Anchor program for Solana"
 bytemuck.workspace = true
 anchor-lang.workspace = true
 solana-axelar-std = { workspace = true, features = ["anchor"] }
+solana-keccak-hasher.workspace = true
+solana-secp256k1-recover.workspace = true
 libsecp256k1.workspace = true
 bitvec.workspace = true
 alloy-primitives.workspace = true
@@ -24,6 +26,7 @@ program-utils.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
+solana-sdk-ids.workspace = true
 rand.workspace = true
 hex.workspace = true
 # For testing ABI payloads

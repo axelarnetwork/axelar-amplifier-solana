@@ -98,7 +98,7 @@ pub fn deploy_interchain_token_helper(
         accounts: solana_axelar_its::accounts::DeployInterchainToken {
             payer: ctx.payer.0,
             deployer: ctx.deployer.0,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             its_root_pda: ctx.its_root.0,
             token_manager_pda,
             token_mint: token_mint_pda,
@@ -144,7 +144,7 @@ pub fn deploy_interchain_token_helper(
             Account {
                 lamports: 1_000_000_000,
                 data: create_sysvar_instructions_data(),
-                owner: solana_program::sysvar::id(),
+                owner: solana_sdk_ids::sysvar::ID,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -155,7 +155,7 @@ pub fn deploy_interchain_token_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },
@@ -165,7 +165,7 @@ pub fn deploy_interchain_token_helper(
         // Minter accounts - use program_id as placeholder if None
         (
             ctx.minter.unwrap_or(program_id),
-            Account::new(1_000_000_000, 0, &solana_sdk::system_program::ID),
+            Account::new(1_000_000_000, 0, &solana_sdk_ids::system_program::ID),
         ),
         (
             ctx.minter_roles_pda.unwrap_or(program_id),
