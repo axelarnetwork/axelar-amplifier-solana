@@ -1,6 +1,6 @@
 use crate::{
     events::FlowLimitSet,
-    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, RolesError, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
