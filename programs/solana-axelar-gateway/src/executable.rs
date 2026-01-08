@@ -138,12 +138,8 @@ macro_rules! executable_accounts {
         )]
         pub gateway_root_pda: AccountLoader<'info, solana_axelar_gateway::state::GatewayConfig>,
 
-        #[account(
-            seeds = [b"__event_authority"],
-            bump,
-            seeds::program = solana_axelar_gateway::ID,
-        )]
-        pub event_authority: AccountInfo<'info>,
+        #[account(address = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP.0)]
+        pub event_authority: UncheckedAccount<'info>,
 
         pub axelar_gateway_program:
             Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,

@@ -110,18 +110,16 @@ pub fn make_register_token_metadata_instruction(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway::CallContractSigner::find_pda(&crate::ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     let (gas_treasury, _) = Pubkey::find_program_address(
         &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
         &solana_axelar_gas_service::ID,
     );
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::RegisterTokenMetadata {
         payer,

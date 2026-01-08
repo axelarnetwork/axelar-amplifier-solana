@@ -306,8 +306,7 @@ pub fn make_deploy_interchain_token_instruction(
     let minter_roles_pda =
         minter.map(|minter_key| crate::UserRoles::find_pda(&token_manager_pda, &minter_key).0);
 
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _bump) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::DeployInterchainToken {
         payer,

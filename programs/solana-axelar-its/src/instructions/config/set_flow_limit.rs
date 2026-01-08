@@ -77,7 +77,7 @@ pub fn make_set_flow_limit_instruction(
     let its_roles_pda = UserRoles::find_pda(&its_root_pda, &operator).0;
     let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::SetFlowLimit {
         payer,

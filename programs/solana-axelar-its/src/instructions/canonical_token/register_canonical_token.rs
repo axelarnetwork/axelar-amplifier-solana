@@ -146,7 +146,7 @@ pub fn make_register_canonical_token_instruction(
     );
 
     let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint);
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::RegisterCanonicalInterchainToken {
         payer,

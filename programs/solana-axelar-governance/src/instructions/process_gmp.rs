@@ -37,11 +37,9 @@ pub struct ProcessGmp<'info> {
     #[account(mut)]
     pub operator_proposal_pda: UncheckedAccount<'info>,
 
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-    )]
-    pub governance_event_authority: SystemAccount<'info>,
+    /// CHECK: we check the address
+    #[account(address = crate::EVENT_AUTHORITY_AND_BUMP.0)]
+    pub governance_event_authority: UncheckedAccount<'info>,
 
     pub axelar_governance_program: Program<'info, SolanaAxelarGovernance>,
 }

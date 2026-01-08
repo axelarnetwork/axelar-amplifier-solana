@@ -13,7 +13,6 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_axelar_std::{CrossChainId, Message, Messages, Payload, PayloadType};
-use solana_sdk::pubkey::Pubkey;
 use solana_sdk::{
     account::Account,
     instruction::{AccountMeta, Instruction},
@@ -234,8 +233,7 @@ fn execute() {
     )
     .unwrap();
 
-    let (event_authority_pda, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+    let (event_authority_pda, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     let execute_instruction_data = solana_axelar_memo::instruction::Execute {
         message: message.clone(),

@@ -597,8 +597,7 @@ fn call_contract_direct_signer() {
 
     let gateway_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
 
-    let (event_authority_pda, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+    let (event_authority_pda, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     // Create a direct signer (e.g., a user wallet)
     let direct_signer = Pubkey::new_unique();

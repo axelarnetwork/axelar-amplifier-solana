@@ -87,7 +87,7 @@ pub fn make_remove_trusted_chain_instruction(
         Some(bpf_loader_upgradeable::get_program_data_address(&crate::ID))
     };
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::RemoveTrustedChain {
         payer,

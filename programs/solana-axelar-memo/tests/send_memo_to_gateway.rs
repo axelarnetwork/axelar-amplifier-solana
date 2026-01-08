@@ -4,9 +4,7 @@ use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_gateway_test_fixtures::{initialize_gateway, setup_test_with_real_signers};
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
-use solana_sdk::{
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-};
+use solana_sdk::{account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL};
 use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
@@ -38,8 +36,7 @@ fn send_memo_to_gateway() {
     let (signing_pda, _signing_pda_bump) =
         solana_axelar_gateway::CallContractSigner::find_pda(&MEMO_PROGRAM_ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+    let (gateway_event_authority, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     let send_memo_accounts = solana_axelar_memo::accounts::SendMemo {
         memo_program: MEMO_PROGRAM_ID,
