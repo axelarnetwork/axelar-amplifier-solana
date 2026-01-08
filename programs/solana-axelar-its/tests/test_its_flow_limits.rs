@@ -3,7 +3,7 @@
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_set_flow_limit_instruction;
-use solana_axelar_its::{ItsError, Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::{roles, ItsError, RolesError, TokenManager, UserRoles};
 
 #[test]
 fn set_flow_limit() {
@@ -118,7 +118,7 @@ fn set_flow_limit_without_operator_role_fails() {
     // Remove operator role
     let its_roles_pda = UserRoles::find_pda(&harness.its_root, &harness.operator).0;
     harness.update_account_as::<UserRoles, _>(&its_roles_pda, |ur| {
-        ur.roles.remove(Roles::OPERATOR);
+        ur.remove(roles::OPERATOR);
     });
 
     let (ix, _) = make_set_flow_limit_instruction(

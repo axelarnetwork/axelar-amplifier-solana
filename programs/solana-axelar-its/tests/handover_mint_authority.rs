@@ -5,7 +5,7 @@ use anchor_lang::AccountDeserialize;
 use anchor_spl::token_2022::spl_token_2022;
 use mollusk_svm::result::Check;
 use solana_axelar_its::{
-    state::{Roles, Type, UserRoles},
+    state::{roles, Type, UserRoles},
     ItsError,
 };
 use solana_axelar_its_test_fixtures::{
@@ -112,7 +112,7 @@ fn handover_mint_authority_success() {
     let minter_roles_account = result.get_account(&minter_roles_pda).unwrap();
     let user_roles = UserRoles::try_deserialize(&mut minter_roles_account.data.as_ref()).unwrap();
 
-    assert!(user_roles.roles.contains(Roles::MINTER));
+    assert!(user_roles.contains(roles::MINTER));
 }
 
 #[test]

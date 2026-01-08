@@ -90,6 +90,7 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
     // Event authority accounts
+    /// CHECK:
     #[account(
         seeds = [b"__event_authority"],
         bump,

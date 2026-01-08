@@ -9,7 +9,7 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::{
     make_initialize_instruction, make_set_pause_status_instruction,
 };
-use solana_axelar_its::{ItsError, Roles, RolesError, UserRoles};
+use solana_axelar_its::{roles, ItsError, RolesError, UserRoles};
 
 //
 // Initialize
@@ -53,7 +53,7 @@ fn init_gives_user_role_to_operator() {
 
     assert_eq!(
         user_roles.roles,
-        Roles::OPERATOR,
+        roles::OPERATOR,
         "user should be an operator"
     );
 }
@@ -165,7 +165,7 @@ fn transfer_operatorship_without_deleting_roles_pda() {
 
     // Append FLOW_LIMITER role to current operator
     its_harness.update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| {
-        ur.roles.insert(Roles::FLOW_LIMITER);
+        ur.insert(roles::FLOW_LIMITER);
     });
 
     let new_operator = its_harness.get_new_wallet();
@@ -177,7 +177,7 @@ fn transfer_operatorship_without_deleting_roles_pda() {
 
     assert_eq!(
         updated_curr_roles.roles,
-        Roles::FLOW_LIMITER,
+        roles::FLOW_LIMITER,
         "current operator should still have FLOW_LIMITER role"
     );
 }
@@ -191,7 +191,7 @@ fn transfer_operatorship_without_permissions() {
 
     // Set only FLOW_LIMITER role to current operator
     its_harness
-        .update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = Roles::FLOW_LIMITER);
+        .update_account_as::<UserRoles, _>(&curr_roles_pda, |ur| ur.roles = roles::FLOW_LIMITER);
 
     let new_operator = its_harness.get_new_wallet();
 

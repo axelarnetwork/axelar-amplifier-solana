@@ -1,4 +1,4 @@
-use crate::state::{InterchainTokenService, Roles, RolesError, TokenManager, UserRoles};
+use crate::state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -20,7 +20,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
             authority_user_account.key().as_ref(),
         ],
         bump = authority_roles_account.bump,
-        constraint = authority_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = authority_roles_account.contains(roles::OPERATOR) @ RolesError::MissingOperatorRole,
     )]
     pub authority_roles_account: Account<'info, UserRoles>,
 
@@ -42,6 +42,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
     )]
     pub token_manager_pda: Account<'info, TokenManager>,
 
+    /// CHECK:
     /// The user account from which the FLOW_LIMITER role will be removed
     pub target_user_account: AccountInfo<'info>,
 
@@ -54,7 +55,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
             target_user_account.key().as_ref(),
         ],
         bump = target_roles_account.bump,
-        constraint = target_roles_account.roles.contains(Roles::FLOW_LIMITER) @ RolesError::MissingFlowLimiterRole,
+        constraint = target_roles_account.contains(roles::FLOW_LIMITER) @ RolesError::MissingFlowLimiterRole,
     )]
     pub target_roles_account: Account<'info, UserRoles>,
 }
@@ -66,7 +67,7 @@ pub fn remove_token_manager_flow_limiter_handler(
 
     let target_roles = &mut ctx.accounts.target_roles_account;
 
-    target_roles.roles.remove(Roles::FLOW_LIMITER);
+    target_roles.remove(roles::FLOW_LIMITER);
 
     // Close if no remaining roles
     if !target_roles.has_roles() {
