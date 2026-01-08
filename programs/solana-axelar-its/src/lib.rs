@@ -28,7 +28,7 @@ ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 // Program ID
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("itspcPS5zL941gd6jJfEAk8NjfzbanDFKtNQCNppVtJ");
+declare_id!("itsYxmqAxNKUL5zaj3fD1K1whuVhqpxKVoiLGie1reF");
 
 #[cfg(feature = "stagenet")]
 declare_id!("itsediSVCwwKc6UuxfrsEiF8AEuEFk34RFAscPEDEpJ");
