@@ -114,6 +114,9 @@ fn main() -> eyre::Result<()> {
                 "cargo clippy --no-deps --all-targets --workspace --locked -- -D warnings"
             )
             .run()?;
+            // For some reason cargo clippy doesn't catch all issues in solana-axelar-std
+            // TODO check why and possibly remove this extra check
+            cmd!(sh, "cargo check -p solana-axelar-std").run()?;
             cmd!(sh, "cargo fmt --all --check").run()?;
         }
         Commands::Fmt => {
