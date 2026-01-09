@@ -141,9 +141,7 @@ num-derive = "0.4"
 num-traits = "0.2"
 rand = "0.8"
 regex = "1.10"
-reqwest = { version = "0.12", features = ["json", "stream"] }
 rs_merkle = "1.4.2"
-rstest = "0.25"
 serde = "1"
 serde_json = "1"
 sha3 = "0.10"
@@ -204,8 +202,6 @@ program-utils = { version = "0.1.5", path = "helpers/program-utils", default-fea
 solana-axelar-gateway-test-fixtures = { path = "crates/solana-axelar-gateway-test-fixtures", default-features = false }
 solana-axelar-governance-test-fixtures = { path = "crates/solana-axelar-governance-test-fixtures", default-features = false }
 solana-axelar-its-test-fixtures = { path = "crates/solana-axelar-its-test-fixtures", default-features = false }
-evm-contracts-rs = { path = "helpers/evm-contracts-rs" }
-evm-contracts-test-suite = { path = "helpers/evm-contracts-test-suite" }
 mollusk-harness = { path = "helpers/mollusk-harness" }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 

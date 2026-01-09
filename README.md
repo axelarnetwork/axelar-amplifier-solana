@@ -24,7 +24,6 @@ The Solana-Axelar integration contains on-chain and off-chain components.
 
 1. [install rust](https://www.rust-lang.org/tools/install)
 2. [install solana tool suite](https://docs.solanalabs.com/cli/install)
-3. [install foundry & build EVM contracts](evm-contracts/README.md)
 
 ```bash
 # list all available commands
@@ -62,7 +61,6 @@ cargo xtask --help
 ### Prerequisites
 
 - [Solana CLI (for running tests during development)](https://solana.com/docs/intro/installation)
-- [Foundry (for running e2e tests, GMP examples between Solana and an EVM chain)](https://book.getfoundry.sh/getting-started/installation)
 
 ### Installation
 

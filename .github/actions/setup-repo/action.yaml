@@ -5,10 +5,6 @@ inputs:
     description: "Cache namespace"
     required: false
     default: ""
-  skip-foundry:
-    description: "skip foundry installation and build"
-    required: false
-    default: "false"
 
 runs:
   using: "composite"
@@ -39,21 +35,6 @@ runs:
       run: |
         echo "Cache hit for key: ${{ steps.cache.outputs.cache-matched-key }}"
         cat /home/runner/.cargo/.crates.toml || true
-
-    - name: Install Foundry
-      if: ${{ inputs.skip-foundry != 'true' }}
-      uses: foundry-rs/foundry-toolchain@v1
-      with:
-        version: v1.0.0
-
-    - name: Run Forge build
-      if: ${{ inputs.skip-foundry != 'true' }}
-      shell: bash
-      run: |
-        cd evm-contracts
-        forge --version
-        forge build --sizes
-      id: build
 
     - name: Install Solana
       shell: bash

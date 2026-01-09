@@ -29,10 +29,7 @@ solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
 rand.workspace = true
 hex.workspace = true
-# For testing ABI payloads
-evm-contracts-rs.workspace = true
-evm-contracts-test-suite.workspace = true
-rstest.workspace = true
+
 test-log.workspace = true
 tokio.workspace = true
 
