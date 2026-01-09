@@ -66,14 +66,18 @@ jobs:
           echo "releases=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT
 
           # Filter to only include Solana programs (packages with programs/<name>/Cargo.toml)
-          PROGRAM_RELEASES=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c '[.[] | select(.package_name as $name | "programs/\($name)/Cargo.toml" | . as $path | $path | @sh | "test -f " + . | @sh) | .]')
-          # Actually check filesystem for each package
-          PROGRAM_RELEASES=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c '.' | jq -r '.[] | .package_name' | while read -r pkg; do
+          PROGRAM_NAMES=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -r '.[].package_name' | while read -r pkg; do
             if [ -f "programs/$pkg/Cargo.toml" ]; then
               echo "$pkg"
             fi
           done)
-          FILTERED=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c --argjson programs "$(echo "$PROGRAM_RELEASES" | jq -R . | jq -s .)" '[.[] | select(.package_name as $name | $programs | index($name))]')
+
+          # Convert newline-separated names to JSON array, handling empty input properly
+          PROGRAMS_JSON=$(echo "$PROGRAM_NAMES" | jq -R -s 'split("\n") | map(select(length > 0))')
+
+          # Filter original releases to only include programs
+          FILTERED=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c --argjson programs "$PROGRAMS_JSON" \
+            '[.[] | select(.package_name as $name | $programs | index($name))]')
           echo "program_releases=$FILTERED" >> $GITHUB_OUTPUT
 
   build:
