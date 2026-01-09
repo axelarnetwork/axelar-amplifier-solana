@@ -11,7 +11,7 @@ description = "Axelar Gas Service Anchor program for Solana"
 [dependencies]
 anchor-lang.workspace = true
 solana-axelar-operators = { workspace = true, features = ["no-entrypoint"] }
-program-utils.workspace = true
+solana-axelar-std.workspace = true
 bytemuck.workspace = true
 
 [dev-dependencies]

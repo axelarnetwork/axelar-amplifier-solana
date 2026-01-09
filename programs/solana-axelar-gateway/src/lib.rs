@@ -27,7 +27,7 @@ pub mod executable;
 
 pub mod payload;
 
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
 pub use solana_axelar_std::Message;
 

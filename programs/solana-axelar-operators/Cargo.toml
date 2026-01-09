@@ -10,7 +10,7 @@ description = "Axelar Operators Anchor program for Solana"
 
 [dependencies]
 anchor-lang.workspace = true
-program-utils.workspace = true
+solana-axelar-std.workspace = true
 
 [dev-dependencies]
 solana-sdk-ids.workspace = true

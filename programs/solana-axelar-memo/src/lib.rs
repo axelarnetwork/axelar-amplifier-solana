@@ -16,9 +16,9 @@ pub use state::*;
 use solana_axelar_gateway::executable::{ExecutablePayloadEncodingScheme, Message};
 use solana_axelar_its::executable::AxelarExecuteWithInterchainTokenPayload;
 
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
-ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
 declare_id!("memxUmZBzudVtrqZGPTuAyKbSZt2LAMkB2itKaUriQR");

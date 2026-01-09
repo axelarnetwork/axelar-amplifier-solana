@@ -1,7 +1,7 @@
 use crate::{events::GasCollectedEvent, state::Treasury};
 use anchor_lang::prelude::*;
-use program_utils::transfer_lamports_anchor;
 use solana_axelar_operators::OperatorAccount;
+use solana_axelar_std::transfer_lamports_anchor;
 
 /// Collect accrued native SOL fees (operator only).
 #[derive(Accounts)]

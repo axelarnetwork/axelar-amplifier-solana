@@ -923,16 +923,15 @@ dependencies = [
 
 [[package]]
 name = "blake3"
-version = "1.8.3"
+version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2468ef7d57b3fb7e16b576e8377cdbde2320c60e1491e961d11da40fc4f02a2d"
+checksum = "3888aaa89e4b2a40fca9848e400f6a658a5a3978de7be858e209cafa8be9a4a0"
 dependencies = [
  "arrayref",
  "arrayvec",
  "cc",
  "cfg-if",
  "constant_time_eq",
- "cpufeatures",
  "digest 0.10.7",
 ]
 
@@ -1273,9 +1272,9 @@ dependencies = [
 
 [[package]]
 name = "constant_time_eq"
-version = "0.4.2"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
+checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 
 [[package]]
 name = "convert_case"
@@ -2747,17 +2746,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "program-utils"
-version = "0.1.5"
-dependencies = [
- "mpl-token-metadata",
- "solana-program",
- "solana-sdk",
- "solana-sdk-ids",
- "spl-associated-token-account",
-]
-
-[[package]]
 name = "proptest"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3416,8 +3404,8 @@ dependencies = [
  "bytemuck",
  "mollusk-svm",
  "mollusk-test-utils",
- "program-utils",
  "solana-axelar-operators",
+ "solana-axelar-std",
  "solana-sdk",
  "solana-sdk-ids",
 ]
@@ -3436,7 +3424,6 @@ dependencies = [
  "mollusk-svm",
  "num-derive 0.4.2",
  "num-traits",
- "program-utils",
  "rand 0.8.5",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-std",
@@ -3474,11 +3461,11 @@ dependencies = [
  "hex",
  "libsecp256k1",
  "mollusk-svm",
- "program-utils",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-governance-test-fixtures",
  "solana-axelar-memo",
+ "solana-axelar-std",
  "solana-keccak-hasher",
  "solana-sdk",
  "solana-sdk-ids",
@@ -3512,7 +3499,6 @@ dependencies = [
  "mollusk-svm-programs-token",
  "mollusk-test-utils",
  "mpl-token-metadata",
- "program-utils",
  "rand 0.8.5",
  "solana-axelar-gas-service",
  "solana-axelar-gateway",
@@ -3556,7 +3542,6 @@ dependencies = [
  "anchor-spl",
  "hex",
  "mollusk-svm",
- "program-utils",
  "solana-axelar-gateway",
  "solana-axelar-gateway-test-fixtures",
  "solana-axelar-its",
@@ -3571,7 +3556,7 @@ version = "0.1.8"
 dependencies = [
  "anchor-lang",
  "mollusk-svm",
- "program-utils",
+ "solana-axelar-std",
  "solana-sdk",
  "solana-sdk-ids",
 ]
@@ -4852,38 +4837,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "spl-associated-token-account"
-version = "8.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0242277e290c023de8826f504abcf9206b3cd4e18d9ace4ec59a698b2828e88b"
-dependencies = [
- "borsh 1.6.0",
- "num-derive 0.4.2",
- "num-traits",
- "solana-account-info",
- "solana-cpi",
- "solana-instruction",
- "solana-msg",
- "solana-program-entrypoint",
- "solana-program-error",
- "solana-pubkey 3.0.0",
- "solana-rent",
- "solana-sdk-ids",
- "solana-system-interface",
- "solana-sysvar",
- "spl-associated-token-account-interface",
- "spl-token-2022-interface",
- "spl-token-interface",
- "thiserror 2.0.17",
-]
-
-[[package]]
 name = "spl-associated-token-account-interface"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6433917b60441d68d99a17e121d9db0ea15a9a69c0e5afa34649cf5ba12612f"
 dependencies = [
- "borsh 1.6.0",
  "solana-instruction",
  "solana-pubkey 3.0.0",
 ]

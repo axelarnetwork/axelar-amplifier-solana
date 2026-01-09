@@ -155,11 +155,6 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "program-utils"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
 crate = "solana-axelar-gateway-test-fixtures"
 expression = "MIT"
 license-files = []

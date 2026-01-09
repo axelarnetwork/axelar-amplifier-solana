@@ -18,9 +18,9 @@ use anchor_lang::prelude::*;
 
 // Export current sdk types for downstream users building with a different sdk
 // version.
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
-ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
 declare_id!("gas5H48imY2w1j6e6x3EvVxKFtyTuWFhw6pgS5VAPLu");

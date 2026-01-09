@@ -34,13 +34,6 @@ git_release_enable = true
 publish = true
 
 [[package]]
-name = "program-utils"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
-
-[[package]]
 name = "governance-gmp"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
