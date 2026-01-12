@@ -37,10 +37,10 @@ mainnet = [
 [dependencies]
 alloy-sol-types.workspace = true
 governance-gmp.workspace = true
+solana-axelar-std.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["no-entrypoint", "cpi"], default-features = false }
 solana-keccak-hasher.workspace = true
 anchor-lang.workspace = true
-program-utils.workspace = true
 anchor-spl.workspace = true
 
 [package.metadata.cargo-machete]

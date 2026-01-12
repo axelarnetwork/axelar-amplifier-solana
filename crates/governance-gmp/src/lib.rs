@@ -32,11 +32,15 @@ sol! {
 
 #[cfg(test)]
 mod tests {
-    use alloy_primitives::Uint;
-    use alloy_sol_types::SolValue;
-    use ethers::abi::{Function, ParamType, Token};
+    use alloy_primitives::{Address, Uint, U256};
+    use alloy_sol_types::{sol, SolCall, SolValue};
 
     use super::*;
+
+    // Define the transfer function for encoding
+    sol! {
+        function transfer(address to, uint256 value);
+    }
 
     // 5GjBHaKUWnF87NFWLGK5jNzyosMA43PDE6drq3btfqSs
     const TARGET_ADDR: [u8; 32] = [
@@ -60,39 +64,12 @@ mod tests {
         assert_eq!(expected, hex::encode(command.abi_encode()))
     }
 
-    #[allow(deprecated)]
     fn sample_call_data() -> Vec<u8> {
-        let function = Function {
-            name: "transfer".into(),
-            inputs: vec![
-                ethers::abi::Param {
-                    name: "to".into(),
-                    kind: ParamType::Address,
-                    internal_type: None,
-                },
-                ethers::abi::Param {
-                    name: "value".into(),
-                    kind: ParamType::Uint(256),
-                    internal_type: None,
-                },
-            ],
-            outputs: vec![],
-            constant: None,
-            state_mutability: ethers::abi::StateMutability::NonPayable,
+        let call = transferCall {
+            to: Address::ZERO,
+            value: U256::from(100),
         };
-
-        // Function arguments
-        let args = vec![
-            Token::Address(
-                "0x0000000000000000000000000000000000000000"
-                    .parse()
-                    .unwrap(),
-            ), // Address
-            Token::Uint(100u64.into()), // Value
-        ];
-
-        // Encode function call
-        function.encode_input(&args).unwrap()
+        call.abi_encode()
     }
 
     #[test]

@@ -23,11 +23,11 @@ use instructions::*;
 pub use state::*;
 
 use anchor_lang::prelude::*;
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
 pub(crate) const ITS_HUB_CHAIN_NAME: &str = "axelar";
 
-ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 // Program ID
 

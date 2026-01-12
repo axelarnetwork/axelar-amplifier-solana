@@ -3,7 +3,7 @@ use crate::{
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use program_utils::transfer_lamports_anchor;
+use solana_axelar_std::transfer_lamports_anchor;
 
 #[derive(Accounts)]
 #[event_cpi]

@@ -26,15 +26,10 @@ Changes:
 {% endfor -%}
 """
 
-[[package]]
-name = "solana-axelar-std"
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-git_release_enable = true
-publish = true
+# Crates
 
 [[package]]
-name = "program-utils"
+name = "solana-axelar-std"
 changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
@@ -46,6 +41,8 @@ changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
 publish = true
+
+# Programs
 
 [[package]]
 name = "solana-axelar-operators"
@@ -85,20 +82,6 @@ publish_no_verify = true
 
 [[package]]
 name = "solana-axelar-memo"
-release = false
-publish = false
-changelog_update = false
-git_release_enable = false
-
-[[package]]
-name = "mollusk-test-utils"
-release = false
-publish = false
-changelog_update = false
-git_release_enable = false
-
-[[package]]
-name = "xtask"
 release = false
 publish = false
 changelog_update = false

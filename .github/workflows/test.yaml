@@ -15,7 +15,6 @@ defaults:
   run:
     shell: bash
 
-
 name: test
 jobs:
   build-programs:
@@ -40,7 +39,6 @@ jobs:
         uses: ./.github/actions/setup-repo
         with:
           cache-key: ${{ matrix.program }}
-          skip-foundry: "true"
 
       - name: Build ${{ matrix.program }}
         run: cargo build-sbf --manifest-path programs/${{ matrix.program }}/Cargo.toml
