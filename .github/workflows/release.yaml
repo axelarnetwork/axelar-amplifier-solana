@@ -15,6 +15,7 @@ jobs:
 
     outputs:
       releases: ${{ steps.prepare-matrix.outputs.releases }}
+      program_releases: ${{ steps.prepare-matrix.outputs.program_releases }}
       commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
 
     steps:
@@ -58,14 +59,30 @@ jobs:
           if [ "${{ steps.publish-release.outputs.releases }}" == "[]" ]; then
             echo "release-plz output contains an empty release list — nothing to release."
             echo "releases=[]" >> $GITHUB_OUTPUT
+            echo "program_releases=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "releases=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT
 
+          # Filter to only include Solana programs (packages with programs/<name>/Cargo.toml)
+          PROGRAM_NAMES=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -r '.[].package_name' | while read -r pkg; do
+            if [ -f "programs/$pkg/Cargo.toml" ]; then
+              echo "$pkg"
+            fi
+          done)
+
+          # Convert newline-separated names to JSON array, handling empty input properly
+          PROGRAMS_JSON=$(echo "$PROGRAM_NAMES" | jq -R -s 'split("\n") | map(select(length > 0))')
+
+          # Filter original releases to only include programs
+          FILTERED=$(echo '${{ steps.publish-release.outputs.releases }}' | jq -c --argjson programs "$PROGRAMS_JSON" \
+            '[.[] | select(.package_name as $name | $programs | index($name))]')
+          echo "program_releases=$FILTERED" >> $GITHUB_OUTPUT
+
   build:
     needs: publish-release
-    if: needs.publish-release.outputs.releases != '[]'
+    if: needs.publish-release.outputs.program_releases != '[]'
     uses: ./.github/workflows/reusable-build.yaml
     with:
       commit-hash: ${{ needs.publish-release.outputs.commit_hash }}
@@ -73,10 +90,10 @@ jobs:
 
   upload:
     needs: [publish-release, build]
-    if: needs.publish-release.outputs.releases != '[]'
+    if: needs.publish-release.outputs.program_releases != '[]'
     strategy:
       matrix:
-        releases: ${{ fromJson(needs.publish-release.outputs.releases) }}
+        releases: ${{ fromJson(needs.publish-release.outputs.program_releases) }}
 
     uses: ./.github/workflows/reusable-upload.yaml
     permissions:
