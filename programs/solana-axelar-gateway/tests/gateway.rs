@@ -113,7 +113,11 @@ fn initialize_payload_verification_session_works() {
     )
     .unwrap();
 
-    let (_, bump) = SignatureVerificationSessionData::find_pda(&payload_merkle_root, payload_type, &setup.verifier_set_hash);
+    let (_, bump) = SignatureVerificationSessionData::find_pda(
+        &payload_merkle_root,
+        payload_type,
+        &setup.verifier_set_hash,
+    );
 
     let mut expected_verification_account =
         SignatureVerificationSessionData::new(SignatureVerification::default(), bump);
