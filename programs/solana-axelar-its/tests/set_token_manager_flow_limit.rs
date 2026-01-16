@@ -6,7 +6,7 @@ use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use mollusk_test_utils::get_event_authority_and_program_accounts;
-use solana_axelar_its::state::{Roles, RolesError};
+use solana_axelar_its::state::{roles, RolesError};
 use solana_axelar_its::{
     state::{TokenManager, UserRoles},
     utils::interchain_token_id,
@@ -90,7 +90,7 @@ fn set_token_manager_flow_limit_success() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -153,7 +153,7 @@ fn set_token_manager_flow_limit_success() {
             its_root_pda,
             token_manager_pda,
             flow_limiter_roles_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             // for emit cpi
             event_authority,
             program: program_id,
@@ -272,7 +272,7 @@ fn reject_set_token_manager_flow_limit_with_unauthorized_operator() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -337,7 +337,7 @@ fn reject_set_token_manager_flow_limit_with_unauthorized_operator() {
             its_root_pda,
             token_manager_pda,
             flow_limiter_roles_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             // for emit cpi
             event_authority,
             program: program_id,
@@ -441,7 +441,7 @@ fn reject_set_token_manager_flow_limit_without_operator_role() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -490,7 +490,7 @@ fn reject_set_token_manager_flow_limit_without_operator_role() {
     let mut flow_limiter_roles =
         UserRoles::try_deserialize(&mut flow_limiter_roles_account_clone.data.as_ref())
             .expect("Failed to deserialize flow limiter roles");
-    flow_limiter_roles.roles = Roles::empty();
+    flow_limiter_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
@@ -513,7 +513,7 @@ fn reject_set_token_manager_flow_limit_without_operator_role() {
             its_root_pda,
             token_manager_pda,
             flow_limiter_roles_pda,
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             // for emit cpi
             event_authority,
             program: program_id,

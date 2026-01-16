@@ -1,9 +1,9 @@
 use crate::{
     errors::ItsError,
     events::TokenManagerDeployed,
-    instructions::validate_mint_extensions,
+    roles,
     seed_prefixes::TOKEN_MANAGER_SEED,
-    state::{token_manager::Type, InterchainTokenService, Roles, TokenManager, UserRoles},
+    state::{token_manager::Type, InterchainTokenService, TokenManager, UserRoles},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
@@ -59,6 +59,7 @@ pub struct RegisterCustomToken<'info> {
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
+    /// CHECK:
     pub operator: Option<UncheckedAccount<'info>>,
 
     #[account(
@@ -107,10 +108,8 @@ pub fn register_custom_token_handler(
     let deploy_salt = linked_token_deployer_salt(&ctx.accounts.deployer.key(), &salt);
     let token_id = interchain_token_id_internal(&deploy_salt);
 
-    validate_mint_extensions(
-        token_manager_type,
-        &ctx.accounts.token_mint.to_account_info(),
-    )?;
+    token_manager_type
+        .validate_mint_extension_account(&ctx.accounts.token_mint.to_account_info())?;
 
     // Initialize the token manager
     TokenManager::init_account(
@@ -128,7 +127,7 @@ pub fn register_custom_token_handler(
         ctx.bumps.operator_roles_pda,
     ) {
         operator_roles_pda.bump = bump;
-        operator_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER;
+        operator_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER;
     }
 
     // Emit TokenManagerDeployed event

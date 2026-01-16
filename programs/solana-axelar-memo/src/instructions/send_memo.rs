@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use solana_axelar_gateway::{
-    cpi::accounts::CallContract, program::SolanaAxelarGateway, CallContractSigner, GatewayConfig,
+    cpi::accounts::CallContract, program::SolanaAxelarGateway, CallContractSigner,
 };
 
 #[derive(Accounts)]
@@ -8,6 +8,7 @@ pub struct SendMemo<'info> {
     /// Reference to our program
     pub memo_program: Program<'info, crate::program::Memo>,
 
+    /// CHECK:
     /// Our standardized PDA for calling the gateway
     #[account(
         seeds = [CallContractSigner::SEED_PREFIX],
@@ -16,20 +17,12 @@ pub struct SendMemo<'info> {
     pub signing_pda: AccountInfo<'info>,
 
     /// The gateway configuration PDA
-    #[account(
-        seeds = [GatewayConfig::SEED_PREFIX],
-        bump = gateway_root_pda.load()?.bump,
-        seeds::program = gateway_program.key()
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+    /// CHECK: checked by the gateway program
+    pub gateway_root_pda: UncheckedAccount<'info>,
 
     /// Event authority - derived from gateway program
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = solana_axelar_gateway::ID,
-    )]
-    pub gateway_event_authority: SystemAccount<'info>,
+    /// CHECK: checked by the gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
 
     /// Reference to the axelar gateway program
     pub gateway_program: Program<'info, SolanaAxelarGateway>,
@@ -64,7 +57,7 @@ pub fn send_memo_handler(
     };
 
     let cpi_ctx = CpiContext::new_with_signer(
-        ctx.accounts.gateway_program.to_account_info(),
+        ctx.accounts.gateway_program.key(),
         cpi_accounts,
         signer_seeds,
     );

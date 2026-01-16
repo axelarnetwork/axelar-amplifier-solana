@@ -1,6 +1,6 @@
 use crate::GovernanceConfig;
 use anchor_lang::prelude::*;
-use program_utils::transfer_lamports_anchor;
+use solana_axelar_std::transfer_lamports_anchor;
 
 #[derive(Accounts)]
 pub struct WithdrawTokens<'info> {

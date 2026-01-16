@@ -1,6 +1,13 @@
 #![allow(clippy::empty_structs_with_brackets)]
 // Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
-#![allow(deprecated)]
+#![allow(
+    deprecated,
+    reason = "event_cpi macro internally still uses AccountInfo which is deprecated"
+)]
+#![allow(
+    clippy::diverging_sub_expression,
+    reason = "Anchor generates such code"
+)]
 
 use anchor_lang::prelude::*;
 
@@ -20,7 +27,7 @@ pub mod executable;
 
 pub mod payload;
 
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
 pub use solana_axelar_std::Message;
 

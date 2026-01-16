@@ -12,7 +12,9 @@ use crate::{
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::InstructionData;
-use anchor_spl::associated_token::get_associated_token_address_with_program_id;
+use anchor_spl::associated_token::{
+    get_associated_token_address_with_program_id, spl_associated_token_account,
+};
 use anchor_spl::token_2022::spl_token_2022::extension::{
     BaseStateWithExtensions, ExtensionType, StateWithExtensions,
 };
@@ -31,15 +33,9 @@ pub struct RegisterCanonicalInterchainToken<'info> {
 
     /// CHECK: decoded using get_token_metadata
     #[account(
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
-    pub metadata_account: AccountInfo<'info>,
+    pub metadata_account: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 
@@ -150,7 +146,7 @@ pub fn make_register_canonical_token_instruction(
     );
 
     let (metadata_account, _) = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint);
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::RegisterCanonicalInterchainToken {
         payer,
@@ -161,7 +157,7 @@ pub fn make_register_canonical_token_instruction(
         token_mint,
         token_manager_ata,
         token_program,
-        associated_token_program: anchor_spl::associated_token::spl_associated_token_account::ID,
+        associated_token_program: spl_associated_token_account::program::ID,
         event_authority,
         program: crate::ID,
     };

@@ -20,8 +20,8 @@ use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::{Messages, Payload, PayloadType, PublicKey, VerifierSet, U256};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
-    system_program::ID as SYSTEM_PROGRAM_ID,
 };
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 use std::collections::BTreeMap;
 
 #[test]
@@ -597,8 +597,7 @@ fn call_contract_direct_signer() {
 
     let gateway_account = init_result.get_account(&setup.gateway_root_pda).unwrap();
 
-    let (event_authority_pda, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &GATEWAY_PROGRAM_ID);
+    let (event_authority_pda, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     // Create a direct signer (e.g., a user wallet)
     let direct_signer = Pubkey::new_unique();
@@ -662,7 +661,7 @@ fn call_contract_direct_signer() {
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

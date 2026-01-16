@@ -1,5 +1,5 @@
 use crate::{
-    state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    state::{roles, InterchainTokenService, RolesError, UserRoles},
     ItsError,
 };
 use anchor_lang::solana_program::instruction::Instruction;
@@ -25,7 +25,7 @@ pub struct TransferOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.has_operator_role() @ RolesError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 
@@ -37,10 +37,11 @@ pub struct TransferOperatorship<'info> {
     pub resource_account: Account<'info, InterchainTokenService>,
 
     /// Destination user account (will receive OPERATOR role)
+    /// CHECK: This is treated as an arbitrary user account and is only used for its public key.
     #[account(
         constraint = destination_user_account.key() != origin_user_account.key() @ ItsError::InvalidArgument,
     )]
-    pub destination_user_account: AccountInfo<'info>,
+    pub destination_user_account: UncheckedAccount<'info>,
 
     /// Destination user roles account
     #[account(
@@ -63,9 +64,9 @@ pub fn transfer_operatorship_handler(ctx: Context<TransferOperatorship>) -> Resu
     let origin_roles = &mut ctx.accounts.origin_roles_account;
     let destination_roles = &mut ctx.accounts.destination_roles_account;
 
-    origin_roles.roles.remove(Roles::OPERATOR);
+    origin_roles.remove(roles::OPERATOR);
 
-    destination_roles.roles.insert(Roles::OPERATOR);
+    destination_roles.insert(roles::OPERATOR);
     destination_roles.bump = ctx.bumps.destination_roles_account;
 
     msg!(

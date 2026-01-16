@@ -2,7 +2,7 @@ use crate::{
     errors::ItsError,
     events::{InterchainTokenDeployed, TokenManagerDeployed},
     seed_prefixes::{INTERCHAIN_TOKEN_SEED, TOKEN_MANAGER_SEED},
-    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, Type, UserRoles},
     utils::truncate_utf8,
 };
 use anchor_lang::prelude::*;
@@ -69,25 +69,22 @@ pub struct ExecuteDeployInterchainToken<'info> {
 
     pub associated_token_program: Program<'info, AssociatedToken>,
 
-    #[account(address = anchor_lang::solana_program::sysvar::instructions::id())]
+    /// CHECK: sysvar address check
+    #[account(address = solana_sdk_ids::sysvar::instructions::ID)]
     pub sysvar_instructions: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(address = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID)]
     pub mpl_token_metadata_program: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(
         mut,
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        bump,
-        seeds::program = mpl_token_metadata::programs::MPL_TOKEN_METADATA_ID
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
     pub mpl_token_metadata_account: UncheckedAccount<'info>,
 
-    // Optional accounts
+    /// CHECK:
     pub minter: Option<UncheckedAccount<'info>>,
 
     #[account(
@@ -201,7 +198,7 @@ pub fn process_inbound_deploy(
             .ok_or(ItsError::MinterRolesNotProvided)?;
         minter_roles_pda.bump =
             minter_roles_pda_bump.ok_or(ItsError::MinterRolesPdaBumpNotProvided)?;
-        minter_roles_pda.roles = Roles::OPERATOR | Roles::FLOW_LIMITER | Roles::MINTER;
+        minter_roles_pda.roles = roles::OPERATOR | roles::FLOW_LIMITER | roles::MINTER;
     }
 
     Ok(())

@@ -23,8 +23,6 @@
 # dependencies not shared by any other crates, would be ignored, as the target
 # list here is effectively saying which targets you are building for.
 targets = [
-
-
   # The triple can be any string, but only the target triples built in to
   # rustc (as of 1.40) can be checked against actual config expressions
   # "x86_64-unknown-linux-musl",
@@ -72,19 +70,10 @@ feature-depth = 1
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
 ignore = [
-  { id = "RUSTSEC-2021-0145", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2022-0093", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2024-0344", reason = "dependency of solana lib" },
   { id = "RUSTSEC-2024-0370", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2024-0375", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2024-0384", reason = "dependency of solana lib" },
   { id = "RUSTSEC-2024-0388", reason = "dependency of solana lib" },
   { id = "RUSTSEC-2024-0436", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2025-0009", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2025-0010", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2025-0119", reason = "dependency of solana lib" },
-  { id = "RUSTSEC-2025-0134", reason = "dependency of dev-only dep evm-contracts-rs" },
-  { id = "RUSTSEC-2025-0057", reason = "deferred to before mainnet" },
+  { id = "RUSTSEC-2025-0141", reason = "bincode used still by solana crates, used only for tests in our workspace" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
@@ -122,8 +111,6 @@ confidence-threshold = 0.6
 # Allow 1 or more licenses on a per-crate basis, so that particular licenses
 # aren't accepted for every possible crate as with the normal allow list
 exceptions = [
-
-
   # Each entry is the crate and version constraint, and its specific allow
   # list
   # { allow = ["Zlib"], crate = "adler32" },
@@ -168,11 +155,6 @@ expression = "MIT"
 license-files = []
 
 [[licenses.clarify]]
-crate = "program-utils"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
 crate = "solana-axelar-gateway-test-fixtures"
 expression = "MIT"
 license-files = []
@@ -184,16 +166,6 @@ license-files = []
 
 [[licenses.clarify]]
 crate = "mollusk-harness"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "evm-contracts-rs"
-expression = "MIT"
-license-files = []
-
-[[licenses.clarify]]
-crate = "evm-contracts-test-suite"
 expression = "MIT"
 license-files = []
 
@@ -222,8 +194,6 @@ ignore = false
 # is only published to private registries, and ignore is true, the crate will
 # not have its license(s) checked
 registries = [
-
-
   # "https://sekretz.com/registry
 ]
 
@@ -251,15 +221,11 @@ workspace-default-features = "allow"
 external-default-features = "allow"
 # List of crates that are allowed. Use with care!
 allow = [
-
-
   # "ansi_term@0.11.0",
   # { crate = "ansi_term@0.11.0", reason = "you can specify a reason it is allowed" },
 ]
 # List of crates to deny
 deny = [
-
-
   # "ansi_term@0.11.0",
   # { crate = "ansi_term@0.11.0", reason = "you can specify a reason it is banned" },
   # Wrapper crates can optionally be specified to allow the crate when it
@@ -267,33 +233,8 @@ deny = [
   # { crate = "ansi_term@0.11.0", wrappers = ["this-crate-directly-depends-on-ansi_term"] },
 ]
 
-# List of features to allow/deny
-# Each entry the name of a crate and a version range. If version is
-# not specified, all versions will be matched.
-# [[bans.features]]
-# crate = "reqwest"
-# Features to not allow
-# deny = ["json"]
-# Features to allow
-# allow = [
-#    "rustls",
-#    "__rustls",
-#    "__tls",
-#    "hyper-rustls",
-#    "rustls",
-#    "rustls-pemfile",
-#    "rustls-tls-webpki-roots",
-#    "tokio-rustls",
-#    "webpki-roots",
-# ]
-# If true, the allowed features must exactly match the enabled feature set. If
-# this is set there is no point setting `deny`
-# exact = true
-
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-
-
   # "ansi_term@0.11.0",
   # { crate = "ansi_term@0.11.0", reason = "you can specify a reason why it can't be updated/removed" },
 ]
@@ -302,8 +243,6 @@ skip = [
 # dependencies starting at the specified crate, up to a certain depth, which is
 # by default infinite.
 skip-tree = [
-
-
   # "ansi_term@0.11.0", # will be skipped along with _all_ of its direct and transitive dependencies
   # { crate = "ansi_term@0.11.0", depth = 20 },
 ]

@@ -10,7 +10,7 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
-use solana_axelar_gateway::{program::SolanaAxelarGateway, GatewayConfig};
+use solana_axelar_gateway::program::SolanaAxelarGateway;
 
 #[derive(Accounts)]
 #[instruction(
@@ -48,14 +48,8 @@ pub struct LinkToken<'info> {
     pub token_manager_pda: Account<'info, TokenManager>,
 
     // GMP Accounts
-    #[account(
-        seeds = [
-            solana_axelar_gateway::seed_prefixes::GATEWAY_SEED
-        ],
-        seeds::program = solana_axelar_gateway::ID,
-        bump = gateway_root_pda.load()?.bump,
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+    /// CHECK: checked by the gateway program
+    pub gateway_root_pda: UncheckedAccount<'info>,
 
     pub gateway_program: Program<'info, SolanaAxelarGateway>,
 
@@ -64,13 +58,8 @@ pub struct LinkToken<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
-    // Event authority accounts
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = solana_axelar_gateway::ID,
-    )]
-    pub gateway_event_authority: AccountInfo<'info>,
+    /// CHECK: checked by the gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by the gas service program
     #[account(mut)]

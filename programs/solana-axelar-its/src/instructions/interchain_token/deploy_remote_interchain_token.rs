@@ -41,13 +41,7 @@ pub struct DeployRemoteInterchainToken<'info> {
 
     /// CHECK: Decoded using get_token_metadata
     #[account(
-        seeds = [
-            b"metadata",
-            mpl_token_metadata::ID.as_ref(),
-            token_mint.key().as_ref()
-        ],
-        seeds::program = mpl_token_metadata::ID,
-        bump
+        address = mpl_token_metadata::accounts::Metadata::find_pda(&token_mint.key()).0,
     )]
     pub metadata_account: AccountInfo<'info>,
 
@@ -63,14 +57,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     pub token_manager_pda: Account<'info, TokenManager>,
 
     // GMP Accounts
-    #[account(
-        seeds = [
-            solana_axelar_gateway::seed_prefixes::GATEWAY_SEED
-        ],
-        seeds::program = solana_axelar_gateway::ID,
-        bump = gateway_root_pda.load()?.bump,
-    )]
-    pub gateway_root_pda: AccountLoader<'info, GatewayConfig>,
+    /// CHECK: checked by the gateway program
+    pub gateway_root_pda: UncheckedAccount<'info>,
 
     /// The GMP gateway program account
     pub gateway_program: Program<'info, SolanaAxelarGateway>,
@@ -89,13 +77,8 @@ pub struct DeployRemoteInterchainToken<'info> {
     /// CHECK: validated in gateway
     pub call_contract_signing_pda: UncheckedAccount<'info>,
 
-    // Event authority accounts
-    #[account(
-        seeds = [b"__event_authority"],
-        bump,
-        seeds::program = solana_axelar_gateway::ID,
-    )]
-    pub gateway_event_authority: AccountInfo<'info>,
+    /// CHECK: checked by the gateway program
+    pub gateway_event_authority: UncheckedAccount<'info>,
 
     /// CHECK: checked by the gas service program
     #[account(mut)]
@@ -235,18 +218,16 @@ pub fn make_deploy_remote_interchain_token_instruction(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway::CallContractSigner::find_pda(&crate::ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     let (gas_treasury, _) = Pubkey::find_program_address(
         &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
         &solana_axelar_gas_service::ID,
     );
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::DeployRemoteInterchainToken {
         payer,

@@ -46,8 +46,7 @@ fn collect_native_fees() {
 
     let amount = 500_000_000u64; // 0.5 SOL
 
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let (event_authority, _bump) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
     let event_authority_account = Account::new(0, 0, &system_program::ID);
 
     let ix = Instruction {
@@ -137,8 +136,7 @@ fn collect_native_fees_insufficient_funds() {
 
     let amount = 50_000_000_000u64; // 50 SOL
 
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let (event_authority, _bump) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
     let event_authority_account = Account::new(0, 0, &system_program::ID);
 
     let ix = Instruction {
@@ -232,8 +230,7 @@ fn collect_native_fees_not_rent_exempt() {
 
     let amount = 10_000_000_000u64 + initial_treasury_balance / 2; // 10 SOL + half of rent exemption
 
-    let (event_authority, _bump) =
-        Pubkey::find_program_address(&[b"__event_authority"], &program_id);
+    let (event_authority, _bump) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
     let event_authority_account = Account::new(0, 0, &system_program::ID);
 
     let ix = Instruction {

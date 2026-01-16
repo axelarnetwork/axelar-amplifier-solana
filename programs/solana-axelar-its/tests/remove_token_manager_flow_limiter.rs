@@ -6,7 +6,10 @@ use anchor_lang::{
     InstructionData, ToAccountMetas,
 };
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use solana_axelar_its::state::{Roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::{
+    roles,
+    state::{RolesError, TokenManager, UserRoles},
+};
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
     new_default_account, new_empty_account, new_test_account, DeployInterchainTokenContext,
@@ -84,7 +87,7 @@ fn remove_token_manager_flow_limiter() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -143,7 +146,7 @@ fn remove_token_manager_flow_limiter() {
     let remove_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::RemoveTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -258,7 +261,7 @@ fn reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -320,7 +323,7 @@ fn reject_remove_token_manager_flow_limiter_with_unauthorized_authority() {
     let remove_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::RemoveTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: malicious_minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -432,7 +435,7 @@ fn reject_remove_token_manager_flow_limiter_without_operator_role() {
     let add_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::AddTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,
@@ -493,7 +496,7 @@ fn reject_remove_token_manager_flow_limiter_without_operator_role() {
     let mut minter_roles =
         UserRoles::try_deserialize(&mut minter_roles_account_clone.data.as_ref())
             .expect("Failed to deserialize flow limiter roles");
-    minter_roles.roles = Roles::empty();
+    minter_roles.roles = roles::EMPTY;
 
     let mut new_data = Vec::new();
     new_data.extend_from_slice(UserRoles::DISCRIMINATOR);
@@ -506,7 +509,7 @@ fn reject_remove_token_manager_flow_limiter_without_operator_role() {
     let remove_flow_limiter_ix = Instruction {
         program_id,
         accounts: solana_axelar_its::accounts::RemoveTokenManagerFlowLimiter {
-            system_program: solana_sdk::system_program::ID,
+            system_program: solana_sdk_ids::system_program::ID,
             payer,
             authority_user_account: minter, // use interchain token minter which is also the operator
             authority_roles_account: minter_roles_pda,

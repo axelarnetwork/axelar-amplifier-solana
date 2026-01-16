@@ -37,7 +37,7 @@ pub fn add_gas(
 
     system_program::transfer(
         CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
+            ctx.accounts.system_program.key(),
             system_program::Transfer {
                 from: payer.clone(),
                 to: treasury_account_info.clone(),

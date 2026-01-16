@@ -237,7 +237,7 @@ fn process_outbound_transfer(
     let data_hash = data
         .as_ref()
         .filter(|d| !d.is_empty())
-        .map(|d| solana_program::keccak::hash(d).0);
+        .map(|d| solana_keccak_hasher::hash(d).to_bytes());
 
     emit_cpi!(crate::events::InterchainTransferSent {
         token_id,
@@ -321,7 +321,7 @@ fn transfer_with_fee_to(
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.key(), cpi_accounts);
 
     token_interface::transfer_checked_with_fee(cpi_context, amount, decimals, fee)?;
 
@@ -338,7 +338,7 @@ fn transfer_to(ctx: &Context<InterchainTransfer>, amount: u64, decimals: u8) -> 
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.key(), cpi_accounts);
 
     token_interface::transfer_checked(cpi_context, amount, decimals)?;
 
@@ -354,7 +354,7 @@ fn burn_from_source(ctx: &Context<InterchainTransfer>, amount: u64) -> Result<()
         authority: ctx.accounts.authority.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.key(), cpi_accounts);
 
     token_interface::burn(cpi_context, amount)?;
 
@@ -425,18 +425,16 @@ pub fn make_interchain_transfer_instruction(
     let (call_contract_signing_pda, _) =
         solana_axelar_gateway::CallContractSigner::find_pda(&crate::ID);
 
-    let (gateway_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gateway::ID);
+    let (gateway_event_authority, _) = solana_axelar_gateway::EVENT_AUTHORITY_AND_BUMP;
 
     let (gas_treasury, _) = Pubkey::find_program_address(
         &[solana_axelar_gas_service::state::Treasury::SEED_PREFIX],
         &solana_axelar_gas_service::ID,
     );
 
-    let (gas_event_authority, _) =
-        Pubkey::find_program_address(&[b"__event_authority"], &solana_axelar_gas_service::ID);
+    let (gas_event_authority, _) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::InterchainTransfer {
         payer,

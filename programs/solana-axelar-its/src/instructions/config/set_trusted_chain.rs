@@ -1,6 +1,6 @@
 use crate::{
     events::TrustedChainSet,
-    state::{InterchainTokenService, Roles, RolesError, UserRoles},
+    state::{InterchainTokenService, RolesError, UserRoles},
     ItsError,
 };
 #[allow(deprecated)]
@@ -29,7 +29,7 @@ pub struct SetTrustedChain<'info> {
 		],
 	 	bump = user_roles.bump,
 		// Require the payer to have the OPERATOR role.
-		constraint = user_roles.roles.contains(Roles::OPERATOR) @ RolesError::MissingOperatorRole,
+		constraint = user_roles.has_operator_role() @ RolesError::MissingOperatorRole,
     )]
     pub user_roles: Option<Account<'info, UserRoles>>,
 
@@ -89,7 +89,7 @@ pub fn make_set_trusted_chain_instruction(
         Some(bpf_loader_upgradeable::get_program_data_address(&crate::ID))
     };
 
-    let (event_authority, _) = Pubkey::find_program_address(&[b"__event_authority"], &crate::ID);
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
 
     let accounts = crate::accounts::SetTrustedChain {
         payer,

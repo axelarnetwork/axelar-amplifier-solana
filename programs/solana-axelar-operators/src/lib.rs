@@ -10,9 +10,9 @@ pub mod state;
 use instructions::*;
 pub use state::*;
 
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
-ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
 declare_id!("oprVNGMBsXzJJBTDQasNWqQ8nZqNhJP2ZXvrC7b5xXd");

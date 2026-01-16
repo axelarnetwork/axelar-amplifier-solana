@@ -27,19 +27,25 @@ pub struct Execute<'info> {
     )]
     pub its_root_pda: Account<'info, InterchainTokenService>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_manager_pda: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_mint: UncheckedAccount<'info>,
 
+    /// CHECK:
     #[account(mut)]
     pub token_manager_ata: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub token_program: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub associated_token_program: UncheckedAccount<'info>,
 
+    /// CHECK:
     pub system_program: UncheckedAccount<'info>,
 }
 
@@ -357,7 +363,7 @@ pub fn execute_interchain_transfer_extra_accounts(
     transfer_has_data: Option<bool>,
 ) -> Vec<AccountMeta> {
     let mut accounts = vec![
-        AccountMeta::new(destination, false),
+        AccountMeta::new_readonly(destination, false),
         AccountMeta::new(destination_ata, false),
     ];
 
@@ -390,7 +396,7 @@ pub fn execute_link_token_extra_accounts(
     let mut accounts = Vec::with_capacity(2);
 
     if let Some(key) = operator {
-        accounts.push(AccountMeta::new(key, false));
+        accounts.push(AccountMeta::new_readonly(key, false));
     }
 
     if let Some(pda_key) = operator_roles_pda {

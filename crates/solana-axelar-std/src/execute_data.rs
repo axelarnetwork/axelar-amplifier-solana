@@ -1,3 +1,6 @@
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::borsh;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
 use std::collections::BTreeMap;
@@ -53,6 +56,7 @@ pub enum Payload {
     not(feature = "anchor"),
     derive(borsh::BorshDeserialize, borsh::BorshSerialize)
 )]
+#[cfg_attr(not(feature = "anchor"), borsh(use_discriminant = false))]
 #[cfg_attr(
     feature = "anchor",
     derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)

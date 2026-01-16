@@ -4,6 +4,10 @@
 #![allow(clippy::too_many_arguments)]
 // Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
 #![allow(deprecated)]
+#![allow(
+    clippy::diverging_sub_expression,
+    reason = "Anchor generates such code"
+)]
 
 pub mod encoding;
 pub mod errors;
@@ -19,11 +23,11 @@ use instructions::*;
 pub use state::*;
 
 use anchor_lang::prelude::*;
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
 pub(crate) const ITS_HUB_CHAIN_NAME: &str = "axelar";
 
-ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 // Program ID
 

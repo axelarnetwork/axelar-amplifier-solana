@@ -115,7 +115,6 @@ impl InterchainTokenService {
 #[allow(clippy::str_to_string)]
 mod tests {
     use super::*;
-    use anchor_lang::AnchorSerialize;
 
     #[test]
     fn space_function_matches_actual_size() {
@@ -128,12 +127,17 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = its_empty.try_to_vec().expect("Failed to serialize");
+        let mut serialized = Vec::new();
+        its_empty
+            .try_serialize(&mut serialized)
+            .expect("Failed to serialize");
+
         let calculated_space = its_empty.space();
 
-        assert!(
-            calculated_space >= serialized.len(),
-            "Space function should account for at least the actual size"
+        assert_eq!(
+            calculated_space,
+            serialized.len(),
+            "Space function should account for the actual size"
         );
     }
 
@@ -151,12 +155,15 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = its.try_to_vec().expect("Failed to serialize");
+        let mut serialized = Vec::new();
+        its.try_serialize(&mut serialized)
+            .expect("Failed to serialize");
         let calculated_space = its.space();
 
-        assert!(
-            calculated_space >= serialized.len(),
-            "Space function should account for at least the actual size"
+        assert_eq!(
+            calculated_space,
+            serialized.len(),
+            "Space function should account for the actual size"
         );
     }
 
@@ -172,12 +179,77 @@ mod tests {
             bump: 1,
         };
 
-        let serialized = its.try_to_vec().expect("Failed to serialize");
+        let mut serialized = Vec::new();
+        its.try_serialize(&mut serialized)
+            .expect("Failed to serialize");
         let calculated_space = its.space();
 
-        assert!(
-            calculated_space >= serialized.len(),
-            "Space function should account for at least the actual size"
+        assert_eq!(
+            calculated_space,
+            serialized.len(),
+            "Space function should account for the actual size"
+        );
+    }
+
+    #[test]
+    fn space_with_chain_added_is_correct() {
+        let its = InterchainTokenService {
+            its_hub_address: "test".to_string(),
+            chain_name: "solana".to_string(),
+            paused: false,
+            trusted_chains: vec!["ethereum".to_string()],
+            bump: 1,
+        };
+
+        let new_chain = "avalanche";
+        let calculated_space_after_add = its.space_with_chain_added(new_chain);
+
+        // Simulate adding the chain
+        let mut its_with_new_chain = its.clone();
+        its_with_new_chain
+            .trusted_chains
+            .push(new_chain.to_string());
+
+        let mut serialized = Vec::new();
+        its_with_new_chain
+            .try_serialize(&mut serialized)
+            .expect("Failed to serialize");
+
+        assert_eq!(
+            calculated_space_after_add,
+            serialized.len(),
+            "space_with_chain_added should match actual size after adding the chain"
+        );
+    }
+
+    #[test]
+    fn space_with_chain_removed_is_correct() {
+        let its = InterchainTokenService {
+            its_hub_address: "test".to_string(),
+            chain_name: "solana".to_string(),
+            paused: false,
+            trusted_chains: vec!["ethereum".to_string(), "avalanche".to_string()],
+            bump: 1,
+        };
+
+        let chain_to_remove = "avalanche";
+        let calculated_space_after_remove = its.space_with_chain_removed(chain_to_remove);
+
+        // Simulate removing the chain
+        let mut its_without_chain = its.clone();
+        its_without_chain
+            .trusted_chains
+            .retain(|c| c != chain_to_remove);
+
+        let mut serialized = Vec::new();
+        its_without_chain
+            .try_serialize(&mut serialized)
+            .expect("Failed to serialize");
+
+        assert_eq!(
+            calculated_space_after_remove,
+            serialized.len(),
+            "space_with_chain_removed should match actual size after removing the chain"
         );
     }
 }

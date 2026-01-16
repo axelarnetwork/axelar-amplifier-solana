@@ -1,5 +1,6 @@
 use crate::{
-    state::{InterchainTokenService, Roles, TokenManager, Type, UserRoles},
+    roles,
+    state::{InterchainTokenService, TokenManager, Type, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -83,7 +84,7 @@ pub fn handover_mint_authority_handler(
     // The given authority is the mint authority. Transfer it to the TokenManager
 
     let cpi_context = CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
+        ctx.accounts.token_program.key(),
         anchor_spl::token_interface::SetAuthority {
             current_authority: authority.to_account_info(),
             account_or_mint: mint.to_account_info(),
@@ -97,7 +98,7 @@ pub fn handover_mint_authority_handler(
     )?;
 
     // Setup minter role for the payer
-    minter_roles.roles.insert(Roles::MINTER);
+    minter_roles.insert(roles::MINTER);
     minter_roles.bump = ctx.bumps.minter_roles;
 
     msg!(

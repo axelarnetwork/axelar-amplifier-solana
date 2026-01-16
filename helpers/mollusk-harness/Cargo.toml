@@ -15,7 +15,6 @@ anchor-lang.workspace = true
 anchor-spl.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
-solana-program.workspace = true
 mpl-token-metadata.workspace = true
 
 rand.workspace = true

@@ -1,8 +1,12 @@
 //! Axelar Gas Service program for the Solana blockchain
-#![allow(clippy::little_endian_bytes)]
-// Anchor's #[program] macro generates code using deprecated AccountInfo::realloc
-#![allow(deprecated)]
-
+#![allow(
+    deprecated,
+    reason = "event_cpi macro internally still uses AccountInfo which is deprecated"
+)]
+#![allow(
+    clippy::diverging_sub_expression,
+    reason = "Anchor generates such code"
+)]
 pub mod events;
 pub mod instructions;
 pub mod state;
@@ -14,9 +18,9 @@ use anchor_lang::prelude::*;
 
 // Export current sdk types for downstream users building with a different sdk
 // version.
-use program_utils::ensure_single_feature;
+use solana_axelar_std::ensure_single_feature;
 
-ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
+solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
 declare_id!("gasUBnVr9GZon2cp8X5gyFrUsQFhzrprjy734Ci6Bmn");

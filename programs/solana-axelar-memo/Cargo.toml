@@ -12,7 +12,7 @@ publish = false
 [dependencies]
 anchor-lang.workspace = true
 anchor-spl.workspace = true
-program-utils.workspace = true
+solana-axelar-std.workspace = true
 solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 solana-axelar-its = { workspace = true, features = ["cpi"] }
 
@@ -20,7 +20,7 @@ solana-axelar-its = { workspace = true, features = ["cpi"] }
 solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
-bincode.workspace = true
+solana-sdk-ids.workspace = true
 solana-axelar-std.workspace = true
 hex.workspace = true
 
@@ -37,7 +37,7 @@ no-entrypoint = []
 cpi = ["no-entrypoint"]
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 test-sbf = []
 
 anchor-debug = []
