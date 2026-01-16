@@ -34,7 +34,7 @@ pub use solana_axelar_std::Message;
 ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("gtwiF7Bamsq5zBQCnKjK7kHfmBQe7StQE9VPucWrtmA");
+declare_id!("gtwT4uGVTYSPnTGv6rSpMheyFyczUicxVWKqdtxNGw9");
 
 #[cfg(feature = "stagenet")]
 declare_id!("gtwpfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");

@@ -23,7 +23,7 @@ use solana_axelar_std::ensure_single_feature;
 solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 
 #[cfg(feature = "devnet-amplifier")]
-declare_id!("gas5H48imY2w1j6e6x3EvVxKFtyTuWFhw6pgS5VAPLu");
+declare_id!("gasUBnVr9GZon2cp8X5gyFrUsQFhzrprjy734Ci6Bmn");
 
 #[cfg(feature = "stagenet")]
 declare_id!("gaspfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
