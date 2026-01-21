@@ -1,11 +1,6 @@
 #![cfg(test)]
 #![allow(clippy::str_to_string, clippy::indexing_slicing)]
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-<<<<<<< HEAD
-use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
-=======
-use solana_axelar_gateway::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
->>>>>>> cd7b9a92 (fix check)
 use solana_axelar_gateway::IncomingMessage;
 use solana_axelar_gateway::ValidateMessageSigner;
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
@@ -17,16 +12,7 @@ use solana_axelar_gateway_test_fixtures::{
 use solana_axelar_memo::Counter;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_axelar_std::{CrossChainId, Message, Messages, Payload, PayloadType};
-use solana_sdk::{
-<<<<<<< HEAD
-    account::Account,
-    instruction::{AccountMeta, Instruction},
-    native_token::LAMPORTS_PER_SOL,
-=======
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
-    system_program::ID as SYSTEM_PROGRAM_ID,
->>>>>>> cd7b9a92 (fix check)
-};
+use solana_sdk::{account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL};
 use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
@@ -36,13 +22,8 @@ fn execute() {
     // Step 0: Example payload
     let memo_string = "🐪🐪🐪🐪";
     let (counter_pda, _counter_pda_bump) = Counter::find_pda();
-    let encoding_scheme = ExecutablePayloadEncodingScheme::AbiEncoding;
-    let test_payload = ExecutablePayload::new(
-        memo_string.as_bytes(),
-        &[AccountMeta::new(counter_pda, false)],
-        encoding_scheme,
-    );
-    let test_payload_hash: [u8; 32] = test_payload.hash().unwrap();
+    let test_payload = Vec::from(memo_string.as_bytes());
+    let test_payload_hash: [u8; 32] = solana_sdk::keccak::hash(test_payload.as_slice()).to_bytes();
 
     // Step 1: Setup test with real signers
     let (mut setup, secret_key_1, secret_key_2) = setup_test_with_real_signers();
@@ -288,7 +269,7 @@ fn execute() {
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: solana_sdk::bpf_loader_upgradeable::id(),
+                owner: solana_sdk_ids::bpf_loader_upgradeable::id(),
                 executable: true,
                 rent_epoch: 0,
             },

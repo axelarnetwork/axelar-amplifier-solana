@@ -8,10 +8,8 @@ use relayer_discovery_test_fixtures::RelayerDiscoveryTestFixture;
 use solana_axelar_std::CrossChainId;
 use solana_axelar_test_discoverable::Payload;
 use solana_axelar_test_discoverable::ID as EXECUTABLE_ID;
-use solana_sdk::{
-    account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL,
-    system_program::ID as SYSTEM_PROGRAM_ID,
-};
+use solana_sdk::{account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL};
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -23,7 +21,6 @@ fn test_execute() {
     fixture.setup.mollusk.add_program(
         &solana_axelar_test_discoverable::id(),
         "../../target/deploy/solana_axelar_test_discoverable",
-        &solana_sdk::bpf_loader_upgradeable::id(),
     );
 
     // Step 7.1: Init Transaction PDA

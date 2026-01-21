@@ -18,10 +18,8 @@ use solana_axelar_gateway_test_fixtures::{
     verify_signature_helper, TestSetup,
 };
 use solana_sdk::pubkey::ParsePubkeyError;
-use solana_sdk::{
-    account::Account, instruction::Instruction, pubkey::Pubkey,
-    system_program::ID as SYSTEM_PROGRAM_ID,
-};
+use solana_sdk::{account::Account, instruction::Instruction, pubkey::Pubkey};
+use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 use std::str::FromStr;
 
 /// A complete setup for testing executables

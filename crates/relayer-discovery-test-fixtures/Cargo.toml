@@ -11,6 +11,7 @@ anchor-lang.workspace = true
 solana-axelar-std.workspace = true
 mollusk-svm.workspace = true
 solana-sdk.workspace = true
+solana-sdk-ids.workspace = true
 libsecp256k1.workspace = true
 solana-axelar-gateway-test-fixtures.workspace = true
 relayer-discovery.workspace = true

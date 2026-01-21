@@ -22,6 +22,7 @@ solana-axelar-std.workspace = true
 hex.workspace = true
 relayer-discovery-test-fixtures.workspace = true
 solana-program.workspace = true
+solana-sdk-ids.workspace = true
 
 [lints]
 workspace = true
