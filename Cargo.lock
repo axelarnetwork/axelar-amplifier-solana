@@ -2354,7 +2354,6 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "bincode",
- "constant_time_eq",
  "mollusk-svm",
  "solana-sdk",
  "solana-sdk-ids",
