@@ -18,3 +18,4 @@ solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
 mollusk-svm.workspace = true
 bincode.workspace = true
+constant_time_eq.workspace = true

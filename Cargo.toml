@@ -162,6 +162,7 @@ udigest = { version = "=0.2.0", features = ["derive"] }
 udigest-derive = "=0.2.0"
 base64ct = "=1.7.2"
 ruint = "=1.16.0"
+constant_time_eq = "=0.3.1"
 async-recursion = "1"
 keccak-const = "0.2.0"
 syn = { version = "2", features = ["full"] }
