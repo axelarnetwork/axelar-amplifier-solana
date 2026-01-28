@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.8...solana-axelar-its-v0.1.9)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update solana devnet ids ([#143](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/143)) - ([f4a322f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f4a322fb766ca7ee882f8327e6d0be7771f477ee))
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @themicp
+* @rista404
+
+## [0.1.9](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.1.8...solana-axelar-governance-v0.1.9)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update solana devnet ids ([#143](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/143)) - ([f4a322f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f4a322fb766ca7ee882f8327e6d0be7771f477ee))
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @themicp
+* @rista404
+
+## [0.1.4](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/governance-gmp-v0.1.3...governance-gmp-v0.1.4)
+
+### ⚙️ Miscellaneous Tasks
+
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @rista404
+
+## [0.1.9](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.1.8...solana-axelar-gateway-v0.1.9)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update solana devnet ids ([#143](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/143)) - ([f4a322f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f4a322fb766ca7ee882f8327e6d0be7771f477ee))
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @themicp
+* @rista404
+
+## [0.1.9](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.1.8...solana-axelar-gas-service-v0.1.9)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update solana devnet ids ([#143](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/143)) - ([f4a322f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f4a322fb766ca7ee882f8327e6d0be7771f477ee))
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @themicp
+* @rista404
+
+## [0.1.9](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.1.8...solana-axelar-operators-v0.1.9)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update solana devnet ids ([#143](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/143)) - ([f4a322f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f4a322fb766ca7ee882f8327e6d0be7771f477ee))
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @themicp
+* @rista404
+
+## [0.1.6](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-std-v0.1.5...solana-axelar-std-v0.1.6)
+
+### ⚙️ Miscellaneous Tasks
+
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+
+### Contributors
+
+* @rista404
+
 ## [0.1.8](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.7...solana-axelar-its-v0.1.8)
 
 ### 🐛 Bug Fixes
