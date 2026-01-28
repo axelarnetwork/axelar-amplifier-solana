@@ -7,20 +7,20 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-solana_axelar_gas_service = "gas5H48imY2w1j6e6x3EvVxKFtyTuWFhw6pgS5VAPLu"
-solana_axelar_gateway = "gtwiF7Bamsq5zBQCnKjK7kHfmBQe7StQE9VPucWrtmA"
-solana_axelar_governance = "govxuD1tYtyiGjXiNJBFtRYmuhA68VwJGpGXKADSJxA"
-solana_axelar_its = "itspcPS5zL941gd6jJfEAk8NjfzbanDFKtNQCNppVtJ"
-solana_axelar_memo = "memxUmZBzudVtrqZGPTuAyKbSZt2LAMkB2itKaUriQR"
-solana_axelar_operators = "oprgv1Fc3i2tRLGpKtbMB8oKnQHtWyossGYUfpfPzN6"
+solana_axelar_gas_service = "gasUBnVr9GZon2cp8X5gyFrUsQFhzrprjy734Ci6Bmn"
+solana_axelar_gateway = "gtwT4uGVTYSPnTGv6rSpMheyFyczUicxVWKqdtxNGw9"
+solana_axelar_governance = "gov9rPeepKWAL17wJAsy7kdib3ELWjj3kYPBtavkaGc"
+solana_axelar_its = "itsYxmqAxNKUL5zaj3fD1K1whuVhqpxKVoiLGie1reF"
+solana_axelar_memo = "memKnP9ex71TveNFpsFNVqAYGEe1v9uHVsHNdFPW6FY"
+solana_axelar_operators = "oprVNGMBsXzJJBTDQasNWqQ8nZqNhJP2ZXvrC7b5xXd"
 
 [programs.devnet]
-solana_axelar_gas_service = "gas5H48imY2w1j6e6x3EvVxKFtyTuWFhw6pgS5VAPLu"
-solana_axelar_gateway = "gtwiF7Bamsq5zBQCnKjK7kHfmBQe7StQE9VPucWrtmA"
-solana_axelar_governance = "govxuD1tYtyiGjXiNJBFtRYmuhA68VwJGpGXKADSJxA"
-solana_axelar_its = "itspcPS5zL941gd6jJfEAk8NjfzbanDFKtNQCNppVtJ"
-solana_axelar_memo = "memxUmZBzudVtrqZGPTuAyKbSZt2LAMkB2itKaUriQR"
-solana_axelar_operators = "oprgv1Fc3i2tRLGpKtbMB8oKnQHtWyossGYUfpfPzN6"
+solana_axelar_gas_service = "gasUBnVr9GZon2cp8X5gyFrUsQFhzrprjy734Ci6Bmn"
+solana_axelar_gateway = "gtwT4uGVTYSPnTGv6rSpMheyFyczUicxVWKqdtxNGw9"
+solana_axelar_governance = "gov9rPeepKWAL17wJAsy7kdib3ELWjj3kYPBtavkaGc"
+solana_axelar_its = "itsYxmqAxNKUL5zaj3fD1K1whuVhqpxKVoiLGie1reF"
+solana_axelar_memo = "memKnP9ex71TveNFpsFNVqAYGEe1v9uHVsHNdFPW6FY"
+solana_axelar_operators = "oprVNGMBsXzJJBTDQasNWqQ8nZqNhJP2ZXvrC7b5xXd"
 
 [registry]
 url = "https://api.apr.dev"
