@@ -1,3 +1,4 @@
+use crate::seed_prefixes::VALIDATE_MESSAGE_SIGNING_SEED;
 use anchor_lang::prelude::*;
 use bytemuck::{Pod, Zeroable};
 
@@ -15,6 +16,7 @@ pub struct IncomingMessage {
 
 impl IncomingMessage {
     pub const SEED_PREFIX: &'static [u8] = b"incoming message";
+    pub const VALIDATE_MESSAGE_SEED_PREFIX: &'static [u8] = b"gtw-validate-msg";
 
     pub fn pda_seeds<'a>(command_id: &'a [u8; 32]) -> [&'a [u8]; 2] {
         [Self::SEED_PREFIX, command_id]
@@ -26,6 +28,13 @@ impl IncomingMessage {
 
     pub fn find_pda(command_id: &[u8; 32]) -> (Pubkey, u8) {
         Pubkey::find_program_address(&Self::pda_seeds(command_id), &crate::ID)
+    }
+
+    pub fn find_signing_pda(command_id: &[u8; 32], destination_address: &Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[VALIDATE_MESSAGE_SIGNING_SEED, command_id],
+            destination_address,
+        )
     }
 }
 

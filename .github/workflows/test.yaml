@@ -29,6 +29,7 @@ jobs:
           - solana-axelar-governance
           - solana-axelar-its
           - solana-axelar-memo
+          - solana-axelar-test-discoverable
           - solana-axelar-operators
     steps:
       - uses: actions/checkout@v4
@@ -63,6 +64,7 @@ jobs:
           - solana-axelar-governance
           - solana-axelar-its
           - solana-axelar-memo
+          - solana-axelar-test-discoverable
           - solana-axelar-operators
     steps:
       - uses: actions/checkout@v4
@@ -105,4 +107,5 @@ jobs:
             --exclude solana-axelar-governance \
             --exclude solana-axelar-its \
             --exclude solana-axelar-memo \
+            --exclude solana-axelar-test-discoverable \
             --exclude solana-axelar-operators

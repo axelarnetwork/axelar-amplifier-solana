@@ -471,7 +471,7 @@ pub fn call_contract_helper(
             Account {
                 lamports: 1,
                 data: vec![],
-                owner: GATEWAY_PROGRAM_ID,
+                owner: SYSTEM_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -622,7 +622,7 @@ pub fn rotate_signers_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: GATEWAY_PROGRAM_ID,
+                owner: SYSTEM_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -700,7 +700,7 @@ pub fn transfer_operatorship_helper(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: GATEWAY_PROGRAM_ID,
+                owner: SYSTEM_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },
@@ -793,7 +793,7 @@ pub fn approve_message_helper_from_merklized(
             Account {
                 lamports: LAMPORTS_PER_SOL,
                 data: vec![],
-                owner: GATEWAY_PROGRAM_ID,
+                owner: SYSTEM_PROGRAM_ID,
                 executable: false,
                 rent_epoch: 0,
             },

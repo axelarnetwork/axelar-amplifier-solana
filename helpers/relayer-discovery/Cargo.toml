@@ -1,0 +1,21 @@
+[package]
+name = "relayer-discovery"
+version = "1.0.0"
+edition = "2021"
+license.workspace = true
+description = "Utility functions and helpers for Solana Relayer Discovery"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program.workspace = true
+solana-axelar-gateway = { workspace = true, features = ["no-entrypoint"], default-features = false }
+anchor-lang.workspace = true
+
+[dev-dependencies]
+solana-sdk.workspace = true
+solana-axelar-gateway-test-fixtures = { workspace = true, default-features = false }
