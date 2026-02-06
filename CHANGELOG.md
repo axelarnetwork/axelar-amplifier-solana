@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.9...solana-axelar-its-v0.1.10)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update stagenet ids ([#145](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/145)) - ([f0854c4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f0854c47c2ebe2edd737022a9f87a0778c95c737))
+
+### Contributors
+
+* @rista404
+
+## [0.1.10](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.1.9...solana-axelar-governance-v0.1.10)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update stagenet ids ([#145](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/145)) - ([f0854c4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f0854c47c2ebe2edd737022a9f87a0778c95c737))
+
+### Contributors
+
+* @rista404
+
+## [0.1.10](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.1.9...solana-axelar-gateway-v0.1.10)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update stagenet ids ([#145](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/145)) - ([f0854c4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f0854c47c2ebe2edd737022a9f87a0778c95c737))
+
+### Contributors
+
+* @rista404
+
+## [0.1.10](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.1.9...solana-axelar-gas-service-v0.1.10)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update stagenet ids ([#145](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/145)) - ([f0854c4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f0854c47c2ebe2edd737022a9f87a0778c95c737))
+
+### Contributors
+
+* @rista404
+
+## [0.1.10](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.1.9...solana-axelar-operators-v0.1.10)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update stagenet ids ([#145](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/145)) - ([f0854c4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f0854c47c2ebe2edd737022a9f87a0778c95c737))
+
+### Contributors
+
+* @rista404
+
 ## [0.1.9](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.8...solana-axelar-its-v0.1.9)
 
 ### ⚙️ Miscellaneous Tasks
