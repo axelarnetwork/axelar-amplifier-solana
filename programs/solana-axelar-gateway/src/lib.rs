@@ -37,7 +37,7 @@ ensure_single_feature!("devnet-amplifier", "stagenet", "testnet", "mainnet");
 declare_id!("gtwT4uGVTYSPnTGv6rSpMheyFyczUicxVWKqdtxNGw9");
 
 #[cfg(feature = "stagenet")]
-declare_id!("gtwpfz1SLfPr1zmackMVMgShjkuCGPZ5taN8wAfwreW");
+declare_id!("gtwYHfHHipAoj8Hfp3cGr3vhZ8f3UtptGCQLqjBkaSZ");
 
 #[cfg(feature = "testnet")]
 declare_id!("gtwpFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");

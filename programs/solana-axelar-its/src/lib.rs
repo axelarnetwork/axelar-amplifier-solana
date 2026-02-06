@@ -35,7 +35,7 @@ solana_axelar_std::ensure_single_feature!("devnet-amplifier", "stagenet", "testn
 declare_id!("itsYxmqAxNKUL5zaj3fD1K1whuVhqpxKVoiLGie1reF");
 
 #[cfg(feature = "stagenet")]
-declare_id!("itsediSVCwwKc6UuxfrsEiF8AEuEFk34RFAscPEDEpJ");
+declare_id!("itsm3zZhp2oGgEfq7XBu9ojRCYZJnhzecbAEPCrvx2B");
 
 #[cfg(feature = "testnet")]
 declare_id!("itsZEirFsnRmLejCsRRNZKHqWTzMsKGyYi6Qr962os4");
