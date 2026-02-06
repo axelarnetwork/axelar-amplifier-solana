@@ -22,6 +22,16 @@ solana_axelar_its = "itsYxmqAxNKUL5zaj3fD1K1whuVhqpxKVoiLGie1reF"
 solana_axelar_memo = "memKnP9ex71TveNFpsFNVqAYGEe1v9uHVsHNdFPW6FY"
 solana_axelar_operators = "oprVNGMBsXzJJBTDQasNWqQ8nZqNhJP2ZXvrC7b5xXd"
 
+# Solana itself doesn't have stagenet but keeping it here
+# for consistency with other networks
+[programs.stagenet]
+solana_axelar_gas_service = "gasgy6jz24wrfZL98uMy8QFUFziVPZ3bNLGXqnyTstW"
+solana_axelar_gateway = "gtwYHfHHipAoj8Hfp3cGr3vhZ8f3UtptGCQLqjBkaSZ"
+solana_axelar_governance = "gove5RYbmvEHyqweWehSnVA7GM1RUSXdNjzPDU37bgD"
+solana_axelar_its = "itsm3zZhp2oGgEfq7XBu9ojRCYZJnhzecbAEPCrvx2B"
+solana_axelar_memo = "mem4E22pPgkbHAvoUYHa7HybBgUKn6jFjvj1YnPdkaq"
+solana_axelar_operators = "oprNyqaxdvxs9s3Ngyi1gHqXeM2QLTv8skVPCcqmekx"
+
 [registry]
 url = "https://api.apr.dev"
 

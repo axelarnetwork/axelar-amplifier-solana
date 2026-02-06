@@ -39,7 +39,11 @@ enum Commands {
         #[clap(last = true)]
         args: Vec<String>,
     },
-    UpdateIds,
+    UpdateIds {
+        /// Network environment: devnet-amplifier, stagenet, testnet, or mainnet
+        #[clap(short, long)]
+        network: String,
+    },
 }
 
 fn main() -> eyre::Result<()> {
@@ -170,8 +174,16 @@ fn main() -> eyre::Result<()> {
             cmd!(sh, "cargo +nightly install cargo-deny").run()?;
             cmd!(sh, "cargo deny check {args...}").run()?;
         }
-        Commands::UpdateIds => {
-            println!("Updating program IDs");
+        Commands::UpdateIds { network } => {
+            let valid_networks = ["devnet-amplifier", "stagenet", "testnet", "mainnet"];
+            if !valid_networks.contains(&network.as_str()) {
+                return Err(eyre::eyre!(
+                    "Invalid network '{}'. Must be one of: devnet-amplifier, stagenet, testnet, mainnet",
+                    network
+                ));
+            }
+
+            println!("Updating program IDs for network: {network}");
 
             let program_prefixes = [
                 ("solana-axelar-gas-service", "gas"),
@@ -183,6 +195,12 @@ fn main() -> eyre::Result<()> {
             ];
 
             let (solana_programs, _) = workspace_crates_by_category(&sh)?;
+
+            let solana_network = match network.as_str() {
+                "devnet-amplifier" => "devnet",
+                other => other,
+            };
+            let mut anchor_toml_block = format!("[programs.{solana_network}]\n");
 
             for (program_name, program_path) in solana_programs {
                 if let Some((_, prefix)) = program_prefixes
@@ -222,34 +240,39 @@ fn main() -> eyre::Result<()> {
 
                     println!("Generated new ID for {program_name}: {new_id}");
 
-                    // Update the declare_id! macro in lib.rs
-                    // Read the current lib.rs content
+                    let program_name_snake = program_name.replace("-", "_");
+                    anchor_toml_block.push_str(&format!("{program_name_snake} = \"{new_id}\"\n"));
+
+                    // Update the declare_id! for the target network in lib.rs
                     let lib_content = std::fs::read_to_string(&lib_rs_path)?;
+                    let lines: Vec<&str> = lib_content.lines().collect();
+                    let cfg_marker = format!("#[cfg(feature = \"{network}\")]");
 
-                    // Find the existing declare_id! line (with or without solana_program:: prefix)
-                    let old_line = lib_content
-                        .lines()
-                        .find(|line| {
-                            line.trim().starts_with("solana_program::declare_id!(")
-                                || line.trim().starts_with("declare_id!(")
-                        })
-                        .unwrap_or("declare_id!(\"NoMatch\");");
+                    let cfg_idx = lines
+                        .iter()
+                        .position(|line| line.trim() == cfg_marker)
+                        .ok_or_eyre(format!("Could not find {cfg_marker} in {lib_rs_path:?}"))?;
 
-                    // Preserve the original format (with or without solana_program:: prefix)
-                    let new_line = if old_line.trim().starts_with("solana_program::") {
-                        format!("solana_program::declare_id!(\"{new_id}\");")
-                    } else {
-                        format!("declare_id!(\"{new_id}\");")
-                    };
+                    // The declare_id! is on the next line
+                    let declare_idx = cfg_idx + 1;
+                    eyre::ensure!(
+                        declare_idx < lines.len()
+                            && lines[declare_idx].trim().starts_with("declare_id!("),
+                        "Expected declare_id! on line after {cfg_marker} in {lib_rs_path:?}"
+                    );
 
-                    let updated_content = lib_content.replace(old_line, &new_line);
+                    let old_declare_line = lines[declare_idx];
+                    let new_declare_line = format!("declare_id!(\"{new_id}\");");
+                    let updated_content =
+                        lib_content.replacen(old_declare_line, &new_declare_line, 1);
 
                     std::fs::write(&lib_rs_path, updated_content)?;
-                    println!("Updated declare_id! macro in {lib_rs_path:?}");
+                    println!("Updated declare_id! for {network} in {lib_rs_path:?}");
                 }
             }
 
-            println!("Program IDs regenerated and successfully updated");
+            println!("Program IDs regenerated and successfully updated for {network}");
+            println!("You can update Anchor.toml for {network}:\n{anchor_toml_block}");
         }
     }
 
