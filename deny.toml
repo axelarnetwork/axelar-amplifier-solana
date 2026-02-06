@@ -73,6 +73,8 @@ ignore = [
   { id = "RUSTSEC-2024-0370", reason = "dependency of solana lib" },
   { id = "RUSTSEC-2024-0388", reason = "dependency of solana lib" },
   { id = "RUSTSEC-2024-0436", reason = "dependency of solana lib" },
+  { id = "RUSTSEC-2024-0370", reason = "dependency of alloy" },
+  { id = "RUSTSEC-2026-0007", reason = "dependency of tokio" },
   { id = "RUSTSEC-2025-0141", reason = "bincode used still by solana crates, used only for tests in our workspace" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
