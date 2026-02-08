@@ -82,10 +82,10 @@ publish_no_verify = true
 
 [[package]]
 name = "solana-axelar-memo"
-release = true
-publish = true
+changelog_path = "CHANGELOG.md"
 changelog_update = true
 git_release_enable = true
+publish = true
 
 [changelog]
 header = """# Changelog
