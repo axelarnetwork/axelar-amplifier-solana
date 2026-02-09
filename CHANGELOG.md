@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v0.1.10...solana-axelar-memo-v0.1.11)
+
+### ⛰️ Features
+
+- *(its)* Execute with interchain token (transfer with data) ([#96](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/96)) - ([537724f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/537724f441f4eb0c6f0f7860fe6db6eeb6ac9969))
+- *(its)* Add deploy, register and execute instructions ([#65](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/65)) - ([d353c7b](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/d353c7b256bc2d77c42f4c3e6c3f1169b1837b39))
+
+### 🐛 Bug Fixes
+
+- *(programs)* Add missing 'description' to Cargo.toml ([#90](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/90)) - ([317285b](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/317285b184b46678e5037fb8f980c839233da3b3))
+- Idl build generation ([#132](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/132)) - ([cf1bcbb](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cf1bcbb9b9e49dcb36178316cbf6f861a8ef92dc))
+- Prefix payload hashes with type + separate verification sessions (issue 148) ([#94](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/94)) - ([8d4c3b8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/8d4c3b82f9f1fc5ad7cb642fed0666058ce2e1fb))
+- Address Arda's ITS comments ([#101](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/101)) - ([90d8b9e](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/90d8b9e8b1ae6f714667f524d4b53e5a90a95b1a))
+- Release ([#98](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/98)) - ([e98d872](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/e98d87273b8cf9b5cbef045a37347347a007bef7))
+
+### 🚜 Refactor
+
+- Bump Anchor to v1 + bump Mollusk ([#128](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/128)) - ([c8d0dea](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/c8d0deabc93de7585f4d49cc3632ea87e2788a04))
+- Add try_find_pda to accounts ([#133](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/133)) - ([cfc83c8](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/cfc83c802560373bcef747ebb680cff6db2b9e4b))
+- Move encoding and gateway commons to `solana-axelar-std` ([#78](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/78)) - ([5236503](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/52365037f9957ef9871100643f6d61ba0304fd9e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(devnet-amplifier)* Add solana-13 IDs ([#118](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/118)) - ([9f33615](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/9f33615e51f0076f74597165a7049c1a0bb4a598))
+- *(github)* Use blacksmith runners ([#53](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/53)) - ([5115d6a](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/5115d6a19e22dd04a57a948aba3764e2b6d28fee))
+- *(programs)* Devnet-amplifier IDs for solana-12 ([#61](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/61)) - ([6f2d7f1](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/6f2d7f1fc818648e8115220b55a264f73f42ff6b))
+- Enable publishing of memo program ([#147](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/147)) - ([5e78aa6](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/5e78aa603e29427a820ace5eba8ee50562e2e159))
+- Update stagenet ids ([#145](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/145)) - ([f0854c4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f0854c47c2ebe2edd737022a9f87a0778c95c737))
+- Update solana devnet ids ([#143](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/143)) - ([f4a322f](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f4a322fb766ca7ee882f8327e6d0be7771f477ee))
+- Clean up dependencies and crates ([#142](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/142)) - ([85fc551](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/85fc551b5e015d3aa3b5233a155a2ba1918bcc4a))
+- Address ITS audit findings ([#137](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/137)) - ([7ecef46](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/7ecef460aec97b2d22ad5894caeec7d5a3f170b6))
+- Ignore bincode advisory ([#138](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/138)) - ([b4531b7](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b4531b781a2d971b8c3541b3f8d49ba58180805f))
+- Upgrade solana-keccak-hasher to use latest ([#110](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/110)) - ([89bc002](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/89bc002a59cfd9fe08c0ac70d87752912654934a))
+- Add env-based ids to memo and governance ([#63](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/63)) - ([feb070b](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/feb070babfa08062a0d9c49218dcf4d46a760971))
+- Rename test fixtures to legacy ([#57](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/57)) - ([18222fa](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/18222fabeb7b538fbd20c3ead7510c91b1aff544))
+- Rename v1 and v2 programs ([#50](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/50)) - ([3844388](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/3844388fe1e4af25427da160fbd411fe51a4d022))
+
+### Contributors
+
+* @rista404
+* @themicp
+* @MakisChristou
+* @nbayindirli
+
+## [0.1.11](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.10...solana-axelar-its-v0.1.11)
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix memo to devnet-amplifier for its tests - ([7193b10](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/7193b10728b48529cc0099be24573b2b122be64c))
+
+### Contributors
+
+* @rista404
+
 ## [0.1.10](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.1.9...solana-axelar-its-v0.1.10)
 
 ### ⚙️ Miscellaneous Tasks
