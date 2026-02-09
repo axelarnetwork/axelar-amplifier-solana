@@ -86,9 +86,6 @@ jobs:
             fi
           done
 
-          # Build memo for use in release testing
-          cargo build-sbf --manifest-path programs/solana-axelar-memo/Cargo.toml
-
           # Process in the deploy directory
           cd target/deploy
 
