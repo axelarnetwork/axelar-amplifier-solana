@@ -141,19 +141,9 @@ impl SignatureVerificationSessionData {
             [first_64 @ .., recovery_id] => (first_64, recovery_id),
         };
 
-        // Transform from Ethereum recovery_id (27, 28) to a range accepted by
-        // secp256k1_recover (0, 1, 2, 3)
-        // Only values 27 and 28 are valid Ethereum recovery IDs
-        let recovery_id = if *recovery_id == 27 || *recovery_id == 28 {
-            recovery_id.saturating_sub(27)
-        } else {
-            solana_program::msg!("Invalid recovery ID: {} (must be 27 or 28)", recovery_id);
-            return false;
-        };
-
         // This is results in a Solana syscall.
         let secp256k1_recover =
-            solana_secp256k1_recover::secp256k1_recover(&hashed_message, recovery_id, signature);
+            solana_secp256k1_recover::secp256k1_recover(&hashed_message, *recovery_id, signature);
         let Ok(recovered_uncompressed_pubkey) = secp256k1_recover else {
             solana_program::msg!("Failed to recover ECDSA signature");
             return false;
