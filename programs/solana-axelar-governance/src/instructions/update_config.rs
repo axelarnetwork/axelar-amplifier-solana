@@ -5,10 +5,10 @@ use anchor_lang::prelude::*;
 pub struct UpdateConfig<'info> {
     #[account(
         mut,
-        constraint = governance_config.operator == payer.key().to_bytes()
+        constraint = governance_config.operator == operator.key().to_bytes()
             @ GovernanceError::NotOperator
     )]
-    pub payer: Signer<'info>,
+    pub operator: Signer<'info>,
 
     #[account(
         mut,

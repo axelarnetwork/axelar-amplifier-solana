@@ -43,13 +43,13 @@ pub fn schedule_timelock_proposal_handler(
     let (_, managed_bump) = OperatorProposal::find_pda(&proposal_hash);
 
     // Enforce min delay
-    let eta = at_least_default_eta_delay(
+    let final_eta = at_least_default_eta_delay(
         eta,
         ctx.accounts.governance_config.minimum_proposal_eta_delay,
     )?;
 
     let proposal_pda = &mut ctx.accounts.proposal_pda;
-    proposal_pda.eta = eta;
+    proposal_pda.eta = final_eta;
     proposal_pda.managed_bump = managed_bump;
     proposal_pda.bump = ctx.bumps.proposal_pda;
 
@@ -58,7 +58,7 @@ pub fn schedule_timelock_proposal_handler(
         target_address: target,
         call_data,
         native_value,
-        eta,
+        eta: final_eta,
     });
 
     Ok(())

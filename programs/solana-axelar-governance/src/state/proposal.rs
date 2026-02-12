@@ -69,7 +69,7 @@ pub struct ExecuteProposalData {
     pub call_data: ExecuteProposalCallData,
     /// A 32-byte array representing the native token U256 value (lamports)
     /// associated with the proposal. This is a U256 value and should be casted
-    /// to u 64
+    /// to u64
     pub native_value: [u8; 32],
 }
 
