@@ -419,11 +419,7 @@ pub fn create_verifier_info(
     let hashed_message = prefixed_message_hash_payload_type(payload_type, &payload_merkle_root);
 
     let message = libsecp256k1::Message::parse(&hashed_message);
-    let (signature, recovery_id) = libsecp256k1::sign(&message, secret_key);
-    let mut signature_bytes = signature.serialize().to_vec();
-    signature_bytes.push(recovery_id.serialize() + 27);
-    let signature_array: [u8; 65] = signature_bytes.try_into().unwrap();
-    let signature = Signature(signature_array);
+    let signature = sign_message(&message, secret_key);
 
     let merkle_proof = verifier_merkle_tree.proof(&[position]);
     let merkle_proof_bytes = merkle_proof.to_bytes();
@@ -899,6 +895,14 @@ pub fn create_merklized_messages_from_std(
     }
 }
 
+fn sign_message(message: &libsecp256k1::Message, secret_key: &SecretKey) -> Signature {
+    let (sig, recovery_id) = libsecp256k1::sign(message, secret_key);
+    let mut bytes = [0u8; 65];
+    bytes[..64].copy_from_slice(&sig.serialize());
+    bytes[64] = recovery_id.serialize();
+    Signature(bytes)
+}
+
 pub fn create_execute_data_with_signatures(
     domain_separator: [u8; 32],
     secret_key_1: &SecretKey,
@@ -924,15 +928,8 @@ pub fn create_execute_data_with_signatures(
     let message = libsecp256k1::Message::parse(&hashed_message);
 
     // Create signatures for both signers
-    let (sig1, recovery_id1) = libsecp256k1::sign(&message, secret_key_1);
-    let mut sig1_bytes = sig1.serialize().to_vec();
-    sig1_bytes.push(recovery_id1.serialize() + 27);
-    let signature1 = Signature(sig1_bytes.try_into().unwrap());
-
-    let (sig2, recovery_id2) = libsecp256k1::sign(&message, secret_key_2);
-    let mut sig2_bytes = sig2.serialize().to_vec();
-    sig2_bytes.push(recovery_id2.serialize() + 27);
-    let signature2 = Signature(sig2_bytes.try_into().unwrap());
+    let signature1 = sign_message(&message, secret_key_1);
+    let signature2 = sign_message(&message, secret_key_2);
 
     let mut signatures = BTreeMap::new();
     signatures.insert(pubkey_1, signature1);
