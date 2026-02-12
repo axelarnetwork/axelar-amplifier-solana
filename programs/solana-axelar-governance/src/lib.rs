@@ -67,13 +67,12 @@ pub mod solana_axelar_governance {
         instructions::update_config_handler(ctx, params)
     }
 
-    #[instruction(discriminator = solana_axelar_gateway::executable::EXECUTE_IX_DISC)]
-    pub fn process_gmp(
-        ctx: Context<ProcessGmp>,
+    pub fn execute(
+        ctx: Context<Execute>,
         message: solana_axelar_gateway::Message,
         payload: Vec<u8>,
     ) -> Result<()> {
-        instructions::process_gmp_handler(ctx, message, payload)
+        instructions::execute_handler(ctx, message, payload)
     }
 
     pub fn schedule_timelock_proposal(

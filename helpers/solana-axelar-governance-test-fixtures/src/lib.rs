@@ -192,7 +192,7 @@ pub fn process_gmp_helper(
     payload: Vec<u8>,
     context: GmpContext,
 ) -> InstructionResult {
-    let instruction_data = solana_axelar_governance::instruction::ProcessGmp {
+    let instruction_data = solana_axelar_governance::instruction::Execute {
         message: message.clone(),
         payload: payload.clone(),
     }
@@ -325,7 +325,7 @@ pub fn process_gmp_helper(
     // Updated instruction accounts:
     let instruction = Instruction {
         program_id: GOVERNANCE_PROGRAM_ID,
-        accounts: solana_axelar_governance::accounts::ProcessGmp {
+        accounts: solana_axelar_governance::accounts::Execute {
             executable: solana_axelar_governance::accounts::AxelarExecuteAccounts {
                 incoming_message_pda: context.incoming_message.pubkey,
                 signing_pda: context.signing_pda.pubkey,

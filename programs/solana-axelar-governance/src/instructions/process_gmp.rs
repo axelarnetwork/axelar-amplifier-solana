@@ -6,10 +6,10 @@ use crate::{ExecutableProposal, ExecuteProposalCallData, GovernanceConfig, Gover
 use governance_gmp::{GovernanceCommand, GovernanceCommandPayload};
 use solana_axelar_gateway::{executable::*, executable_accounts};
 
-executable_accounts!(ProcessGmp);
+executable_accounts!(Execute);
 
 #[derive(Accounts)]
-pub struct ProcessGmp<'info> {
+pub struct Execute<'info> {
     // GMP Accounts
     pub executable: AxelarExecuteAccounts<'info>,
 
@@ -21,7 +21,6 @@ pub struct ProcessGmp<'info> {
     // Even though governance_config doesn't need to be mutable in
     // all GMP instructions, we make it mutable here to simplify CPI handling.
     // This avoids manual account construction for each instruction.
-    // TODO: recheck this choice later
     #[account(
     	mut,
     	seeds = [GovernanceConfig::SEED_PREFIX],
@@ -44,11 +43,7 @@ pub struct ProcessGmp<'info> {
     pub axelar_governance_program: Program<'info, SolanaAxelarGovernance>,
 }
 
-pub fn process_gmp_handler(
-    ctx: Context<ProcessGmp>,
-    message: Message,
-    payload: Vec<u8>,
-) -> Result<()> {
+pub fn execute_handler(ctx: Context<Execute>, message: Message, payload: Vec<u8>) -> Result<()> {
     // Ensure the message is from an authorized address and chain.
     // Check this first before validating message,
     // to avoid copying Message + it's a cheaper check
@@ -115,7 +110,7 @@ fn calculate_gmp_context(
 }
 
 fn process_proposal_gmp(
-    ctx: Context<ProcessGmp>,
+    ctx: Context<Execute>,
     proposal_hash: [u8; 32],
     cmd_payload: GovernanceCommandPayload,
 ) -> Result<()> {
@@ -159,7 +154,7 @@ fn extract_proposal_data(
 }
 
 fn schedule_timelock_proposal(
-    ctx: Context<ProcessGmp>,
+    ctx: Context<Execute>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
@@ -208,7 +203,7 @@ fn schedule_timelock_proposal(
 }
 
 fn cancel_timelock_proposal(
-    ctx: Context<ProcessGmp>,
+    ctx: Context<Execute>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
@@ -252,7 +247,7 @@ fn cancel_timelock_proposal(
 }
 
 fn approve_operator_proposal(
-    ctx: Context<ProcessGmp>,
+    ctx: Context<Execute>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
@@ -302,7 +297,7 @@ fn approve_operator_proposal(
 }
 
 fn cancel_operator_proposal(
-    ctx: Context<ProcessGmp>,
+    ctx: Context<Execute>,
     cmd_payload: GovernanceCommandPayload,
     proposal_hash: [u8; 32],
 ) -> Result<()> {
