@@ -46,7 +46,10 @@ pub fn refund_native_fees(ctx: Context<RefundFees>, message_id: String, amount: 
         amount
     );
 
-    if !Rent::get()?.is_exempt(ctx.accounts.treasury.get_lamports(), Treasury::INIT_SPACE) {
+    if !Rent::get()?.is_exempt(
+        ctx.accounts.treasury.get_lamports(),
+        Treasury::INIT_SPACE + Treasury::DISCRIMINATOR.len(),
+    ) {
         msg!("Treasury account is not rent exempt after fee refund");
         return Err(ProgramError::InvalidAccountData.into());
     }
