@@ -33,7 +33,7 @@ pub fn withdraw_tokens_handler(ctx: Context<WithdrawTokens>, amount: u64) -> Res
 
     if !Rent::get()?.is_exempt(
         governance_account_info.get_lamports(),
-        GovernanceConfig::INIT_SPACE,
+        GovernanceConfig::INIT_SPACE + GovernanceConfig::DISCRIMINATOR.len(),
     ) {
         msg!("GovernanceConfig account is not rent exempt after token withdrawal");
         return Err(ProgramError::InvalidAccountData.into());

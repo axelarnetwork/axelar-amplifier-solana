@@ -45,7 +45,10 @@ pub fn collect_native_fees(ctx: Context<CollectFees>, amount: u64) -> Result<()>
         amount
     );
 
-    if !Rent::get()?.is_exempt(ctx.accounts.treasury.get_lamports(), Treasury::INIT_SPACE) {
+    if !Rent::get()?.is_exempt(
+        ctx.accounts.treasury.get_lamports(),
+        Treasury::INIT_SPACE + Treasury::DISCRIMINATOR.len(),
+    ) {
         msg!("Treasury account is not rent exempt after fee collection");
         return Err(ProgramError::InvalidAccountData.into());
     }
