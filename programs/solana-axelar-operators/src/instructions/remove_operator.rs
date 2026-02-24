@@ -10,7 +10,7 @@ pub struct RemoveOperator<'info> {
     )]
     pub owner: Signer<'info>,
 
-    /// CHECK: Referenced in operator_account
+    /// CHECK: Used as seed for operator_account PDA derivation
     pub operator_to_remove: AccountInfo<'info>,
 
     #[account(
@@ -28,7 +28,6 @@ pub struct RemoveOperator<'info> {
             operator_to_remove.key().as_ref(),
         ],
         bump = operator_account.bump,
-        constraint = operator_account.operator == operator_to_remove.key() @ ErrorCode::InvalidOperator
     )]
     pub operator_account: Account<'info, OperatorAccount>,
 }

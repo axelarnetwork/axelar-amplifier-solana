@@ -39,7 +39,6 @@ pub fn add_operator(ctx: Context<AddOperator>) -> Result<()> {
     let operator_account = &mut ctx.accounts.operator_account;
     let registry = &mut ctx.accounts.registry;
 
-    operator_account.operator = ctx.accounts.operator_to_add.key();
     operator_account.bump = ctx.bumps.operator_account;
 
     registry.operator_count = registry
