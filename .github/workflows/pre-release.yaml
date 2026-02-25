@@ -47,7 +47,6 @@ jobs:
     uses: ./.github/workflows/reusable-build.yaml
     with:
       commit-hash: ${{ needs.solana-program-names.outputs.commit_hash }}
-      environment: ${{ vars.CF_BUCKET_ROOT_KEY }}
     secrets: inherit
 
   upload:

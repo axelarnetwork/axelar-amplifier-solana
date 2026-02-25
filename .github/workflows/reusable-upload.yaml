@@ -70,12 +70,11 @@ jobs:
           export PACKAGE_VERSION=${{ inputs.github-release && format('v{0}', inputs.package-version) || inputs.package-version }}
 
           export BASE_ARTIFACTS_DIR='${{ inputs.artifact-path }}'
-          export ARTIFACT_NAME="axelar-amplifier-solana-${PACKAGE_NAME}-${PACKAGE_VERSION}"
-          export BASE_ARTIFACTS_VERSIONED_DIR="$(dirname ${BASE_ARTIFACTS_DIR})/${ARTIFACT_NAME}" # Regardless of the dir type, relative or absolute
 
           export ARCHIVES_OUTPUT_DIR="${{ github.workspace }}/build/archives"
-          export ZIP_ARCHIVE_FILE="${ARCHIVES_OUTPUT_DIR}/${ARTIFACT_NAME}.zip"
-          export TAR_ARCHIVE_FILE="${ARCHIVES_OUTPUT_DIR}/${ARTIFACT_NAME}.tar.gz"
+
+          # Convert package name from kebab-case to snake_case for matching .so filename
+          export PROGRAM_SO_NAME=$(echo "${PACKAGE_NAME}" | tr '-' '_').so
 
           # Ensures that this dir is created
           mkdir -p ${ARCHIVES_OUTPUT_DIR}
@@ -89,49 +88,76 @@ jobs:
           # ex: ./target/deploy
           echo "BASE_ARTIFACTS_DIR=${BASE_ARTIFACTS_DIR}" >> $GITHUB_ENV
 
-          # ex: axelar-amplifier-solana-solana-axelar-gateway-v0.1.0
-          echo "ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
+          echo "ARCHIVES_OUTPUT_DIR=${ARCHIVES_OUTPUT_DIR}" >> $GITHUB_ENV
 
-          # ex: ./axelar-amplifier-solana-solana-axelar-gateway-v0.1.0
-          echo "BASE_ARTIFACTS_VERSIONED_DIR=${BASE_ARTIFACTS_VERSIONED_DIR}" >> $GITHUB_ENV
+          # ex: solana_axelar_gateway.so
+          echo "PROGRAM_SO_NAME=${PROGRAM_SO_NAME}" >> $GITHUB_ENV
 
-          echo "ZIP_ARCHIVE_FILE=${ZIP_ARCHIVE_FILE}" >> $GITHUB_ENV
-          echo "TAR_ARCHIVE_FILE=${TAR_ARCHIVE_FILE}" >> $GITHUB_ENV
-
-        # Create `zip` and `tar` archive files for program binaries
-      - name: Create `zip` and `tar` archive files for program binaries
+      - name: Prepare per-network artifacts, archives, and GitHub release files
         run: |
-          # Renaming to keep the dir structure in the archive matching the release version defined in `BASE_ARTIFACTS_VERSIONED_DIR`
-          mv ${{ env.BASE_ARTIFACTS_DIR }} ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}
+          NETWORKS="devnet-amplifier stagenet testnet mainnet"
+          GITHUB_RELEASE_FILES=""
 
-          # This cd to keep the dir structure of the artifacts archive
-          cd ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}
+          for network in $NETWORKS; do
+            echo "=========================================="
+            echo "Processing network: $network"
+            echo "=========================================="
 
-          # Convert package name from kebab-case to snake_case for matching .so filename
-          PROGRAM_SO_NAME=$(echo "${{ env.PACKAGE_NAME }}" | tr '-' '_').so
+            SO_FILE="${{ env.BASE_ARTIFACTS_DIR }}/${network}/${{ env.PROGRAM_SO_NAME }}"
 
-          # Verify the program binary exists before archiving
-          if [ ! -f "./${PROGRAM_SO_NAME}" ]; then
-            echo "Error: Program binary './${PROGRAM_SO_NAME}' not found"
-            exit 1
-          fi
-
-          # Archive only the specific program binary
-          find "." -type f -name "$PROGRAM_SO_NAME" -maxdepth 1 -print | zip "${{ env.ZIP_ARCHIVE_FILE }}" -@
-          find "." -type f -name "$PROGRAM_SO_NAME" -maxdepth 1 -print | tar -czvf "${{ env.TAR_ARCHIVE_FILE }}" -T -
-
-          # Verify archives were created successfully and are not empty
-          for archive in "${{ env.ZIP_ARCHIVE_FILE }}" "${{ env.TAR_ARCHIVE_FILE }}"; do
-            if [ ! -f "$archive" ] || [ ! -s "$archive" ]; then
-              echo "Error: Archive '$archive' is missing or empty"
+            # Verify the program binary exists
+            if [ ! -f "$SO_FILE" ]; then
+              echo "Error: Program binary '$SO_FILE' not found"
               exit 1
             fi
+
+            # --- Archives ---
+            ARTIFACT_NAME="axelar-amplifier-solana-${{ env.PACKAGE_NAME }}-${{ env.PACKAGE_VERSION }}-${network}"
+            ZIP_ARCHIVE_FILE="${{ env.ARCHIVES_OUTPUT_DIR }}/${ARTIFACT_NAME}.zip"
+            TAR_ARCHIVE_FILE="${{ env.ARCHIVES_OUTPUT_DIR }}/${ARTIFACT_NAME}.tar.gz"
+
+            # Create a temporary versioned dir for archive structure
+            VERSIONED_DIR="${{ github.workspace }}/build/versioned-${network}/${ARTIFACT_NAME}"
+            mkdir -p "${VERSIONED_DIR}"
+            cp "$SO_FILE" "${VERSIONED_DIR}/${{ env.PROGRAM_SO_NAME }}"
+
+            # Create archives
+            cd "${VERSIONED_DIR}"
+            find "." -type f -name "${{ env.PROGRAM_SO_NAME }}" -maxdepth 1 -print | zip "${ZIP_ARCHIVE_FILE}" -@
+            find "." -type f -name "${{ env.PROGRAM_SO_NAME }}" -maxdepth 1 -print | tar -czvf "${TAR_ARCHIVE_FILE}" -T -
+            cd "${{ github.workspace }}"
+
+            # Verify archives were created successfully and are not empty
+            for archive in "${ZIP_ARCHIVE_FILE}" "${TAR_ARCHIVE_FILE}"; do
+              if [ ! -f "$archive" ] || [ ! -s "$archive" ]; then
+                echo "Error: Archive '$archive' is missing or empty"
+                exit 1
+              fi
+            done
+
+            # Generate SHA-256 Checksums
+            for file in "${TAR_ARCHIVE_FILE}" "${ZIP_ARCHIVE_FILE}"; do
+              sha256sum "$file" > "$file.sha256"
+            done
+
+            # --- GitHub Release files ---
+            # Copy .so with network suffix for GitHub release
+            SO_BASENAME=$(basename "${{ env.PROGRAM_SO_NAME }}" .so)
+            RELEASE_SO_FILE="${{ env.ARCHIVES_OUTPUT_DIR }}/${SO_BASENAME}-${network}.so"
+            cp "$SO_FILE" "$RELEASE_SO_FILE"
+
+            # Collect all files for GitHub release
+            GITHUB_RELEASE_FILES="${GITHUB_RELEASE_FILES}${TAR_ARCHIVE_FILE}
+          ${TAR_ARCHIVE_FILE}.sha256
+          ${ZIP_ARCHIVE_FILE}
+          ${ZIP_ARCHIVE_FILE}.sha256
+          ${RELEASE_SO_FILE}
+          "
           done
 
-          # Generate SHA-256 Checksums
-          for file in "${{ env.TAR_ARCHIVE_FILE }}" "${{ env.ZIP_ARCHIVE_FILE }}"; do
-            sha256sum "$file" > "$file.sha256"
-          done
+          echo "GITHUB_RELEASE_FILES<<EOF" >> $GITHUB_ENV
+          echo "$GITHUB_RELEASE_FILES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # Publishing program binaries to `R2`
       - name: Configure CF credentials
@@ -145,43 +171,40 @@ jobs:
           output=json" > ~/.aws/config
 
       - name: Publish files to CF R2
-        id: publish-to-r2
         env:
           S3_BUCKET_NAME: ${{ inputs.cf-bucket-name }}
           ENDPOINT_URL: ${{ secrets.cf-endpoint-url }}
           CF_BUCKET_ROOT_KEY: ${{ inputs.cf-config-bucket-root-key }}
         run: |
-          export CF_PROGRAMS_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/programs"
-          # Convert package name from kebab-case to snake_case for matching .so filename
-          PROGRAM_SO_NAME=$(echo "${{ env.PACKAGE_NAME }}" | tr '-' '_').so
-          export PROGRAM_FILES=$(find "${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}" -maxdepth 1 -type f -name "$PROGRAM_SO_NAME")
+          NETWORKS="devnet-amplifier stagenet testnet mainnet"
 
-          # Verify program file was found
-          if [ -z "$PROGRAM_FILES" ]; then
-            echo "Error: No program binary found matching '$PROGRAM_SO_NAME' in ${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}"
-            exit 1
-          fi
+          for network in $NETWORKS; do
+            echo "=========================================="
+            echo "Uploading to R2 for network: $network"
+            echo "=========================================="
 
-          printf '%s\n' "$PROGRAM_FILES" | while IFS= read -r program_file; do
-            echo "Uploading program file: ${program_file}"
-            if [[ -f "$program_file" ]]; then
-              FILE_KEY=$(echo $program_file | sed "s|^${{ env.BASE_ARTIFACTS_VERSIONED_DIR }}/||")
-              echo "Uploading program file key: $CF_PROGRAMS_BUCKET_ROOT_KEY/$FILE_KEY"
-              aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_PROGRAMS_BUCKET_ROOT_KEY/$FILE_KEY" --body "$program_file" --acl public-read --endpoint-url $ENDPOINT_URL
-            fi
+            # R2 path: ROOT_KEY/PACKAGE_NAME/VERSION/NETWORK/programs/so_file.so
+            CF_PROGRAMS_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/${network}/programs"
+
+            SO_FILE="${{ env.BASE_ARTIFACTS_DIR }}/${network}/${{ env.PROGRAM_SO_NAME }}"
+
+            echo "Uploading program file: ${SO_FILE}"
+            echo "Uploading to key: ${CF_PROGRAMS_BUCKET_ROOT_KEY}/${{ env.PROGRAM_SO_NAME }}"
+            aws s3api put-object --bucket $S3_BUCKET_NAME --key "${CF_PROGRAMS_BUCKET_ROOT_KEY}/${{ env.PROGRAM_SO_NAME }}" --body "$SO_FILE" --acl public-read --endpoint-url $ENDPOINT_URL
+
+            # Upload per-network archives to R2
+            CF_ARCHIVES_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/${network}/archives"
+
+            ARTIFACT_NAME="axelar-amplifier-solana-${{ env.PACKAGE_NAME }}-${{ env.PACKAGE_VERSION }}-${network}"
+            TAR_ARCHIVE_FILE="${{ env.ARCHIVES_OUTPUT_DIR }}/${ARTIFACT_NAME}.tar.gz"
+            ZIP_ARCHIVE_FILE="${{ env.ARCHIVES_OUTPUT_DIR }}/${ARTIFACT_NAME}.zip"
+
+            for file in "$TAR_ARCHIVE_FILE" "$ZIP_ARCHIVE_FILE"; do
+              FILE_NAME=$(basename "${file}")
+              aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME" --body "$file" --acl public-read --endpoint-url $ENDPOINT_URL
+              aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME.sha256" --body "$file.sha256" --acl public-read --endpoint-url $ENDPOINT_URL
+            done
           done
-
-          # Upload the previously created archives to R2
-          export CF_ARCHIVES_BUCKET_ROOT_KEY="${CF_BUCKET_ROOT_KEY}/${{ env.PACKAGE_NAME }}/${{ env.PACKAGE_VERSION }}/archives"
-
-          for file in "${{ env.TAR_ARCHIVE_FILE }}" "${{ env.ZIP_ARCHIVE_FILE }}"; do
-            FILE_NAME=$(basename "${file}")
-            aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME" --body "$file" --acl public-read --endpoint-url $ENDPOINT_URL
-            aws s3api put-object --bucket $S3_BUCKET_NAME --key "$CF_ARCHIVES_BUCKET_ROOT_KEY/$FILE_NAME.sha256" --body "$file.sha256" --acl public-read --endpoint-url $ENDPOINT_URL
-          done
-
-          # Convert list to a compacted JSON array output
-          echo program_files=$(echo "${PROGRAM_FILES}" | jq -R . | jq -s . | jq -c .) >> "$GITHUB_OUTPUT"
 
       # Update the existing release and upload the program binaries, zip and tar archives to the specific tag
       # https://github.com/orgs/community/discussions/26263#discussioncomment-3251069
@@ -190,12 +213,6 @@ jobs:
         if: inputs.github-release
         with:
           tag_name: ${{ inputs.package-git-tag }} # This uses the tag from the push
-          files: |
-            ${{ env.TAR_ARCHIVE_FILE }}
-            ${{ env.TAR_ARCHIVE_FILE }}.sha256
-            ${{ env.ZIP_ARCHIVE_FILE }}
-            ${{ env.ZIP_ARCHIVE_FILE }}.sha256
-            ${{ join(fromJson(steps.publish-to-r2.outputs.program_files), '
-            ') }}
+          files: ${{ env.GITHUB_RELEASE_FILES }}
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
