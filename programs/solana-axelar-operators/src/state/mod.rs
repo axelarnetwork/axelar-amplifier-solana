@@ -28,12 +28,10 @@ impl OperatorRegistry {
     }
 }
 
-/// Individual operator account - holds operator pubkey
+/// Individual operator account
 #[account]
 #[derive(InitSpace)]
 pub struct OperatorAccount {
-    /// The operator's pubkey
-    pub operator: Pubkey,
     /// Bump seed
     pub bump: u8,
 }
