@@ -7,10 +7,6 @@ on:
         description: "The commit hash to build from"
         type: string
         required: true
-      environment:
-        description: "The root key to determine the cluster environment (ex: devnet-amplifier, testnet, stagenet, mainnet)"
-        type: string
-        required: true
     outputs:
       artifact-name:
         description: "Name of the uploaded artifact containing all builds"
@@ -51,46 +47,41 @@ jobs:
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 
-      - name: Build all programs
+      - name: Build all programs for all networks
         run: |
           echo "Warning: All declare_id!() values should already be set in the programs prior to building, and corresponding keypairs should be available in 1pass."
 
-          # Determine the Solana cluster based on the environment
-          ENVIRONMENT="${{ inputs.environment }}"
+          NETWORKS="devnet-amplifier stagenet testnet mainnet"
 
-          if [[ "$ENVIRONMENT" == *"devnet-amplifier"* ]] || [[ "$ENVIRONMENT" == *"stagenet"* ]] || [[ "$ENVIRONMENT" == *"testnet"* ]]; then
-            CLUSTER="devnet"
-          elif [[ "$ENVIRONMENT" == *"mainnet"* ]]; then
-            CLUSTER="mainnet-beta"
-          else
-            echo "Warning: Unknown environment '$ENVIRONMENT', defaulting to devnet"
-            CLUSTER="devnet"
-          fi
-
-          echo "Setting Solana cluster to: $CLUSTER"
-          solana config set --url $CLUSTER
-
-          # Extract package names from release-plz.toml and build each one
+          # Extract package names from release-plz.toml
           PROGRAMS=$(grep -A 4 '^\[\[package\]\]' release-plz.toml | grep '^name = ' | sed 's/name = "\(.*\)"/\1/')
 
           echo "Building programs from release-plz.toml:"
           echo "$PROGRAMS"
 
-          for program in $PROGRAMS; do
-            if [ -f "programs/$program/Cargo.toml" ]; then
-              library_name=$(echo "$program" | tr '-' '_')
-              echo "Building $program (library: $library_name)..."
-              cargo build-sbf --manifest-path programs/$program/Cargo.toml
-            else
-              echo "Skipping $program (not a Solana program)"
-            fi
+          for network in $NETWORKS; do
+            echo "=========================================="
+            echo "Building for network: $network"
+            echo "=========================================="
+
+            for program in $PROGRAMS; do
+              if [ -f "programs/$program/Cargo.toml" ]; then
+                echo "Building $program for $network..."
+                cargo build-sbf --manifest-path programs/$program/Cargo.toml --features "$network" --no-default-features
+              else
+                echo "Skipping $program (not a Solana program)"
+              fi
+            done
+
+            # Move built .so files into per-network subdirectory
+            mkdir -p target/deploy/$network
+            mv target/deploy/*.so target/deploy/$network/
+
+            echo "Moved .so files to target/deploy/$network/"
           done
 
-          # Process in the deploy directory
-          cd target/deploy
-
-          # Keep only .so files
-          find . -type f ! -name "*.so" -delete
+          # Clean up non-.so files at the root level of target/deploy/
+          find target/deploy -maxdepth 1 -type f -delete
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

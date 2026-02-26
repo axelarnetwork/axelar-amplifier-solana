@@ -77,7 +77,6 @@ jobs:
     uses: ./.github/workflows/reusable-build.yaml
     with:
       commit-hash: ${{ needs.prepare-release.outputs.commit_hash }}
-      environment: ${{ vars.CF_BUCKET_ROOT_KEY }}
 
   upload:
     needs: [prepare-release, build]

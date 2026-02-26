@@ -13,10 +13,6 @@ jobs:
 
     runs-on: blacksmith-8vcpu-ubuntu-2204
 
-    outputs:
-      releases: ${{ steps.prepare-matrix.outputs.releases }}
-      commit_hash: ${{ steps.get-commit-hash.outputs.hash }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,10 +21,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@1.86.0
-
-      - name: Get commit hash
-        id: get-commit-hash
-        run: echo "hash=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Dry-run
         id: dry-run
@@ -41,13 +33,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-      - name: Prepare JSON output to be a matrix GHA format
-        id: prepare-matrix
+      - name: Print dry-run results
         run: |
-          if [ "${{ steps.dry-run.outputs.releases }}" == "[]" ]; then
-            echo "release-plz dry-run output contains an empty release list — nothing to release."
-            echo "releases=[]" >> $GITHUB_OUTPUT
-            exit 0
+          echo "## Dry-run releases" >> $GITHUB_STEP_SUMMARY
+          RELEASES='${{ steps.dry-run.outputs.releases }}'
+          if [ "$RELEASES" == "[]" ] || [ -z "$RELEASES" ]; then
+            echo "No releases detected by dry-run."
+            echo "No releases detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "$RELEASES" | jq .
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            echo "$RELEASES" | jq . >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
-
-          echo "releases=$(echo '${{ steps.dry-run.outputs.releases }}' | jq -c '.')" >> $GITHUB_OUTPUT
