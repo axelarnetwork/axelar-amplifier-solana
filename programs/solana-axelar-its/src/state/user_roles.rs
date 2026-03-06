@@ -85,13 +85,6 @@ pub enum RolesError {
     MissingOperatorRole,
     #[msg("User does not have the FLOW_LIMITER role.")]
     MissingFlowLimiterRole,
-
-    #[msg("Proposal does not have the MINTER role.")]
-    ProposalMissingMinterRole,
-    #[msg("Proposal does not have the OPERATOR role.")]
-    ProposalMissingOperatorRole,
-    #[msg("Proposal does not have the FLOW_LIMITER role.")]
-    ProposalMissingFlowLimiterRole,
 }
 
 impl From<RolesError> for ProgramError {
