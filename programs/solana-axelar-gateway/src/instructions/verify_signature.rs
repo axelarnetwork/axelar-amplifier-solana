@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use solana_axelar_std::SigningVerifierSetInfo;
 
 #[derive(Accounts)]
-#[instruction(merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo)]
+#[instruction(payload_merkle_root: [u8; 32], verifier_info: SigningVerifierSetInfo)]
 pub struct VerifySignature<'info> {
     #[account(
         seeds = [GatewayConfig::SEED_PREFIX],
@@ -22,7 +22,7 @@ pub struct VerifySignature<'info> {
         mut,
         seeds = [
             SignatureVerificationSessionData::SEED_PREFIX,
-            merkle_root.as_ref(),
+            payload_merkle_root.as_ref(),
             &[verifier_info.payload_type.into()],
             verification_session_account.load()?.signature_verification.signing_verifier_set_hash.as_ref(),
         ],
