@@ -31,7 +31,6 @@ pub struct TransferOperatorship<'info> {
 
     /// CHECK: The new operator must be different
     #[account(
-
     	constraint = new_operator.key() != gateway_root_pda.load()?.operator.key()
      		@ ProgramError::InvalidInstructionData
     )]
