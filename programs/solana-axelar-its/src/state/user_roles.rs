@@ -42,17 +42,17 @@ impl UserRoles {
         self.roles != roles::EMPTY
     }
 
-    pub fn contains(&self, role: u8) -> bool {
-        let res = self.roles & role;
-        res == role
+    pub fn contains(&self, roles: u8) -> bool {
+        let res = self.roles & roles;
+        res == roles
     }
 
-    pub fn insert(&mut self, new_role: u8) {
-        self.roles |= new_role;
+    pub fn insert(&mut self, new_roles: u8) {
+        self.roles |= new_roles;
     }
 
-    pub fn remove(&mut self, role: u8) {
-        self.roles &= !role;
+    pub fn remove(&mut self, roles: u8) {
+        self.roles &= !roles;
     }
 
     pub fn find_pda(resource: &Pubkey, user: &Pubkey) -> (Pubkey, u8) {
