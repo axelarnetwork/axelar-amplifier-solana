@@ -45,6 +45,7 @@ runs:
     - name: Install needed tooling (needed for solana deps)
       shell: bash
       run: |
+        sudo apt-get update
         sudo apt-get install -y protobuf-compiler bzip2 clang libclang-dev llvm-dev
 
     - name: Install deps for rust check and docs

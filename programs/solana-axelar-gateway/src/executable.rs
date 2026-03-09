@@ -290,7 +290,6 @@ pub fn validate_message_raw(
 
 /// Relayer helpers for building the execute instruction
 /// for arbitrary programs.
-// TODO verify this is the best API for relayers and add tests
 pub mod helpers {
     use super::*;
     use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
@@ -367,6 +366,156 @@ pub mod helpers {
             program_id,
             accounts,
             data: ix_data,
+        }
+    }
+
+    #[cfg(test)]
+    #[allow(clippy::indexing_slicing, clippy::str_to_string)]
+    mod tests {
+        use super::*;
+        use anchor_lang::solana_program::pubkey::Pubkey;
+
+        fn test_message() -> Message {
+            Message {
+                cc_id: solana_axelar_std::CrossChainId {
+                    chain: "ethereum".to_string(),
+                    id: "tx-123".to_string(),
+                },
+                source_address: "0xSourceAddr".to_string(),
+                destination_chain: "solana".to_string(),
+                destination_address: Pubkey::new_unique().to_string(),
+                payload_hash: [42u8; 32],
+            }
+        }
+
+        fn test_execute_accounts() -> AxelarExecuteAccounts {
+            AxelarExecuteAccounts {
+                incoming_message_pda: Pubkey::new_unique(),
+                signing_pda: Pubkey::new_unique(),
+                gateway_root_pda: Pubkey::new_unique(),
+                event_authority: Pubkey::new_unique(),
+                axelar_gateway_program: Pubkey::new_unique(),
+            }
+        }
+
+        #[test]
+        fn axelar_execute_accounts_to_account_metas() {
+            let accounts = test_execute_accounts();
+            let metas = accounts.to_account_metas(None);
+
+            assert_eq!(metas.len(), 5);
+            // incoming_message_pda is writable, not a signer
+            assert_eq!(metas[0].pubkey, accounts.incoming_message_pda);
+            assert!(metas[0].is_writable);
+            assert!(!metas[0].is_signer);
+            // remaining accounts are read-only, not signers
+            for (i, expected_pubkey) in [
+                accounts.signing_pda,
+                accounts.gateway_root_pda,
+                accounts.event_authority,
+                accounts.axelar_gateway_program,
+            ]
+            .iter()
+            .enumerate()
+            {
+                assert_eq!(metas[i + 1].pubkey, *expected_pubkey);
+                assert!(!metas[i + 1].is_writable);
+                assert!(!metas[i + 1].is_signer);
+            }
+        }
+
+        #[test]
+        fn axelar_execute_instruction_serialization_roundtrip() {
+            let message = test_message();
+            let ix = AxelarExecuteInstruction {
+                message: message.clone(),
+                payload_without_accounts: vec![1, 2, 3, 4],
+                encoding_scheme: ExecutablePayloadEncodingScheme::Borsh,
+            };
+
+            let data = ix.data();
+            // Starts with the execute discriminator
+            assert_eq!(&data[..8], EXECUTE_IX_DISC);
+
+            // Roundtrip via AnchorDeserialize
+            let deserialized = AxelarExecuteInstruction::try_from_slice(&data[8..]).unwrap();
+            assert_eq!(deserialized.message, message);
+            assert_eq!(deserialized.payload_without_accounts, vec![1, 2, 3, 4]);
+            assert_eq!(
+                deserialized.encoding_scheme,
+                ExecutablePayloadEncodingScheme::Borsh
+            );
+        }
+
+        #[test]
+        fn create_execute_instruction_structure() {
+            let program_id = Pubkey::new_unique();
+            let message = test_message();
+            let execute_accounts = test_execute_accounts();
+
+            let extra_accounts = vec![
+                AccountMeta::new(Pubkey::new_unique(), false),
+                AccountMeta::new_readonly(Pubkey::new_unique(), true),
+            ];
+            let payload_bytes = b"hello";
+            let payload = ExecutablePayload::new(
+                payload_bytes,
+                &extra_accounts,
+                ExecutablePayloadEncodingScheme::Borsh,
+            );
+
+            let ix = create_execute_instruction(
+                program_id,
+                message.clone(),
+                &payload,
+                &execute_accounts,
+            );
+
+            assert_eq!(ix.program_id, program_id);
+            // 5 executable accounts + 2 extra accounts from the payload
+            assert_eq!(ix.accounts.len(), 7);
+            // First 5 are the executable accounts
+            assert_eq!(ix.accounts[0].pubkey, execute_accounts.incoming_message_pda);
+            assert_eq!(
+                ix.accounts[4].pubkey,
+                execute_accounts.axelar_gateway_program
+            );
+            // Last 2 are the payload accounts
+            assert_eq!(ix.accounts[5].pubkey, extra_accounts[0].pubkey);
+            assert_eq!(ix.accounts[6].pubkey, extra_accounts[1].pubkey);
+            assert!(ix.accounts[5].is_writable);
+            assert!(ix.accounts[6].is_signer);
+
+            // Verify instruction data contains the discriminator
+            assert_eq!(&ix.data[..8], EXECUTE_IX_DISC);
+
+            // Verify the deserialized instruction data
+            let deserialized = AxelarExecuteInstruction::try_from_slice(&ix.data[8..]).unwrap();
+            assert_eq!(deserialized.message, message);
+            assert_eq!(deserialized.payload_without_accounts, payload_bytes);
+            assert_eq!(
+                deserialized.encoding_scheme,
+                ExecutablePayloadEncodingScheme::Borsh
+            );
+        }
+
+        #[test]
+        fn create_execute_instruction_empty_payload_accounts() {
+            let program_id = Pubkey::new_unique();
+            let message = test_message();
+            let execute_accounts = test_execute_accounts();
+
+            let no_accounts: Vec<AccountMeta> = vec![];
+            let payload = ExecutablePayload::new(
+                b"data",
+                &no_accounts,
+                ExecutablePayloadEncodingScheme::AbiEncoding,
+            );
+
+            let ix = create_execute_instruction(program_id, message, &payload, &execute_accounts);
+
+            // Only the 5 executable accounts, no extra payload accounts
+            assert_eq!(ix.accounts.len(), 5);
         }
     }
 }
