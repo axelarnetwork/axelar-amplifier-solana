@@ -370,6 +370,7 @@ pub mod helpers {
     }
 
     #[cfg(test)]
+    #[allow(clippy::indexing_slicing, clippy::str_to_string)]
     mod tests {
         use super::*;
         use anchor_lang::solana_program::pubkey::Pubkey;
