@@ -4,9 +4,12 @@
 
 use anchor_lang::prelude::*;
 
+pub mod errors;
+pub mod events;
 pub mod instructions;
 pub mod state;
 
+pub use errors::ErrorCode;
 use instructions::*;
 pub use state::*;
 
@@ -45,28 +48,4 @@ pub mod operators {
     pub fn transfer_owner(ctx: Context<TransferOwner>) -> Result<()> {
         instructions::transfer_owner(ctx)
     }
-}
-
-#[event]
-pub struct OperatorAdded {
-    pub key: Pubkey,
-}
-
-#[event]
-pub struct OperatorRemoved {
-    pub key: Pubkey,
-}
-
-#[event]
-pub struct OwnershipTransferred {
-    pub old_owner: Pubkey,
-    pub new_owner: Pubkey,
-}
-
-#[error_code]
-pub enum ErrorCode {
-    #[msg("Only the master operator can perform this action")]
-    UnauthorizedOwner,
-    #[msg("New master cannot be the same as current master")]
-    SameMaster,
 }

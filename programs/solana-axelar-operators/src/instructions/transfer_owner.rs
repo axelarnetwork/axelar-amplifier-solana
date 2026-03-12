@@ -1,6 +1,6 @@
+use crate::events::OwnershipTransferred;
 use crate::state::*;
 use crate::ErrorCode;
-use crate::OwnershipTransferred;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -14,7 +14,7 @@ pub struct TransferOwner<'info> {
     /// CHECK: The new owner pubkey
     #[account(
     	// Ensure the new owner is not the same as the current owner
-		constraint = new_owner.key() != registry.owner @ ErrorCode::SameMaster
+		constraint = new_owner.key() != registry.owner @ ErrorCode::SameOwner
     )]
     pub new_owner: UncheckedAccount<'info>,
 

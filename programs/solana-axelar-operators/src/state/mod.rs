@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 
-/// Registry config - holds master operator
+/// Registry config
 #[account]
 #[derive(InitSpace)]
 pub struct OperatorRegistry {
-    /// Master operator who can add/remove operators
+    /// Owner, which can add/remove operators
     pub owner: Pubkey,
     /// Total number of operators
     pub operator_count: u64,
