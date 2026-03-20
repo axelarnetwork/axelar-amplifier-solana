@@ -24,7 +24,7 @@ declare_id!("oprVNGMBsXzJJBTDQasNWqQ8nZqNhJP2ZXvrC7b5xXd");
 declare_id!("oprNyqaxdvxs9s3Ngyi1gHqXeM2QLTv8skVPCcqmekx");
 
 #[cfg(feature = "testnet")]
-declare_id!("oprmPyi5v1mR3RDPoh72H6t6kNw2dbCYX8goanVF2gq");
+declare_id!("opriTiaaV7Ew1kma71TjKbrwQ2RWKJ3wbiWEAp3hUZc");
 
 #[cfg(feature = "mainnet")]
 declare_id!("opr1111111111111111111111111111111111111111");
