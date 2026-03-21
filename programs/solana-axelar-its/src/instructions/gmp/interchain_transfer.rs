@@ -47,12 +47,18 @@ pub struct ExecuteInterchainTransfer<'info> {
     )]
     pub destination: UncheckedAccount<'info>,
 
-    /// CHECK:
+    /// CHECK: The authority for the destination ATA.
+    /// For simple transfers (no data): this equals the destination wallet.
+    /// For CPI transfers (with data): this is a PDA derived as
+    /// `[b"axelar-its-token-authority"]` from the destination program, so the
+    /// destination program can sign for it via `invoke_signed`.
+    pub destination_token_authority: UncheckedAccount<'info>,
+
     #[account(
         init_if_needed,
         payer = payer,
         associated_token::mint = token_mint,
-        associated_token::authority = destination,
+        associated_token::authority = destination_token_authority,
         associated_token::token_program = token_program
     )]
     pub destination_ata: InterfaceAccount<'info, TokenAccount>,
@@ -153,6 +159,19 @@ pub fn execute_interchain_transfer_handler<'info>(
             return err!(ItsError::InterchainTransferExecutePdaMissing);
         };
 
+        // Validate that the destination_token_authority is the expected PDA
+        // derived from [b"axelar-its-token-authority"] with program = destination.
+        // This ensures the destination program can sign for the ATA authority
+        // via invoke_signed and spend the received tokens.
+        let (expected_authority, _) = Pubkey::find_program_address(
+            &[crate::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
+            &ctx.accounts.destination.key(),
+        );
+        require!(
+            ctx.accounts.destination_token_authority.key() == expected_authority,
+            ItsError::InvalidDestinationTokenAuthority
+        );
+
         // Validate and decode payload data value
 
         msg!("Got interchain transfer data, length: {}", data.len());
@@ -187,6 +206,7 @@ pub fn execute_interchain_transfer_handler<'info>(
         let accounts = AxelarExecuteWithInterchainToken {
             token_program: ctx.accounts.token_program.to_account_info(),
             token_mint: ctx.accounts.token_mint.to_account_info(),
+            destination_token_authority: ctx.accounts.destination_token_authority.to_account_info(),
             destination_program_ata: ctx.accounts.destination_ata.to_account_info(),
             interchain_transfer_execute: interchain_transfer_execute.to_account_info(),
         };

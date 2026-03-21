@@ -216,10 +216,12 @@ pub fn link_token_extra_accounts() -> Vec<anchor_lang::solana_program::instructi
 pub fn interchain_transfer_extra_accounts(
     destination_token_account: Pubkey,
     destination: Pubkey,
+    destination_token_authority: Pubkey,
     transfer_has_data: Option<bool>,
 ) -> Vec<anchor_lang::solana_program::instruction::AccountMeta> {
     solana_axelar_its::instructions::gmp::execute::execute_interchain_transfer_extra_accounts(
         destination,
+        destination_token_authority,
         destination_token_account,
         transfer_has_data,
     )

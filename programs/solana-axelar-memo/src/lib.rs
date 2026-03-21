@@ -61,8 +61,8 @@ pub mod memo {
         instructions::execute_handler(ctx, message, payload, encoding_scheme)
     }
 
-    pub fn execute_with_interchain_token(
-        ctx: Context<ExecuteWithInterchainToken>,
+    pub fn execute_with_interchain_token<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteWithInterchainToken<'info>>,
         execute_payload: AxelarExecuteWithInterchainTokenPayload,
     ) -> Result<()> {
         instructions::execute_with_interchain_token_handler(ctx, execute_payload)

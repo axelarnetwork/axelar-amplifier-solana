@@ -940,8 +940,19 @@ impl ItsTestHarness {
     }
 
     /// Shortcut function to get the token mint for a given token ID.
+    /// Reads the actual token address from the token manager account,
+    /// which works for both interchain tokens (PDA mint) and canonical
+    /// tokens (external mint). Falls back to deriving the PDA if the
+    /// token manager doesn't exist yet.
     pub fn token_mint_for_id(&self, token_id: [u8; 32]) -> Pubkey {
-        solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0
+        let token_manager_pda =
+            solana_axelar_its::TokenManager::find_pda(token_id, self.its_root).0;
+        if let Some(tm) = self.get_account_as::<solana_axelar_its::TokenManager>(&token_manager_pda)
+        {
+            tm.token_address
+        } else {
+            solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0
+        }
     }
 
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
@@ -1363,6 +1374,24 @@ impl ItsTestHarness {
         payload: encoding::HubMessage,
         extra_accounts: Vec<AccountMeta>,
     ) -> InstructionResult {
+        self.execute_hub_message_with_checks(
+            token_id,
+            source_chain,
+            payload,
+            extra_accounts,
+            &[Check::success()],
+        )
+    }
+
+    /// Like `execute_hub_message` but accepts custom checks instead of asserting success.
+    pub fn execute_hub_message_with_checks(
+        &self,
+        token_id: [u8; 32],
+        source_chain: &str,
+        payload: encoding::HubMessage,
+        extra_accounts: Vec<AccountMeta>,
+        checks: &[Check],
+    ) -> InstructionResult {
         let encoded_payload = borsh::to_vec(&payload).expect("payload should serialize");
         let payload_hash = solana_sdk::keccak::hashv(&[&encoded_payload]).to_bytes();
 
@@ -1399,15 +1428,13 @@ impl ItsTestHarness {
 
         let token_manager_pda =
             solana_axelar_its::TokenManager::find_pda(token_id, self.its_root).0;
-        let token_mint =
-            solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0;
+        let token_mint = self.token_mint_for_id(token_id);
         let token_manager_ata = get_associated_token_address_with_program_id(
             &token_manager_pda,
             &token_mint,
             &spl_token_2022::ID,
         );
 
-        // TODO extract to helper
         let executable = solana_axelar_its::accounts::AxelarExecuteAccounts {
             incoming_message_pda,
             signing_pda: solana_axelar_gateway::ValidateMessageSigner::create_pda(
@@ -1448,7 +1475,7 @@ impl ItsTestHarness {
         };
 
         self.ctx
-            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])])
+            .process_and_validate_instruction_chain(&[(&ix, checks)])
     }
 
     pub fn execute_gmp_transfer(
@@ -1470,17 +1497,26 @@ impl ItsTestHarness {
             data: data.clone().map(|(d, _)| d),
         };
 
-        let token_mint =
-            solana_axelar_its::TokenManager::find_token_mint(token_id, self.its_root).0;
+        let token_mint = self.token_mint_for_id(token_id);
+
+        // For CPI transfers (has_data), use a PDA as the ATA authority so the
+        // destination program can sign for it. For simple transfers, use the
+        // destination address (wallet) as authority.
+        let destination_token_authority = if has_data {
+            solana_axelar_its::instructions::destination_token_authority_pda(&destination_address)
+        } else {
+            destination_address
+        };
 
         let destination_ata = get_associated_token_address_with_program_id(
-            &destination_address,
+            &destination_token_authority,
             &token_mint,
             &spl_token_2022::ID,
         );
 
         let mut extra_accounts = execute_interchain_transfer_extra_accounts(
             destination_address,
+            destination_token_authority,
             destination_ata,
             Some(has_data),
         );
@@ -1498,6 +1534,61 @@ impl ItsTestHarness {
             source_chain,
             transfer_payload_wrapped,
             extra_accounts,
+        )
+    }
+
+    /// Like `execute_gmp_transfer` but allows overriding the destination token
+    /// authority and result checks. Useful for testing invalid authority scenarios.
+    pub fn execute_gmp_transfer_with_authority(
+        &self,
+        token_id: [u8; 32],
+        source_chain: &str,
+        source_address: &str,
+        destination_address: Pubkey,
+        amount: u64,
+        data: Option<(Vec<u8>, Vec<AccountMeta>)>,
+        destination_token_authority: Pubkey,
+        checks: &[Check],
+    ) -> InstructionResult {
+        let has_data = data.is_some();
+
+        let transfer_payload = encoding::InterchainTransfer {
+            token_id,
+            source_address: source_address.as_bytes().to_vec(),
+            destination_address: destination_address.to_bytes().to_vec(),
+            amount,
+            data: data.clone().map(|(d, _)| d),
+        };
+
+        let token_mint = self.token_mint_for_id(token_id);
+
+        let destination_ata = get_associated_token_address_with_program_id(
+            &destination_token_authority,
+            &token_mint,
+            &spl_token_2022::ID,
+        );
+
+        let mut extra_accounts = execute_interchain_transfer_extra_accounts(
+            destination_address,
+            destination_token_authority,
+            destination_ata,
+            Some(has_data),
+        );
+        if let Some((_, data_accounts)) = data {
+            extra_accounts.extend(data_accounts);
+        }
+
+        let transfer_payload_wrapped = encoding::HubMessage::ReceiveFromHub {
+            source_chain: source_chain.to_owned(),
+            message: encoding::Message::InterchainTransfer(transfer_payload),
+        };
+
+        self.execute_hub_message_with_checks(
+            token_id,
+            source_chain,
+            transfer_payload_wrapped,
+            extra_accounts,
+            checks,
         )
     }
 

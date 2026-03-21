@@ -68,6 +68,8 @@ pub enum ItsError {
     InvalidTokenManagerType,
     #[msg("Data serialization error")]
     SerializationError,
+    #[msg("The destination token authority does not match the expected PDA")]
+    InvalidDestinationTokenAuthority,
 }
 
 impl From<ItsError> for ProgramError {
