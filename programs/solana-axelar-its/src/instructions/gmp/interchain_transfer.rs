@@ -247,6 +247,11 @@ pub fn execute_interchain_transfer_handler<'info>(
                 &[interchain_transfer_execute_bump],
             ]],
         )?;
+    } else {
+        require!(
+            ctx.accounts.destination_token_authority.key() == ctx.accounts.destination.key(),
+            ItsError::InvalidDestinationTokenAuthority
+        );
     }
 
     Ok(())
