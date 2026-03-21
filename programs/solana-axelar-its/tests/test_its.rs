@@ -613,6 +613,44 @@ fn reject_interchain_transfer_with_data_when_authority_is_wrong_pda() {
     );
 }
 
+/// Test that a malicious relayer cannot redirect tokens in a simple (no-data)
+/// transfer by passing an arbitrary destination_token_authority.
+#[test]
+fn reject_simple_transfer_when_authority_differs_from_destination() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    let source_chain = "ethereum";
+    its_harness.ensure_trusted_chain(source_chain);
+
+    let receiver = its_harness.get_new_wallet();
+    let transfer_amount = 1_000_000u64;
+
+    // Pass an attacker-controlled authority instead of the destination wallet
+    let attacker = its_harness.get_new_wallet();
+
+    let result = its_harness.execute_gmp_transfer_with_authority(
+        token_id,
+        source_chain,
+        "ethereum_address_123",
+        receiver,
+        transfer_amount,
+        None, // no data = simple transfer
+        attacker,
+        &[Check::err(
+            anchor_lang::error::Error::from(
+                solana_axelar_its::ItsError::InvalidDestinationTokenAuthority,
+            )
+            .into(),
+        )],
+    );
+
+    assert!(
+        result.program_result.is_err(),
+        "should reject simple transfer when destination_token_authority != destination"
+    );
+}
+
 /// Test CPI interchain transfer with a canonical (LockUnlock) token.
 /// Unlike MintBurn tokens, LockUnlock tokens are transferred from the token
 /// manager's ATA (unlocked) rather than minted fresh.

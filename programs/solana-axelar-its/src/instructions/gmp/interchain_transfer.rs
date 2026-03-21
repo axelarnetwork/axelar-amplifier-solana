@@ -122,6 +122,17 @@ pub fn execute_interchain_transfer_handler<'info>(
         return err!(ItsError::InvalidAmount);
     }
 
+    // Validate destination_token_authority before transferring tokens.
+    // For simple transfers (no CPI), the authority must equal the destination
+    // wallet to prevent a malicious relayer from redirecting tokens.
+    // For CPI transfers, it must be the expected PDA (validated in invoke_destination_program).
+    if data.is_empty() {
+        require!(
+            ctx.accounts.destination_token_authority.key() == ctx.accounts.destination.key(),
+            ItsError::InvalidDestinationTokenAuthority
+        );
+    }
+
     validate_token_manager_type(
         ctx.accounts.token_manager_pda.ty,
         &ctx.accounts.token_mint.to_account_info(),
@@ -149,105 +160,124 @@ pub fn execute_interchain_transfer_handler<'info>(
     });
 
     if !data.is_empty() {
-        // Validate accounts
-
-        let Some(interchain_transfer_execute) = ctx.accounts.interchain_transfer_execute.as_ref()
-        else {
-            return err!(ItsError::InterchainTransferExecutePdaMissing);
-        };
-        let Some(interchain_transfer_execute_bump) = ctx.bumps.interchain_transfer_execute else {
-            return err!(ItsError::InterchainTransferExecutePdaMissing);
-        };
-
-        // Validate that the destination_token_authority is the expected PDA
-        // derived from [b"axelar-its-token-authority"] with program = destination.
-        // This ensures the destination program can sign for the ATA authority
-        // via invoke_signed and spend the received tokens.
-        let (expected_authority, _) = Pubkey::find_program_address(
-            &[crate::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
-            &ctx.accounts.destination.key(),
-        );
-        require!(
-            ctx.accounts.destination_token_authority.key() == expected_authority,
-            ItsError::InvalidDestinationTokenAuthority
-        );
-
-        // Validate and decode payload data value
-
-        msg!("Got interchain transfer data, length: {}", data.len());
-
-        let destination_payload = AxelarMessagePayload::decode(&data)?;
-        let destination_accounts = destination_payload.account_meta();
-
-        if destination_accounts.len() != ctx.remaining_accounts.len() {
-            return Err(ProgramError::NotEnoughAccountKeys.into());
-        }
-
-        let remaining_metas = ctx
-            .remaining_accounts
-            .iter()
-            .map(|ai| AccountMeta {
-                pubkey: ai.key(),
-                is_signer: ai.is_signer,
-                is_writable: ai.is_writable,
-            })
-            .collect::<Vec<_>>();
-
-        if !destination_accounts.eq(&remaining_metas) {
-            msg!("Provided executable accounts do not match the payload specified accounts");
-            return err!(ItsError::InvalidAccountData);
-        }
-
-        // Remove accounts from the final data sent to the destination program
-        let destination_data = destination_payload.payload_without_accounts().to_vec();
-
-        // Prepare instruction to invoke
-
-        let accounts = AxelarExecuteWithInterchainToken {
-            token_program: ctx.accounts.token_program.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            destination_token_authority: ctx.accounts.destination_token_authority.to_account_info(),
-            destination_program_ata: ctx.accounts.destination_ata.to_account_info(),
-            interchain_transfer_execute: interchain_transfer_execute.to_account_info(),
-        };
-
-        let mut ix_accounts = accounts.to_account_metas(Some(true));
-        ix_accounts.extend(destination_accounts);
-
-        let ix_data = AxelarExecuteWithInterchainTokenInstruction {
-            execute_payload: AxelarExecuteWithInterchainTokenPayload {
-                command_id: message.command_id(),
-                source_chain,
-                source_address,
-                token_id,
-                token_mint: ctx.accounts.token_mint.key(),
-                amount: transferred_amount,
-                data: destination_data,
-            },
-        };
-
-        let ix = solana_program::instruction::Instruction {
-            program_id: ctx.accounts.destination.key(),
-            accounts: ix_accounts,
-            data: ix_data.data(),
-        };
-
-        let mut account_infos = accounts.to_account_infos();
-        account_infos.extend(ctx.remaining_accounts.iter().cloned());
-
-        // Invoke the destination program
-
-        solana_program::program::invoke_signed(
-            &ix,
-            &account_infos,
-            // Sign with the interchain transfer execute PDA
-            &[&[
-                InterchainTransferExecute::SEED_PREFIX,
-                ctx.accounts.destination.key().as_ref(),
-                &[interchain_transfer_execute_bump],
-            ]],
+        invoke_destination_program(
+            &ctx,
+            message,
+            source_chain,
+            source_address,
+            token_id,
+            transferred_amount,
+            &data,
         )?;
     }
+
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn invoke_destination_program<'info>(
+    ctx: &Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
+    message: Message,
+    source_chain: String,
+    source_address: Vec<u8>,
+    token_id: [u8; 32],
+    transferred_amount: u64,
+    data: &[u8],
+) -> Result<()> {
+    let Some(interchain_transfer_execute) = ctx.accounts.interchain_transfer_execute.as_ref()
+    else {
+        return err!(ItsError::InterchainTransferExecutePdaMissing);
+    };
+    let Some(interchain_transfer_execute_bump) = ctx.bumps.interchain_transfer_execute else {
+        return err!(ItsError::InterchainTransferExecutePdaMissing);
+    };
+
+    // Validate that the destination_token_authority is the expected PDA
+    // derived from [b"axelar-its-token-authority"] with program = destination.
+    // This ensures the destination program can sign for the ATA authority
+    // via invoke_signed and spend the received tokens.
+    let (expected_authority, _) = Pubkey::find_program_address(
+        &[crate::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
+        &ctx.accounts.destination.key(),
+    );
+    require!(
+        ctx.accounts.destination_token_authority.key() == expected_authority,
+        ItsError::InvalidDestinationTokenAuthority
+    );
+
+    // Validate and decode payload data value
+
+    msg!("Got interchain transfer data, length: {}", data.len());
+
+    let destination_payload = AxelarMessagePayload::decode(data)?;
+    let destination_accounts = destination_payload.account_meta();
+
+    if destination_accounts.len() != ctx.remaining_accounts.len() {
+        return Err(ProgramError::NotEnoughAccountKeys.into());
+    }
+
+    let remaining_metas = ctx
+        .remaining_accounts
+        .iter()
+        .map(|ai| AccountMeta {
+            pubkey: ai.key(),
+            is_signer: ai.is_signer,
+            is_writable: ai.is_writable,
+        })
+        .collect::<Vec<_>>();
+
+    if !destination_accounts.eq(&remaining_metas) {
+        msg!("Provided executable accounts do not match the payload specified accounts");
+        return err!(ItsError::InvalidAccountData);
+    }
+
+    // Remove accounts from the final data sent to the destination program
+    let destination_data = destination_payload.payload_without_accounts().to_vec();
+
+    // Prepare instruction to invoke
+
+    let accounts = AxelarExecuteWithInterchainToken {
+        token_program: ctx.accounts.token_program.to_account_info(),
+        token_mint: ctx.accounts.token_mint.to_account_info(),
+        destination_token_authority: ctx.accounts.destination_token_authority.to_account_info(),
+        destination_program_ata: ctx.accounts.destination_ata.to_account_info(),
+        interchain_transfer_execute: interchain_transfer_execute.to_account_info(),
+    };
+
+    let mut ix_accounts = accounts.to_account_metas(Some(true));
+    ix_accounts.extend(destination_accounts);
+
+    let ix_data = AxelarExecuteWithInterchainTokenInstruction {
+        execute_payload: AxelarExecuteWithInterchainTokenPayload {
+            command_id: message.command_id(),
+            source_chain,
+            source_address,
+            token_id,
+            token_mint: ctx.accounts.token_mint.key(),
+            amount: transferred_amount,
+            data: destination_data,
+        },
+    };
+
+    let ix = solana_program::instruction::Instruction {
+        program_id: ctx.accounts.destination.key(),
+        accounts: ix_accounts,
+        data: ix_data.data(),
+    };
+
+    let mut account_infos = accounts.to_account_infos();
+    account_infos.extend(ctx.remaining_accounts.iter().cloned());
+
+    solana_program::program::invoke_signed(
+        &ix,
+        &account_infos,
+        // Sign with the interchain transfer execute PDA
+        &[&[
+            InterchainTransferExecute::SEED_PREFIX,
+            ctx.accounts.destination.key().as_ref(),
+            &[interchain_transfer_execute_bump],
+        ]],
+    )?;
 
     Ok(())
 }
