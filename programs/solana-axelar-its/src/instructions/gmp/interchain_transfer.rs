@@ -127,6 +127,13 @@ pub fn execute_interchain_transfer_handler<'info>(
     // wallet to prevent a malicious relayer from redirecting tokens.
     // For CPI transfers, it must be the expected PDA (validated in invoke_destination_program).
     if data.is_empty() {
+        // Reject sending tokens to a program without data — the program can't
+        // sign for its own ID, so tokens would be stuck. The destination must
+        // be a wallet or PDA, not an executable program.
+        require!(
+            !ctx.accounts.destination.executable,
+            ItsError::SimpleTransferToExecutableNotAllowed
+        );
         require!(
             ctx.accounts.destination_token_authority.key() == ctx.accounts.destination.key(),
             ItsError::InvalidDestinationTokenAuthority

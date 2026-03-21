@@ -38,8 +38,6 @@ pub enum ItsError {
     InvalidDestinationChain,
     #[msg("The destination address is invalid")]
     InvalidDestinationAddress,
-    #[msg("The destination address must be an executable")]
-    DestinationAddressNotExecutable,
     #[msg("The destination address account is invalid")]
     InvalidDestinationAddressAccount,
     #[msg("The interchain transfer PDA is required for transfers with data")]
@@ -70,6 +68,8 @@ pub enum ItsError {
     SerializationError,
     #[msg("The destination token authority does not match the expected PDA")]
     InvalidDestinationTokenAuthority,
+    #[msg("Simple transfers (no data) cannot target an executable program; use a CPI transfer with data instead")]
+    SimpleTransferToExecutableNotAllowed,
 }
 
 impl From<ItsError> for ProgramError {
