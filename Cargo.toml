@@ -110,8 +110,8 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 
 
 [workspace.dependencies]
-anchor-lang = { version = "1.0.0-rc.1", features = ["event-cpi"] }
-anchor-spl = "1.0.0-rc.1"
+anchor-lang = { version = "1.0.0-rc.5", features = ["event-cpi"] }
+anchor-spl = "1.0.0-rc.5"
 alloy-primitives = "0.7"
 alloy-sol-types = "0.7"
 anyhow = "1"
@@ -171,9 +171,9 @@ proc-macro2 = "1"
 # solana dependencies
 solana-sdk = "~3.0.0"
 solana-program = "~3.0.0"
-solana-sdk-ids = "~3.0.0"
+solana-sdk-ids = "~3.1.0"
 solana-keccak-hasher = { version = "~3.1.0", features = ["sha3"] }
-solana-secp256k1-recover = "~3.0.0"
+solana-secp256k1-recover = "~3.1.0"
 spl-associated-token-account = "8.0.0"
 spl-pod = "0.7.1"
 spl-token = "9.0.0"
