@@ -27,10 +27,10 @@ declare_id!("memKnP9ex71TveNFpsFNVqAYGEe1v9uHVsHNdFPW6FY");
 declare_id!("mem4E22pPgkbHAvoUYHa7HybBgUKn6jFjvj1YnPdkaq");
 
 #[cfg(feature = "testnet")]
-declare_id!("mempFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
+declare_id!("mem7UJouaeyTgySvXhQSxWtGFrWPQ89jywjc8YvQFRT");
 
 #[cfg(feature = "mainnet")]
-declare_id!("mem1111111111111111111111111111111111111111");
+declare_id!("memtaCuA26EANM26matPAhiQGPnvsrYdJYrYcK8wcon");
 
 #[program]
 pub mod memo {

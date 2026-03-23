@@ -32,6 +32,22 @@ solana_axelar_its = "itsm3zZhp2oGgEfq7XBu9ojRCYZJnhzecbAEPCrvx2B"
 solana_axelar_memo = "mem4E22pPgkbHAvoUYHa7HybBgUKn6jFjvj1YnPdkaq"
 solana_axelar_operators = "oprNyqaxdvxs9s3Ngyi1gHqXeM2QLTv8skVPCcqmekx"
 
+[programs.testnet]
+solana_axelar_its = "itsJo4kNJ3mdh3requwbtTTt7vyYTudp1pxhn2KiHMc"
+solana_axelar_governance = "gov8RocHyma92s2VmF2EXwphqV9wefm9KHJKUaPGRvX"
+solana_axelar_memo = "mem7UJouaeyTgySvXhQSxWtGFrWPQ89jywjc8YvQFRT"
+solana_axelar_operators = "opriTiaaV7Ew1kma71TjKbrwQ2RWKJ3wbiWEAp3hUZc"
+solana_axelar_gas_service = "gasq7KHHv9Rs8C82hu3dgoBD9wk5LTKpWqbdf5o5juu"
+solana_axelar_gateway = "gtwJ8LWDRWZpbvCqp8sDeTgy3GSyuoEsiaKC8wSXJqq"
+
+[programs.mainnet]
+solana_axelar_its = "itsAUdHnV2K99ppbM6d6WUDac8MD54RAE7dUKHnw1Eg"
+solana_axelar_governance = "gov8EenfCgBTzVQR5akuVxnTUuAw5AJN9Ce9c2yJfMg"
+solana_axelar_memo = "memtaCuA26EANM26matPAhiQGPnvsrYdJYrYcK8wcon"
+solana_axelar_operators = "opre2VP8uvjq3YS15NRhRagsWvsY5DybitvCeLPAwbK"
+solana_axelar_gas_service = "gaszjG8797GGm8oACCzH2KLLifGp2nugKkLwaecwBjT"
+solana_axelar_gateway = "gtwqvLL93XK7pC2eMvfGamqokvs19AytzaVhrL2iKiz"
+
 [registry]
 url = "https://api.apr.dev"
 

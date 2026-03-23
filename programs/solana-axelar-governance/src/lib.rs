@@ -33,10 +33,10 @@ declare_id!("gov9rPeepKWAL17wJAsy7kdib3ELWjj3kYPBtavkaGc");
 declare_id!("gove5RYbmvEHyqweWehSnVA7GM1RUSXdNjzPDU37bgD");
 
 #[cfg(feature = "testnet")]
-declare_id!("govpFGXoWNNMMaYGhJoNRMNAp8R3srFeBmKAoeLgSYy");
+declare_id!("gov8RocHyma92s2VmF2EXwphqV9wefm9KHJKUaPGRvX");
 
 #[cfg(feature = "mainnet")]
-declare_id!("gov1111111111111111111111111111111111111111");
+declare_id!("gov8EenfCgBTzVQR5akuVxnTUuAw5AJN9Ce9c2yJfMg");
 
 /// Seed prefixes for different PDAs initialized by the Governance program.
 pub mod seed_prefixes {
