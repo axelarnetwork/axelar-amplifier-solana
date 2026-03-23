@@ -41,7 +41,7 @@ declare_id!("itsm3zZhp2oGgEfq7XBu9ojRCYZJnhzecbAEPCrvx2B");
 declare_id!("itsJo4kNJ3mdh3requwbtTTt7vyYTudp1pxhn2KiHMc");
 
 #[cfg(feature = "mainnet")]
-declare_id!("its1111111111111111111111111111111111111111");
+declare_id!("itsAUdHnV2K99ppbM6d6WUDac8MD54RAE7dUKHnw1Eg");
 
 // Chain name hash
 

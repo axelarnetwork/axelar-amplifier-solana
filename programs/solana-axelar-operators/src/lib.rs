@@ -27,7 +27,7 @@ declare_id!("oprNyqaxdvxs9s3Ngyi1gHqXeM2QLTv8skVPCcqmekx");
 declare_id!("opriTiaaV7Ew1kma71TjKbrwQ2RWKJ3wbiWEAp3hUZc");
 
 #[cfg(feature = "mainnet")]
-declare_id!("opr1111111111111111111111111111111111111111");
+declare_id!("opre2VP8uvjq3YS15NRhRagsWvsY5DybitvCeLPAwbK");
 
 #[program]
 pub mod operators {

@@ -30,7 +30,7 @@ declare_id!("mem4E22pPgkbHAvoUYHa7HybBgUKn6jFjvj1YnPdkaq");
 declare_id!("mem7UJouaeyTgySvXhQSxWtGFrWPQ89jywjc8YvQFRT");
 
 #[cfg(feature = "mainnet")]
-declare_id!("mem1111111111111111111111111111111111111111");
+declare_id!("memtaCuA26EANM26matPAhiQGPnvsrYdJYrYcK8wcon");
 
 #[program]
 pub mod memo {

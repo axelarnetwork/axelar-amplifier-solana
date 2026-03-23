@@ -32,7 +32,7 @@ declare_id!("gasgy6jz24wrfZL98uMy8QFUFziVPZ3bNLGXqnyTstW");
 declare_id!("gasq7KHHv9Rs8C82hu3dgoBD9wk5LTKpWqbdf5o5juu");
 
 #[cfg(feature = "mainnet")]
-declare_id!("gas1111111111111111111111111111111111111111");
+declare_id!("gaszjG8797GGm8oACCzH2KLLifGp2nugKkLwaecwBjT");
 
 #[program]
 pub mod solana_axelar_gas_service {

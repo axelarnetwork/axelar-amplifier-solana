@@ -43,7 +43,7 @@ declare_id!("gtwYHfHHipAoj8Hfp3cGr3vhZ8f3UtptGCQLqjBkaSZ");
 declare_id!("gtwJ8LWDRWZpbvCqp8sDeTgy3GSyuoEsiaKC8wSXJqq");
 
 #[cfg(feature = "mainnet")]
-declare_id!("gtw1111111111111111111111111111111111111111");
+declare_id!("gtwqvLL93XK7pC2eMvfGamqokvs19AytzaVhrL2iKiz");
 
 /// Seed prefixes for different PDAs initialized by the Gateway
 pub mod seed_prefixes {
