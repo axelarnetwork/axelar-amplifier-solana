@@ -64,6 +64,7 @@ pub struct TransferInterchainTokenMintership<'info> {
             destination_user_account.key().as_ref(),
         ],
         bump,
+        dup,
     )]
     pub destination_roles_account: Account<'info, UserRoles>,
 
