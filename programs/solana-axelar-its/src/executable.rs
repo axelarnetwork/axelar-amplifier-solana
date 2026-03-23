@@ -98,9 +98,18 @@ macro_rules! executable_with_interchain_token_accounts {
         #[account(mint::token_program = token_program)]
         pub token_mint: InterfaceAccount<'info, anchor_spl::token_interface::Mint>,
 
+        /// The token authority PDA derived from this program's ID.
+        /// Programs can sign for this PDA via `invoke_signed` with
+        /// seeds `[b"axelar-its-token-authority"]` to spend received tokens.
+        #[account(
+            seeds = [solana_axelar_its::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
+            bump,
+        )]
+        pub destination_token_authority: UncheckedAccount<'info>,
+
         #[account(
             associated_token::mint = token_mint,
-            associated_token::authority = crate::ID,
+            associated_token::authority = destination_token_authority,
             associated_token::token_program = token_program,
         )]
         pub destination_program_ata: InterfaceAccount<'info, anchor_spl::token_interface::TokenAccount>,
@@ -123,6 +132,7 @@ pub mod builder {
     pub struct AxelarExecuteWithInterchainToken<'info> {
         pub token_program: AccountInfo<'info>,
         pub token_mint: AccountInfo<'info>,
+        pub destination_token_authority: AccountInfo<'info>,
         pub destination_program_ata: AccountInfo<'info>,
         pub interchain_transfer_execute: AccountInfo<'info>,
     }
@@ -132,6 +142,7 @@ pub mod builder {
             vec![
                 AccountMeta::new_readonly(self.token_program.key(), false),
                 AccountMeta::new(self.token_mint.key(), false),
+                AccountMeta::new_readonly(self.destination_token_authority.key(), false),
                 AccountMeta::new(self.destination_program_ata.key(), false),
                 AccountMeta::new_readonly(
                     self.interchain_transfer_execute.key(),
@@ -146,6 +157,7 @@ pub mod builder {
             vec![
                 self.token_program.clone(),
                 self.token_mint.clone(),
+                self.destination_token_authority.clone(),
                 self.destination_program_ata.clone(),
                 self.interchain_transfer_execute.clone(),
             ]

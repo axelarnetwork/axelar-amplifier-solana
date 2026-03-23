@@ -1,6 +1,3 @@
-#[cfg(feature = "anchor")]
-use anchor_lang::prelude::borsh;
-
 use borsh::{BorshDeserialize, BorshSerialize};
 use rs_merkle::MerkleTree;
 use std::collections::BTreeMap;
@@ -51,16 +48,8 @@ pub enum Payload {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(not(feature = "anchor"), borsh(use_discriminant = false))]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
-)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, borsh::BorshSerialize, borsh::BorshDeserialize)]
+#[borsh(use_discriminant = false)]
 pub enum PayloadType {
     ApproveMessages = 0,
     RotateSigners = 1,
