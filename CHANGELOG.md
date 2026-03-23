@@ -7,6 +7,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v0.2.0...solana-axelar-memo-v1.0.0)
+
+### ⛰️ Features
+
+- [**breaking**] Update testnet and mainnet program addresses ([#159](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/159)) - ([2d517dd](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d517dd7f85a60cf2c5bc98cc63544c31d2fd7b9))
+
+### 🐛 Bug Fixes
+
+- *(its)* [**breaking**] Use PDA as ATA authority for CPI interchain transfers (arda 304) ([#157](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/157)) - ([603d771](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/603d771de10217a54a6ed87de3beb2be454c3126))
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump anchor-lang to v1.0.0-rc.5 ([#158](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/158)) - ([b6f8781](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b6f8781d0cbed5cf034b16c9a581ea9177c2a1be))
+
+### Contributors
+
+* @rista404
+
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.2.0...solana-axelar-its-v1.0.0)
+
+### ⛰️ Features
+
+- [**breaking**] Update testnet and mainnet program addresses ([#159](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/159)) - ([2d517dd](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d517dd7f85a60cf2c5bc98cc63544c31d2fd7b9))
+
+### 🐛 Bug Fixes
+
+- *(its)* [**breaking**] Use PDA as ATA authority for CPI interchain transfers (arda 304) ([#157](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/157)) - ([603d771](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/603d771de10217a54a6ed87de3beb2be454c3126))
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump anchor-lang to v1.0.0-rc.5 ([#158](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/158)) - ([b6f8781](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b6f8781d0cbed5cf034b16c9a581ea9177c2a1be))
+
+### Contributors
+
+* @rista404
+
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.2.0...solana-axelar-governance-v1.0.0)
+
+### ⛰️ Features
+
+- [**breaking**] Update testnet and mainnet program addresses ([#159](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/159)) - ([2d517dd](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d517dd7f85a60cf2c5bc98cc63544c31d2fd7b9))
+
+### Contributors
+
+* @rista404
+
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.2.0...solana-axelar-gateway-v1.0.0)
+
+### ⛰️ Features
+
+- [**breaking**] Update testnet and mainnet program addresses ([#159](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/159)) - ([2d517dd](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d517dd7f85a60cf2c5bc98cc63544c31d2fd7b9))
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump anchor-lang to v1.0.0-rc.5 ([#158](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/158)) - ([b6f8781](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b6f8781d0cbed5cf034b16c9a581ea9177c2a1be))
+
+### Contributors
+
+* @rista404
+
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.2.0...solana-axelar-gas-service-v1.0.0)
+
+### ⛰️ Features
+
+- [**breaking**] Update testnet and mainnet program addresses ([#159](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/159)) - ([2d517dd](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d517dd7f85a60cf2c5bc98cc63544c31d2fd7b9))
+
+### Contributors
+
+* @rista404
+
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.2.0...solana-axelar-operators-v1.0.0)
+
+### ⛰️ Features
+
+- [**breaking**] Update testnet and mainnet program addresses ([#159](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/159)) - ([2d517dd](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/2d517dd7f85a60cf2c5bc98cc63544c31d2fd7b9))
+
+### Contributors
+
+* @rista404
+
+## [0.1.7](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-std-v0.1.6...solana-axelar-std-v0.1.7)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump anchor-lang to v1.0.0-rc.5 ([#158](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/158)) - ([b6f8781](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/b6f8781d0cbed5cf034b16c9a581ea9177c2a1be))
+
+### Contributors
+
+* @rista404
+
 ## [0.1.11](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v0.1.10...solana-axelar-memo-v0.1.11)
 
 ### ⛰️ Features
