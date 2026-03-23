@@ -1,5 +1,5 @@
 use crate::payload::{AxelarMessagePayload, PayloadError, SolanaAccountRepr};
-use anchor_lang::{prelude::borsh, AnchorDeserialize, AnchorSerialize};
+use anchor_lang::prelude::borsh;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 
@@ -79,9 +79,10 @@ impl<'payload> AxelarMessagePayload<'payload> {
     Copy,
     FromPrimitive,
     ToPrimitive,
-    AnchorSerialize,
-    AnchorDeserialize,
+    borsh::BorshSerialize,
+    borsh::BorshDeserialize,
 )]
+#[borsh(use_discriminant = false)]
 #[non_exhaustive]
 pub enum EncodingScheme {
     /// Encoding of the payload using Borsh

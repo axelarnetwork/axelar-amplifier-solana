@@ -109,7 +109,7 @@ pub struct ExecuteInterchainTransfer<'info> {
 
 #[allow(clippy::too_many_arguments)]
 pub fn execute_interchain_transfer_handler<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
+    mut ctx: Context<'info, ExecuteInterchainTransfer<'info>>,
     message: Message,
     source_chain: String,
     source_address: Vec<u8>,
@@ -174,7 +174,7 @@ pub fn execute_interchain_transfer_handler<'info>(
 
 #[allow(clippy::too_many_arguments)]
 fn invoke_destination_program<'info>(
-    ctx: &Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
+    ctx: &Context<'info, ExecuteInterchainTransfer<'info>>,
     message: Message,
     source_chain: String,
     source_address: Vec<u8>,

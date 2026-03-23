@@ -62,7 +62,7 @@ pub mod memo {
     }
 
     pub fn execute_with_interchain_token<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteWithInterchainToken<'info>>,
+        ctx: Context<'info, ExecuteWithInterchainToken<'info>>,
         execute_payload: AxelarExecuteWithInterchainTokenPayload,
     ) -> Result<()> {
         instructions::execute_with_interchain_token_handler(ctx, execute_payload)

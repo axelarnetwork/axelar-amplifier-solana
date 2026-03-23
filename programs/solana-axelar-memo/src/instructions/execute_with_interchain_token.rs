@@ -16,7 +16,7 @@ pub struct ExecuteWithInterchainToken<'info> {
 }
 
 pub fn execute_with_interchain_token_handler<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteWithInterchainToken<'info>>,
+    ctx: Context<'info, ExecuteWithInterchainToken<'info>>,
     execute_payload: AxelarExecuteWithInterchainTokenPayload,
 ) -> Result<()> {
     msg!("execute_with_interchain_token_handler called");
