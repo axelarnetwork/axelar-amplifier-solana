@@ -224,7 +224,7 @@ pub mod solana_axelar_its {
     }
 
     pub fn execute<'info>(
-        ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
+        ctx: Context<'info, Execute<'info>>,
         message: solana_axelar_gateway::Message,
         payload: Vec<u8>,
     ) -> Result<()> {
@@ -261,7 +261,7 @@ pub mod solana_axelar_its {
     }
 
     pub fn execute_interchain_transfer<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteInterchainTransfer<'info>>,
+        ctx: Context<'info, ExecuteInterchainTransfer<'info>>,
         message: solana_axelar_gateway::Message,
         source_chain: String,
         source_address: Vec<u8>,

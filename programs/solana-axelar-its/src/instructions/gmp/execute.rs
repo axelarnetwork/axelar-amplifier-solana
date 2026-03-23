@@ -50,7 +50,7 @@ pub struct Execute<'info> {
 }
 
 pub fn execute_handler<'info>(
-    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
+    ctx: Context<'info, Execute<'info>>,
     message: CrossChainMessage,
     payload: Vec<u8>,
 ) -> Result<()> {
@@ -92,7 +92,7 @@ pub fn execute_handler<'info>(
 }
 
 fn cpi_execute_interchain_transfer<'info>(
-    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
+    ctx: Context<'info, Execute<'info>>,
     transfer: crate::encoding::InterchainTransfer,
     message: CrossChainMessage,
     source_chain: &str,
@@ -188,7 +188,7 @@ fn cpi_execute_interchain_transfer<'info>(
 }
 
 fn cpi_execute_link_token<'info>(
-    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
+    ctx: Context<'info, Execute<'info>>,
     payload: crate::encoding::LinkToken,
 ) -> Result<()> {
     let token_id = payload.token_id;
@@ -262,7 +262,7 @@ fn cpi_execute_link_token<'info>(
 }
 
 fn cpi_execute_deploy_interchain_token<'info>(
-    ctx: Context<'_, '_, '_, 'info, Execute<'info>>,
+    ctx: Context<'info, Execute<'info>>,
     deploy: crate::encoding::DeployInterchainToken,
 ) -> Result<()> {
     // Extract data from the deploy payload
