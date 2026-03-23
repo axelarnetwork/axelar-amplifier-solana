@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v0.2.0...solana-axelar-memo-v0.3.0)
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v0.2.0...solana-axelar-memo-v1.0.0)
 
 ### ⛰️ Features
 
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * @rista404
 
-## [0.3.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.2.0...solana-axelar-its-v0.3.0)
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v0.2.0...solana-axelar-its-v1.0.0)
 
 ### ⛰️ Features
 
@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * @rista404
 
-## [0.3.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.2.0...solana-axelar-governance-v0.3.0)
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v0.2.0...solana-axelar-governance-v1.0.0)
 
 ### ⛰️ Features
 
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * @rista404
 
-## [0.3.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.2.0...solana-axelar-gateway-v0.3.0)
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v0.2.0...solana-axelar-gateway-v1.0.0)
 
 ### ⛰️ Features
 
@@ -67,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * @rista404
 
-## [0.3.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.2.0...solana-axelar-gas-service-v0.3.0)
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v0.2.0...solana-axelar-gas-service-v1.0.0)
 
 ### ⛰️ Features
 
@@ -77,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * @rista404
 
-## [0.3.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.2.0...solana-axelar-operators-v0.3.0)
+## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v0.2.0...solana-axelar-operators-v1.0.0)
 
 ### ⛰️ Features
 
