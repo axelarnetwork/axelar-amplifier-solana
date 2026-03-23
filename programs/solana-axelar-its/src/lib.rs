@@ -100,6 +100,10 @@ pub mod seed_prefixes {
     /// The seed prefix for deriving the interchain transfer execute signing PDA
     pub const INTERCHAIN_TRANSFER_EXECUTE_SEED: &[u8] =
         state::InterchainTransferExecute::SEED_PREFIX;
+
+    /// The seed prefix for deriving the token authority PDA used as the ATA
+    /// authority for destination programs receiving interchain tokens via CPI.
+    pub const ITS_TOKEN_AUTHORITY_SEED: &[u8] = b"axelar-its-token-authority";
 }
 
 #[program]

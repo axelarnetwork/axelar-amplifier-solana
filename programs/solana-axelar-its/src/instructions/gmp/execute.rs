@@ -120,6 +120,7 @@ fn cpi_execute_interchain_transfer<'info>(
 
     let mut remaining = ctx.remaining_accounts.iter();
     let destination = remaining.next().ok_or(ItsError::AccountNotProvided)?;
+    let destination_token_authority = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     let destination_ata = remaining.next().ok_or(ItsError::AccountNotProvided)?;
     // Optional interchain transfer execute
     let interchain_transfer_execute = remaining.next();
@@ -130,6 +131,7 @@ fn cpi_execute_interchain_transfer<'info>(
         payer: ctx.accounts.payer.key(),
         its_root_pda: ctx.accounts.its_root_pda.key(),
         destination: destination.key(),
+        destination_token_authority: destination_token_authority.key(),
         destination_ata: destination_ata.key(),
         token_mint: ctx.accounts.token_mint.key(),
         token_manager_pda: ctx.accounts.token_manager_pda.key(),
@@ -160,6 +162,7 @@ fn cpi_execute_interchain_transfer<'info>(
             payer: ctx.accounts.payer.to_account_info(),
             its_root_pda: ctx.accounts.its_root_pda.to_account_info(),
             destination: destination.to_account_info(),
+            destination_token_authority: destination_token_authority.to_account_info(),
             destination_ata: destination_ata.to_account_info(),
             token_mint: ctx.accounts.token_mint.to_account_info(),
             token_manager_pda: ctx.accounts.token_manager_pda.to_account_info(),
@@ -359,11 +362,13 @@ fn invoke_signed_with_its_root_pda(
 /// ```
 pub fn execute_interchain_transfer_extra_accounts(
     destination: Pubkey,
+    destination_token_authority: Pubkey,
     destination_ata: Pubkey,
     transfer_has_data: Option<bool>,
 ) -> Vec<AccountMeta> {
     let mut accounts = vec![
         AccountMeta::new_readonly(destination, false),
+        AccountMeta::new_readonly(destination_token_authority, false),
         AccountMeta::new(destination_ata, false),
     ];
 
@@ -380,6 +385,17 @@ pub fn execute_interchain_transfer_extra_accounts(
     }
 
     accounts
+}
+
+/// Derives the token authority PDA for a destination program.
+/// This PDA is used as the ATA authority for destination programs
+/// receiving interchain tokens via CPI, so they can spend received tokens.
+pub fn destination_token_authority_pda(destination_program: &Pubkey) -> Pubkey {
+    Pubkey::find_program_address(
+        &[crate::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
+        destination_program,
+    )
+    .0
 }
 
 /// Helper function to build the extra accounts needed for execute with LinkToken payload.
