@@ -955,6 +955,26 @@ impl ItsTestHarness {
         }
     }
 
+    /// Returns the expected `destination_token_authority` for a given destination.
+    ///
+    /// If the destination account is owned by a BPF loader (i.e. it is a deployed
+    /// program), the authority is the PDA `[ITS_TOKEN_AUTHORITY_SEED]` derived from
+    /// the destination program. Otherwise it is the destination address itself.
+    pub fn expected_destination_token_authority(&self, destination: &Pubkey) -> Pubkey {
+        let is_program = self.get_account(destination).is_some_and(|acc| {
+            acc.owner == solana_sdk_ids::bpf_loader::ID
+                || acc.owner == solana_sdk_ids::bpf_loader_deprecated::ID
+                || acc.owner == solana_sdk_ids::bpf_loader_upgradeable::ID
+                || acc.owner == solana_sdk_ids::loader_v4::ID
+        });
+
+        if is_program {
+            solana_axelar_its::instructions::destination_token_authority_pda(destination)
+        } else {
+            *destination
+        }
+    }
+
     pub fn ensure_trusted_chain(&mut self, trusted_chain_name: &str) {
         let its = self.get_its_root();
         let trusted_chains_before = its.trusted_chains.len();
@@ -1499,14 +1519,8 @@ impl ItsTestHarness {
 
         let token_mint = self.token_mint_for_id(token_id);
 
-        // For CPI transfers (has_data), use a PDA as the ATA authority so the
-        // destination program can sign for it. For simple transfers, use the
-        // destination address (wallet) as authority.
-        let destination_token_authority = if has_data {
-            solana_axelar_its::instructions::destination_token_authority_pda(&destination_address)
-        } else {
-            destination_address
-        };
+        let destination_token_authority =
+            self.expected_destination_token_authority(&destination_address);
 
         let destination_ata = get_associated_token_address_with_program_id(
             &destination_token_authority,

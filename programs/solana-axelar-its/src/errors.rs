@@ -68,8 +68,6 @@ pub enum ItsError {
     SerializationError,
     #[msg("The destination token authority does not match the expected PDA")]
     InvalidDestinationTokenAuthority,
-    #[msg("Simple transfers (no data) cannot target an executable program; use a CPI transfer with data instead")]
-    SimpleTransferToExecutableNotAllowed,
 }
 
 impl From<ItsError> for ProgramError {

@@ -1,3 +1,5 @@
+use solana_sdk_ids::{bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, loader_v4};
+
 use crate::{
     errors::ItsError,
     events::InterchainTransferReceived,
@@ -122,23 +124,12 @@ pub fn execute_interchain_transfer_handler<'info>(
         return err!(ItsError::InvalidAmount);
     }
 
-    // Validate destination_token_authority before transferring tokens.
-    // For simple transfers (no CPI), the authority must equal the destination
-    // wallet to prevent a malicious relayer from redirecting tokens.
-    // For CPI transfers, it must be the expected PDA (validated in invoke_destination_program).
-    if data.is_empty() {
-        // Reject sending tokens to a program without data — the program can't
-        // sign for its own ID, so tokens would be stuck. The destination must
-        // be a wallet or PDA, not an executable program.
-        require!(
-            !ctx.accounts.destination.executable,
-            ItsError::SimpleTransferToExecutableNotAllowed
-        );
-        require!(
-            ctx.accounts.destination_token_authority.key() == ctx.accounts.destination.key(),
-            ItsError::InvalidDestinationTokenAuthority
-        );
-    }
+    // Validate the destination_token_authority early, before any token transfer,
+    // to prevent a malicious relayer from redirecting tokens to an attacker-controlled ATA.
+    check_destination_authority(
+        &ctx.accounts.destination,
+        &ctx.accounts.destination_token_authority,
+    )?;
 
     validate_token_manager_type(
         ctx.accounts.token_manager_pda.ty,
@@ -198,19 +189,6 @@ fn invoke_destination_program<'info>(
     let Some(interchain_transfer_execute_bump) = ctx.bumps.interchain_transfer_execute else {
         return err!(ItsError::InterchainTransferExecutePdaMissing);
     };
-
-    // Validate that the destination_token_authority is the expected PDA
-    // derived from [b"axelar-its-token-authority"] with program = destination.
-    // This ensures the destination program can sign for the ATA authority
-    // via invoke_signed and spend the received tokens.
-    let (expected_authority, _) = Pubkey::find_program_address(
-        &[crate::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
-        &ctx.accounts.destination.key(),
-    );
-    require!(
-        ctx.accounts.destination_token_authority.key() == expected_authority,
-        ItsError::InvalidDestinationTokenAuthority
-    );
 
     // Validate and decode payload data value
 
@@ -462,6 +440,48 @@ fn mint_to_receiver(
 
     token_interface::mint_to(cpi_context, initial_supply)?;
 
+    Ok(())
+}
+
+/// Returns `true` if `owner` is one of the known Solana BPF loader program IDs,
+/// indicating the account is a deployed program.
+///
+/// We check the owner rather than the `.executable` flag because SIMD-0162
+/// makes `.executable` unreliable for on-chain use.
+fn is_bpf_loader_owned(owner: &Pubkey) -> bool {
+    *owner == bpf_loader::ID
+        || *owner == bpf_loader_deprecated::ID
+        || *owner == bpf_loader_upgradeable::ID
+        || *owner == loader_v4::ID
+}
+
+/// Validates that `destination_token_authority` is correct for the given destination.
+///
+/// - If `destination` is a deployed program (BPF-loader-owned): the authority must
+///   be the PDA `[ITS_TOKEN_AUTHORITY_SEED]` derived from the destination program,
+///   so the program can spend tokens via `invoke_signed`.
+/// - Otherwise (wallet / non-program PDA): the authority must equal `destination`.
+///
+/// This is called **before** any token transfer to prevent a malicious relayer
+/// from redirecting tokens to an attacker-controlled ATA.
+fn check_destination_authority(
+    destination: &AccountInfo,
+    destination_token_authority: &AccountInfo,
+) -> Result<()> {
+    let expected_authority = if is_bpf_loader_owned(destination.owner) {
+        Pubkey::find_program_address(
+            &[crate::seed_prefixes::ITS_TOKEN_AUTHORITY_SEED],
+            destination.key,
+        )
+        .0
+    } else {
+        *destination.key
+    };
+
+    require!(
+        destination_token_authority.key() == expected_authority,
+        ItsError::InvalidDestinationTokenAuthority
+    );
     Ok(())
 }
 

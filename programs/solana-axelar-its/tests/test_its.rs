@@ -651,40 +651,43 @@ fn reject_simple_transfer_when_authority_differs_from_destination() {
     );
 }
 
-/// Test that sending tokens to a program without data is rejected.
-/// Programs can't sign for their own ID, so tokens would be stuck.
+/// Test that a simple (no-data) transfer to a program succeeds by using the
+/// program's token authority PDA as the ATA authority, so the program can later
+/// spend the tokens via `invoke_signed`.
 #[test]
-fn reject_simple_transfer_to_executable_program() {
+fn execute_simple_interchain_transfer_to_program() {
     let mut its_harness = ItsTestHarness::new();
 
     let token_id = its_harness.ensure_test_interchain_token();
     let source_chain = "ethereum";
     its_harness.ensure_trusted_chain(source_chain);
 
-    // Use the memo program (an executable) as the destination without data
     its_harness.ensure_memo_program_initialized();
     let receiver = solana_axelar_memo::ID;
+    let transfer_amount = 1_000_000u64;
 
-    let result = its_harness.execute_gmp_transfer_with_authority(
+    // The harness will derive the PDA authority automatically since receiver is a program
+    let result = its_harness.execute_gmp_transfer(
         token_id,
         source_chain,
         "ethereum_address_123",
         receiver,
-        1_000_000,
-        None, // no data = simple transfer to a program = rejected
-        receiver,
-        &[Check::err(
-            anchor_lang::error::Error::from(
-                solana_axelar_its::ItsError::SimpleTransferToExecutableNotAllowed,
-            )
-            .into(),
-        )],
+        transfer_amount,
+        None,
     );
 
     assert!(
-        result.program_result.is_err(),
-        "should reject simple transfer to an executable program"
+        result.program_result.is_ok(),
+        "simple transfer to a program should succeed using the token authority PDA"
     );
+
+    // Verify tokens landed in the ATA owned by the program's token authority PDA
+    let token_authority =
+        solana_axelar_its::instructions::destination_token_authority_pda(&receiver);
+    let token_mint = its_harness.token_mint_for_id(token_id);
+    let ata_data = its_harness.get_ata_2022_data(token_authority, token_mint);
+    assert_eq!(ata_data.amount, transfer_amount);
+    assert_eq!(ata_data.owner, token_authority);
 }
 
 /// Test CPI interchain transfer with a canonical (LockUnlock) token.
