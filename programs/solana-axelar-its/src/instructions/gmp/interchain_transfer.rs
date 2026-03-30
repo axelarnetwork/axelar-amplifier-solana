@@ -40,7 +40,7 @@ pub struct ExecuteInterchainTransfer<'info> {
         constraint = !its_root_pda.paused @ ItsError::Paused,
         signer, // important: only ITS can call this
     )]
-    pub its_root_pda: Account<'info, InterchainTokenService>,
+    pub its_root_pda: Box<Account<'info, InterchainTokenService>>,
 
     /// CHECK: we check this matches the destination address
     #[account(
@@ -80,7 +80,7 @@ pub struct ExecuteInterchainTransfer<'info> {
         constraint = token_manager_pda.token_address == token_mint.key()
             @ ItsError::TokenMintTokenManagerMissmatch
     )]
-    pub token_manager_pda: Account<'info, TokenManager>,
+    pub token_manager_pda: Box<Account<'info, TokenManager>>,
 
     #[account(
         mut,
