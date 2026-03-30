@@ -79,7 +79,7 @@ pub struct InterchainTransfer<'info> {
         constraint = its_root_pda.is_trusted_chain(&destination_chain)
             @ ItsError::UntrustedDestinationChain,
     )]
-    pub its_root_pda: Account<'info, InterchainTokenService>,
+    pub its_root_pda: Box<Account<'info, InterchainTokenService>>,
 
     #[account(
         mut,
@@ -91,7 +91,7 @@ pub struct InterchainTransfer<'info> {
         bump = token_manager_pda.bump,
         constraint = token_manager_pda.token_address == token_mint.key()  @ ItsError::TokenMintTokenManagerMissmatch
     )]
-    pub token_manager_pda: Account<'info, TokenManager>,
+    pub token_manager_pda: Box<Account<'info, TokenManager>>,
 
     //
     // Token Info
