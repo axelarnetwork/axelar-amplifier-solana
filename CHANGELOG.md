@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v1.0.0...solana-axelar-its-v1.0.1)
+
+### 🐛 Bug Fixes
+
+- *(its)* Box large accounts in InterchainTransfer to prevent stack overflow ([#161](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/161)) - ([f2c8cc3](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/f2c8cc37cc52ebf62ec83198e2a3435cb34a53dc))
+
+### Contributors
+
+* @rista404
+
 ## [1.0.0](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v0.2.0...solana-axelar-memo-v1.0.0)
 
 ### ⛰️ Features
