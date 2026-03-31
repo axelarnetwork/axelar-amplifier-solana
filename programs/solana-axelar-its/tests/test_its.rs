@@ -790,3 +790,65 @@ fn execute_interchain_transfer_with_data_lock_unlock_token() {
         "token manager should have remaining locked tokens"
     );
 }
+
+#[test]
+fn reject_execute_interchain_transfer_with_zero_amount() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    its_harness.ensure_trusted_chain("ethereum");
+
+    let receiver = its_harness.get_new_wallet();
+
+    let result = its_harness.execute_gmp_transfer_with_authority(
+        token_id,
+        "ethereum",
+        "eth_addr_123",
+        receiver,
+        0, // zero amount
+        None,
+        receiver, // authority = destination for simple transfer
+        &[Check::err(
+            solana_axelar_its::ItsError::InvalidAmount.into(),
+        )],
+    );
+
+    assert!(result.program_result.is_err());
+}
+
+#[test]
+fn reject_outbound_interchain_transfer_empty_destination() {
+    let mut its_harness = ItsTestHarness::new();
+
+    let token_id = its_harness.ensure_test_interchain_token();
+    let token_mint = its_harness.token_mint_for_id(token_id);
+
+    let sender = its_harness.get_new_wallet();
+    let sender_ata = its_harness
+        .get_or_create_ata_2022_account(its_harness.payer, sender, token_mint)
+        .0;
+    its_harness.ensure_mint_test_interchain_token(token_id, 500_000, sender_ata);
+
+    its_harness.ensure_trusted_chain("ethereum");
+
+    let (ix, _) = solana_axelar_its::instructions::make_interchain_transfer_instruction(
+        token_id,
+        100_000,
+        token_2022::ID,
+        its_harness.payer,
+        sender,
+        "ethereum".to_owned(),
+        vec![], // empty destination address
+        0,
+        None,
+        None,
+        None,
+    );
+
+    its_harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[Check::err(
+            solana_axelar_its::ItsError::InvalidDestinationAddress.into(),
+        )],
+    );
+}
