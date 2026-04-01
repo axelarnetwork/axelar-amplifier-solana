@@ -1205,6 +1205,126 @@ impl ItsTestHarness {
         )
     }
 
+    /// Execute a GMP LinkToken message. Takes an explicit `token_mint` because
+    /// link-token operates on an existing SPL mint (not a PDA-derived one).
+    pub fn execute_gmp_link_token(
+        &self,
+        token_id: [u8; 32],
+        source_chain: &str,
+        token_mint: Pubkey,
+        payload: encoding::LinkToken,
+        extra_accounts: Vec<AccountMeta>,
+    ) -> InstructionResult {
+        self.execute_gmp_link_token_with_checks(
+            token_id,
+            source_chain,
+            token_mint,
+            payload,
+            extra_accounts,
+            &[Check::success()],
+        )
+    }
+
+    /// Like `execute_gmp_link_token` but accepts custom checks.
+    pub fn execute_gmp_link_token_with_checks(
+        &self,
+        token_id: [u8; 32],
+        source_chain: &str,
+        token_mint: Pubkey,
+        payload: encoding::LinkToken,
+        extra_accounts: Vec<AccountMeta>,
+        checks: &[Check],
+    ) -> InstructionResult {
+        let hub_message = encoding::HubMessage::ReceiveFromHub {
+            source_chain: source_chain.to_owned(),
+            message: encoding::Message::LinkToken(payload),
+        };
+
+        let encoded_payload = borsh::to_vec(&hub_message).expect("payload should serialize");
+        let payload_hash = solana_sdk::keccak::hashv(&[&encoded_payload]).to_bytes();
+
+        let rand_message_id: String = rand::thread_rng()
+            .sample_iter(&rand::distributions::Alphanumeric)
+            .take(32)
+            .map(char::from)
+            .collect();
+
+        let InterchainTokenService {
+            its_hub_address, ..
+        } = self
+            .get_account_as(&self.its_root)
+            .expect("its config should exist");
+
+        let message = CrossChainMessage {
+            cc_id: solana_axelar_std::CrossChainId {
+                chain: source_chain.to_owned(),
+                id: rand_message_id,
+            },
+            source_address: its_hub_address,
+            destination_chain: "solana".to_owned(),
+            destination_address: solana_axelar_its::ID.to_string(),
+            payload_hash,
+        };
+
+        self.ensure_approved_incoming_messages(&[message.clone()]);
+
+        let incoming_message_pda =
+            solana_axelar_gateway::IncomingMessage::find_pda(&message.command_id()).0;
+        let incoming_message = self
+            .get_account_as::<solana_axelar_gateway::IncomingMessage>(&incoming_message_pda)
+            .expect("incoming message account should exist");
+
+        let token_manager_pda =
+            solana_axelar_its::TokenManager::find_pda(token_id, self.its_root).0;
+        let token_manager_ata = get_associated_token_address_with_program_id(
+            &token_manager_pda,
+            &token_mint,
+            &spl_token_2022::ID,
+        );
+
+        let executable = solana_axelar_its::accounts::AxelarExecuteAccounts {
+            incoming_message_pda,
+            signing_pda: solana_axelar_gateway::ValidateMessageSigner::create_pda(
+                &message.command_id(),
+                incoming_message.signing_pda_bump,
+                &solana_axelar_its::ID,
+            )
+            .expect("valid signing PDA"),
+            gateway_root_pda: self.gateway.root,
+            event_authority: get_event_authority_and_program_accounts(&solana_axelar_gateway::ID).0,
+            axelar_gateway_program: solana_axelar_gateway::ID,
+        };
+
+        let mut accounts = solana_axelar_its::accounts::Execute {
+            executable,
+            payer: self.payer,
+            system_program: solana_sdk_ids::system_program::ID,
+            its_root_pda: self.its_root,
+            token_mint,
+            token_manager_pda,
+            token_manager_ata,
+            token_program: spl_token_2022::ID,
+            associated_token_program: associated_token::ID,
+            event_authority: get_event_authority_and_program_accounts(&solana_axelar_its::ID).0,
+            program: solana_axelar_its::ID,
+        }
+        .to_account_metas(None);
+        accounts.extend(extra_accounts);
+
+        let ix = Instruction {
+            program_id: solana_axelar_its::ID,
+            accounts,
+            data: solana_axelar_its::instruction::Execute {
+                message,
+                payload: encoded_payload,
+            }
+            .data(),
+        };
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, checks)])
+    }
+
     //
     // Memo Program
     //
