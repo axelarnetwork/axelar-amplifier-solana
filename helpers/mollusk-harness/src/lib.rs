@@ -5,7 +5,7 @@ pub mod gateway;
 pub mod its;
 
 // Re-exports for convenience
-pub use gateway::{GatewayHarnessInfo, GatewayTestHarness};
+pub use gateway::{GatewayHarnessInfo, GatewaySetup, GatewayTestHarness};
 pub use its::ItsTestHarness;
 
 use std::collections::HashMap;
