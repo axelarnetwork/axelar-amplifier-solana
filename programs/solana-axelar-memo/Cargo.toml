@@ -16,12 +16,11 @@ solana-axelar-gateway = { workspace = true, features = ["cpi"] }
 solana-axelar-its = { workspace = true, features = ["cpi"] }
 
 [dev-dependencies]
-solana-axelar-gateway-test-fixtures.workspace = true
 mollusk-svm.workspace = true
+mollusk-harness.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
 solana-axelar-std.workspace = true
-hex.workspace = true
 
 [lints]
 workspace = true
