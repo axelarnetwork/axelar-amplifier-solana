@@ -19,19 +19,17 @@ mpl-token-metadata.workspace = true
 
 rand.workspace = true
 hex.workspace = true
-libsecp256k1.workspace = true
+libsecp256k1 = { workspace = true, features = ["hmac", "static-context"] }
 
 mollusk-svm.workspace = true
+mollusk-svm-programs-token.workspace = true
+spl-token.workspace = true
 
 mollusk-test-utils.workspace = true
 solana-axelar-std.workspace = true
 
-solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint"] }
-solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint"] }
-solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint"] }
-solana-axelar-its = { workspace = true, features = ["cpi", "no-entrypoint"] }
-solana-axelar-memo = { workspace = true, features = ["cpi", "no-entrypoint"] }
-
-# temp
-solana-axelar-gateway-test-fixtures.workspace = true
-solana-axelar-its-test-fixtures.workspace = true
+solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }
+solana-axelar-operators = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }
+solana-axelar-gateway = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }
+solana-axelar-its = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }
+solana-axelar-memo = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }

@@ -3,6 +3,8 @@ use crate::{
     state::{InterchainTokenService, RolesError, TokenManager, UserRoles},
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 #[derive(Accounts)]
 #[event_cpi]
@@ -67,4 +69,37 @@ pub fn set_token_manager_flow_limit_handler(
     });
 
     Ok(())
+}
+
+pub fn make_set_token_manager_flow_limit_instruction(
+    payer: Pubkey,
+    flow_limiter: Pubkey,
+    token_id: [u8; 32],
+    flow_limit: Option<u64>,
+) -> (Instruction, crate::accounts::SetTokenManagerFlowLimit) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
+    let flow_limiter_roles_pda = UserRoles::find_pda(&token_manager_pda, &flow_limiter).0;
+
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
+
+    let accounts = crate::accounts::SetTokenManagerFlowLimit {
+        payer,
+        flow_limiter,
+        its_root_pda,
+        token_manager_pda,
+        flow_limiter_roles_pda,
+        system_program: anchor_lang::system_program::ID,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::SetTokenManagerFlowLimit { flow_limit }.data(),
+        },
+        accounts,
+    )
 }

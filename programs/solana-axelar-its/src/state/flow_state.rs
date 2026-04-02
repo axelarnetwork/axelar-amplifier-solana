@@ -45,8 +45,12 @@ impl FlowState {
     fn update_flow(flow_limit: u64, to_add: &mut u64, to_compare: u64, amount: u64) -> Result<()> {
         // Individual transfer amount cannot exceed the flow limit
         if amount > flow_limit {
-            msg!("Flow limit exceeded");
-            return err!(ItsError::InvalidArgument);
+            msg!(
+                "Flow limit exceeded: transfer amount {} exceeds limit {}",
+                amount,
+                flow_limit
+            );
+            return err!(ItsError::FlowLimitExceeded);
         }
 
         // Calculate new flow amount after adding the transfer
@@ -61,8 +65,12 @@ impl FlowState {
 
         // Check if net flow exceeds the limit
         if net_flow > flow_limit {
-            msg!("Flow limit exceeded");
-            return err!(ItsError::InvalidArgument);
+            msg!(
+                "Flow limit exceeded: net flow {} exceeds limit {}",
+                net_flow,
+                flow_limit
+            );
+            return err!(ItsError::FlowLimitExceeded);
         }
 
         *to_add = new_flow;

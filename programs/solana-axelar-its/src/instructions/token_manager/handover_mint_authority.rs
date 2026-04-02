@@ -4,6 +4,8 @@ use crate::{
     ItsError,
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 use anchor_spl::{
     token_2022::spl_token_2022::instruction::AuthorityType,
     token_interface::{Mint, TokenInterface},
@@ -107,4 +109,36 @@ pub fn handover_mint_authority_handler(
     );
 
     Ok(())
+}
+
+pub fn make_handover_mint_authority_instruction(
+    payer: Pubkey,
+    authority: Pubkey,
+    mint: Pubkey,
+    token_program: Pubkey,
+    token_id: [u8; 32],
+) -> (Instruction, crate::accounts::HandoverMintAuthority) {
+    let its_root = InterchainTokenService::find_pda().0;
+    let token_manager = TokenManager::find_pda(token_id, its_root).0;
+    let minter_roles = UserRoles::find_pda(&token_manager, &authority).0;
+
+    let accounts = crate::accounts::HandoverMintAuthority {
+        payer,
+        authority,
+        mint,
+        its_root,
+        token_manager,
+        minter_roles,
+        token_program,
+        system_program: anchor_lang::system_program::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::HandoverMintAuthority { token_id }.data(),
+        },
+        accounts,
+    )
 }
