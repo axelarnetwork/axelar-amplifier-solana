@@ -68,6 +68,8 @@ pub enum ItsError {
     SerializationError,
     #[msg("The destination token authority does not match the expected PDA")]
     InvalidDestinationTokenAuthority,
+    #[msg("Transfer exceeds the flow limit for this token")]
+    FlowLimitExceeded,
 }
 
 impl From<ItsError> for ProgramError {

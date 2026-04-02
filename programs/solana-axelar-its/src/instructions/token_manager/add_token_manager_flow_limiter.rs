@@ -3,6 +3,8 @@ use crate::{
     ItsError,
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 #[derive(Accounts)]
 pub struct AddTokenManagerFlowLimiter<'info> {
@@ -76,4 +78,36 @@ pub fn add_token_manager_flow_limiter_handler(
     target_roles.bump = ctx.bumps.target_roles_account;
 
     Ok(())
+}
+
+pub fn make_add_token_manager_flow_limiter_instruction(
+    payer: Pubkey,
+    authority: Pubkey,
+    target: Pubkey,
+    token_id: [u8; 32],
+) -> (Instruction, crate::accounts::AddTokenManagerFlowLimiter) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
+    let authority_roles_account = UserRoles::find_pda(&token_manager_pda, &authority).0;
+    let target_roles_account = UserRoles::find_pda(&token_manager_pda, &target).0;
+
+    let accounts = crate::accounts::AddTokenManagerFlowLimiter {
+        system_program: anchor_lang::system_program::ID,
+        payer,
+        authority_user_account: authority,
+        authority_roles_account,
+        its_root_pda,
+        token_manager_pda,
+        target_user_account: target,
+        target_roles_account,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::AddTokenManagerFlowLimiter {}.data(),
+        },
+        accounts,
+    )
 }

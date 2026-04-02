@@ -3,12 +3,7 @@
 
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
-use solana_axelar_its::{
-    encoding,
-    state::TokenManager,
-    utils::interchain_token_id,
-    ItsError,
-};
+use solana_axelar_its::{encoding, state::TokenManager, utils::interchain_token_id, ItsError};
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
@@ -30,13 +25,7 @@ fn execute_link_token_success() {
         params: None,
     };
 
-    harness.execute_gmp_link_token(
-        token_id,
-        "ethereum",
-        token_mint,
-        payload,
-        vec![],
-    );
+    harness.execute_gmp_link_token(token_id, "ethereum", token_mint, payload, vec![]);
 
     // Verify token manager was created
     let token_manager_pda = TokenManager::find_pda(token_id, harness.its_root).0;

@@ -30,6 +30,9 @@ pub struct SetPauseStatus<'info> {
 }
 
 pub fn set_pause_status(ctx: Context<SetPauseStatus>, paused: bool) -> Result<()> {
+    msg!("Instruction: SetPauseStatus");
+    msg!("paused={}", paused);
+
     ctx.accounts.its_root_pda.paused = paused;
 
     Ok(())

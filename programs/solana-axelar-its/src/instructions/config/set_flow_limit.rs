@@ -51,6 +51,11 @@ pub struct SetFlowLimit<'info> {
 
 pub fn set_flow_limit_handler(ctx: Context<SetFlowLimit>, flow_limit: Option<u64>) -> Result<()> {
     msg!("Instruction: SetFlowLimit");
+    msg!(
+        "token_id={:?}, flow_limit={:?}",
+        ctx.accounts.token_manager_pda.token_id,
+        flow_limit,
+    );
 
     // Update the flow limit in the token manager
     ctx.accounts.token_manager_pda.flow_slot.flow_limit = flow_limit;
