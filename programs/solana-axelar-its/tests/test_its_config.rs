@@ -203,8 +203,7 @@ fn transfer_operatorship_without_permissions() {
     .0;
 
     // Process
-    its_harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[Check::err(ItsError::MissingOperatorRole.into())],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::MissingOperatorRole.into())]);
 }

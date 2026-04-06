@@ -5,7 +5,15 @@ use bytemuck::{Pod, Zeroable};
 
 /// [U256] represents uint256.
 #[derive(
-    Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable, borsh::BorshSerialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Copy,
+    Default,
+    Pod,
+    Zeroable,
+    borsh::BorshSerialize,
     borsh::BorshDeserialize,
 )]
 #[repr(transparent)]

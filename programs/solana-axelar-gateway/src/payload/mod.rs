@@ -91,4 +91,3 @@ impl<'payload> AxelarMessagePayload<'payload> {
         self.encoding_scheme
     }
 }
-

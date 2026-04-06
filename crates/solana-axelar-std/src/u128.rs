@@ -18,8 +18,7 @@ use bytemuck::{Pod, Zeroable};
 ///
 /// The byte representation is identical to `u128`, ensuring backwards compatibility.
 #[repr(C)]
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-#[derive(Copy, Clone, Pod, Zeroable)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Pod, Zeroable)]
 pub struct U128 {
     pub(crate) bytes: [u8; 16],
 }

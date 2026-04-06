@@ -77,7 +77,6 @@ pub mod roles {
     pub const EMPTY: u8 = 0b0000_0000;
 }
 
-
 #[cfg(test)]
 mod tests {
     use borsh::to_vec;

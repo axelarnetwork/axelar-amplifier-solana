@@ -342,8 +342,7 @@ fn reject_transfer_interchain_token_mintership_without_minter_role() {
     );
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(solana_axelar_its::ItsError::MissingMinterRole)
-            .into(),
+        anchor_lang::error::Error::from(solana_axelar_its::ItsError::MissingMinterRole).into(),
     )];
 
     let (result, _) = transfer_interchain_token_mintership_helper(transfer_ctx, checks);

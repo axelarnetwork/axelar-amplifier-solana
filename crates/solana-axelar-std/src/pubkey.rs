@@ -18,7 +18,15 @@ pub type Secp256k1Pubkey = [u8; SECP256K1_COMPRESSED_PUBKEY_LEN];
 
 /// Represents a public key using supported cryptographic algorithms.
 #[derive(
-    Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Digestable, borsh::BorshSerialize,
+    Clone,
+    Copy,
+    Ord,
+    PartialOrd,
+    PartialEq,
+    Eq,
+    Hash,
+    Digestable,
+    borsh::BorshSerialize,
     borsh::BorshDeserialize,
 )]
 pub struct PublicKey(pub Secp256k1Pubkey);

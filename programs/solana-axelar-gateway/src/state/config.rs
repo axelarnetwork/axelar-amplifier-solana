@@ -2,7 +2,6 @@ use crate::GatewayError;
 use anchor_lang::prelude::*;
 use solana_axelar_std::U256;
 
-
 #[account(zero_copy)]
 #[derive(Debug, PartialEq, Eq)]
 #[allow(clippy::pub_underscore_fields)]

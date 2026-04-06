@@ -128,10 +128,9 @@ fn set_flow_limit_without_operator_role_fails() {
         Some(1_000_000u64),
     );
 
-    harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[Check::err(ItsError::MissingOperatorRole.into())],
-    );
+    harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::MissingOperatorRole.into())]);
 }
 
 #[test]

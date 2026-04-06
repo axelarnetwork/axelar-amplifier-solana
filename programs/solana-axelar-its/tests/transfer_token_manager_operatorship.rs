@@ -6,8 +6,8 @@ use mollusk_svm::program::keyed_account_for_system_program;
 use mollusk_svm::result::Check;
 use solana_axelar_its::roles;
 use solana_axelar_its::state::{TokenManager, UserRoles};
-use solana_axelar_its::ItsError;
 use solana_axelar_its::utils::interchain_token_id;
+use solana_axelar_its::ItsError;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
     new_empty_account, new_test_account, DeployInterchainTokenContext,
