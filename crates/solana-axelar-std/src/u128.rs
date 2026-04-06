@@ -1,9 +1,4 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-
-#[cfg(feature = "anchor")]
-use anchor_lang::prelude::{borsh, zero_copy};
-
-#[cfg(not(feature = "anchor"))]
 use bytemuck::{Pod, Zeroable};
 
 /// Custom u128 type with 8-byte alignment instead of the default 16-byte alignment.
@@ -23,12 +18,13 @@ use bytemuck::{Pod, Zeroable};
 ///
 /// The byte representation is identical to `u128`, ensuring backwards compatibility.
 #[repr(C)]
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-#[cfg_attr(not(feature = "anchor"), derive(Copy, Clone, Pod, Zeroable))]
-#[cfg_attr(feature = "anchor", zero_copy)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Pod, Zeroable)]
 pub struct U128 {
     pub(crate) bytes: [u8; 16],
 }
+
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for U128 {}
 
 impl U128 {
     pub const ZERO: Self = Self { bytes: [0u8; 16] };

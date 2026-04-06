@@ -1,5 +1,6 @@
-use anchor_lang::error_code;
 use anchor_lang::solana_program::instruction::AccountMeta;
+
+use crate::GatewayError;
 
 mod abi;
 mod accounts;
@@ -53,7 +54,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
     ///
     /// # Errors
     /// - the payload struct cannot be encoded
-    pub fn hash(&self) -> Result<[u8; 32], PayloadError> {
+    pub fn hash(&self) -> Result<[u8; 32], GatewayError> {
         let payload = self.encode()?;
         let payload_hash = Self::hash_payload(&payload);
         Ok(payload_hash)
@@ -89,27 +90,4 @@ impl<'payload> AxelarMessagePayload<'payload> {
     pub const fn encoding_scheme(&self) -> EncodingScheme {
         self.encoding_scheme
     }
-}
-
-#[error_code]
-pub enum PayloadError {
-    /// Invalid encoding scheme
-    #[msg("Invalid encoding scheme")]
-    InvalidEncodingScheme,
-
-    /// Borsh serialization error
-    #[msg("Borsh serialize error")]
-    BorshSerializeError,
-
-    /// Borsh deserialization error
-    #[msg("Borsh deserialize error")]
-    BorshDeserializeError,
-
-    /// ABI error
-    #[msg("ABI error")]
-    AbiError,
-
-    /// Internal type conversion error
-    #[msg("Internal type conversion error")]
-    Conversion,
 }

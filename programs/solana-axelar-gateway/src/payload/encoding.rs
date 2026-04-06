@@ -1,4 +1,5 @@
-use crate::payload::{AxelarMessagePayload, PayloadError, SolanaAccountRepr};
+use crate::payload::{AxelarMessagePayload, SolanaAccountRepr};
+use crate::GatewayError;
 use anchor_lang::prelude::borsh;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
@@ -8,7 +9,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
     ///
     /// # Errors
     /// - if any of the encoding schemes fail
-    pub fn encode(&self) -> Result<Vec<u8>, PayloadError> {
+    pub fn encode(&self) -> Result<Vec<u8>, GatewayError> {
         match self.encoding_scheme {
             EncodingScheme::Borsh => self.encode_borsh(),
             EncodingScheme::AbiEncoding => self.encode_abi_encoding(),
@@ -19,13 +20,13 @@ impl<'payload> AxelarMessagePayload<'payload> {
     ///
     /// # Errors
     /// - if the encoding scheme is not valid
-    pub fn decode(data: &'payload [u8]) -> Result<Self, PayloadError> {
+    pub fn decode(data: &'payload [u8]) -> Result<Self, GatewayError> {
         let (encoding_scheme, data) = data
             .split_first()
-            .ok_or(PayloadError::InvalidEncodingScheme)?;
+            .ok_or(GatewayError::InvalidEncodingScheme)?;
 
         let encoding_scheme =
-            EncodingScheme::from_u8(*encoding_scheme).ok_or(PayloadError::InvalidEncodingScheme)?;
+            EncodingScheme::from_u8(*encoding_scheme).ok_or(GatewayError::InvalidEncodingScheme)?;
         let (payload_without_accounts, solana_accounts) = match encoding_scheme {
             EncodingScheme::Borsh => Self::decode_borsh(data)?,
             EncodingScheme::AbiEncoding => Self::decode_abi_encoding(data)?,
@@ -38,7 +39,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
         ))
     }
 
-    pub(crate) fn encoding_scheme_prefixed_array(&self) -> Result<Vec<u8>, PayloadError> {
+    pub(crate) fn encoding_scheme_prefixed_array(&self) -> Result<Vec<u8>, GatewayError> {
         let mut writer_vec =
             Vec::<u8>::with_capacity(
                 // This might not be the exact size, but it's a good approximation
@@ -57,7 +58,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
         writer_vec.push(
             self.encoding_scheme
                 .to_u8()
-                .ok_or(PayloadError::InvalidEncodingScheme)?,
+                .ok_or(GatewayError::InvalidEncodingScheme)?,
         );
         Ok(writer_vec)
     }
@@ -90,6 +91,9 @@ pub enum EncodingScheme {
     /// Encoding of the payload using ABI (EVM) encoding
     AbiEncoding = 1,
 }
+
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for EncodingScheme {}
 
 #[cfg(test)]
 pub(crate) mod tests {

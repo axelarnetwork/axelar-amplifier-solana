@@ -5,74 +5,75 @@ This repository contains the integration work between Solana and Axelar, enablin
 ## Table of Contents
 
 - [Repository contents](#repository-contents)
-  - [Solana contracts](#solana-contracts)
-    - [Utility crates](#utility-crates)
-  - [EVM Smart contracts](#evm-smart-contracts)
+  - [Solana programs](#solana-programs)
+  - [Utility crates](#utility-crates)
   - [Related repositories](#related-repositories)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
+  - [Building](#building)
+  - [Testing](#testing)
+  - [IDL generation](#idl-generation)
 
 ## Repository contents
 
-![image](https://github.com/user-attachments/assets/88008f1c-4096-4248-87b2-128b65cb8e41)
+### Solana programs
 
-The Solana-Axelar integration contains on-chain and off-chain components.
-
-
-### Development setup:
-
-1. [install rust](https://www.rust-lang.org/tools/install)
-2. [install solana tool suite](https://docs.solanalabs.com/cli/install)
-
-```bash
-# list all available commands
-cargo xtask --help
-```
-### Solana contracts
-
-- [**Gateway**](programs/axelar-solana-gateway/README.md): The core contract responsible for authenticating GMP messages.
-- [**Gas Service**](programs/solana-axelar-gas-service/README.md): Used for gas payments for the relayer.
-- [**Interchain Token Service**](programs/axelar-solana-its/README.md): Bridge tokens between chains.
-- [**Multicall**](programs/axelar-solana-multicall): Execute multiple actions from a single GMP message.
-- [**Governance**](programs/axelar-solana-governance/README.md): The governing entity over on-chain programs, responsible for program upgrades.
+- [**Gateway**](programs/solana-axelar-gateway): The core contract responsible for authenticating GMP messages.
+- [**Interchain Token Service**](programs/solana-axelar-its): Bridge tokens between chains.
+- [**Gas Service**](programs/solana-axelar-gas-service): Used for gas payments for the relayer.
+- [**Governance**](programs/solana-axelar-governance): The governing entity over on-chain programs, responsible for program upgrades.
+- [**Operators**](programs/solana-axelar-operators): Manages operator roles and permissions.
 - [**Memo**](programs/solana-axelar-memo): An example program that sends and receives GMP messages.
 
+### Utility crates
 
-#### Utility crates
-- [**Axelar Solana Std**](solana/crates/solana-axelar-std/README.md): Encoding used by the Multisig Prover to encode the data in a way that the relayer & the Solana Gateway can interpret.
+- [**solana-axelar-std**](crates/solana-axelar-std): Primitive types, encoding and hashing utilities shared across programs.
 
-### EVM Smart Contracts
-- [**Axelar Memo**](evm-contracts/src/AxelarMemo.sol): A counterpart of the `solana-axelar-memo` program that acts as an example program used to send GMP messages back and forth Solana.
-- [**Axelar Solana Multi Call**](evm-contracts/src/AxelarSolanaMultiCall.sol): An example contract used to showcase how to compose Multicall payloads for Solana.
-- [**Solana Gateway Payload**](evm-contracts/src/ExampleEncoder.sol): A Solditiy library that can create Solana-specific GMP payloads.
+### Related Repositories
 
-
-## Related Repositories
-
-- [**Solana Relayer**](https://github.com/axelarnetwork/axelar-solana-relayer): The off-chain entity that will route your messages to and from Solana.
-- [**Relayer Core**](https://github.com/axelarnetwork/axelar-relayer-core): All Axelar-related relayer infrastructure. Used as a core building block for the Solana Relayer. The Axelar-Starknet and Axlelar-Aleo relayers also use it.
-- [**Multisig Prover**](https://github.com/axelarnetwork/axelar-amplifier/tree/add-multisig-prover-sol-logic/contracts/multisig-prover): The entity on the Axelar chain that is responsible for encoding the data for the Relayer and the Solana Gateway
+- [**Solana Relayer**](https://github.com/axelarnetwork/axelar-relayer-solana): The off-chain entity that will route your messages to and from Solana.
+- [**Relayer Core**](https://github.com/commonprefix/axelar-relayer-core): Used as a core building block for the Solana Relayer.
+- [**Multisig Prover**](https://github.com/axelarnetwork/axelar-amplifier/tree/main/contracts/multisig-prover): The entity on the Axelar chain that is responsible for encoding the data for the Relayer and the Solana Gateway.
+- [**Chain Codec Solana**](https://github.com/axelarnetwork/axelar-amplifier/tree/main/contracts/chain-codec-solana): Used by Multisig Prover for Solana-specific encodings.
 - [**Utility Scripts**](https://github.com/axelarnetwork/axelar-contract-deployments): Contract deployment scripts and resources for Axelar.
-
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Solana CLI (for running tests during development)](https://solana.com/docs/intro/installation)
+Install all Solana and Anchor development dependencies. See the [Anchor installation guide](https://www.anchor-lang.com/docs/installation) for details.
 
-### Installation
+On Mac/Linux you can install everything with:
 
 ```bash
-git clone git@github.com:axelarnetwork/axelar-amplifier-solana.git
-cd solana
+curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+```
+
+### Building
+
+```bash
+# Build all programs (default network: devnet-amplifier)
+anchor build
+
+# Build for a specific network
+cargo xtask build --network mainnet
+```
+
+### Testing
+
+```bash
 cargo xtask test
 ```
 
-## About [Eiger](https://www.eiger.co)
+### IDL generation
 
-We are engineers. We contribute to various ecosystems by building low-level implementations and core components. We work on several Axelar and Solana projects and connecting these two is a fundamental goal to achieve cross-chain execution.
+```bash
+anchor idl build
+```
 
-Contact us at hello@eiger.co
-Follow us on [X/Twitter](https://x.com/eiger_co)
+### Linting
+
+```bash
+# Runs clippy + fmt check
+cargo xtask check
+```

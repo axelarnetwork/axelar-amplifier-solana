@@ -9,7 +9,7 @@ use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::{
     make_initialize_instruction, make_set_pause_status_instruction,
 };
-use solana_axelar_its::{roles, ItsError, RolesError, UserRoles};
+use solana_axelar_its::{roles, ItsError, UserRoles};
 
 //
 // Initialize
@@ -203,8 +203,7 @@ fn transfer_operatorship_without_permissions() {
     .0;
 
     // Process
-    its_harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[Check::err(RolesError::MissingOperatorRole.into())],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::MissingOperatorRole.into())]);
 }
