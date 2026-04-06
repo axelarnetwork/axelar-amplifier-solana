@@ -77,21 +77,6 @@ pub mod roles {
     pub const EMPTY: u8 = 0b0000_0000;
 }
 
-#[error_code]
-pub enum RolesError {
-    #[msg("User does not have the MINTER role.")]
-    MissingMinterRole,
-    #[msg("User does not have the OPERATOR role.")]
-    MissingOperatorRole,
-    #[msg("User does not have the FLOW_LIMITER role.")]
-    MissingFlowLimiterRole,
-}
-
-impl From<RolesError> for ProgramError {
-    fn from(val: RolesError) -> Self {
-        anchor_lang::error::Error::from(val).into()
-    }
-}
 
 #[cfg(test)]
 mod tests {

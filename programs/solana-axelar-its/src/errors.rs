@@ -68,6 +68,12 @@ pub enum ItsError {
     SerializationError,
     #[msg("The destination token authority does not match the expected PDA")]
     InvalidDestinationTokenAuthority,
+    #[msg("User does not have the MINTER role.")]
+    MissingMinterRole,
+    #[msg("User does not have the OPERATOR role.")]
+    MissingOperatorRole,
+    #[msg("User does not have the FLOW_LIMITER role.")]
+    MissingFlowLimiterRole,
 }
 
 impl From<ItsError> for ProgramError {

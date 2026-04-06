@@ -142,7 +142,7 @@ fn set_trusted_chain_non_operator_user_roles() {
     its_harness.ctx.process_and_validate_instruction(
         &ix,
         &[Check::err(
-            solana_axelar_its::RolesError::MissingOperatorRole.into(),
+            solana_axelar_its::ItsError::MissingOperatorRole.into(),
         )],
     );
 }
@@ -274,7 +274,7 @@ fn remove_trusted_chain_non_operator_user_roles() {
     its_harness.ctx.process_and_validate_instruction(
         &ix,
         &[Check::err(
-            solana_axelar_its::RolesError::MissingOperatorRole.into(),
+            solana_axelar_its::ItsError::MissingOperatorRole.into(),
         )],
     );
 }

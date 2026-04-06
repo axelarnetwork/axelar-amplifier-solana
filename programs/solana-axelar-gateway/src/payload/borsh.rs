@@ -1,4 +1,5 @@
-use crate::payload::{AxelarMessagePayload, PayloadError, SolanaAccountRepr};
+use crate::payload::{AxelarMessagePayload, SolanaAccountRepr};
+use crate::GatewayError;
 use anchor_lang::prelude::borsh;
 use anchor_lang::prelude::borsh::BorshDeserialize;
 use anchor_lang::{AnchorDeserialize, AnchorSerialize};
@@ -8,13 +9,13 @@ use anchor_lang::{AnchorDeserialize, AnchorSerialize};
 //
 
 impl<'payload> AxelarMessagePayload<'payload> {
-    pub(super) fn encode_borsh(&self) -> Result<Vec<u8>, PayloadError> {
+    pub(super) fn encode_borsh(&self) -> Result<Vec<u8>, GatewayError> {
         let mut writer_vec = self.encoding_scheme_prefixed_array()?;
         // Serialize each field directly without copying
         borsh::to_writer(&mut writer_vec, self.payload_without_accounts)
-            .map_err(|_err| PayloadError::BorshSerializeError)?;
+            .map_err(|_err| GatewayError::BorshSerializeError)?;
         borsh::to_writer(&mut writer_vec, &self.solana_accounts)
-            .map_err(|_err| PayloadError::BorshSerializeError)?;
+            .map_err(|_err| GatewayError::BorshSerializeError)?;
         Ok(writer_vec)
     }
 
@@ -30,7 +31,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
     /// user's program.
     pub(super) fn decode_borsh(
         raw_payload: &'payload [u8],
-    ) -> Result<(&'payload [u8], Vec<SolanaAccountRepr>), PayloadError> {
+    ) -> Result<(&'payload [u8], Vec<SolanaAccountRepr>), GatewayError> {
         // Borsh stores the length of a serialized vector (the payload in this case) as a
         // little-endian u32.
         let payload_length = raw_payload
@@ -38,18 +39,18 @@ impl<'payload> AxelarMessagePayload<'payload> {
             .and_then(|bytes| bytes.try_into().ok())
             .map(u32::from_le_bytes)
             .and_then(|len| len.try_into().ok())
-            .ok_or(PayloadError::BorshDeserializeError)?;
+            .ok_or(GatewayError::BorshDeserializeError)?;
 
         // Split into payload and accounts data
         let (payload_slice, accounts_slice) = raw_payload
             .get(4..)
             .and_then(|bytes| bytes.get(..payload_length).zip(bytes.get(payload_length..)))
-            .ok_or(PayloadError::BorshDeserializeError)?;
+            .ok_or(GatewayError::BorshDeserializeError)?;
 
         // Deserialize accounts data using Borsh
         let solana_accounts: Vec<SolanaAccountRepr> =
             BorshDeserialize::try_from_slice(accounts_slice)
-                .map_err(|_err| PayloadError::BorshDeserializeError)?;
+                .map_err(|_err| GatewayError::BorshDeserializeError)?;
 
         Ok((payload_slice, solana_accounts))
     }

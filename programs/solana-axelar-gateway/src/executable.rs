@@ -11,23 +11,39 @@ pub use crate::Message;
 pub use payload::AxelarMessagePayload as ExecutablePayload;
 pub use payload::EncodingScheme as ExecutablePayloadEncodingScheme;
 
-#[error_code]
+/// Errors for the Axelar executable interface, used by programs that receive
+/// GMP messages. Error codes start at 7000 to avoid
+/// collisions with the importing program's own `#[error_code]` (6000+).
+#[derive(Debug)]
 pub enum ExecutableError {
-    #[msg("Payload hash does not match the computed hash of the payload")]
+    /// Payload hash does not match the computed hash of the payload
     InvalidPayloadHash,
-    #[msg("Provided accounts are invalid")]
+    /// Provided accounts are invalid
     InvalidAccounts,
+}
+
+impl From<ExecutableError> for anchor_lang::error::Error {
+    fn from(e: ExecutableError) -> Self {
+        match e {
+            ExecutableError::InvalidPayloadHash => {
+                anchor_lang::error::Error::from(ProgramError::Custom(7000))
+            }
+            ExecutableError::InvalidAccounts => {
+                anchor_lang::error::Error::from(ProgramError::Custom(7001))
+            }
+        }
+    }
 }
 
 /// Holds references to the Axelar executable accounts needed for validation.
 /// This is returned by the `HasAxelarExecutable` trait.
 pub struct AxelarExecutableAccountRefs<'a, 'info> {
     pub incoming_message_pda: &'a AccountLoader<'info, solana_axelar_gateway::IncomingMessage>,
-    pub signing_pda: &'a AccountInfo<'info>,
+    pub signing_pda: &'a UncheckedAccount<'info>,
     pub gateway_root_pda: &'a AccountLoader<'info, solana_axelar_gateway::state::GatewayConfig>,
     pub axelar_gateway_program:
         &'a Program<'info, solana_axelar_gateway::program::SolanaAxelarGateway>,
-    pub event_authority: &'a AccountInfo<'info>,
+    pub event_authority: &'a UncheckedAccount<'info>,
 }
 
 /// Trait that must be implemented by account structs that contain Axelar executable accounts.
@@ -129,7 +145,7 @@ macro_rules! executable_accounts {
             seeds = [solana_axelar_gateway::ValidateMessageSigner::SEED_PREFIX, message.command_id().as_ref()],
             bump = incoming_message_pda.load()?.signing_pda_bump,
         )]
-        pub signing_pda: AccountInfo<'info>,
+        pub signing_pda: UncheckedAccount<'info>,
 
         #[account(
             seeds = [solana_axelar_gateway::state::GatewayConfig::SEED_PREFIX],
@@ -245,7 +261,7 @@ pub fn validate_message_raw(
 ) -> Result<()> {
     let computed_payload_hash = solana_keccak_hasher::hash(payload).to_bytes();
     if computed_payload_hash != message.payload_hash {
-        return err!(solana_axelar_gateway::executable::ExecutableError::InvalidPayloadHash);
+        return Err(solana_axelar_gateway::executable::ExecutableError::InvalidPayloadHash.into());
     }
 
     // Prepare signer seeds

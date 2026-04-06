@@ -17,16 +17,14 @@ pub const SECP256K1_COMPRESSED_PUBKEY_LEN: usize = 33;
 pub type Secp256k1Pubkey = [u8; SECP256K1_COMPRESSED_PUBKEY_LEN];
 
 /// Represents a public key using supported cryptographic algorithms.
-#[derive(Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Digestable)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+#[derive(
+    Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Digestable, borsh::BorshSerialize,
+    borsh::BorshDeserialize,
 )]
 pub struct PublicKey(pub Secp256k1Pubkey);
+
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for PublicKey {}
 
 #[allow(clippy::min_ident_chars)]
 impl core::fmt::Debug for PublicKey {
@@ -47,16 +45,11 @@ pub const ECDSA_RECOVERABLE_SIGNATURE_LEN: usize = 65;
 pub type EcdsaRecoverableSignature = [u8; ECDSA_RECOVERABLE_SIGNATURE_LEN];
 
 /// Represents a digital signature using supported cryptographic algorithms.
-#[derive(Eq, PartialEq, Clone, Copy)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
-)]
+#[derive(Eq, PartialEq, Clone, Copy, borsh::BorshSerialize, borsh::BorshDeserialize)]
 pub struct Signature(pub EcdsaRecoverableSignature);
+
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for Signature {}
 
 #[allow(clippy::min_ident_chars)]
 impl core::fmt::Debug for Signature {

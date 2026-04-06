@@ -1,6 +1,6 @@
 use crate::{
     events::TrustedChainRemoved,
-    state::{InterchainTokenService, RolesError, UserRoles},
+    state::{InterchainTokenService, UserRoles},
     ItsError,
 };
 #[allow(deprecated)]
@@ -29,7 +29,7 @@ pub struct RemoveTrustedChain<'info> {
 		],
 	 	bump = user_roles.bump,
 		// Require the payer to have the OPERATOR role.
-		constraint = user_roles.has_operator_role() @ RolesError::MissingOperatorRole,
+		constraint = user_roles.has_operator_role() @ ItsError::MissingOperatorRole,
     )]
     pub user_roles: Option<Account<'info, UserRoles>>,
 

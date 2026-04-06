@@ -1,6 +1,6 @@
 use crate::{
     errors::ItsError,
-    state::{InterchainTokenService, RolesError, TokenManager, UserRoles},
+    state::{InterchainTokenService, TokenManager, UserRoles},
 };
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::{prelude::*, InstructionData};
@@ -51,7 +51,7 @@ pub struct MintInterchainToken<'info> {
             minter.key().as_ref(),
         ],
         bump = minter_roles_pda.bump,
-        constraint = minter_roles_pda.has_minter_role() @ RolesError::MissingMinterRole,
+        constraint = minter_roles_pda.has_minter_role() @ ItsError::MissingMinterRole,
     )]
     pub minter_roles_pda: Account<'info, UserRoles>,
 

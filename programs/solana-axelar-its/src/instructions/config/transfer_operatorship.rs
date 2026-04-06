@@ -1,5 +1,5 @@
 use crate::{
-    state::{roles, InterchainTokenService, RolesError, UserRoles},
+    state::{roles, InterchainTokenService, UserRoles},
     ItsError,
 };
 use anchor_lang::solana_program::instruction::Instruction;
@@ -25,7 +25,7 @@ pub struct TransferOperatorship<'info> {
             origin_user_account.key().as_ref(),
         ],
         bump = origin_roles_account.bump,
-        constraint = origin_roles_account.has_operator_role() @ RolesError::MissingOperatorRole,
+        constraint = origin_roles_account.has_operator_role() @ ItsError::MissingOperatorRole,
     )]
     pub origin_roles_account: Account<'info, UserRoles>,
 

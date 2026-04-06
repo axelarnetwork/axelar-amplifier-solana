@@ -110,8 +110,8 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 
 
 [workspace.dependencies]
-anchor-lang = { version = "1.0.0-rc.5", features = ["event-cpi"] }
-anchor-spl = "1.0.0-rc.5"
+anchor-lang = { version = "1.0.0", features = ["event-cpi"] }
+anchor-spl = "1.0.0"
 alloy-primitives = "0.7"
 alloy-sol-types = "0.7"
 anyhow = "1"

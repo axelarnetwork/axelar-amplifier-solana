@@ -5,7 +5,7 @@ use anchor_spl::token_2022::spl_token_2022;
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_mint_interchain_token_instruction;
-use solana_axelar_its::{roles, ItsError, RolesError, UserRoles};
+use solana_axelar_its::{roles, ItsError, UserRoles};
 
 #[test]
 fn mint_interchain_tokens() {
@@ -111,7 +111,7 @@ fn mint_interchain_token_no_minter_role_fails() {
 
     harness.ctx.process_and_validate_instruction(
         &mint_ix,
-        &[Check::err(RolesError::MissingMinterRole.into())],
+        &[Check::err(ItsError::MissingMinterRole.into())],
     );
 }
 

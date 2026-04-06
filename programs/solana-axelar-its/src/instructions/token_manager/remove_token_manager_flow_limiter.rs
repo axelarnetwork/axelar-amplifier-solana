@@ -1,4 +1,5 @@
-use crate::state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles};
+use crate::state::{roles, InterchainTokenService, TokenManager, UserRoles};
+use crate::ItsError;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -20,7 +21,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
             authority_user_account.key().as_ref(),
         ],
         bump = authority_roles_account.bump,
-        constraint = authority_roles_account.has_operator_role() @ RolesError::MissingOperatorRole,
+        constraint = authority_roles_account.has_operator_role() @ ItsError::MissingOperatorRole,
     )]
     pub authority_roles_account: Account<'info, UserRoles>,
 
@@ -55,7 +56,7 @@ pub struct RemoveTokenManagerFlowLimiter<'info> {
             target_user_account.key().as_ref(),
         ],
         bump = target_roles_account.bump,
-        constraint = target_roles_account.has_flow_limiter_role() @ RolesError::MissingFlowLimiterRole,
+        constraint = target_roles_account.has_flow_limiter_role() @ ItsError::MissingFlowLimiterRole,
     )]
     pub target_roles_account: Account<'info, UserRoles>,
 }

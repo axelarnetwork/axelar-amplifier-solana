@@ -4,19 +4,17 @@ use std::fmt::Display;
 use bytemuck::{Pod, Zeroable};
 
 /// [U256] represents uint256.
-#[derive(Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+#[derive(
+    Clone, Debug, PartialEq, Eq, Copy, Default, Pod, Zeroable, borsh::BorshSerialize,
+    borsh::BorshDeserialize,
 )]
 #[repr(transparent)]
 pub struct U256 {
     value: [u64; 4],
 }
+
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for U256 {}
 
 impl U256 {
     pub const ZERO: U256 = Self { value: [0; 4] };

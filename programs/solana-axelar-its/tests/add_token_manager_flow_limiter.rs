@@ -6,7 +6,8 @@ use anchor_lang::{
     InstructionData, ToAccountMetas,
 };
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
-use solana_axelar_its::state::{roles, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::state::{roles, TokenManager, UserRoles};
+use solana_axelar_its::ItsError;
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
     new_default_account, new_empty_account, new_test_account, DeployInterchainTokenContext,
@@ -397,7 +398,7 @@ fn reject_add_flow_limiter_without_operator_role() {
     ];
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(RolesError::MissingOperatorRole).into(),
+        anchor_lang::error::Error::from(ItsError::MissingOperatorRole).into(),
     )];
 
     mollusk.process_and_validate_instruction(

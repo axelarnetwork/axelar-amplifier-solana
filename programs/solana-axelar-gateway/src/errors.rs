@@ -30,4 +30,14 @@ pub enum GatewayError {
     UnsupportedSignatureScheme,
     InvalidSigningPDABump,
     InvalidTimestamp,
+    #[msg("Invalid encoding scheme")]
+    InvalidEncodingScheme,
+    #[msg("Borsh serialize error")]
+    BorshSerializeError,
+    #[msg("Borsh deserialize error")]
+    BorshDeserializeError,
+    #[msg("ABI error")]
+    PayloadAbiError,
+    #[msg("Internal type conversion error")]
+    PayloadConversion,
 }

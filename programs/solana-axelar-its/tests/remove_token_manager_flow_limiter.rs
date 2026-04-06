@@ -8,7 +8,8 @@ use anchor_lang::{
 use mollusk_svm::{program::keyed_account_for_system_program, result::Check};
 use solana_axelar_its::{
     roles,
-    state::{RolesError, TokenManager, UserRoles},
+    state::{TokenManager, UserRoles},
+    ItsError,
 };
 use solana_axelar_its_test_fixtures::{
     deploy_interchain_token_helper, init_its_service, initialize_mollusk_with_programs,
@@ -540,7 +541,7 @@ fn reject_remove_token_manager_flow_limiter_without_operator_role() {
     ];
 
     let checks = vec![Check::err(
-        anchor_lang::error::Error::from(RolesError::MissingOperatorRole).into(),
+        anchor_lang::error::Error::from(ItsError::MissingOperatorRole).into(),
     )];
 
     mollusk.process_and_validate_instruction(

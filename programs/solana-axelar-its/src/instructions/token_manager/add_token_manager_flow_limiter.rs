@@ -1,5 +1,5 @@
 use crate::{
-    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -23,7 +23,7 @@ pub struct AddTokenManagerFlowLimiter<'info> {
             authority_user_account.key().as_ref(),
         ],
         bump = authority_roles_account.bump,
-        constraint = authority_roles_account.has_operator_role() @ RolesError::MissingOperatorRole,
+        constraint = authority_roles_account.has_operator_role() @ ItsError::MissingOperatorRole,
     )]
     pub authority_roles_account: Account<'info, UserRoles>,
 
