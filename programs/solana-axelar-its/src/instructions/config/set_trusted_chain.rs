@@ -64,6 +64,9 @@ pub struct SetTrustedChain<'info> {
 /// If both accounts are passed, the payer must be the program upgrade authority *and*
 /// have the OPERATOR role.
 pub fn set_trusted_chain(ctx: Context<SetTrustedChain>, chain_name: String) -> Result<()> {
+    msg!("Instruction: SetTrustedChain");
+    msg!("chain={}", chain_name);
+
     ctx.accounts
         .its_root_pda
         .add_trusted_chain(chain_name.clone());

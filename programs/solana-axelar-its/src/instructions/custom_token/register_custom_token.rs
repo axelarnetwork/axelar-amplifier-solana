@@ -7,6 +7,8 @@ use crate::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{Mint, TokenAccount, TokenInterface},
@@ -139,4 +141,60 @@ pub fn register_custom_token_handler(
     });
 
     Ok(token_id)
+}
+
+pub fn make_register_custom_token_instruction(
+    payer: Pubkey,
+    deployer: Pubkey,
+    token_mint: Pubkey,
+    token_program: Pubkey,
+    salt: [u8; 32],
+    token_manager_type: Type,
+    operator: Option<Pubkey>,
+) -> (Instruction, crate::accounts::RegisterCustomToken) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+    let deploy_salt = linked_token_deployer_salt(&deployer, &salt);
+    let token_id = interchain_token_id_internal(&deploy_salt);
+    let token_manager_pda = TokenManager::find_pda(token_id, its_root_pda).0;
+
+    let token_manager_ata =
+        anchor_spl::associated_token::get_associated_token_address_with_program_id(
+            &token_manager_pda,
+            &token_mint,
+            &token_program,
+        );
+
+    let operator_roles_pda = operator.map(|op| UserRoles::find_pda(&token_manager_pda, &op).0);
+
+    let (event_authority, _) = crate::EVENT_AUTHORITY_AND_BUMP;
+
+    let accounts = crate::accounts::RegisterCustomToken {
+        payer,
+        deployer,
+        system_program: anchor_lang::system_program::ID,
+        its_root_pda,
+        token_manager_pda,
+        token_mint,
+        token_manager_ata,
+        token_program,
+        associated_token_program: anchor_spl::associated_token::ID,
+        operator,
+        operator_roles_pda,
+        event_authority,
+        program: crate::ID,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::RegisterCustomToken {
+                salt,
+                token_manager_type,
+                operator,
+            }
+            .data(),
+        },
+        accounts,
+    )
 }

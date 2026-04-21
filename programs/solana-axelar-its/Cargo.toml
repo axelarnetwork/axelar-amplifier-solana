@@ -26,8 +26,6 @@ rand.workspace = true
 solana-program.workspace = true
 solana-axelar-memo = { workspace = true, features = ["devnet-amplifier"] }
 solana-axelar-gas-service.workspace = true
-solana-axelar-gateway-test-fixtures.workspace = true
-solana-axelar-its-test-fixtures.workspace = true
 solana-sdk.workspace = true
 mollusk-svm.workspace = true
 mollusk-harness.workspace = true

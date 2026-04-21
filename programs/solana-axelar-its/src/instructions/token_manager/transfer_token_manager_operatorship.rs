@@ -3,6 +3,8 @@ use crate::{
     ItsError,
 };
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::instruction::Instruction;
+use anchor_lang::InstructionData;
 
 #[derive(Accounts)]
 pub struct TransferTokenManagerOperatorship<'info> {
@@ -99,4 +101,39 @@ pub fn transfer_token_manager_operatorship_handler(
     }
 
     Ok(())
+}
+
+pub fn make_transfer_token_manager_operatorship_instruction(
+    payer: Pubkey,
+    origin: Pubkey,
+    destination: Pubkey,
+    token_id: [u8; 32],
+) -> (
+    Instruction,
+    crate::accounts::TransferTokenManagerOperatorship,
+) {
+    let its_root_pda = InterchainTokenService::find_pda().0;
+    let token_manager_account = TokenManager::find_pda(token_id, its_root_pda).0;
+    let origin_roles_account = UserRoles::find_pda(&token_manager_account, &origin).0;
+    let destination_roles_account = UserRoles::find_pda(&token_manager_account, &destination).0;
+
+    let accounts = crate::accounts::TransferTokenManagerOperatorship {
+        system_program: anchor_lang::system_program::ID,
+        payer,
+        origin_user_account: origin,
+        origin_roles_account,
+        its_root_pda,
+        token_manager_account,
+        destination_user_account: destination,
+        destination_roles_account,
+    };
+
+    (
+        Instruction {
+            program_id: crate::ID,
+            accounts: accounts.to_account_metas(None),
+            data: crate::instruction::TransferTokenManagerOperatorship {}.data(),
+        },
+        accounts,
+    )
 }

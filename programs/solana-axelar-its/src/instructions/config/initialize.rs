@@ -58,6 +58,14 @@ pub fn initialize(
     chain_name: String,
     its_hub_address: String,
 ) -> Result<()> {
+    msg!("Instruction: Initialize");
+    msg!(
+        "chain_name={}, hub_address={}, operator={}",
+        chain_name,
+        its_hub_address,
+        ctx.accounts.operator.key()
+    );
+
     // Initialize ITS root
     *ctx.accounts.its_root_pda =
         InterchainTokenService::new(ctx.bumps.its_root_pda, chain_name, its_hub_address);
