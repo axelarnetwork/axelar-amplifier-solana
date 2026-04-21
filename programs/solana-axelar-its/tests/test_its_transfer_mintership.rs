@@ -5,7 +5,7 @@ use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::{
     instructions::make_transfer_interchain_token_mintership_instruction,
-    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, UserRoles},
     ItsError,
 };
 
@@ -104,7 +104,7 @@ fn reject_transfer_mintership_without_minter_role() {
 
     harness
         .ctx
-        .process_and_validate_instruction(&ix, &[Check::err(RolesError::MissingMinterRole.into())]);
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::MissingMinterRole.into())]);
 }
 
 #[test]

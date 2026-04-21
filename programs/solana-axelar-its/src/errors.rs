@@ -74,6 +74,8 @@ pub enum ItsError {
     MissingOperatorRole,
     #[msg("User does not have the FLOW_LIMITER role.")]
     MissingFlowLimiterRole,
+    #[msg("Transfer exceeds the flow limit for this token")]
+    FlowLimitExceeded,
 }
 
 impl From<ItsError> for ProgramError {

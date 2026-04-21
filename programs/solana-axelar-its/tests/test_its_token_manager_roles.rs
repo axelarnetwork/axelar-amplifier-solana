@@ -11,10 +11,9 @@ use solana_axelar_its::{
         make_set_token_manager_flow_limit_instruction,
         make_transfer_token_manager_operatorship_instruction,
     },
-    state::{
-        roles, token_manager::Type, InterchainTokenService, RolesError, TokenManager, UserRoles,
-    },
+    state::{roles, token_manager::Type, InterchainTokenService, TokenManager, UserRoles},
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
+    ItsError,
 };
 
 /// Register a custom token with an operator, return (token_id, operator).
@@ -117,7 +116,7 @@ fn reject_add_flow_limiter_without_operator_role() {
 
     harness.ctx.process_and_validate_instruction(
         &ix,
-        &[Check::err(RolesError::MissingOperatorRole.into())],
+        &[Check::err(ItsError::MissingOperatorRole.into())],
     );
 }
 
