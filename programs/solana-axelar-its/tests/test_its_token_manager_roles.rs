@@ -114,10 +114,9 @@ fn reject_add_flow_limiter_without_operator_role() {
     let (ix, _) =
         make_add_token_manager_flow_limiter_instruction(harness.payer, operator, target, token_id);
 
-    harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[Check::err(ItsError::MissingOperatorRole.into())],
-    );
+    harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::MissingOperatorRole.into())]);
 }
 
 // ── Remove Flow Limiter ──────────────────────────────────────────────
