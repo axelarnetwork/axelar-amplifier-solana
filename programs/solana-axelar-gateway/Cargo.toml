@@ -12,7 +12,7 @@ description = "Axelar Gateway Anchor program for Solana"
 bytemuck.workspace = true
 anchor-lang.workspace = true
 borsh.workspace = true
-solana-axelar-std = { workspace = true, features = ["anchor"] }
+solana-axelar-std.workspace = true
 solana-keccak-hasher.workspace = true
 solana-secp256k1-recover.workspace = true
 libsecp256k1.workspace = true
@@ -47,7 +47,7 @@ test-sbf = []
 cpi = ["no-entrypoint"]
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build"]
+idl-build = ["anchor-lang/idl-build", "solana-axelar-std/idl-build"]
 
 anchor-debug = []
 custom-heap = []

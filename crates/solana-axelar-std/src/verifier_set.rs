@@ -1,9 +1,6 @@
 use std::collections::BTreeMap;
 use udigest::Digestable;
 
-#[cfg(feature = "anchor")]
-use anchor_lang::prelude::borsh;
-
 use crate::{hasher::LeafHash, EncodingError, PayloadType, PublicKey, Signature};
 
 /// Represents a set of verifiers, each with an associated weight, and a quorum
@@ -32,14 +29,8 @@ pub struct VerifierSet {
 
 pub type VerifierSetHash = [u8; 32];
 
-#[derive(Clone, Copy, PartialEq, Eq, Digestable, Debug)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
+#[derive(
+    Clone, Copy, PartialEq, Eq, Digestable, Debug, borsh::BorshSerialize, borsh::BorshDeserialize,
 )]
 pub struct VerifierSetLeaf {
     /// The nonce value from the associated `VerifierSet`.
@@ -69,21 +60,16 @@ pub struct VerifierSetLeaf {
 
 impl LeafHash for VerifierSetLeaf {}
 
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for VerifierSetLeaf {}
+
 /// Contains information about a single verifier within the signing verifier
 /// set.
 ///
 /// This struct holds the verifier's signature, their corresponding leaf in the
 /// verifier set Merkle tree, and the Merkle proof needed to verify their
 /// inclusion in the set.
-#[derive(Debug, Eq, PartialEq, Clone)]
-#[cfg_attr(
-    not(feature = "anchor"),
-    derive(borsh::BorshDeserialize, borsh::BorshSerialize)
-)]
-#[cfg_attr(
-    feature = "anchor",
-    derive(anchor_lang::AnchorSerialize, anchor_lang::AnchorDeserialize)
-)]
+#[derive(Debug, Eq, PartialEq, Clone, borsh::BorshSerialize, borsh::BorshDeserialize)]
 pub struct SigningVerifierSetInfo {
     /// The signature provided by the verifier.
     pub signature: Signature,
@@ -99,6 +85,9 @@ pub struct SigningVerifierSetInfo {
     /// MessageApproval or SignerRotation
     pub payload_type: PayloadType,
 }
+
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for SigningVerifierSetInfo {}
 
 /// Generates the Merkle root hash for a given verifier set.
 ///

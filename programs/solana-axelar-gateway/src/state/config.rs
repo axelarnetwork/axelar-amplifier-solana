@@ -2,25 +2,18 @@ use crate::GatewayError;
 use anchor_lang::prelude::*;
 use solana_axelar_std::U256;
 
-/// Timestamp alias for when the last signer rotation happened
-pub type Timestamp = u64;
-/// Seconds that need to pass between signer rotations
-pub type RotationDelaySecs = u64;
-/// Ever-incrementing idx for the signer set
-pub type VerifierSetEpoch = U256;
-
 #[account(zero_copy)]
 #[derive(Debug, PartialEq, Eq)]
 #[allow(clippy::pub_underscore_fields)]
 pub struct GatewayConfig {
     /// current epoch points to the latest signer set hash
-    pub current_epoch: VerifierSetEpoch,
+    pub current_epoch: U256,
     /// how many n epochs do we consider valid
-    pub previous_verifier_set_retention: VerifierSetEpoch,
-    /// the minimum delay required between rotations
-    pub minimum_rotation_delay: RotationDelaySecs,
-    /// timestamp tracking of when the previous rotation happened
-    pub last_rotation_timestamp: Timestamp,
+    pub previous_verifier_set_retention: U256,
+    /// The minimum delay in seconds required between rotations
+    pub minimum_rotation_delay: u64,
+    /// Timestamp (seconds) of when the previous rotation happened
+    pub last_rotation_timestamp: u64,
     /// The gateway operator.
     pub operator: Pubkey,
     /// The domain separator, used as an input for hashing payloads.
@@ -75,9 +68,9 @@ pub struct InitializeConfigParams {
     /// initial verifier set
     pub initial_verifier_set: InitialVerifierSet,
     /// the minimum delay required between rotations
-    pub minimum_rotation_delay: RotationDelaySecs,
+    pub minimum_rotation_delay: u64,
     /// The gateway operator.
     pub operator: Pubkey,
     /// how many n epochs do we consider valid
-    pub previous_verifier_retention: VerifierSetEpoch,
+    pub previous_verifier_retention: U256,
 }

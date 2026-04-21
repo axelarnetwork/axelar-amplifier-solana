@@ -1,5 +1,5 @@
 use crate::{
-    state::{roles, InterchainTokenService, RolesError, TokenManager, UserRoles},
+    state::{roles, InterchainTokenService, TokenManager, UserRoles},
     ItsError,
 };
 use anchor_lang::prelude::*;
@@ -43,7 +43,7 @@ pub struct TransferInterchainTokenMintership<'info> {
         ],
         bump = sender_roles_account.bump,
         constraint = sender_roles_account.has_minter_role()
-            @ RolesError::MissingMinterRole,
+            @ ItsError::MissingMinterRole,
     )]
     pub sender_roles_account: Account<'info, UserRoles>,
 

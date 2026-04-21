@@ -55,6 +55,9 @@ pub enum PayloadType {
     RotateSigners = 1,
 }
 
+#[cfg(feature = "idl-build")]
+impl anchor_lang::IdlBuild for PayloadType {}
+
 impl From<PayloadType> for u8 {
     fn from(payload_type: PayloadType) -> Self {
         match payload_type {

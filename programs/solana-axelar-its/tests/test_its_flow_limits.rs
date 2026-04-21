@@ -3,7 +3,7 @@
 use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_set_flow_limit_instruction;
-use solana_axelar_its::{roles, ItsError, RolesError, TokenManager, UserRoles};
+use solana_axelar_its::{roles, ItsError, TokenManager, UserRoles};
 
 #[test]
 fn set_flow_limit() {
@@ -128,10 +128,9 @@ fn set_flow_limit_without_operator_role_fails() {
         Some(1_000_000u64),
     );
 
-    harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[Check::err(RolesError::MissingOperatorRole.into())],
-    );
+    harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::err(ItsError::MissingOperatorRole.into())]);
 }
 
 #[test]

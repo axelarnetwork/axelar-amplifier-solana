@@ -7,7 +7,8 @@ use alloy_sol_types::{
     sol, SolValue,
 };
 
-use crate::payload::{AxelarMessagePayload, PayloadError, SolanaAccountRepr};
+use crate::payload::{AxelarMessagePayload, SolanaAccountRepr};
+use crate::GatewayError;
 
 sol! {
     #[repr(C)]
@@ -24,7 +25,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
     /// - single byte indicating the encoding scheme.
     /// - encoded: The first element is the payload without the accounts.
     /// - encoded: The second element is the list of Solana accounts.
-    pub(super) fn encode_abi_encoding(&self) -> Result<Vec<u8>, PayloadError> {
+    pub(super) fn encode_abi_encoding(&self) -> Result<Vec<u8>, GatewayError> {
         let mut writer_vec = self.encoding_scheme_prefixed_array()?;
         let gateway_payload = SolanaGatewayPayload {
             execute_payload: self.payload_without_accounts.to_vec().into(),
@@ -50,7 +51,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
     /// Debug builds verify our manual decoding against alloy's full (but allocating) decode.
     pub(super) fn decode_abi_encoding(
         data: &'payload [u8],
-    ) -> Result<(&'payload [u8], Vec<SolanaAccountRepr>), PayloadError> {
+    ) -> Result<(&'payload [u8], Vec<SolanaAccountRepr>), GatewayError> {
         let (payload, accounts) = extract_payload_slice_and_solana_accounts(data)?;
 
         // Verify our implementation matches alloy's copying/owned decode
@@ -60,7 +61,7 @@ impl<'payload> AxelarMessagePayload<'payload> {
                 execute_payload: allocated_payload,
                 accounts: allocated_accounts,
             } = SolanaGatewayPayload::abi_decode_params(data, true)
-                .map_err(|_| PayloadError::AbiError)?;
+                .map_err(|_| GatewayError::PayloadAbiError)?;
 
             debug_assert_eq!(payload, allocated_payload.to_vec(), "bad payload");
             debug_assert_eq!(accounts, allocated_accounts, "bad accounts");
@@ -90,11 +91,11 @@ impl<'payload> AxelarMessagePayload<'payload> {
 #[inline]
 fn extract_payload_slice_and_solana_accounts(
     data: &[u8],
-) -> Result<(&[u8], Vec<SolanaAccountRepr>), PayloadError> {
+) -> Result<(&[u8], Vec<SolanaAccountRepr>), GatewayError> {
     let mut decoder = Decoder::new(data, true);
     let decoded_sequence = decoder
         .decode_sequence::<<SolanaGatewayPayload as alloy_sol_types::SolType>::Token<'_>>()
-        .map_err(|_| PayloadError::AbiError)?;
+        .map_err(|_| GatewayError::PayloadAbiError)?;
 
     // The payload bytes are packed inside the first token, and we can use it directly.
     // Account info is listed inside the second token.
@@ -106,12 +107,12 @@ fn extract_payload_slice_and_solana_accounts(
     for (WordToken(pubkey_token), WordToken(signer), WordToken(writable)) in account_words {
         let signer = U256::from_be_bytes(signer.0);
         if signer > U256::from(1) {
-            return Err(PayloadError::AbiError);
+            return Err(GatewayError::PayloadAbiError);
         }
 
         let writable = U256::from_be_bytes(writable.0);
         if writable > U256::from(1) {
-            return Err(PayloadError::AbiError);
+            return Err(GatewayError::PayloadAbiError);
         }
 
         accounts.push(SolanaAccountRepr {
