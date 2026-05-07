@@ -21,6 +21,8 @@ use anchor_lang::prelude::borsh;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use anchor_spl::token_2022;
 use solana_sdk::instruction::{AccountMeta, Instruction};
+use solana_sdk::message::v0;
+use solana_sdk::message::AddressLookupTableAccount;
 use solana_sdk::pubkey::Pubkey;
 
 const SEPARATOR: &str = "========================================================================";
@@ -121,6 +123,157 @@ fn compute_legacy_tx_size(ix: &Instruction) -> TxSizeBreakdown {
 
 fn accounts_that_fit(remaining_bytes: usize) -> usize {
     remaining_bytes / 33 // 32 key + 1 index
+}
+
+/// Compute Budget program id.
+/// All production transactions sent by the relayer prepend 2 compute-budget
+/// instructions (`set_compute_unit_price` + `set_compute_unit_limit`), which
+/// add the program id to `account_keys` and two short instructions.
+fn compute_budget_program_id() -> Pubkey {
+    solana_sdk_ids::compute_budget::ID
+}
+
+/// Two compute-budget instructions matching the ones the relayer prepends.
+/// `set_compute_unit_price` (variant 3, u64 little-endian, 9 bytes data)
+/// `set_compute_unit_limit` (variant 2, u32 little-endian, 5 bytes data)
+fn compute_budget_instructions() -> [Instruction; 2] {
+    let cb = compute_budget_program_id();
+    let mut price_data = vec![3u8];
+    price_data.extend_from_slice(&1u64.to_le_bytes());
+    let mut limit_data = vec![2u8];
+    limit_data.extend_from_slice(&200_000u32.to_le_bytes());
+    [
+        Instruction { program_id: cb, accounts: vec![], data: price_data },
+        Instruction { program_id: cb, accounts: vec![], data: limit_data },
+    ]
+}
+
+/// Compute the *exact* serialized size of a VersionedTransaction (v0) by
+/// compiling it and walking the structure. Mirrors the bincode wire format.
+///
+/// `alts` is the list of address lookup tables to use, exactly as the
+/// relayer would pass them to `v0::Message::try_compile`.
+///
+/// Adds the same 2 compute-budget instructions the relayer prepends, plus
+/// 1 signature for the payer.
+fn compute_v0_tx_size(ixs: &[Instruction], alts: &[AddressLookupTableAccount]) -> usize {
+    // Use the first signer in the input instructions as the payer. Otherwise
+    // v0::Message::try_compile would treat the instruction's signer as a
+    // *second* signer, double-counting a 64-byte signature and 32-byte key.
+    let payer = ixs
+        .iter()
+        .flat_map(|ix| ix.accounts.iter())
+        .find(|m| m.is_signer)
+        .map(|m| m.pubkey)
+        .unwrap_or_else(Pubkey::new_unique);
+    let dummy_hash = solana_sdk::hash::Hash::default();
+    let cb = compute_budget_instructions();
+    let mut all_ixs: Vec<Instruction> = cb.into_iter().collect();
+    all_ixs.extend_from_slice(ixs);
+
+    let msg = v0::Message::try_compile(&payer, &all_ixs, alts, dummy_hash)
+        .expect("compile v0 message");
+
+    // VersionedTransaction wire format:
+    //   compact_u16(num_signatures) + 64 * num_signatures
+    //   + 1 (v0 prefix byte 0x80)
+    //   + 3 (header)
+    //   + compact_u16(num_static_keys) + 32 * num_static_keys
+    //   + 32 (blockhash)
+    //   + compact_u16(num_instructions) + sum_over_ixs(
+    //       1 (program_id_index)
+    //       + compact_u16(num_accs) + num_accs
+    //       + compact_u16(data_len) + data_len
+    //     )
+    //   + compact_u16(num_alts) + sum_over_alts(
+    //       32 (alt key)
+    //       + compact_u16(num_writable) + num_writable
+    //       + compact_u16(num_readonly) + num_readonly
+    //     )
+    let num_sigs = msg.header.num_required_signatures as usize;
+    let num_keys = msg.account_keys.len();
+    let num_ixs = msg.instructions.len();
+    let num_alts = msg.address_table_lookups.len();
+
+    let mut size = compact_u16_len(num_sigs) + num_sigs * 64
+        + 1
+        + 3
+        + compact_u16_len(num_keys) + num_keys * 32
+        + 32
+        + compact_u16_len(num_ixs);
+    for ix in &msg.instructions {
+        size += 1
+            + compact_u16_len(ix.accounts.len()) + ix.accounts.len()
+            + compact_u16_len(ix.data.len()) + ix.data.len();
+    }
+    size += compact_u16_len(num_alts);
+    for alt in &msg.address_table_lookups {
+        size += 32
+            + compact_u16_len(alt.writable_indexes.len()) + alt.writable_indexes.len()
+            + compact_u16_len(alt.readonly_indexes.len()) + alt.readonly_indexes.len();
+    }
+    size
+}
+
+/// Build a global ITS ALT containing only the static accounts present in
+/// `ix`. The relayer's ALT holds 9 entries (gateway_root_pda,
+/// gateway_event_authority, gateway program, its_root_pda,
+/// associated_token_program, system_program, its_event_authority, Token,
+/// Token-2022). v0 message compilation only references the ones the
+/// instruction actually uses, so we mirror that here.
+fn build_global_its_alt_from_ix(ix: &Instruction) -> AddressLookupTableAccount {
+    // Slots in the ITS Execute account list that are static (PDAs + program ids).
+    // Indices match `solana_axelar_its::accounts::Execute::to_account_metas`.
+    //
+    //   0 incoming_message_pda    (per-message, not in ALT)
+    //   1 signing_pda             (per-message, not in ALT)
+    //   2 gateway_root_pda        ← static
+    //   3 gateway_event_authority ← static
+    //   4 axelar_gateway_program  ← static
+    //   5 payer (signer)          (not in ALT)
+    //   6 its_root_pda            ← static
+    //   7 token_manager_pda       (per-token, not in ALT)
+    //   8 token_mint              (per-token, not in ALT)
+    //   9 token_manager_ata       (per-token, not in ALT)
+    //  10 token_program           ← static
+    //  11 associated_token_prog   ← static
+    //  12 system_program          ← static
+    //  13 its_event_authority     ← static
+    //  14 program (ITS)           (instruction program_id, not in ALT)
+    let static_indices = [2, 3, 4, 6, 10, 11, 12, 13];
+    let mut addrs: Vec<Pubkey> = static_indices
+        .iter()
+        .filter_map(|i| ix.accounts.get(*i).map(|a| a.pubkey))
+        .collect();
+    // The relayer's global ALT also holds the SPL Token program id, even
+    // when the current tx uses Token-2022. Include it so v0 compile sees
+    // it but it won't be referenced.
+    addrs.push(anchor_spl::token::ID);
+    AddressLookupTableAccount { key: Pubkey::new_unique(), addresses: addrs }
+}
+
+/// Build the GMP Execute synthetic ALT — empty (the relayer does NOT use an
+/// ALT for non-ITS GMP destinations).
+fn no_alt() -> Vec<AddressLookupTableAccount> {
+    vec![]
+}
+
+/// Build the full per-message ephemeral ALT covering every non-signer,
+/// non-program_id account in the ITS Execute instruction that isn't already
+/// in the global ALT — matching the relayer's filter at
+/// `includer.rs:426`.
+fn build_ephemeral_alt(ix: &Instruction, global_alt: &AddressLookupTableAccount) -> AddressLookupTableAccount {
+    let global: BTreeSet<Pubkey> = global_alt.addresses.iter().copied().collect();
+    let mut addrs: Vec<Pubkey> = Vec::new();
+    let mut seen: BTreeSet<Pubkey> = BTreeSet::new();
+    for acc in &ix.accounts {
+        if acc.is_signer { continue; }
+        if acc.pubkey == ix.program_id { continue; }
+        if global.contains(&acc.pubkey) { continue; }
+        if !seen.insert(acc.pubkey) { continue; }
+        addrs.push(acc.pubkey);
+    }
+    AddressLookupTableAccount { key: Pubkey::new_unique(), addresses: addrs }
 }
 
 /// Binary search for the maximum payload size that fits.
@@ -545,4 +698,107 @@ fn protocol_limits() {
         let max_payload = data_budget_l2.saturating_sub(account_cost);
         println!("{:>10} {:>12}", n_accs, max_payload);
     }
+}
+
+/// Authoritative measurement: compiles each instruction to a real v0
+/// `Message` (with the 2 compute-budget instructions and 1 signature the
+/// relayer adds) and reports the exact serialized tx size.
+///
+/// Use these numbers — not the legacy approximations above — when stating
+/// protocol limits in user-facing documentation.
+#[test]
+fn production_realistic_sizes() {
+    println!("\n{SEPARATOR}");
+    println!("PRODUCTION-REALISTIC SIZES (v0 + compute-budget + 1 signature)");
+    println!("Mirrors the relayer's `estimate_v0_tx_size` exactly.");
+    println!("{SEPARATOR}\n");
+
+    // ---- 1. GMP Execute (no ALT — relayer doesn't ALT non-ITS GMP) ----
+
+    println!("=== 1. Gateway GMP Execute (no ALT) ===");
+    println!("Per-account cost: 33 bytes | Per-byte of payload: 1 byte\n");
+    let base_ix = build_gmp_execute_ix(0, &[], 0);
+    let base = compute_v0_tx_size(&[base_ix], &no_alt());
+    println!("Base (0 program accounts, empty payload): {} bytes", base);
+    println!("Budget: {} bytes\n", MAX_TX_SIZE.saturating_sub(base));
+
+    println!("{:>10} {:>12}", "Accounts", "Max payload");
+    println!("{:->10} {:->12}", "", "");
+    for n_accs in [0, 1, 2, 3, 5, 8, 10, 15, 20] {
+        let max_payload = find_max_payload(|p| {
+            let ix = build_gmp_execute_ix(0, &vec![0u8; p], n_accs);
+            compute_v0_tx_size(&[ix], &no_alt()) <= MAX_TX_SIZE
+        });
+        println!("{:>10} {:>12}", n_accs, max_payload);
+    }
+
+    // ---- 2. ITS Execute → InterchainTransfer WITHOUT data ----
+
+    println!("\n=== 2. ITS Execute → InterchainTransfer (no data) ===\n");
+    let ix = build_execute_interchain_transfer_ix(None, &[]);
+    let alt = build_global_its_alt_from_ix(&ix);
+    let size_no_alt = compute_v0_tx_size(std::slice::from_ref(&ix), &no_alt());
+    let size_l1 = compute_v0_tx_size(std::slice::from_ref(&ix), &[alt]);
+    println!("Legacy v0 (no ALT): {} / {} bytes ({} remaining)",
+        size_no_alt, MAX_TX_SIZE, MAX_TX_SIZE.saturating_sub(size_no_alt));
+    println!("With global ALT:    {} / {} bytes ({} remaining)",
+        size_l1, MAX_TX_SIZE, MAX_TX_SIZE.saturating_sub(size_l1));
+
+    // ---- 3. DeployInterchainToken / LinkToken ----
+
+    println!("\n=== 3. ITS Execute → DeployInterchainToken / LinkToken ===\n");
+    for (name, ix) in [
+        ("DeployInterchainToken", build_execute_deploy_interchain_token_ix()),
+        ("LinkToken", build_execute_link_token_ix()),
+    ] {
+        let alt = build_global_its_alt_from_ix(&ix);
+        let size = compute_v0_tx_size(std::slice::from_ref(&ix), &[alt]);
+        println!("{:<25} (with global ALT): {} / {} bytes ({} remaining)",
+            name, size, MAX_TX_SIZE, MAX_TX_SIZE.saturating_sub(size));
+    }
+
+    // ---- 4. ITS Execute → InterchainTransfer WITH data ----
+
+    println!("\n=== 4. ITS Execute → InterchainTransfer (with data) ===");
+    println!("User accounts in BOTH data (AxelarMessagePayload) AND tx remaining_accounts.\n");
+
+    // Level 1 (global ALT only)
+    let ref_ix = build_its_execute_with_payload(&[], 0);
+    let global = build_global_its_alt_from_ix(&ref_ix);
+    let l1_base = compute_v0_tx_size(std::slice::from_ref(&ref_ix), std::slice::from_ref(&global));
+    println!("--- Level 1 (global ALT only) ---");
+    println!("Base (empty payload, 0 user accounts): {} bytes", l1_base);
+    println!("Budget: {} bytes\n", MAX_TX_SIZE.saturating_sub(l1_base));
+    println!("{:>10} {:>12}", "Accounts", "Max payload");
+    println!("{:->10} {:->12}", "", "");
+    for n_accs in [0, 1, 2, 3, 4, 5] {
+        let max_payload = find_max_payload(|p| {
+            let ix = build_its_execute_with_payload(&vec![0u8; p], n_accs);
+            let alt = build_global_its_alt_from_ix(&ix);
+            compute_v0_tx_size(std::slice::from_ref(&ix), std::slice::from_ref(&alt)) <= MAX_TX_SIZE
+        });
+        println!("{:>10} {:>12}", n_accs, max_payload);
+    }
+
+    // Level 2 (global + ephemeral ALT — relayer's strategy)
+    println!("\n--- Level 2 (global + ephemeral ALT) ---\n");
+    println!("{:>10} {:>12}", "Accounts", "Max payload");
+    println!("{:->10} {:->12}", "", "");
+    for n_accs in [0, 1, 2, 3, 5, 8, 10, 15] {
+        let max_payload = find_max_payload(|p| {
+            let ix = build_its_execute_with_payload(&vec![0u8; p], n_accs);
+            let global = build_global_its_alt_from_ix(&ix);
+            let ephemeral = build_ephemeral_alt(&ix, &global);
+            let alts = vec![global, ephemeral];
+            compute_v0_tx_size(std::slice::from_ref(&ix), &alts) <= MAX_TX_SIZE
+        });
+        println!("{:>10} {:>12}", n_accs, max_payload);
+    }
+
+    // ---- 5. Outbound: gateway call_contract via wallet ----
+
+    // Outbound is a different test crate, but we mirror the calc here so the
+    // doc has a one-stop place. Direct signer, no CPI, no ALT.
+    println!("\n=== 5. Outbound: gateway call_contract (direct signer) ===");
+    println!("(See programs/solana-axelar-gateway/tests/test_transaction_sizes.rs)");
 }
