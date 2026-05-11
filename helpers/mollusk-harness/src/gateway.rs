@@ -1,12 +1,16 @@
 use std::collections::HashMap;
 
 use anchor_lang::{InstructionData, ToAccountMetas};
-use mollusk_svm::{result::Check, Mollusk, MolluskContext};
+use mollusk_svm::{
+    result::{Check, InstructionResult},
+    Mollusk, MolluskContext,
+};
 use mollusk_test_utils::get_event_authority_and_program_accounts;
 use rand::Rng;
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    GatewayConfig, Message as CrossChainMessage, VerifierSetTracker,
+    CallContractSigner, GatewayConfig, Message as CrossChainMessage,
+    SignatureVerificationSessionData, VerifierSetTracker,
 };
 use solana_axelar_std::{
     hasher::LeafHash, MerkleTree, MessageLeaf, PayloadType, PublicKey, Signature,
@@ -545,5 +549,340 @@ impl GatewayTestHarness {
         harness.ensure_gateway_initialized();
 
         harness
+    }
+
+    /// Initializes a payload verification session and returns the session PDA.
+    pub fn init_payload_verification_session(
+        &self,
+        payload_merkle_root: [u8; 32],
+        payload_type: PayloadType,
+    ) -> Pubkey {
+        let VerifierSetTracker {
+            verifier_set_hash, ..
+        } = self
+            .get_account_as(&self.gateway.verifier_set_tracker)
+            .expect("verifier set tracker should exist");
+
+        let verification_session_account = SignatureVerificationSessionData::find_pda(
+            &payload_merkle_root,
+            payload_type,
+            &verifier_set_hash,
+        )
+        .0;
+
+        let ix = Instruction {
+            program_id: solana_axelar_gateway::ID,
+            accounts: solana_axelar_gateway::accounts::InitializePayloadVerificationSession {
+                payer: self.payer,
+                gateway_root_pda: self.gateway.root,
+                verifier_set_tracker_pda: self.gateway.verifier_set_tracker,
+                verification_session_account,
+                system_program: solana_sdk_ids::system_program::ID,
+            }
+            .to_account_metas(None),
+            data: solana_axelar_gateway::instruction::InitializePayloadVerificationSession {
+                merkle_root: payload_merkle_root,
+                payload_type,
+            }
+            .data(),
+        };
+
+        self.ctx.process_and_validate_instruction_chain(&[(
+            &ix,
+            &[
+                Check::success(),
+                Check::account(&verification_session_account)
+                    .owner(&solana_axelar_gateway::ID)
+                    .rent_exempt()
+                    .build(),
+            ],
+        )]);
+
+        verification_session_account
+    }
+
+    /// Verifies a single signature against a payload verification session.
+    pub fn verify_signature(
+        &self,
+        payload_merkle_root: [u8; 32],
+        verifier_info: SigningVerifierSetInfo,
+    ) -> InstructionResult {
+        self.verify_signature_with_checks(payload_merkle_root, verifier_info, &[Check::success()])
+    }
+
+    /// Like `verify_signature` but accepts custom checks.
+    pub fn verify_signature_with_checks(
+        &self,
+        payload_merkle_root: [u8; 32],
+        verifier_info: SigningVerifierSetInfo,
+        checks: &[Check],
+    ) -> InstructionResult {
+        let VerifierSetTracker {
+            verifier_set_hash, ..
+        } = self
+            .get_account_as(&self.gateway.verifier_set_tracker)
+            .expect("verifier set tracker should exist");
+
+        let verification_session_account = SignatureVerificationSessionData::find_pda(
+            &payload_merkle_root,
+            verifier_info.payload_type,
+            &verifier_set_hash,
+        )
+        .0;
+
+        let ix = Instruction {
+            program_id: solana_axelar_gateway::ID,
+            accounts: solana_axelar_gateway::accounts::VerifySignature {
+                gateway_root_pda: self.gateway.root,
+                verification_session_account,
+                verifier_set_tracker_pda: self.gateway.verifier_set_tracker,
+            }
+            .to_account_metas(None),
+            data: solana_axelar_gateway::instruction::VerifySignature {
+                payload_merkle_root,
+                verifier_info,
+            }
+            .data(),
+        };
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, checks)])
+    }
+
+    /// Convenience: signs and verifies with all signers in the current verifier set.
+    pub fn verify_all_signatures(&self, payload_merkle_root: [u8; 32], payload_type: PayloadType) {
+        let VerifierSetTracker {
+            verifier_set_hash, ..
+        } = self
+            .get_account_as(&self.gateway.verifier_set_tracker)
+            .expect("verifier set tracker should exist");
+
+        let verification_session_account = SignatureVerificationSessionData::find_pda(
+            &payload_merkle_root,
+            payload_type,
+            &verifier_set_hash,
+        )
+        .0;
+
+        let ixs: Vec<Instruction> = self
+            .gateway
+            .signers
+            .iter()
+            .zip(self.gateway.verifier_set_leaves.iter())
+            .enumerate()
+            .map(|(idx, (sk, leaf))| {
+                create_verifier_info(
+                    sk,
+                    payload_merkle_root,
+                    leaf,
+                    idx,
+                    &self.gateway.verifier_merkle_tree,
+                    payload_type,
+                )
+            })
+            .map(|verifier_info| Instruction {
+                program_id: solana_axelar_gateway::ID,
+                accounts: solana_axelar_gateway::accounts::VerifySignature {
+                    gateway_root_pda: self.gateway.root,
+                    verification_session_account,
+                    verifier_set_tracker_pda: self.gateway.verifier_set_tracker,
+                }
+                .to_account_metas(None),
+                data: solana_axelar_gateway::instruction::VerifySignature {
+                    payload_merkle_root,
+                    verifier_info,
+                }
+                .data(),
+            })
+            .collect();
+
+        let checks = vec![Check::success()];
+        let ix_checks: Vec<(&Instruction, &[Check])> =
+            ixs.iter().map(|ix| (ix, checks.as_slice())).collect();
+
+        self.ctx.process_and_validate_instruction_chain(&ix_checks);
+    }
+
+    /// Executes signer rotation with a new verifier set hash.
+    pub fn rotate_signers(
+        &self,
+        new_verifier_set_hash: [u8; 32],
+        verification_session_pda: Pubkey,
+    ) -> InstructionResult {
+        self.rotate_signers_with_checks(
+            new_verifier_set_hash,
+            verification_session_pda,
+            &[Check::success()],
+        )
+    }
+
+    /// Like `rotate_signers` but accepts custom checks.
+    pub fn rotate_signers_with_checks(
+        &self,
+        new_verifier_set_hash: [u8; 32],
+        verification_session_pda: Pubkey,
+        checks: &[Check],
+    ) -> InstructionResult {
+        let (new_verifier_set_tracker_pda, _) =
+            VerifierSetTracker::find_pda(&new_verifier_set_hash);
+
+        let (event_authority, _, _) =
+            get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
+
+        let ix = Instruction {
+            program_id: solana_axelar_gateway::ID,
+            accounts: solana_axelar_gateway::accounts::RotateSigners {
+                gateway_root_pda: self.gateway.root,
+                verification_session_account: verification_session_pda,
+                verifier_set_tracker_pda: self.gateway.verifier_set_tracker,
+                new_verifier_set_tracker: new_verifier_set_tracker_pda,
+                payer: self.payer,
+                system_program: solana_sdk_ids::system_program::ID,
+                operator: Some(self.operator),
+                event_authority,
+                program: solana_axelar_gateway::ID,
+            }
+            .to_account_metas(None),
+            data: solana_axelar_gateway::instruction::RotateSigners {
+                new_verifier_set_merkle_root: new_verifier_set_hash,
+            }
+            .data(),
+        };
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, checks)])
+    }
+
+    /// Approves a single message. Returns the incoming message PDA.
+    pub fn approve_message(
+        &self,
+        merklized_message: &solana_axelar_std::MerklizedMessage,
+        payload_merkle_root: [u8; 32],
+        verification_session_pda: Pubkey,
+    ) -> InstructionResult {
+        self.approve_message_with_checks(
+            merklized_message,
+            payload_merkle_root,
+            verification_session_pda,
+            &[Check::success()],
+        )
+    }
+
+    /// Like `approve_message` but with custom checks.
+    pub fn approve_message_with_checks(
+        &self,
+        merklized_message: &solana_axelar_std::MerklizedMessage,
+        payload_merkle_root: [u8; 32],
+        verification_session_pda: Pubkey,
+        checks: &[Check],
+    ) -> InstructionResult {
+        let command_id = merklized_message.leaf.message.command_id();
+        let incoming_message_pda = solana_axelar_gateway::IncomingMessage::find_pda(&command_id).0;
+
+        let (event_authority, _, _) =
+            get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
+
+        let ix = Instruction {
+            program_id: solana_axelar_gateway::ID,
+            accounts: solana_axelar_gateway::accounts::ApproveMessage {
+                gateway_root_pda: self.gateway.root,
+                funder: self.payer,
+                verification_session_account: verification_session_pda,
+                incoming_message_pda,
+                system_program: solana_sdk_ids::system_program::ID,
+                event_authority,
+                program: solana_axelar_gateway::ID,
+            }
+            .to_account_metas(None),
+            data: solana_axelar_gateway::instruction::ApproveMessage {
+                merklized_message: merklized_message.clone(),
+                payload_merkle_root,
+            }
+            .data(),
+        };
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, checks)])
+    }
+
+    /// Transfers gateway operatorship to a new operator.
+    pub fn transfer_gateway_operatorship(&self, new_operator: Pubkey) -> InstructionResult {
+        let program_data = anchor_lang::prelude::bpf_loader_upgradeable::get_program_data_address(
+            &solana_axelar_gateway::ID,
+        );
+
+        let (event_authority, _, _) =
+            get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
+
+        let ix = Instruction {
+            program_id: solana_axelar_gateway::ID,
+            accounts: solana_axelar_gateway::accounts::TransferOperatorship {
+                gateway_root_pda: self.gateway.root,
+                operator_or_upgrade_authority: self.operator,
+                program_data,
+                new_operator,
+                event_authority,
+                program: solana_axelar_gateway::ID,
+            }
+            .to_account_metas(None),
+            data: solana_axelar_gateway::instruction::TransferOperatorship {}.data(),
+        };
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])])
+    }
+
+    /// Calls the gateway's `call_contract` instruction.
+    pub fn call_contract(
+        &self,
+        caller: Pubkey,
+        destination_chain: String,
+        destination_address: String,
+        payload: Vec<u8>,
+    ) -> InstructionResult {
+        let (event_authority, _, _) =
+            get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
+
+        // Check if caller is a program (has signing PDA) or a direct signer
+        let (signing_pda, signing_pda_bump) = CallContractSigner::find_pda(&caller);
+        let caller_account = self.get_account(&caller);
+
+        // If the caller account is executable, use the signing PDA flow
+        let (signing_pda_option, bump) = if caller_account.is_some_and(|a| a.executable) {
+            (Some(signing_pda), signing_pda_bump)
+        } else {
+            (None, 0)
+        };
+
+        let mut accounts = solana_axelar_gateway::accounts::CallContract {
+            caller,
+            signing_pda: signing_pda_option,
+            gateway_root_pda: self.gateway.root,
+            event_authority,
+            program: solana_axelar_gateway::ID,
+        }
+        .to_account_metas(None);
+
+        // For direct signers, mark the caller as signer
+        if signing_pda_option.is_none() {
+            if let Some(first) = accounts.first_mut() {
+                first.is_signer = true;
+            }
+        }
+
+        let ix = Instruction {
+            program_id: solana_axelar_gateway::ID,
+            accounts,
+            data: solana_axelar_gateway::instruction::CallContract {
+                destination_chain,
+                destination_contract_address: destination_address,
+                payload,
+                signing_pda_bump: bump,
+            }
+            .data(),
+        };
+
+        self.ctx
+            .process_and_validate_instruction_chain(&[(&ix, &[Check::success()])])
     }
 }
