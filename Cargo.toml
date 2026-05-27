@@ -9,7 +9,7 @@ repository = "https://github.com/axelarnetwork/axelar-amplifier-solana"
 homepage = "https://github.com/axelarnetwork/axelar-amplifier-solana"
 license = "MIT/Apache-2.0"
 edition = "2021"
-rust-version = "1.86"
+rust-version = "1.87"
 
 [workspace.lints.clippy]
 cargo = { priority = -1, level = "deny" }
@@ -110,8 +110,8 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 
 
 [workspace.dependencies]
-anchor-lang = { version = "1.0.0", features = ["event-cpi"] }
-anchor-spl = "1.0.0"
+anchor-lang = { version = "1.0.2", features = ["event-cpi"] }
+anchor-spl = "1.0.2"
 alloy-primitives = "0.7"
 alloy-sol-types = "0.7"
 anyhow = "1"

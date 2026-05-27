@@ -8,7 +8,7 @@
 //! derives for IDL generation.
 //!
 //! WARNING: These mirrors must be kept in sync with the cosmwasm contract!
-//! https://github.com/axelarnetwork/axelar-amplifier/tree/main/contracts/its-borsh-translator
+//! <https://github.com/axelarnetwork/axelar-amplifier/tree/main/contracts/its-borsh-translator>
 
 use anchor_lang::prelude::*;
 
