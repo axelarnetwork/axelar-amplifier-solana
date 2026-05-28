@@ -8,6 +8,11 @@ license.workspace = true
 edition.workspace = true
 description = "Axelar Gateway Anchor program for Solana"
 
+[package.metadata.cargo-machete]
+# `ruint` is intentionally unused directly. It constrains Alloy's transitive
+# dependency during `cargo publish`, where the workspace lockfile is ignored.
+ignored = ["ruint"]
+
 [dependencies]
 bytemuck.workspace = true
 anchor-lang.workspace = true
@@ -21,6 +26,8 @@ alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 num-derive.workspace = true
 num-traits.workspace = true
+# Keep Alloy's transitive `ruint` on the workspace-pinned SBF-compatible version.
+ruint.workspace = true
 
 [dev-dependencies]
 mollusk-harness.workspace = true

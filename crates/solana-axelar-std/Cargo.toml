@@ -9,6 +9,11 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[package.metadata.cargo-machete]
+# `ruint` is intentionally unused directly. It constrains Alloy's transitive
+# dependency during `cargo publish`, where the workspace lockfile is ignored.
+ignored = ["ruint"]
+
 [dependencies]
 alloy-primitives.workspace = true
 arrayref.workspace = true
@@ -21,6 +26,8 @@ anchor-lang = { workspace = true, optional = true }
 solana-keccak-hasher.workspace = true
 bytemuck.workspace = true
 bnum.workspace = true
+# Keep Alloy's transitive `ruint` on the workspace-pinned SBF-compatible version.
+ruint.workspace = true
 
 [dev-dependencies]
 rand.workspace = true
