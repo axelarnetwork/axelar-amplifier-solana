@@ -1813,6 +1813,7 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
  "hex",
+ "ruint",
 ]
 
 [[package]]
@@ -3448,6 +3449,7 @@ dependencies = [
  "num-derive 0.4.2",
  "num-traits",
  "rand 0.8.6",
+ "ruint",
  "solana-axelar-std",
  "solana-keccak-hasher",
  "solana-sdk",
@@ -3573,6 +3575,7 @@ dependencies = [
  "hex",
  "rand 0.8.6",
  "rs_merkle",
+ "ruint",
  "solana-keccak-hasher",
  "thiserror 1.0.69",
  "udigest",

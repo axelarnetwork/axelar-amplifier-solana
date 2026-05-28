@@ -6,7 +6,14 @@ description = "Governance GMP message encoding and decoding for Axelar"
 license.workspace = true
 repository.workspace = true
 
+[package.metadata.cargo-machete]
+# `ruint` is intentionally unused directly. It constrains Alloy's transitive
+# dependency during `cargo publish`, where the workspace lockfile is ignored.
+ignored = ["ruint"]
+
 [dependencies]
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 hex.workspace = true
+# Keep Alloy's transitive `ruint` on the workspace-pinned SBF-compatible version.
+ruint.workspace = true
