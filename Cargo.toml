@@ -9,7 +9,7 @@ repository = "https://github.com/axelarnetwork/axelar-amplifier-solana"
 homepage = "https://github.com/axelarnetwork/axelar-amplifier-solana"
 license = "MIT/Apache-2.0"
 edition = "2021"
-rust-version = "1.87"
+rust-version = "1.89"
 
 [workspace.lints.clippy]
 cargo = { priority = -1, level = "deny" }
@@ -182,8 +182,8 @@ spl-token-metadata-interface = "0.8.0"
 spl-type-length-value = "0.9.0"
 
 # solana test dependencies
-mollusk-svm = "0.11.0"
-mollusk-svm-programs-token = "0.11.0"
+mollusk-svm = "0.13.1"
+mollusk-svm-programs-token = "0.13.1"
 
 # solana programs
 solana-axelar-operators = { version = "1.1.1", path = "programs/solana-axelar-operators", default-features = false }

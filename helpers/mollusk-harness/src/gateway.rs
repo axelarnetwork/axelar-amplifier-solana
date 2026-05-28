@@ -20,9 +20,9 @@ use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
 
-use crate::{msg, TestHarness};
+use crate::{deployed_program_path, ensure_default_sbf_out_dir, msg, TestHarness};
 
-// -- Inlined from solana-axelar-gateway-test-fixtures --
+// -- Signature helpers --
 
 pub fn generate_random_signer() -> (libsecp256k1::SecretKey, [u8; 33]) {
     let mut rng = rand::thread_rng();
@@ -521,20 +521,14 @@ impl Default for GatewayTestHarness {
 
 /// Creates a Mollusk instance with the gateway and its dependencies loaded.
 pub fn initialize_gateway_mollusk() -> Mollusk {
-    std::env::set_var("SBF_OUT_DIR", "../../target/deploy");
+    ensure_default_sbf_out_dir();
     let mut mollusk = Mollusk::new(&solana_axelar_gateway::ID, "solana_axelar_gateway");
 
-    // Operators
-    mollusk.add_program(
-        &solana_axelar_operators::ID,
-        "../../target/deploy/solana_axelar_operators",
-    );
+    let operators_program = deployed_program_path("solana_axelar_operators");
+    mollusk.add_program(&solana_axelar_operators::ID, &operators_program);
 
-    // Gas Service
-    mollusk.add_program(
-        &solana_axelar_gas_service::ID,
-        "../../target/deploy/solana_axelar_gas_service",
-    );
+    let gas_service_program = deployed_program_path("solana_axelar_gas_service");
+    mollusk.add_program(&solana_axelar_gas_service::ID, &gas_service_program);
 
     mollusk
 }

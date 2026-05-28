@@ -1,12 +1,16 @@
 #![allow(clippy::indexing_slicing)]
 #![allow(clippy::too_many_arguments)]
 
+pub mod gas_service;
 pub mod gateway;
 pub mod its;
+pub mod operators;
 
 // Re-exports for convenience
+pub use gas_service::{GasServiceSetup, GasServiceTestHarness};
 pub use gateway::{GatewayHarnessInfo, GatewaySetup, GatewayTestHarness};
 pub use its::ItsTestHarness;
+pub use operators::{OperatorsSetup, OperatorsTestHarness};
 
 use std::collections::HashMap;
 
@@ -19,6 +23,16 @@ use mollusk_svm::{result::Check, MolluskContext};
 use mollusk_test_utils::create_program_data_account;
 use mollusk_test_utils::system_account_with_lamports;
 use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+
+pub const DEFAULT_SBF_OUT_DIR: &str = "../../target/deploy";
+
+pub fn ensure_default_sbf_out_dir() {
+    std::env::set_var("SBF_OUT_DIR", DEFAULT_SBF_OUT_DIR);
+}
+
+pub fn deployed_program_path(program_name: &str) -> String {
+    format!("{DEFAULT_SBF_OUT_DIR}/{program_name}")
+}
 
 macro_rules! msg {
     () => {

@@ -27,21 +27,21 @@ use solana_sdk::{
 };
 
 use crate::gateway::{GatewayHarnessInfo, GatewaySetup};
-use crate::{msg, TestHarness};
+use crate::{deployed_program_path, ensure_default_sbf_out_dir, msg, TestHarness};
 
 /// Creates a Mollusk instance with ITS, gateway, and all dependencies loaded.
 pub fn initialize_its_mollusk() -> Mollusk {
-    std::env::set_var("SBF_OUT_DIR", "../../target/deploy");
+    ensure_default_sbf_out_dir();
     let mut mollusk = Mollusk::new(&solana_axelar_its::ID, "solana_axelar_its");
 
-    // Operators
-    mollusk.add_program(&solana_axelar_operators::ID, "solana_axelar_operators");
+    let operators_program = deployed_program_path("solana_axelar_operators");
+    mollusk.add_program(&solana_axelar_operators::ID, &operators_program);
 
-    // Gas Service
-    mollusk.add_program(&solana_axelar_gas_service::ID, "solana_axelar_gas_service");
+    let gas_service_program = deployed_program_path("solana_axelar_gas_service");
+    mollusk.add_program(&solana_axelar_gas_service::ID, &gas_service_program);
 
-    // Gateway
-    mollusk.add_program(&solana_axelar_gateway::ID, "solana_axelar_gateway");
+    let gateway_program = deployed_program_path("solana_axelar_gateway");
+    mollusk.add_program(&solana_axelar_gateway::ID, &gateway_program);
 
     // Token Programs
     mollusk.add_program_with_loader_and_elf(
