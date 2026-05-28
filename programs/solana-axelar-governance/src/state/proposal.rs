@@ -62,8 +62,7 @@ impl ExecutableProposal {
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct ExecuteProposalData {
     /// The target program address for the proposal, represented as a 32-byte
-    /// array. Will be later converted to a [`solana_program::pubkey::Pubkey`].
-    /// [`solana_program::pubkey::Pubkey`] when executing the proposal.
+    /// array. Will be later converted to a [`Pubkey`] when executing the proposal.
     pub target_address: [u8; 32],
     /// The data required to call the target program.
     pub call_data: ExecuteProposalCallData,
@@ -94,12 +93,12 @@ pub struct ExecuteProposalCallData {
 
 #[derive(Debug, Eq, PartialEq, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct SolanaAccountMetadata {
-    /// The [`solana_program::pubkey::Pubkey`], converted to bytes.
+    /// The [`Pubkey`], converted to bytes.
     pub pubkey: [u8; 32],
     /// If this account is a signer of the transaction. See original
-    /// [`solana_program::instruction::AccountMeta::is_signer`].
+    /// `AccountMeta::is_signer`.
     pub is_signer: bool,
     /// If this account is writable. See original
-    /// [`solana_program::instruction::AccountMeta::is_writable`].
+    /// `AccountMeta::is_writable`.
     pub is_writable: bool,
 }

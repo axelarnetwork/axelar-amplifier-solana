@@ -4,7 +4,7 @@ use crate::GovernanceError;
 use anchor_lang::prelude::*;
 
 pub type Hash = [u8; 32];
-/// The [`solana_program::pubkey::Pubkey`] bytes.
+/// The [`Pubkey`] bytes.
 pub type Address = [u8; 32];
 
 pub const VALID_PROPOSAL_DELAY_RANGE: RangeInclusive<u32> = 3600..=86400;
