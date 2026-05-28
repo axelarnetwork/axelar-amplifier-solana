@@ -10,22 +10,22 @@ mod encoding;
 pub use accounts::SolanaAccountRepr;
 pub use encoding::EncodingScheme;
 
-/// In standard Axelar flow, the accounts are concatenated at the beginning of
-/// the payload message. This struct represents a Solana account in a way that
+/// In standard Axelar flow, the accounts are concatenated at the end of the
+/// payload message. This struct represents a Solana account in a way that
 /// can be easily serialized and deserialized.
 ///
 /// The payload is encoded in the following way:
 /// - the first byte is encoding scheme, encoded as an u8.
-/// - the rest of the data is encoded([account array][payload bytes]). The
+/// - the rest of the data is encoded([payload bytes][account array]). The
 ///   encoding depends on the encoding scheme.
 ///
 /// ```text
-/// [u8 scheme] encoded([account array][payload bytes])
+/// [u8 scheme] encoded([payload bytes][account array])
 /// ```
 #[derive(PartialEq, Debug, Eq, Clone)]
 pub struct AxelarMessagePayload<'payload> {
-    // Using Cow because on-chain we will use a the owned version (because of the decoding),
-    // but off-chain we will use the borrowed version to prevent unnecessary cloning.
+    // Using a borrowed slice so on-chain decoding can return a zero-copy reference
+    // into the instruction data, and off-chain construction can borrow without cloning.
     payload_without_accounts: &'payload [u8],
     solana_accounts: Vec<SolanaAccountRepr>,
     encoding_scheme: EncodingScheme,
