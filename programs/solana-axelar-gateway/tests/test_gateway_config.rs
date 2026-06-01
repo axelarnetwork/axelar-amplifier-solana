@@ -5,9 +5,9 @@ mod helpers;
 use helpers::*;
 
 use anchor_lang::{InstructionData, ToAccountMetas};
-use mollusk_harness::{GatewayTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::{GatewayConfig, GatewayError, VerifierSetTracker};
+use solana_axelar_mollusk_harness::{GatewayTestHarness, TestHarness};
 use solana_axelar_std::U256;
 use solana_sdk::pubkey::Pubkey;
 
@@ -66,7 +66,9 @@ fn transfer_operatorship_unauthorized() {
     );
 
     let (event_authority, _, _) =
-        mollusk_test_utils::get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
+        solana_axelar_mollusk_harness::get_event_authority_and_program_accounts(
+            &solana_axelar_gateway::ID,
+        );
 
     let new_operator = Pubkey::new_unique();
 
@@ -106,7 +108,9 @@ fn transfer_operatorship_same_operator() {
     );
 
     let (event_authority, _, _) =
-        mollusk_test_utils::get_event_authority_and_program_accounts(&solana_axelar_gateway::ID);
+        solana_axelar_mollusk_harness::get_event_authority_and_program_accounts(
+            &solana_axelar_gateway::ID,
+        );
 
     let ix = solana_sdk::instruction::Instruction {
         program_id: solana_axelar_gateway::ID,

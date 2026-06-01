@@ -3,8 +3,8 @@
 
 pub use anchor_lang::error::{Error, ErrorCode};
 use anchor_lang::ToAccountMetas;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn set_trusted_chain_by_upgrade_authority() {

@@ -1,10 +1,10 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_deploy_remote_interchain_token_instruction;
 use solana_axelar_its::ItsError;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn deploy_remote_interchain_token() {

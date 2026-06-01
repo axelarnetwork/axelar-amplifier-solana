@@ -28,8 +28,7 @@ solana-axelar-memo = { workspace = true, features = ["devnet-amplifier"] }
 solana-axelar-gas-service.workspace = true
 solana-sdk.workspace = true
 mollusk-svm.workspace = true
-mollusk-harness.workspace = true
-mollusk-test-utils.workspace = true
+solana-axelar-mollusk-harness.workspace = true
 mollusk-svm-programs-token.workspace = true
 hex.workspace = true
 libsecp256k1.workspace = true

@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use anchor_lang::Discriminator;
-use mollusk_harness::{OperatorsSetup, OperatorsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{OperatorsSetup, OperatorsTestHarness, TestHarness};
 use solana_axelar_operators::ErrorCode;
 use solana_axelar_operators::OperatorRegistry;
 use solana_sdk::program_error::ProgramError;

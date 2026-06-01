@@ -2309,30 +2309,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mollusk-harness"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "hex",
- "libsecp256k1",
- "mollusk-svm",
- "mollusk-svm-programs-token",
- "mollusk-test-utils",
- "mpl-token-metadata",
- "rand 0.8.6",
- "solana-axelar-gas-service",
- "solana-axelar-gateway",
- "solana-axelar-its",
- "solana-axelar-memo",
- "solana-axelar-operators",
- "solana-axelar-std",
- "solana-sdk",
- "solana-sdk-ids",
- "spl-token",
-]
-
-[[package]]
 name = "mollusk-svm"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2413,17 +2389,6 @@ dependencies = [
  "solana-pubkey 4.1.0",
  "solana-rent",
  "solana-transaction-error",
-]
-
-[[package]]
-name = "mollusk-test-utils"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "bincode",
- "mollusk-svm",
- "solana-sdk",
- "solana-sdk-ids",
 ]
 
 [[package]]
@@ -3503,8 +3468,8 @@ dependencies = [
  "anchor-lang",
  "borsh 1.6.0",
  "bytemuck",
- "mollusk-harness",
  "mollusk-svm",
+ "solana-axelar-mollusk-harness",
  "solana-axelar-operators",
  "solana-axelar-std",
  "solana-sdk",
@@ -3523,13 +3488,12 @@ dependencies = [
  "bytemuck",
  "hex",
  "libsecp256k1",
- "mollusk-harness",
  "mollusk-svm",
- "mollusk-test-utils",
  "num-derive 0.4.2",
  "num-traits",
  "rand 0.8.6",
  "ruint",
+ "solana-axelar-mollusk-harness",
  "solana-axelar-std",
  "solana-keccak-hasher",
  "solana-sdk",
@@ -3550,11 +3514,11 @@ dependencies = [
  "governance-gmp",
  "hex",
  "libsecp256k1",
- "mollusk-harness",
  "mollusk-svm",
  "rand 0.8.6",
  "solana-axelar-gateway",
  "solana-axelar-memo",
+ "solana-axelar-mollusk-harness",
  "solana-axelar-std",
  "solana-keccak-hasher",
  "solana-sdk",
@@ -3570,15 +3534,14 @@ dependencies = [
  "bytemuck",
  "hex",
  "libsecp256k1",
- "mollusk-harness",
  "mollusk-svm",
  "mollusk-svm-programs-token",
- "mollusk-test-utils",
  "mpl-token-metadata",
  "rand 0.8.6",
  "solana-axelar-gas-service",
  "solana-axelar-gateway",
  "solana-axelar-memo",
+ "solana-axelar-mollusk-harness",
  "solana-axelar-operators",
  "solana-axelar-std",
  "solana-keccak-hasher",
@@ -3594,13 +3557,37 @@ version = "1.1.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "mollusk-harness",
  "mollusk-svm",
  "solana-axelar-gateway",
  "solana-axelar-its",
+ "solana-axelar-mollusk-harness",
  "solana-axelar-std",
  "solana-sdk",
  "solana-sdk-ids",
+]
+
+[[package]]
+name = "solana-axelar-mollusk-harness"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "bincode",
+ "hex",
+ "libsecp256k1",
+ "mollusk-svm",
+ "mollusk-svm-programs-token",
+ "mpl-token-metadata",
+ "rand 0.8.6",
+ "solana-axelar-gas-service",
+ "solana-axelar-gateway",
+ "solana-axelar-its",
+ "solana-axelar-memo",
+ "solana-axelar-operators",
+ "solana-axelar-std",
+ "solana-sdk",
+ "solana-sdk-ids",
+ "spl-token",
 ]
 
 [[package]]
@@ -3608,8 +3595,8 @@ name = "solana-axelar-operators"
 version = "1.1.1"
 dependencies = [
  "anchor-lang",
- "mollusk-harness",
  "mollusk-svm",
+ "solana-axelar-mollusk-harness",
  "solana-axelar-std",
  "solana-sdk",
  "solana-sdk-ids",

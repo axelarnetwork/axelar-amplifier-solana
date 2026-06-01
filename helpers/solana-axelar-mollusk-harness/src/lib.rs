@@ -7,10 +7,13 @@ pub mod its;
 pub mod operators;
 
 // Re-exports for convenience
-pub use gas_service::{GasServiceSetup, GasServiceTestHarness};
-pub use gateway::{GatewayHarnessInfo, GatewaySetup, GatewayTestHarness};
-pub use its::ItsTestHarness;
-pub use operators::{OperatorsSetup, OperatorsTestHarness};
+pub use gas_service::{initialize_gas_service_mollusk, GasServiceSetup, GasServiceTestHarness};
+pub use gateway::{
+    initialize_gateway_mollusk, ApprovedGatewayMessage, GatewayHarnessInfo, GatewaySetup,
+    GatewayTestHarness,
+};
+pub use its::{initialize_its_mollusk, ItsTestHarness};
+pub use operators::{initialize_operators_mollusk, OperatorsSetup, OperatorsTestHarness};
 
 use std::collections::HashMap;
 
@@ -20,9 +23,7 @@ use anchor_spl::{
     token_2022::spl_token_2022,
 };
 use mollusk_svm::{result::Check, MolluskContext};
-use mollusk_test_utils::create_program_data_account;
-use mollusk_test_utils::system_account_with_lamports;
-use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use solana_sdk::{account::Account, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, rent::Rent};
 
 pub const DEFAULT_SBF_OUT_DIR: &str = "../../target/deploy";
 
@@ -34,15 +35,57 @@ pub fn deployed_program_path(program_name: &str) -> String {
     format!("{DEFAULT_SBF_OUT_DIR}/{program_name}")
 }
 
+#[allow(clippy::indexing_slicing)]
+fn create_program_data_account(elf: &[u8], upgrade_authority: Pubkey) -> Account {
+    let data = {
+        let elf_offset =
+            bpf_loader_upgradeable::UpgradeableLoaderState::size_of_programdata_metadata();
+        let data_len = elf_offset + elf.len();
+        let mut data = vec![0; data_len];
+        bincode::serialize_into(
+            &mut data[0..elf_offset],
+            &bpf_loader_upgradeable::UpgradeableLoaderState::ProgramData {
+                slot: 0,
+                upgrade_authority_address: Some(upgrade_authority),
+            },
+        )
+        .expect("failed to serialize program data account");
+        data[elf_offset..].copy_from_slice(elf);
+        data
+    };
+    let lamports = Rent::default().minimum_balance(data.len());
+
+    Account {
+        lamports,
+        data,
+        owner: solana_sdk_ids::bpf_loader_upgradeable::ID,
+        executable: false,
+        rent_epoch: 0,
+    }
+}
+
+fn system_account_with_lamports(lamports: u64) -> Account {
+    Account::new(lamports, 0, &solana_sdk_ids::system_program::ID)
+}
+
+pub fn get_event_authority_and_program_accounts(program_id: &Pubkey) -> (Pubkey, Account, Account) {
+    let (event_authority, _bump) =
+        Pubkey::find_program_address(&[b"__event_authority"], program_id);
+    let event_authority_account = Account::new(0, 0, &solana_sdk_ids::system_program::ID);
+    let program_account = mollusk_svm::program::create_program_account_loader_v3(program_id);
+
+    (event_authority, event_authority_account, program_account)
+}
+
 macro_rules! msg {
     () => {
-        solana_sdk::msg!("[mollusk-harness]");
+        solana_sdk::msg!("[solana-axelar-mollusk-harness]");
     };
     ($msg:literal) => {
-        solana_sdk::msg!(concat!("[mollusk-harness] ", $msg));
+        solana_sdk::msg!(concat!("[solana-axelar-mollusk-harness] ", $msg));
     };
     ($fmt:literal, $($arg:tt)*) => {
-        solana_sdk::msg!(concat!("[mollusk-harness] ", $fmt), $($arg)*);
+        solana_sdk::msg!(concat!("[solana-axelar-mollusk-harness] ", $fmt), $($arg)*);
     };
 }
 

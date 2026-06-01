@@ -6,10 +6,10 @@ use helpers::*;
 
 use std::collections::BTreeMap;
 
-use mollusk_harness::gateway::generate_random_signer;
-use mollusk_harness::{GatewayTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::{GatewayConfig, SignatureVerificationSessionData, VerifierSetTracker};
+use solana_axelar_mollusk_harness::gateway::generate_random_signer;
+use solana_axelar_mollusk_harness::{GatewayTestHarness, TestHarness};
 use solana_axelar_std::{PayloadType, PublicKey, VerifierSet, U256};
 
 #[test]

@@ -52,7 +52,7 @@ solana-axelar-memo = { workspace = true, features = ["no-entrypoint", "cpi"], de
 solana-axelar-std.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
-mollusk-harness.workspace = true
+solana-axelar-mollusk-harness.workspace = true
 mollusk-svm.workspace = true
 bincode.workspace = true
 hex.workspace = true

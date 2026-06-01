@@ -2,8 +2,8 @@
 #![allow(clippy::str_to_string)]
 
 use anchor_lang::prelude::ProgramError;
-use mollusk_harness::{GasServiceSetup, GasServiceTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{GasServiceSetup, GasServiceTestHarness, TestHarness};
 use solana_sdk::pubkey::Pubkey;
 
 #[test]

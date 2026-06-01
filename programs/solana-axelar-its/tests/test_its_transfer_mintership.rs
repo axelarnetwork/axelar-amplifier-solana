@@ -1,13 +1,13 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::{
     instructions::make_transfer_interchain_token_mintership_instruction,
     state::{roles, InterchainTokenService, TokenManager, UserRoles},
     ItsError,
 };
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn transfer_mintership_success() {
