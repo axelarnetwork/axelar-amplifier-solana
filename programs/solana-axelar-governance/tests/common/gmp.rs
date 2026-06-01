@@ -1,3 +1,6 @@
+#![cfg(test)]
+#![allow(dead_code)]
+
 use solana_axelar_gateway::ID as GATEWAY_PROGRAM_ID;
 use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_sdk::pubkey::Pubkey;

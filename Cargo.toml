@@ -198,8 +198,6 @@ solana-axelar-std = { version = "1.1.1", path = "crates/solana-axelar-std" }
 governance-gmp = { version = "0.1.4", path = "crates/governance-gmp" }
 
 # helper crates (not published - dev-dependencies only)
-solana-axelar-gateway-test-fixtures = { path = "helpers/solana-axelar-gateway-test-fixtures", default-features = false }
-solana-axelar-governance-test-fixtures = { path = "helpers/solana-axelar-governance-test-fixtures", default-features = false }
 mollusk-harness = { path = "helpers/mollusk-harness" }
 mollusk-test-utils = { path = "helpers/mollusk-test-utils", default-features = false }
 

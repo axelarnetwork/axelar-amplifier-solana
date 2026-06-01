@@ -1,22 +1,24 @@
+mod common;
+
 use alloy_sol_types::SolValue;
 use anchor_lang::prelude::{borsh, AccountMeta};
 use anchor_lang::{AccountDeserialize, ToAccountMetas};
-use governance_gmp::alloy_primitives::U256;
-use solana_axelar_gateway::IncomingMessage;
-use solana_axelar_gateway_test_fixtures::{
+use common::gateway::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use solana_axelar_governance::state::GovernanceConfigInit;
-use solana_axelar_governance::SolanaAccountMetadata;
-use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
-use solana_axelar_governance_test_fixtures::{
+use common::{
     create_execute_operator_proposal_instruction_data, create_gateway_event_authority_pda,
     create_governance_config_pda, create_governance_event_authority_pda,
     create_governance_program_data_pda, create_operator_proposal_pda, create_proposal_pda,
     create_signing_pda_from_message, extract_proposal_hash_unchecked, get_memo_instruction_data,
     initialize_governance, process_gmp_helper, GmpContext, TestSetup,
 };
+use governance_gmp::alloy_primitives::U256;
+use solana_axelar_gateway::IncomingMessage;
+use solana_axelar_governance::state::GovernanceConfigInit;
+use solana_axelar_governance::SolanaAccountMetadata;
+use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
@@ -110,23 +112,21 @@ fn should_execute_operator_proposal() {
     );
 
     // Step 7: Setup Governance
-    setup.mollusk.add_program(
-        &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_governance",
-    );
+    setup
+        .mollusk
+        .add_program(&GOVERNANCE_PROGRAM_ID, &common::governance_program_path());
 
     setup
         .mollusk
-        .add_program(&MEMO_PROGRAM_ID, "../../target/deploy/solana_axelar_memo");
+        .add_program(&MEMO_PROGRAM_ID, &common::memo_program_path());
 
     let payer = Pubkey::new_unique();
     let upgrade_authority = Pubkey::new_unique();
     let operator = Pubkey::new_unique();
 
-    let (governance_config, governance_config_bump) = create_governance_config_pda();
+    let (governance_config, _) = create_governance_config_pda();
     let program_data_pda = create_governance_program_data_pda();
-    let (event_authority_pda_governance, event_authority_bump) =
-        create_governance_event_authority_pda();
+    let (event_authority_pda_governance, _) = create_governance_event_authority_pda();
 
     let governance_setup = TestSetup {
         mollusk: setup.mollusk,
@@ -134,10 +134,8 @@ fn should_execute_operator_proposal() {
         upgrade_authority,
         operator,
         governance_config,
-        governance_config_bump,
         program_data_pda,
         event_authority_pda: event_authority_pda_governance,
-        event_authority_bump,
     };
 
     let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();

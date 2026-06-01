@@ -3540,51 +3540,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-axelar-gateway-test-fixtures"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "bincode",
- "libsecp256k1",
- "mollusk-svm",
- "rand 0.8.6",
- "solana-axelar-gateway",
- "solana-axelar-std",
- "solana-sdk",
- "solana-sdk-ids",
-]
-
-[[package]]
 name = "solana-axelar-governance"
 version = "1.1.1"
 dependencies = [
  "alloy-sol-types",
  "anchor-lang",
  "anchor-spl",
+ "bincode",
  "governance-gmp",
  "hex",
  "libsecp256k1",
+ "mollusk-harness",
  "mollusk-svm",
+ "rand 0.8.6",
  "solana-axelar-gateway",
- "solana-axelar-gateway-test-fixtures",
- "solana-axelar-governance-test-fixtures",
  "solana-axelar-memo",
  "solana-axelar-std",
  "solana-keccak-hasher",
- "solana-sdk",
- "solana-sdk-ids",
-]
-
-[[package]]
-name = "solana-axelar-governance-test-fixtures"
-version = "1.1.1"
-dependencies = [
- "anchor-lang",
- "bincode",
- "mollusk-svm",
- "solana-axelar-gateway",
- "solana-axelar-governance",
- "solana-axelar-memo",
  "solana-sdk",
  "solana-sdk-ids",
 ]

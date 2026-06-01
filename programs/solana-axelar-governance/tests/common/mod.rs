@@ -1,5 +1,9 @@
+#![cfg(test)]
+#![allow(dead_code)]
+
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
+use mollusk_harness::{deployed_program_path, ensure_default_sbf_out_dir};
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::Message;
 use solana_axelar_gateway::{IncomingMessage, ValidateMessageSigner, ID as GATEWAY_PROGRAM_ID};
@@ -14,8 +18,19 @@ use solana_sdk::{
 };
 use solana_sdk_ids::system_program::ID as SYSTEM_PROGRAM_ID;
 
+pub mod gateway;
 mod gmp;
 pub use gmp::*;
+
+pub fn governance_program_path() -> String {
+    ensure_default_sbf_out_dir();
+    deployed_program_path("solana_axelar_governance")
+}
+
+pub fn memo_program_path() -> String {
+    ensure_default_sbf_out_dir();
+    deployed_program_path("solana_axelar_memo")
+}
 
 pub struct TestSetup {
     pub mollusk: Mollusk,
@@ -23,24 +38,19 @@ pub struct TestSetup {
     pub upgrade_authority: Pubkey,
     pub operator: Pubkey,
     pub governance_config: Pubkey,
-    pub governance_config_bump: u8,
     pub program_data_pda: Pubkey,
     pub event_authority_pda: Pubkey,
-    pub event_authority_bump: u8,
 }
 
 pub fn mock_setup_test() -> TestSetup {
-    let mollusk = Mollusk::new(
-        &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_governance",
-    );
+    let mollusk = Mollusk::new(&GOVERNANCE_PROGRAM_ID, &governance_program_path());
 
     let payer = Pubkey::new_unique();
     let upgrade_authority = Pubkey::new_unique();
     let operator = Pubkey::new_unique();
 
     // Derive PDAs
-    let (governance_config, governance_config_bump) =
+    let (governance_config, _) =
         Pubkey::find_program_address(&[seed_prefixes::GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
 
     let (program_data_pda, _) = Pubkey::find_program_address(
@@ -48,7 +58,7 @@ pub fn mock_setup_test() -> TestSetup {
         &solana_sdk_ids::bpf_loader_upgradeable::id(),
     );
 
-    let (event_authority_pda, event_authority_bump) =
+    let (event_authority_pda, _) =
         Pubkey::find_program_address(&[b"__event_authority"], &GOVERNANCE_PROGRAM_ID);
 
     TestSetup {
@@ -57,10 +67,8 @@ pub fn mock_setup_test() -> TestSetup {
         upgrade_authority,
         operator,
         governance_config,
-        governance_config_bump,
         program_data_pda,
         event_authority_pda,
-        event_authority_bump,
     }
 }
 
