@@ -3,9 +3,9 @@
 use std::collections::BTreeMap;
 
 use anchor_lang::prelude::AnchorDeserialize;
-use mollusk_harness::gateway::create_verifier_info;
-use mollusk_harness::GatewayTestHarness;
 use solana_axelar_gateway::GatewayError;
+use solana_axelar_mollusk_harness::gateway::create_verifier_info;
+use solana_axelar_mollusk_harness::GatewayTestHarness;
 use solana_axelar_std::{
     Message, Payload, PayloadType, PublicKey, SigningVerifierSetInfo, VerifierSet,
 };

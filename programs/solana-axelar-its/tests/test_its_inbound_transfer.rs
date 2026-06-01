@@ -2,9 +2,9 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::prelude::AccountMeta;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 use solana_program::program_pack::IsInitialized;
 use solana_sdk::pubkey::Pubkey;
 

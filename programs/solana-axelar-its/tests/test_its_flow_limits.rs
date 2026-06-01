@@ -1,9 +1,9 @@
 #![cfg(test)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_set_flow_limit_instruction;
 use solana_axelar_its::{roles, ItsError, TokenManager, UserRoles};
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn set_flow_limit() {

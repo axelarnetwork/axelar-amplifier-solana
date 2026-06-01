@@ -2,10 +2,10 @@
 
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_mint_interchain_token_instruction;
 use solana_axelar_its::{roles, ItsError, UserRoles};
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn mint_interchain_tokens() {

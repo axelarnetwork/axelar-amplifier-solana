@@ -5,7 +5,6 @@ use mollusk_svm::{
     result::{Check, InstructionResult},
     Mollusk, MolluskContext,
 };
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use rand::Rng;
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
@@ -20,7 +19,10 @@ use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
 
-use crate::{deployed_program_path, ensure_default_sbf_out_dir, msg, TestHarness};
+use crate::{
+    deployed_program_path, ensure_default_sbf_out_dir, get_event_authority_and_program_accounts,
+    msg, TestHarness,
+};
 
 // -- Signature helpers --
 

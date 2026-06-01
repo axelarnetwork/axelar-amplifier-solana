@@ -2,10 +2,10 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::{InstructionData, ToAccountMetas};
-use mollusk_harness::{its::ItsTestHarness, GatewaySetup, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_memo::{Counter, ID as MEMO_PROGRAM_ID};
+use solana_axelar_mollusk_harness::{its::ItsTestHarness, GatewaySetup, TestHarness};
 use solana_sdk::instruction::{AccountMeta, Instruction};
 
 #[test]

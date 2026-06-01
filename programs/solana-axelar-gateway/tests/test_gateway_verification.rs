@@ -4,12 +4,12 @@
 mod helpers;
 use helpers::*;
 
-use mollusk_harness::{GatewayTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::{
     GatewayConfig, GatewayError, IncomingMessage, MessageStatus, SignatureVerificationSessionData,
     VerifierSetTracker,
 };
+use solana_axelar_mollusk_harness::{GatewayTestHarness, TestHarness};
 use solana_axelar_std::hasher::LeafHash;
 use solana_axelar_std::PayloadType;
 

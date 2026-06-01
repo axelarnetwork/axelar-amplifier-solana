@@ -2,7 +2,6 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_spl::token_2022::spl_token_2022;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::{
     instructions::{
@@ -15,6 +14,7 @@ use solana_axelar_its::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
     ItsError,
 };
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 /// Register a custom token with an operator, return (token_id, operator).
 fn setup_custom_token_with_operator(

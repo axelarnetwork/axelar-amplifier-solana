@@ -5,14 +5,16 @@ use mollusk_svm::{
     result::{Check, InstructionResult},
     Mollusk, MolluskContext,
 };
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use solana_axelar_gas_service::Treasury;
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };
 
 use crate::operators::OperatorsSetup;
-use crate::{deployed_program_path, ensure_default_sbf_out_dir, msg, TestHarness};
+use crate::{
+    deployed_program_path, ensure_default_sbf_out_dir, get_event_authority_and_program_accounts,
+    msg, TestHarness,
+};
 
 pub trait GasServiceSetup: OperatorsSetup {
     fn operator(&self) -> Pubkey;

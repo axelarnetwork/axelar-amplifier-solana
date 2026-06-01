@@ -10,7 +10,6 @@ use mollusk_svm::{
     result::{Check, InstructionResult},
     Mollusk, MolluskContext,
 };
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use rand::Rng;
 use solana_axelar_gateway::Message as CrossChainMessage;
 use solana_axelar_its::{
@@ -27,7 +26,10 @@ use solana_sdk::{
 };
 
 use crate::gateway::{GatewayHarnessInfo, GatewaySetup};
-use crate::{deployed_program_path, ensure_default_sbf_out_dir, msg, TestHarness};
+use crate::{
+    deployed_program_path, ensure_default_sbf_out_dir, get_event_authority_and_program_accounts,
+    msg, TestHarness,
+};
 
 /// Creates a Mollusk instance with ITS, gateway, and all dependencies loaded.
 pub fn initialize_its_mollusk() -> Mollusk {

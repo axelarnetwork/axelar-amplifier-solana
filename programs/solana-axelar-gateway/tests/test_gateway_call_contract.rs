@@ -3,7 +3,7 @@
 
 mod helpers;
 
-use mollusk_harness::{GatewayTestHarness, TestHarness};
+use solana_axelar_mollusk_harness::{GatewayTestHarness, TestHarness};
 use solana_sdk::pubkey::Pubkey;
 
 #[test]

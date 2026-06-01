@@ -1,8 +1,8 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn local_deploy_interchain_token() {

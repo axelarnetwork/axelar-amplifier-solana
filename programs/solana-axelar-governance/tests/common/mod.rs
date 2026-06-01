@@ -3,7 +3,6 @@
 
 use anchor_lang::prelude::{AccountMeta, ToAccountMetas, UpgradeableLoaderState};
 use anchor_lang::InstructionData;
-use mollusk_harness::{deployed_program_path, ensure_default_sbf_out_dir};
 use mollusk_svm::{result::InstructionResult, Mollusk};
 use solana_axelar_gateway::Message;
 use solana_axelar_gateway::{IncomingMessage, ValidateMessageSigner, ID as GATEWAY_PROGRAM_ID};
@@ -13,6 +12,7 @@ use solana_axelar_governance::{
     ExecuteProposalCallData, ExecuteProposalData, GovernanceConfigInit, GovernanceConfigUpdate,
     SolanaAccountMetadata, ID as GOVERNANCE_PROGRAM_ID,
 };
+use solana_axelar_mollusk_harness::{deployed_program_path, ensure_default_sbf_out_dir};
 use solana_sdk::{
     account::Account, instruction::Instruction, native_token::LAMPORTS_PER_SOL, pubkey::Pubkey,
 };

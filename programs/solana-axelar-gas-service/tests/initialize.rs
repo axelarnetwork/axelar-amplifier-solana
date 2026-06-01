@@ -1,8 +1,10 @@
 #![cfg(test)]
 
 use anchor_lang::{InstructionData, ToAccountMetas};
-use mollusk_harness::{GasServiceSetup, GasServiceTestHarness, OperatorsSetup, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{
+    GasServiceSetup, GasServiceTestHarness, OperatorsSetup, TestHarness,
+};
 use solana_sdk::pubkey::Pubkey;
 
 #[test]

@@ -1,10 +1,10 @@
 #![cfg(test)]
 #![allow(dead_code)]
 
-use mollusk_harness::{GatewaySetup, GatewayTestHarness, TestHarness};
 use mollusk_svm::result::{InstructionResult, ProgramResult};
 use mollusk_svm::Mollusk;
 use solana_axelar_gateway::{IncomingMessage, Message};
+use solana_axelar_mollusk_harness::{GatewaySetup, GatewayTestHarness, TestHarness};
 use solana_axelar_std::CrossChainId;
 use solana_sdk::{account::Account, pubkey::Pubkey};
 
@@ -22,7 +22,7 @@ pub fn setup_test_with_real_signers(
     let secret_key_2 = harness.gateway.signers[1];
 
     let setup = TestSetup {
-        mollusk: mollusk_harness::gateway::initialize_gateway_mollusk(),
+        mollusk: solana_axelar_mollusk_harness::gateway::initialize_gateway_mollusk(),
         gateway_root_pda: harness.gateway.root,
         verifier_set_tracker_pda: harness.gateway.verifier_set_tracker,
         harness,

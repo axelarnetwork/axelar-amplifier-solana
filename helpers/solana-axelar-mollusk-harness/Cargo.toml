@@ -1,9 +1,13 @@
 [package]
-name = "mollusk-harness"
+name = "solana-axelar-mollusk-harness"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-publish = false
+description = "Mollusk test harnesses for Axelar Solana programs"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 
 [package.metadata.cargo-machete]
 # Constrain transitive serialization dependencies to Agave 4.2's wincode 0.5.
@@ -24,6 +28,7 @@ mpl-token-metadata.workspace = true
 
 rand.workspace = true
 hex.workspace = true
+bincode.workspace = true
 libsecp256k1 = { workspace = true, features = ["hmac", "static-context"] }
 
 # Newer releases switch to wincode 0.6 and break Agave 4.2 compilation.
@@ -33,7 +38,6 @@ mollusk-svm.workspace = true
 mollusk-svm-programs-token.workspace = true
 spl-token.workspace = true
 
-mollusk-test-utils.workspace = true
 solana-axelar-std.workspace = true
 
 solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }
