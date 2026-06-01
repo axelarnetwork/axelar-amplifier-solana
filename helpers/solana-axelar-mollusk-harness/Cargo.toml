@@ -36,7 +36,7 @@ solana-short-vec = "=3.2.2"
 solana-signature = "=3.4.1"
 mollusk-svm.workspace = true
 mollusk-svm-programs-token.workspace = true
-spl-token.workspace = true
+spl-token = { workspace = true, default-features = false, features = ["no-entrypoint"] }
 
 solana-axelar-std.workspace = true
 
