@@ -45,7 +45,7 @@ fn initialize_payload_verification_session_works() {
 }
 
 #[test]
-fn test_approve_message_with_dual_signers_and_merkle_proof() {
+fn approve_message_with_dual_signers_and_merkle_proof() {
     let harness = GatewayTestHarness::new();
 
     let config: GatewayConfig = harness
@@ -121,7 +121,7 @@ fn test_approve_message_with_dual_signers_and_merkle_proof() {
 }
 
 #[test]
-fn test_fails_when_verifier_submits_signature_twice() {
+fn fails_when_verifier_submits_signature_twice() {
     let harness = GatewayTestHarness::new();
 
     let config: GatewayConfig = harness
@@ -149,7 +149,7 @@ fn test_fails_when_verifier_submits_signature_twice() {
 }
 
 #[test]
-fn test_fails_when_approving_message_with_insufficient_signatures() {
+fn fails_when_approving_message_with_insufficient_signatures() {
     let harness = GatewayTestHarness::new();
 
     let config: GatewayConfig = harness
@@ -180,7 +180,7 @@ fn test_fails_when_approving_message_with_insufficient_signatures() {
 }
 
 #[test]
-fn test_fails_when_verifying_invalid_signature() {
+fn fails_when_verifying_invalid_signature() {
     let harness = GatewayTestHarness::new();
 
     let config: GatewayConfig = harness

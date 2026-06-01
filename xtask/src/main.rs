@@ -153,10 +153,10 @@ fn main() -> eyre::Result<()> {
 
             if std::option_env!("CI").is_none() {
                 #[cfg(target_os = "macos")]
-                cmd!(sh, "open target/doc/relayer/index.html").run()?;
+                cmd!(sh, "open target/doc/solana_axelar_std/index.html").run()?;
 
                 #[cfg(target_os = "linux")]
-                cmd!(sh, "xdg-open target/doc/relayer/index.html").run()?;
+                cmd!(sh, "xdg-open target/doc/solana_axelar_std/index.html").run()?;
             }
         }
         Commands::Audit { args } => {
@@ -285,7 +285,7 @@ type WorkspaceCrateInfo<'a> = (&'a str, PathBuf);
 /// - (solana program crates, native crates)
 fn workspace_crates_by_category(
     sh: &Shell,
-) -> Result<(Vec<WorkspaceCrateInfo>, Vec<WorkspaceCrateInfo>), eyre::Error> {
+) -> Result<(Vec<WorkspaceCrateInfo<'_>>, Vec<WorkspaceCrateInfo<'_>>), eyre::Error> {
     let crates_in_repo = cmd!(sh, "cargo tree --workspace --depth 0")
         .output()
         .map(|o| String::from_utf8(o.stdout))??

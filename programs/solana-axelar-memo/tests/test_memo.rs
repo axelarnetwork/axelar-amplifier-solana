@@ -71,7 +71,7 @@ fn execute_gmp_message() {
         payload_hash,
     };
 
-    harness.ensure_approved_incoming_messages(&[message.clone()]);
+    harness.ensure_approved_incoming_messages(std::slice::from_ref(&message));
 
     // Build the execute instruction
     let incoming_message_pda =

@@ -155,7 +155,10 @@ fn collect_native_fees_not_rent_exempt() {
 
     let receiver = Pubkey::new_unique();
     let receiver_balance = 1_000_000_000;
-    let amount = 10_000_000_000 + initial_treasury_balance / 2;
+    let amount = 10_000_000_000
+        + initial_treasury_balance
+            .checked_div(2)
+            .expect("initial treasury balance should divide by two");
     harness.ensure_account_exists_with_lamports(receiver, receiver_balance);
 
     let treasury_balance = harness
