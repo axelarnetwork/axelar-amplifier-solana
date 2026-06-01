@@ -1,23 +1,25 @@
+mod common;
+
 use alloy_sol_types::SolValue;
 use anchor_lang::prelude::{borsh, AccountMeta, ToAccountMetas};
 
-use governance_gmp::alloy_primitives::U256;
-use hex::FromHex;
-use solana_axelar_gateway_test_fixtures::{
+use common::create_operator_proposal_pda;
+use common::gateway::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use solana_axelar_governance::seed_prefixes::GOVERNANCE_CONFIG;
-use solana_axelar_governance::state::GovernanceConfigInit;
-use solana_axelar_governance::SolanaAccountMetadata;
-use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
-use solana_axelar_governance_test_fixtures::create_operator_proposal_pda;
-use solana_axelar_governance_test_fixtures::{
+use common::{
     create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
     create_governance_event_authority_pda, create_governance_program_data_pda, create_proposal_pda,
     create_signing_pda_from_message, extract_proposal_hash_unchecked, get_memo_instruction_data,
     initialize_governance, process_gmp_helper, GmpContext, TestSetup,
 };
+use governance_gmp::alloy_primitives::U256;
+use hex::FromHex;
+use solana_axelar_governance::seed_prefixes::GOVERNANCE_CONFIG;
+use solana_axelar_governance::state::GovernanceConfigInit;
+use solana_axelar_governance::SolanaAccountMetadata;
+use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_axelar_memo::ID as MEMO_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::clock::Clock;
@@ -107,26 +109,24 @@ fn should_execute_scheduled_proposal() {
 
     // Now we have an approved message
     // Add remaining programs to mollusk
-    setup.mollusk.add_program(
-        &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_governance",
-    );
+    setup
+        .mollusk
+        .add_program(&GOVERNANCE_PROGRAM_ID, &common::governance_program_path());
 
     setup
         .mollusk
-        .add_program(&MEMO_PROGRAM_ID, "../../target/deploy/solana_axelar_memo");
+        .add_program(&MEMO_PROGRAM_ID, &common::memo_program_path());
 
     let payer = Pubkey::new_unique();
     let upgrade_authority = Pubkey::new_unique();
     let operator = Pubkey::new_unique();
 
-    let (governance_config_pda, governance_config_bump) =
+    let (governance_config_pda, _) =
         Pubkey::find_program_address(&[GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
 
     let program_data_pda = create_governance_program_data_pda();
 
-    let (event_authority_pda_governance, event_authority_bump) =
-        create_governance_event_authority_pda();
+    let (event_authority_pda_governance, _) = create_governance_event_authority_pda();
 
     let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();
     let address_hash =
@@ -139,10 +139,8 @@ fn should_execute_scheduled_proposal() {
         upgrade_authority,
         operator,
         governance_config: governance_config_pda,
-        governance_config_bump,
         program_data_pda,
         event_authority_pda: event_authority_pda_governance,
-        event_authority_bump,
     };
 
     let governance_config = GovernanceConfigInit::new(

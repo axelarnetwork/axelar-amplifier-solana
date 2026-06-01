@@ -1,16 +1,14 @@
+mod common;
+
 use alloy_sol_types::SolValue;
 use anchor_lang::prelude::{borsh, AccountMeta, ToAccountMetas};
 use anchor_lang::{Discriminator, Space};
 
-use governance_gmp::alloy_primitives::U256;
-use solana_axelar_gateway_test_fixtures::{
+use common::gateway::{
     approve_messages_on_gateway, create_test_message, initialize_gateway,
     setup_test_with_real_signers,
 };
-use solana_axelar_governance::seed_prefixes::GOVERNANCE_CONFIG;
-use solana_axelar_governance::state::{GovernanceConfig, GovernanceConfigInit};
-use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
-use solana_axelar_governance_test_fixtures::{
+use common::{
     create_execute_proposal_instruction_data, create_gateway_event_authority_pda,
     create_governance_config_pda, create_governance_event_authority_pda,
     create_governance_program_data_pda, create_operator_proposal_pda, create_proposal_pda,
@@ -18,6 +16,10 @@ use solana_axelar_governance_test_fixtures::{
     get_withdraw_tokens_instruction_data, initialize_governance, mock_setup_test,
     process_gmp_helper, GmpContext, TestSetup,
 };
+use governance_gmp::alloy_primitives::U256;
+use solana_axelar_governance::seed_prefixes::GOVERNANCE_CONFIG;
+use solana_axelar_governance::state::{GovernanceConfig, GovernanceConfigInit};
+use solana_axelar_governance::ID as GOVERNANCE_PROGRAM_ID;
 use solana_sdk::account::Account;
 use solana_sdk::clock::Clock;
 use solana_sdk::instruction::Instruction;
@@ -49,7 +51,7 @@ fn should_execute_withdraw_tokens_through_proposal() {
     let upgrade_authority = Pubkey::new_unique();
     let operator = Pubkey::new_unique();
 
-    let (governance_config_pda, governance_config_bump) =
+    let (governance_config_pda, _) =
         Pubkey::find_program_address(&[GOVERNANCE_CONFIG], &GOVERNANCE_PROGRAM_ID);
 
     let governance_config_bytes: [u8; 32] = governance_config_pda.to_bytes();
@@ -104,14 +106,12 @@ fn should_execute_withdraw_tokens_through_proposal() {
     let incoming_message = incoming_messages[0].clone();
 
     // Step 9: Setup Governance
-    setup.mollusk.add_program(
-        &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_governance",
-    );
+    setup
+        .mollusk
+        .add_program(&GOVERNANCE_PROGRAM_ID, &common::governance_program_path());
 
     let program_data_pda = create_governance_program_data_pda();
-    let (event_authority_pda_governance, event_authority_bump) =
-        create_governance_event_authority_pda();
+    let (event_authority_pda_governance, _) = create_governance_event_authority_pda();
 
     let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();
     let address_hash =
@@ -124,10 +124,8 @@ fn should_execute_withdraw_tokens_through_proposal() {
         upgrade_authority,
         operator,
         governance_config: governance_config_pda,
-        governance_config_bump,
         program_data_pda,
         event_authority_pda: event_authority_pda_governance,
-        event_authority_bump,
     };
 
     let governance_config_data = GovernanceConfigInit::new(
@@ -476,7 +474,7 @@ fn should_fail_withdraw_that_would_breach_rent_with_discriminator() {
     let upgrade_authority = Pubkey::new_unique();
     let operator = Pubkey::new_unique();
 
-    let (governance_config_pda, governance_config_bump) = create_governance_config_pda();
+    let (governance_config_pda, _) = create_governance_config_pda();
 
     let governance_config_bytes: [u8; 32] = governance_config_pda.to_bytes();
     let native_value = U256::from(native_value_u64);
@@ -529,14 +527,12 @@ fn should_fail_withdraw_that_would_breach_rent_with_discriminator() {
     let incoming_message = incoming_messages[0].clone();
 
     // Step 4: Setup Governance
-    setup.mollusk.add_program(
-        &GOVERNANCE_PROGRAM_ID,
-        "../../target/deploy/solana_axelar_governance",
-    );
+    setup
+        .mollusk
+        .add_program(&GOVERNANCE_PROGRAM_ID, &common::governance_program_path());
 
     let program_data_pda = create_governance_program_data_pda();
-    let (event_authority_pda_governance, event_authority_bump) =
-        create_governance_event_authority_pda();
+    let (event_authority_pda_governance, _) = create_governance_event_authority_pda();
 
     let chain_hash = solana_keccak_hasher::hashv(&[b"ethereum"]).to_bytes();
     let address_hash =
@@ -549,10 +545,8 @@ fn should_fail_withdraw_that_would_breach_rent_with_discriminator() {
         upgrade_authority,
         operator,
         governance_config: governance_config_pda,
-        governance_config_bump,
         program_data_pda,
         event_authority_pda: event_authority_pda_governance,
-        event_authority_bump,
     };
 
     let governance_config_data = GovernanceConfigInit::new(

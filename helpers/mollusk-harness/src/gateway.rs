@@ -9,7 +9,7 @@ use mollusk_test_utils::get_event_authority_and_program_accounts;
 use rand::Rng;
 use solana_axelar_gateway::{
     state::config::{InitialVerifierSet, InitializeConfigParams},
-    CallContractSigner, GatewayConfig, Message as CrossChainMessage,
+    CallContractSigner, GatewayConfig, IncomingMessage, Message as CrossChainMessage,
     SignatureVerificationSessionData, VerifierSetTracker,
 };
 use solana_axelar_std::{
@@ -81,6 +81,12 @@ pub struct GatewayHarnessInfo {
     pub verifier_set_tracker: Pubkey,
     pub verifier_set_leaves: Vec<VerifierSetLeaf>,
     pub verifier_merkle_tree: MerkleTree,
+}
+
+pub struct ApprovedGatewayMessage {
+    pub incoming_message: IncomingMessage,
+    pub pda: Pubkey,
+    pub data: Vec<u8>,
 }
 
 // -- GatewaySetup trait (shared between GatewayTestHarness and ItsTestHarness) --
@@ -305,9 +311,16 @@ pub trait GatewaySetup: TestHarness {
         msg!("Gateway initialized.");
     }
 
+    fn ensure_approved_incoming_messages(&self, messages: &[CrossChainMessage]) {
+        self.approve_incoming_messages(messages);
+    }
+
     #[allow(clippy::too_many_lines)]
     #[allow(clippy::cast_possible_truncation)]
-    fn ensure_approved_incoming_messages(&self, messages: &[CrossChainMessage]) {
+    fn approve_incoming_messages(
+        &self,
+        messages: &[CrossChainMessage],
+    ) -> Vec<ApprovedGatewayMessage> {
         let GatewayConfig {
             domain_separator, ..
         } = self
@@ -473,6 +486,25 @@ pub trait GatewaySetup: TestHarness {
             .process_and_validate_instruction_chain(&instruction_checks);
 
         msg!("Messages approved on gateway.");
+
+        messages
+            .iter()
+            .map(|message| {
+                let incoming_message_pda = IncomingMessage::find_pda(&message.command_id()).0;
+                let account = self
+                    .get_account(&incoming_message_pda)
+                    .expect("incoming message account should exist");
+                let incoming_message = self
+                    .get_account_as(&incoming_message_pda)
+                    .expect("incoming message should deserialize");
+
+                ApprovedGatewayMessage {
+                    incoming_message,
+                    pda: incoming_message_pda,
+                    data: account.data,
+                }
+            })
+            .collect()
     }
 }
 
