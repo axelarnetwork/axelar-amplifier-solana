@@ -58,6 +58,8 @@ library SolanaGatewayPayloadLib {
         if (payload.executePayload.length > type(uint32).max) revert PayloadLengthOverflow();
         if (payload.accounts.length > type(uint32).max) revert AccountLengthOverflow();
 
+        // TODO: Optimize gas further by copying payload bytes and account pubkeys in 32-byte
+        // chunks. This avoids O(n^2) buffer growth, but still writes byte-by-byte.
         encoded = new bytes(1 + 4 + payload.executePayload.length + 4 + payload.accounts.length * 33);
 
         uint256 offset;
