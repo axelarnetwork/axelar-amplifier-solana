@@ -226,6 +226,8 @@ pub(crate) mod tests {
 
     #[test]
     fn decodes_forge_generated_borsh_payload() {
+        use std::io::Write as _;
+
         let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let repo_root = manifest_dir
             .parent()
@@ -247,12 +249,19 @@ pub(crate) mod tests {
         let output = match output {
             Ok(output) => output,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-                eprintln!(
-                    "skipping forge-generated Solana gateway payload compatibility test: forge is not installed"
+                let _ignored = std::io::stderr().write_all(
+                    b"skipping forge-generated Solana gateway payload compatibility test: forge is not installed\n",
                 );
                 return;
             }
-            Err(err) => panic!("failed to run forge: {err}"),
+            Err(err) => {
+                assert_eq!(
+                    err.kind(),
+                    std::io::ErrorKind::NotFound,
+                    "failed to run forge: {err}",
+                );
+                return;
+            }
         };
 
         assert!(
@@ -276,64 +285,80 @@ pub(crate) mod tests {
             pubkey
         }
 
-        let decoded = AxelarMessagePayload::decode(&encoded).unwrap();
+        let decoded = AxelarMessagePayload::decode(encoded).unwrap();
         let accounts = decoded.solana_accounts().copied().collect::<Vec<_>>();
 
         assert_eq!(decoded.encoding_scheme(), EncodingScheme::Borsh);
         assert_eq!(decoded.payload_without_accounts(), [1, 2, 3]);
         assert_eq!(accounts.len(), 4);
+        let account_0 = accounts.first().expect("missing account 0");
+        let account_1 = accounts.get(1).expect("missing account 1");
+        let account_2 = accounts.get(2).expect("missing account 2");
+        let account_3 = accounts.get(3).expect("missing account 3");
 
         assert_eq!(
-            accounts[0].pubkey.as_slice(),
+            account_0.pubkey.as_slice(),
             pubkey_with_suffix([0x11, 0x11]).as_slice()
         );
-        assert!(accounts[0].is_signer);
-        assert!(accounts[0].is_writable);
+        assert!(account_0.is_signer);
+        assert!(account_0.is_writable);
 
         assert_eq!(
-            accounts[1].pubkey.as_slice(),
+            account_1.pubkey.as_slice(),
             pubkey_with_suffix([0x22, 0x22]).as_slice()
         );
-        assert!(accounts[1].is_signer);
-        assert!(!accounts[1].is_writable);
+        assert!(account_1.is_signer);
+        assert!(!account_1.is_writable);
 
         assert_eq!(
-            accounts[2].pubkey.as_slice(),
+            account_2.pubkey.as_slice(),
             pubkey_with_suffix([0x33, 0x33]).as_slice()
         );
-        assert!(!accounts[2].is_signer);
-        assert!(accounts[2].is_writable);
+        assert!(!account_2.is_signer);
+        assert!(account_2.is_writable);
 
         assert_eq!(
-            accounts[3].pubkey.as_slice(),
+            account_3.pubkey.as_slice(),
             pubkey_with_suffix([0x44, 0x44]).as_slice()
         );
-        assert!(!accounts[3].is_signer);
-        assert!(!accounts[3].is_writable);
+        assert!(!account_3.is_signer);
+        assert!(!account_3.is_writable);
     }
 
     fn extract_first_json_hex_data(json: &str) -> Vec<u8> {
         let marker = r#""data":"0x"#;
         let start = json.find(marker).expect("missing event data") + marker.len();
-        let end = json[start..].find('"').expect("unterminated event data") + start;
-        hex::decode(&json[start..end]).expect("event data must be hex")
+        let json_bytes = json.as_bytes();
+        let rest = json_bytes.get(start..).expect("missing event data suffix");
+        let end = rest
+            .iter()
+            .position(|byte| *byte == b'"')
+            .expect("unterminated event data")
+            + start;
+        let hex_data = std::str::from_utf8(
+            json_bytes
+                .get(start..end)
+                .expect("missing event data slice"),
+        )
+        .expect("event data must be utf8");
+        hex::decode(hex_data).expect("event data must be hex")
     }
 
     fn decode_single_bytes_event_data(event_data: &[u8]) -> Vec<u8> {
         fn read_abi_usize(word: &[u8]) -> usize {
             assert_eq!(word.len(), 32);
             let mut value = 0_usize;
-            for byte in &word[24..] {
+            for byte in word.get(24..).expect("ABI word should have low bytes") {
                 value = (value << 8) | usize::from(*byte);
             }
             value
         }
 
         assert!(event_data.len() >= 64, "event data too short");
-        let offset = read_abi_usize(&event_data[..32]);
+        let offset = read_abi_usize(event_data.get(..32).expect("missing ABI offset"));
         assert_eq!(offset, 32, "unexpected event data offset");
 
-        let length = read_abi_usize(&event_data[32..64]);
+        let length = read_abi_usize(event_data.get(32..64).expect("missing ABI length"));
         let payload_start = 64;
         let payload_end = payload_start + length;
         assert!(
@@ -341,6 +366,9 @@ pub(crate) mod tests {
             "event data shorter than encoded bytes length"
         );
 
-        event_data[payload_start..payload_end].to_vec()
+        event_data
+            .get(payload_start..payload_end)
+            .expect("missing ABI payload")
+            .to_vec()
     }
 }
