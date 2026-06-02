@@ -118,6 +118,44 @@ contract SolanaGatewayPayloadTest {
         assertBytesEq(encoded, expected);
     }
 
+    function testFuzzBorshEncodingMultipleAccounts(
+        bytes memory executePayload,
+        bytes32[16] memory pubkeys,
+        uint16 signerMask,
+        uint16 writableMask,
+        uint8 accountCount
+    ) public pure {
+        if (executePayload.length > 512) return;
+        accountCount = uint8(bound(accountCount, 0, 16));
+
+        SolanaAccountRepr[] memory accounts = new SolanaAccountRepr[](accountCount);
+        for (uint256 i; i < accountCount; ++i) {
+            accounts[i] = SolanaGatewayPayloadLib.account(
+                pubkeys[i], ((signerMask >> i) & 1) == 1, ((writableMask >> i) & 1) == 1
+            );
+        }
+
+        bytes memory encoded = SolanaGatewayPayload({executePayload: executePayload, accounts: accounts}).encodeBorsh();
+
+        require(encoded.length == 1 + 4 + executePayload.length + 4 + uint256(accountCount) * 33, "bad encoded length");
+        require(uint8(encoded[0]) == 0, "bad scheme");
+        assertBytesEq(slice(encoded, 1, 4), le32(uint32(executePayload.length)));
+        assertBytesEq(slice(encoded, 5, executePayload.length), executePayload);
+
+        uint256 accountsOffset = 5 + executePayload.length;
+        assertBytesEq(slice(encoded, accountsOffset, 4), le32(accountCount));
+        accountsOffset += 4;
+
+        for (uint256 i; i < accountCount; ++i) {
+            bool isSigner = ((signerMask >> i) & 1) == 1;
+            bool isWritable = ((writableMask >> i) & 1) == 1;
+            uint8 flags = (isSigner ? uint8(1) : uint8(0)) | (isWritable ? uint8(2) : uint8(0));
+
+            assertBytesEq(slice(encoded, accountsOffset + i * 33, 32), abi.encodePacked(pubkeys[i]));
+            require(uint8(encoded[accountsOffset + i * 33 + 32]) == flags, "bad account flags");
+        }
+    }
+
     function testFuzzAbiEncodingRoundTrip(bytes memory executePayload, bytes32 pubkey, bool isSigner, bool isWritable)
         public
         pure
@@ -159,11 +197,23 @@ contract SolanaGatewayPayloadTest {
         );
     }
 
+    function bound(uint8 value, uint8 min, uint8 max) private pure returns (uint8) {
+        return uint8(uint256(min) + (uint256(value) % (uint256(max) - uint256(min) + 1)));
+    }
+
     function skipSchemeByte(bytes memory input) private pure returns (bytes memory output) {
         require(input.length > 0, "empty input");
         output = new bytes(input.length - 1);
         for (uint256 i; i < output.length; ++i) {
             output[i] = input[i + 1];
+        }
+    }
+
+    function slice(bytes memory input, uint256 start, uint256 length) private pure returns (bytes memory output) {
+        require(input.length >= start + length, "slice out of bounds");
+        output = new bytes(length);
+        for (uint256 i; i < length; ++i) {
+            output[i] = input[start + i];
         }
     }
 

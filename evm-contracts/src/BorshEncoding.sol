@@ -57,12 +57,16 @@ library BorshEncoding {
         return encodeBytes(bytes(value));
     }
 
-    function encodeOptionBytes(bytes memory value, bool isSome) internal pure returns (bytes memory) {
-        return isSome ? bytes.concat(bytes1(uint8(1)), encodeBytes(value)) : abi.encodePacked(bytes1(uint8(0)));
+    function encodeSomeBytes(bytes memory value) internal pure returns (bytes memory) {
+        return bytes.concat(bytes1(uint8(1)), encodeBytes(value));
     }
 
-    function encodeOptionString(string memory value, bool isSome) internal pure returns (bytes memory) {
-        return isSome ? bytes.concat(bytes1(uint8(1)), encodeString(value)) : abi.encodePacked(bytes1(uint8(0)));
+    function encodeSomeString(string memory value) internal pure returns (bytes memory) {
+        return bytes.concat(bytes1(uint8(1)), encodeString(value));
+    }
+
+    function encodeNone() internal pure returns (bytes memory) {
+        return abi.encodePacked(bytes1(uint8(0)));
     }
 
     function appendU8(bytes memory buffer, uint8 value) internal pure returns (bytes memory) {

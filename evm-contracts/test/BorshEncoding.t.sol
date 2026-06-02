@@ -19,10 +19,9 @@ contract BorshEncodingTest {
         assertBytesEq(BorshEncoding.encodeBool(false), hex"00");
         assertBytesEq(BorshEncoding.encodeBytes(hex"aabbcc"), hex"03000000aabbcc");
         assertBytesEq(BorshEncoding.encodeString("memo"), hex"040000006d656d6f");
-        assertBytesEq(BorshEncoding.encodeOptionBytes(hex"aabb", true), hex"0102000000aabb");
-        assertBytesEq(BorshEncoding.encodeOptionBytes(hex"aabb", false), hex"00");
-        assertBytesEq(BorshEncoding.encodeOptionString("hi", true), hex"01020000006869");
-        assertBytesEq(BorshEncoding.encodeOptionString("hi", false), hex"00");
+        assertBytesEq(BorshEncoding.encodeSomeBytes(hex"aabb"), hex"0102000000aabb");
+        assertBytesEq(BorshEncoding.encodeSomeString("hi"), hex"01020000006869");
+        assertBytesEq(BorshEncoding.encodeNone(), hex"00");
     }
 
     function testAppendHelpers() public pure {

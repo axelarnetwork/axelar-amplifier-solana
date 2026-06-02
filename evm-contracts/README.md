@@ -12,6 +12,10 @@ The `executePayload` bytes are intentionally supplied by the caller. For simple
 programs they may be raw bytes. For programs that expect Borsh instruction data,
 use `BorshEncoding.sol` to build the inner payload.
 
+These helpers only produce protocol-encoded bytes. Callers are responsible for
+keeping the final payload and account list small enough for the intended Solana
+transaction, relayer, and destination-program execution path.
+
 ## Libraries
 
 - `src/SolanaGatewayPayload.sol`: encodes gateway executable payloads with either
