@@ -3,7 +3,6 @@
 
 use anchor_lang::InstructionData;
 use anchor_spl::token_2022::spl_token_2022;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::{
     instructions::{
@@ -13,6 +12,7 @@ use solana_axelar_its::{
     utils::{interchain_token_id_internal, linked_token_deployer_salt},
     ItsError,
 };
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 use solana_sdk::program_pack::Pack;
 
 /// Registers a custom token via the harness and returns the token_id.

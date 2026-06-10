@@ -15,6 +15,7 @@ solana-axelar-std.workspace = true
 [dev-dependencies]
 solana-sdk-ids.workspace = true
 mollusk-svm.workspace = true
+solana-axelar-mollusk-harness.workspace = true
 solana-sdk.workspace = true
 
 [lints]

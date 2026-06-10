@@ -1,100 +1,189 @@
 #![cfg(test)]
+
+use anchor_lang::prelude::ProgramError;
+use anchor_lang::{InstructionData, ToAccountMetas};
 use mollusk_svm::result::Check;
-use mollusk_test_utils::get_event_authority_and_program_accounts;
-use solana_sdk::account::WritableAccount;
-use {
-    anchor_lang::{
-        solana_program::instruction::Instruction, system_program, InstructionData, ToAccountMetas,
-    },
-    solana_sdk::{account::Account, pubkey::Pubkey},
+use solana_axelar_mollusk_harness::{
+    GasServiceSetup, GasServiceTestHarness, OperatorsSetup, TestHarness,
 };
-mod initialize;
-use initialize::{init_gas_service, setup_mollusk, setup_operator};
+use solana_sdk::pubkey::Pubkey;
 
 #[test]
 fn refund_native_fees() {
-    // Setup
+    let mut harness = GasServiceTestHarness::new();
 
-    let program_id = solana_axelar_gas_service::id();
-    let mut mollusk = setup_mollusk(&program_id, "solana_axelar_gas_service");
-
-    let operator = Pubkey::new_unique();
-    let operator_account = Account::new(1_000_000_000, 0, &system_program::ID);
-
-    let (operator_pda, operator_pda_account) =
-        setup_operator(&mut mollusk, operator, &operator_account);
-
-    let (treasury, mut treasury_pda) = init_gas_service(
-        &mollusk,
-        operator,
-        &operator_account,
-        operator_pda,
-        &operator_pda_account,
-    );
-
-    let treasury_balance = 10_000_000_000u64; // 10 SOL
-    treasury_pda
-        .checked_add_lamports(treasury_balance)
-        .expect("Failed to add lamports to treasury");
-
-    // Instruction
+    let treasury_funding = 10_000_000_000;
+    harness.fund_treasury(treasury_funding);
 
     let receiver = Pubkey::new_unique();
-    let receiver_balance = 1_000_000_000u64; // 1 SOL
-    let receiver_account = Account::new(receiver_balance, 0, &system_program::ID);
+    let receiver_balance = 1_000_000_000;
+    let amount = 500_000_000;
+    harness.ensure_account_exists_with_lamports(receiver, receiver_balance);
 
-    let message_id = "tx-sig-2.1".to_owned();
-    let fees = 500_000_000u64; // 0.5 SOL
+    let treasury_balance = harness
+        .get_account(&harness.treasury())
+        .expect("treasury should exist")
+        .lamports;
 
-    let (event_authority, event_authority_account, program_account) =
-        get_event_authority_and_program_accounts(&program_id);
+    let ix = harness.refund_fees_ix(receiver, "tx-sig-2.1".to_owned(), amount);
 
-    let ix = Instruction {
-        program_id,
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[
+            Check::success(),
+            Check::account(&receiver)
+                .lamports(receiver_balance + amount)
+                .build(),
+            Check::account(&harness.treasury())
+                .lamports(treasury_balance - amount)
+                .build(),
+        ],
+    );
+}
+
+#[test]
+fn refund_native_fees_fails_for_zero() {
+    let mut harness = GasServiceTestHarness::new();
+
+    harness.fund_treasury(10_000_000_000);
+
+    let receiver = Pubkey::new_unique();
+    let receiver_balance = 1_000_000_000;
+    harness.ensure_account_exists_with_lamports(receiver, receiver_balance);
+
+    let treasury_balance = harness
+        .get_account(&harness.treasury())
+        .expect("treasury should exist")
+        .lamports;
+
+    let ix = harness.refund_fees_ix(receiver, "tx-sig-2.1".to_owned(), 0);
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[
+            Check::err(ProgramError::InvalidInstructionData),
+            Check::account(&receiver).lamports(receiver_balance).build(),
+            Check::account(&harness.treasury())
+                .lamports(treasury_balance)
+                .build(),
+        ],
+    );
+}
+
+#[test]
+fn refund_native_fees_insufficient_funds() {
+    let mut harness = GasServiceTestHarness::new();
+
+    harness.fund_treasury(10_000_000_000);
+
+    let receiver = Pubkey::new_unique();
+    let receiver_balance = 1_000_000_000;
+    let amount = 50_000_000_000;
+    harness.ensure_account_exists_with_lamports(receiver, receiver_balance);
+
+    let treasury_balance = harness
+        .get_account(&harness.treasury())
+        .expect("treasury should exist")
+        .lamports;
+
+    let ix = harness.refund_fees_ix(receiver, "tx-sig-2.1".to_owned(), amount);
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[
+            Check::err(ProgramError::InsufficientFunds),
+            Check::account(&receiver).lamports(receiver_balance).build(),
+            Check::account(&harness.treasury())
+                .lamports(treasury_balance)
+                .build(),
+        ],
+    );
+}
+
+#[test]
+fn refund_native_fees_not_rent_exempt() {
+    let mut harness = GasServiceTestHarness::new();
+
+    let initial_treasury_balance = harness
+        .get_account(&harness.treasury())
+        .expect("treasury should exist")
+        .lamports;
+    harness.fund_treasury(10_000_000_000);
+
+    let receiver = Pubkey::new_unique();
+    let receiver_balance = 1_000_000_000;
+    let amount = 10_000_000_000
+        + initial_treasury_balance
+            .checked_div(2)
+            .expect("initial treasury balance should divide by two");
+    harness.ensure_account_exists_with_lamports(receiver, receiver_balance);
+
+    let treasury_balance = harness
+        .get_account(&harness.treasury())
+        .expect("treasury should exist")
+        .lamports;
+
+    let ix = harness.refund_fees_ix(receiver, "tx-sig-2.1".to_owned(), amount);
+
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[
+            Check::err(ProgramError::InvalidAccountData),
+            Check::account(&receiver).lamports(receiver_balance).build(),
+            Check::account(&harness.treasury())
+                .lamports(treasury_balance)
+                .rent_exempt()
+                .build(),
+        ],
+    );
+}
+
+#[test]
+fn refund_native_fees_requires_operator() {
+    let mut harness = GasServiceTestHarness::new();
+
+    harness.fund_treasury(10_000_000_000);
+
+    let unauthorized_operator = Pubkey::new_unique();
+    harness.ensure_account_exists_with_lamports(unauthorized_operator, 1_000_000_000);
+
+    let receiver = Pubkey::new_unique();
+    let receiver_balance = 1_000_000_000;
+    let amount = 500_000_000;
+    harness.ensure_account_exists_with_lamports(receiver, receiver_balance);
+
+    let treasury_balance = harness
+        .get_account(&harness.treasury())
+        .expect("treasury should exist")
+        .lamports;
+
+    let (event_authority, _) = solana_axelar_gas_service::EVENT_AUTHORITY_AND_BUMP;
+    let ix = solana_sdk::instruction::Instruction {
+        program_id: solana_axelar_gas_service::ID,
         accounts: solana_axelar_gas_service::accounts::RefundFees {
-            operator,
-            operator_pda,
+            operator: unauthorized_operator,
+            operator_pda: harness.operator_account(&harness.operator),
             receiver,
-            treasury,
-            // Event authority
+            treasury: harness.treasury(),
             event_authority,
-            // The current program account
-            program: program_id,
+            program: solana_axelar_gas_service::ID,
         }
         .to_account_metas(None),
         data: solana_axelar_gas_service::instruction::RefundFees {
-            message_id,
-            amount: fees,
+            message_id: "tx-sig-2.1".to_owned(),
+            amount,
         }
         .data(),
     };
 
-    let accounts = vec![
-        (operator, operator_account.clone()),
-        (operator_pda, operator_pda_account.clone()),
-        (receiver, receiver_account.clone()),
-        (treasury, treasury_pda.clone()),
-        // Event authority
-        (event_authority, event_authority_account),
-        // Current program account (executable)
-        (program_id, program_account),
-    ];
-
-    // Checks
-
-    let checks = vec![
-        Check::success(),
-        // Balance added
-        Check::account(&receiver)
-            .lamports(receiver_balance + fees)
-            .build(),
-        // Balance subtracted
-        Check::account(&treasury)
-            .lamports(treasury_pda.lamports - fees)
-            .build(),
-    ];
-
-    mollusk.process_and_validate_instruction(&ix, &accounts, &checks);
-
-    // TODO(v2) check for CPI event emission
+    harness.ctx.process_and_validate_instruction(
+        &ix,
+        &[
+            Check::err(ProgramError::Custom(2006)),
+            Check::account(&receiver).lamports(receiver_balance).build(),
+            Check::account(&harness.treasury())
+                .lamports(treasury_balance)
+                .build(),
+        ],
+    );
 }

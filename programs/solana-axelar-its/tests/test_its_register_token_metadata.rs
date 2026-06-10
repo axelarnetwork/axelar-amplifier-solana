@@ -1,9 +1,9 @@
 #![cfg(test)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::make_register_token_metadata_instruction;
 use solana_axelar_its::ItsError;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn register_token_metadata() {

@@ -2,11 +2,11 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_spl::token_2022;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
-fn test_user_interchain_transfer() {
+fn user_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
     // Create token
@@ -43,7 +43,7 @@ fn test_user_interchain_transfer() {
 }
 
 #[test]
-fn test_cpi_interchain_transfer() {
+fn cpi_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 
@@ -90,7 +90,7 @@ fn test_cpi_interchain_transfer() {
 }
 
 #[test]
-fn test_cpi_interchain_transfer_invalid_pda_arguments() {
+fn cpi_interchain_transfer_invalid_pda_arguments() {
     let mut its_harness = ItsTestHarness::new();
     its_harness.ensure_memo_program_initialized();
 

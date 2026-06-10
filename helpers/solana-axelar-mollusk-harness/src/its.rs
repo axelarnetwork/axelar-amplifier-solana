@@ -10,7 +10,6 @@ use mollusk_svm::{
     result::{Check, InstructionResult},
     Mollusk, MolluskContext,
 };
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use rand::Rng;
 use solana_axelar_gateway::Message as CrossChainMessage;
 use solana_axelar_its::{
@@ -27,21 +26,24 @@ use solana_sdk::{
 };
 
 use crate::gateway::{GatewayHarnessInfo, GatewaySetup};
-use crate::{msg, TestHarness};
+use crate::{
+    deployed_program_path, ensure_default_sbf_out_dir, get_event_authority_and_program_accounts,
+    msg, TestHarness,
+};
 
 /// Creates a Mollusk instance with ITS, gateway, and all dependencies loaded.
 pub fn initialize_its_mollusk() -> Mollusk {
-    std::env::set_var("SBF_OUT_DIR", "../../target/deploy");
+    ensure_default_sbf_out_dir();
     let mut mollusk = Mollusk::new(&solana_axelar_its::ID, "solana_axelar_its");
 
-    // Operators
-    mollusk.add_program(&solana_axelar_operators::ID, "solana_axelar_operators");
+    let operators_program = deployed_program_path("solana_axelar_operators");
+    mollusk.add_program(&solana_axelar_operators::ID, &operators_program);
 
-    // Gas Service
-    mollusk.add_program(&solana_axelar_gas_service::ID, "solana_axelar_gas_service");
+    let gas_service_program = deployed_program_path("solana_axelar_gas_service");
+    mollusk.add_program(&solana_axelar_gas_service::ID, &gas_service_program);
 
-    // Gateway
-    mollusk.add_program(&solana_axelar_gateway::ID, "solana_axelar_gateway");
+    let gateway_program = deployed_program_path("solana_axelar_gateway");
+    mollusk.add_program(&solana_axelar_gateway::ID, &gateway_program);
 
     // Token Programs
     mollusk.add_program_with_loader_and_elf(
@@ -673,7 +675,7 @@ impl ItsTestHarness {
             payload_hash,
         };
 
-        self.ensure_approved_incoming_messages(&[message.clone()]);
+        self.ensure_approved_incoming_messages(std::slice::from_ref(&message));
 
         let incoming_message_pda =
             solana_axelar_gateway::IncomingMessage::find_pda(&message.command_id()).0;
@@ -902,7 +904,7 @@ impl ItsTestHarness {
             payload_hash,
         };
 
-        self.ensure_approved_incoming_messages(&[message.clone()]);
+        self.ensure_approved_incoming_messages(std::slice::from_ref(&message));
 
         let incoming_message_pda =
             solana_axelar_gateway::IncomingMessage::find_pda(&message.command_id()).0;

@@ -2,10 +2,10 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::{InstructionData, ToAccountMetas};
-use mollusk_harness::{its::ItsTestHarness, GatewaySetup, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
 use solana_axelar_memo::{Counter, ID as MEMO_PROGRAM_ID};
+use solana_axelar_mollusk_harness::{its::ItsTestHarness, GatewaySetup, TestHarness};
 use solana_sdk::instruction::{AccountMeta, Instruction};
 
 #[test]
@@ -71,7 +71,7 @@ fn execute_gmp_message() {
         payload_hash,
     };
 
-    harness.ensure_approved_incoming_messages(&[message.clone()]);
+    harness.ensure_approved_incoming_messages(std::slice::from_ref(&message));
 
     // Build the execute instruction
     let incoming_message_pda =

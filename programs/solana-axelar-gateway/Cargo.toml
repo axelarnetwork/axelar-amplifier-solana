@@ -30,9 +30,8 @@ num-traits.workspace = true
 ruint.workspace = true
 
 [dev-dependencies]
-mollusk-harness.workspace = true
+solana-axelar-mollusk-harness.workspace = true
 mollusk-svm.workspace = true
-mollusk-test-utils.workspace = true
 solana-sdk.workspace = true
 solana-sdk-ids.workspace = true
 solana-axelar-std.workspace = true

@@ -2,14 +2,14 @@
 #![allow(clippy::indexing_slicing)]
 
 use anchor_lang::prelude::AccountMeta;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::executable::{ExecutablePayload, ExecutablePayloadEncodingScheme};
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 use solana_program::program_pack::IsInitialized;
 use solana_sdk::pubkey::Pubkey;
 
 #[test]
-fn test_execute_interchain_transfer() {
+fn execute_interchain_transfer() {
     let mut its_harness = ItsTestHarness::new();
 
     let token_id = its_harness.ensure_test_interchain_token();
@@ -41,7 +41,7 @@ fn test_execute_interchain_transfer() {
 }
 
 #[test]
-fn test_execute_interchain_transfer_existing_ata() {
+fn execute_interchain_transfer_existing_ata() {
     let mut its_harness = ItsTestHarness::new();
 
     let token_id = its_harness.ensure_test_interchain_token();
