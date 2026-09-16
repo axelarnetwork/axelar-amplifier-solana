@@ -25,7 +25,8 @@ runs:
       uses: useblacksmith/rust-cache@f53e7f127245d2a269b3d90879ccf259876842d5 # v3.0.1
       id: cache
       with:
-        prefix-key: "${{ steps.rust.outputs.cachekey }}-rust"
+        # SBF artifacts must not be reused across Agave/platform-tools upgrades.
+        prefix-key: "${{ steps.rust.outputs.cachekey }}-agave-4.2.2-sbf-v1.54"
         shared-key: "${{ inputs.cache-key }}"
         cache-on-failure: true
 
@@ -39,7 +40,7 @@ runs:
     - name: Install Solana
       shell: bash
       run: |
-        curl -sSfL https://release.anza.xyz/stable/install | sh
+        curl -sSfL https://release.anza.xyz/v4.2.2/install | sh
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
     - name: Install needed tooling (needed for solana deps)

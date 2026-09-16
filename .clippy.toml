@@ -2,5 +2,5 @@ large-error-threshold = 161
 allow-dbg-in-tests = true
 allow-unwrap-in-tests = true
 disallowed-methods = [
-    "solana_program::system_instruction::create_account",
+    { path = "solana_system_interface::instruction::create_account", allow-invalid = true },
 ]

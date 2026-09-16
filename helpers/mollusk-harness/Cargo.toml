@@ -2,7 +2,12 @@
 name = "mollusk-harness"
 version = "0.1.0"
 edition = "2021"
+rust-version.workspace = true
 publish = false
+
+[package.metadata.cargo-machete]
+# Constrain transitive serialization dependencies to Agave 4.2's wincode 0.5.
+ignored = ["solana-short-vec", "solana-signature"]
 
 [lints]
 workspace = true
@@ -21,6 +26,9 @@ rand.workspace = true
 hex.workspace = true
 libsecp256k1 = { workspace = true, features = ["hmac", "static-context"] }
 
+# Newer releases switch to wincode 0.6 and break Agave 4.2 compilation.
+solana-short-vec = "=3.2.2"
+solana-signature = "=3.4.1"
 mollusk-svm.workspace = true
 mollusk-svm-programs-token.workspace = true
 spl-token.workspace = true

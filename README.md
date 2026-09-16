@@ -43,10 +43,14 @@ This repository contains the integration work between Solana and Axelar, enablin
 
 Install all Solana and Anchor development dependencies. See the [Anchor installation guide](https://www.anchor-lang.com/docs/installation) for details.
 
-On Mac/Linux you can install everything with:
+Use Rust **1.98.1**, Agave **4.2.2** (platform-tools **v1.54**, SBF Rust **1.89**), and Anchor **1.2.0**. Rust is selected by `rust-toolchain.toml`; the CLI versions are recorded in `Anchor.toml`.
+
+On Mac/Linux, install the pinned CLI versions with:
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
+curl --proto '=https' --tlsv1.2 -sSfL https://release.anza.xyz/v4.2.2/install | sh
+avm install 1.2.0
+avm use 1.2.0
 ```
 
 ### Building
