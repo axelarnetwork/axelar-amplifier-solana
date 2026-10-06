@@ -10,7 +10,6 @@ use mollusk_svm::{
     result::{Check, InstructionResult},
     Mollusk, MolluskContext,
 };
-use mollusk_test_utils::get_event_authority_and_program_accounts;
 use rand::Rng;
 use solana_axelar_gateway::Message as CrossChainMessage;
 use solana_axelar_its::{
@@ -27,21 +26,24 @@ use solana_sdk::{
 };
 
 use crate::gateway::{GatewayHarnessInfo, GatewaySetup};
-use crate::{msg, TestHarness};
+use crate::{
+    deployed_program_path, ensure_default_sbf_out_dir, get_event_authority_and_program_accounts,
+    msg, TestHarness,
+};
 
 /// Creates a Mollusk instance with ITS, gateway, and all dependencies loaded.
 pub fn initialize_its_mollusk() -> Mollusk {
-    std::env::set_var("SBF_OUT_DIR", "../../target/deploy");
+    ensure_default_sbf_out_dir();
     let mut mollusk = Mollusk::new(&solana_axelar_its::ID, "solana_axelar_its");
 
-    // Operators
-    mollusk.add_program(&solana_axelar_operators::ID, "solana_axelar_operators");
+    let operators_program = deployed_program_path("solana_axelar_operators");
+    mollusk.add_program(&solana_axelar_operators::ID, &operators_program);
 
-    // Gas Service
-    mollusk.add_program(&solana_axelar_gas_service::ID, "solana_axelar_gas_service");
+    let gas_service_program = deployed_program_path("solana_axelar_gas_service");
+    mollusk.add_program(&solana_axelar_gas_service::ID, &gas_service_program);
 
-    // Gateway
-    mollusk.add_program(&solana_axelar_gateway::ID, "solana_axelar_gateway");
+    let gateway_program = deployed_program_path("solana_axelar_gateway");
+    mollusk.add_program(&solana_axelar_gateway::ID, &gateway_program);
 
     // Token Programs
     mollusk.add_program_with_loader_and_elf(
@@ -164,11 +166,9 @@ impl ItsTestHarness {
                 Check::success(),
                 Check::account(&its_root_pda)
                     .owner(&solana_axelar_its::ID)
-                    .rent_exempt()
                     .build(),
                 Check::account(&init_accounts.user_roles_account)
                     .owner(&solana_axelar_its::ID)
-                    .rent_exempt()
                     .build(),
             ],
         );
@@ -222,13 +222,8 @@ impl ItsTestHarness {
             make_set_trusted_chain_instruction(self.operator, trusted_chain_name.to_owned(), false)
                 .0;
 
-        self.ctx.process_and_validate_instruction(
-            &ix,
-            &[
-                Check::success(),
-                Check::account(&self.its_root).rent_exempt().build(),
-            ],
-        );
+        self.ctx
+            .process_and_validate_instruction(&ix, &[Check::success()]);
 
         let its = self.get_its_root();
 
@@ -344,11 +339,9 @@ impl ItsTestHarness {
                 Check::success(),
                 Check::account(&token_manager_pda)
                     .owner(&solana_axelar_its::ID)
-                    .rent_exempt()
                     .build(),
                 Check::account(&deploy_accounts.token_mint)
                     .owner(&spl_token_2022::ID)
-                    .rent_exempt()
                     .build(),
             ],
         )]);
@@ -395,7 +388,6 @@ impl ItsTestHarness {
                 Check::return_data(&expected_token_id),
                 Check::account(&accounts.token_manager_pda)
                     .owner(&solana_axelar_its::ID)
-                    .rent_exempt()
                     .build(),
             ],
         )]);

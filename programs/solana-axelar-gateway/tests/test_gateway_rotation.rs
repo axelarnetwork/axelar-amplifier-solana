@@ -6,14 +6,14 @@ use helpers::*;
 
 use std::collections::BTreeMap;
 
-use mollusk_harness::gateway::generate_random_signer;
-use mollusk_harness::{GatewayTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_gateway::{GatewayConfig, SignatureVerificationSessionData, VerifierSetTracker};
+use solana_axelar_mollusk_harness::gateway::generate_random_signer;
+use solana_axelar_mollusk_harness::{GatewayTestHarness, TestHarness};
 use solana_axelar_std::{PayloadType, PublicKey, VerifierSet, U256};
 
 #[test]
-fn test_rotate_signers() {
+fn rotate_signers() {
     let harness = GatewayTestHarness::new();
 
     let config: GatewayConfig = harness
@@ -84,7 +84,7 @@ fn test_rotate_signers() {
 }
 
 #[test]
-fn test_fails_when_using_approve_messages_payload_for_rotate_signers() {
+fn fails_when_using_approve_messages_payload_for_rotate_signers() {
     let harness = GatewayTestHarness::new();
 
     let config: GatewayConfig = harness

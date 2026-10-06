@@ -2,9 +2,9 @@
 #![allow(clippy::indexing_slicing)]
 //! TEMPORARY: Test file using the new test harness. The tests will be split up into multiple files as the harness gets adopted.
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 #[allow(unused)]
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 use solana_axelar_its::instructions::{
     make_initialize_instruction, make_set_pause_status_instruction,

@@ -1,19 +1,20 @@
 [package]
-name = "mollusk-harness"
+name = "solana-axelar-mollusk-harness"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-publish = false
-
-[package.metadata.cargo-machete]
-# Constrain transitive serialization dependencies to Agave 4.2's wincode 0.5.
-ignored = ["solana-short-vec", "solana-signature"]
+description = "Mollusk test harnesses for Axelar Solana programs"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
 
 [lints]
 workspace = true
 
 [lib]
-crate-type = ["cdylib", "lib"]
+# Host-only test support; declaring a cdylib makes cargo test-sbf build it as a program.
+crate-type = ["lib"]
 
 [dependencies]
 anchor-lang.workspace = true
@@ -24,16 +25,13 @@ mpl-token-metadata.workspace = true
 
 rand.workspace = true
 hex.workspace = true
+bincode.workspace = true
 libsecp256k1 = { workspace = true, features = ["hmac", "static-context"] }
 
-# Newer releases switch to wincode 0.6 and break Agave 4.2 compilation.
-solana-short-vec = "=3.2.2"
-solana-signature = "=3.4.1"
 mollusk-svm.workspace = true
 mollusk-svm-programs-token.workspace = true
-spl-token.workspace = true
+spl-token = { workspace = true, default-features = false, features = ["no-entrypoint"] }
 
-mollusk-test-utils.workspace = true
 solana-axelar-std.workspace = true
 
 solana-axelar-gas-service = { workspace = true, features = ["cpi", "no-entrypoint", "devnet-amplifier"] }

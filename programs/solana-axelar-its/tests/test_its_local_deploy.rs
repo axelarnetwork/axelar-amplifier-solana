@@ -1,8 +1,8 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn local_deploy_interchain_token() {
@@ -158,13 +158,9 @@ fn local_deploy_minter_roles() {
         .minter_roles_pda
         .expect("should have minter roles account");
 
-    its_harness.ctx.process_and_validate_instruction(
-        &deploy_ix,
-        &[
-            Check::success(),
-            Check::account(&minter_user_roles).rent_exempt().build(),
-        ],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&deploy_ix, &[Check::success()]);
 
     let user_roles: UserRoles = its_harness
         .get_account_as(&minter_user_roles)

@@ -1,9 +1,9 @@
 #![cfg(test)]
 #![allow(clippy::indexing_slicing)]
 
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::{encoding, state::TokenManager, utils::interchain_token_id, ItsError};
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 use solana_sdk::pubkey::Pubkey;
 
 #[test]

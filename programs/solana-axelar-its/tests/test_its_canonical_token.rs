@@ -3,12 +3,12 @@
 use anchor_lang::prelude::ProgramError;
 use anchor_spl::associated_token::get_associated_token_address_with_program_id;
 use anchor_spl::token_2022::spl_token_2022::{self, extension::StateWithExtensions};
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
 use solana_axelar_its::instructions::{
     make_deploy_remote_canonical_token_instruction, make_register_canonical_token_instruction,
 };
 use solana_axelar_its::state::TokenManager;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 use solana_sdk::pubkey::Pubkey;
 use spl_token_2022::state::Account as Token2022Account;
 

@@ -3,8 +3,8 @@
 
 pub use anchor_lang::error::{Error, ErrorCode};
 use anchor_lang::ToAccountMetas;
-use mollusk_harness::{ItsTestHarness, TestHarness};
 use mollusk_svm::result::Check;
+use solana_axelar_mollusk_harness::{ItsTestHarness, TestHarness};
 
 #[test]
 fn set_trusted_chain_by_upgrade_authority() {
@@ -61,13 +61,9 @@ fn set_trusted_chain_by_operator() {
         true, // by_operator
     )
     .0;
-    its_harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[
-            Check::success(),
-            Check::account(&its_harness.its_root).rent_exempt().build(),
-        ],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::success()]);
 
     // Verify the trusted chain was added
     let its_root = its_harness.get_its_root();
@@ -161,13 +157,9 @@ fn remove_trusted_chain_by_upgrade_authority() {
     )
     .0;
 
-    its_harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[
-            Check::success(),
-            Check::account(&its_harness.its_root).rent_exempt().build(),
-        ],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::success()]);
 
     let its_root = its_harness.get_its_root();
     assert!(

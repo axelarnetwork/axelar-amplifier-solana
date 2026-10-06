@@ -42,6 +42,13 @@ changelog_update = true
 git_release_enable = true
 publish = true
 
+[[package]]
+name = "solana-axelar-mollusk-harness"
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+git_release_enable = true
+publish = true
+
 # Programs
 
 [[package]]

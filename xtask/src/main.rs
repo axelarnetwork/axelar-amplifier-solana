@@ -153,10 +153,10 @@ fn main() -> eyre::Result<()> {
 
             if std::option_env!("CI").is_none() {
                 #[cfg(target_os = "macos")]
-                cmd!(sh, "open target/doc/relayer/index.html").run()?;
+                cmd!(sh, "open target/doc/solana_axelar_std/index.html").run()?;
 
                 #[cfg(target_os = "linux")]
-                cmd!(sh, "xdg-open target/doc/relayer/index.html").run()?;
+                cmd!(sh, "xdg-open target/doc/solana_axelar_std/index.html").run()?;
             }
         }
         Commands::Audit { args } => {
