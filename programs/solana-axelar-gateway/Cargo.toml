@@ -6,16 +6,19 @@ repository.workspace = true
 homepage.workspace = true
 license.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 description = "Axelar Gateway Anchor program for Solana"
 
 [package.metadata.cargo-machete]
 # `ruint` is intentionally unused directly. It constrains Alloy's transitive
 # dependency during `cargo publish`, where the workspace lockfile is ignored.
-ignored = ["ruint"]
+ignored = ["ruint", "anchor-spl"]
 
 [dependencies]
 bytemuck.workspace = true
 anchor-lang.workspace = true
+# IDL builds also compile the ITS program through the test harness.
+anchor-spl = { workspace = true, optional = true }
 borsh.workspace = true
 solana-axelar-std.workspace = true
 solana-keccak-hasher.workspace = true
@@ -58,7 +61,7 @@ test-sbf = []
 cpi = ["no-entrypoint"]
 no-idl = []
 no-log-ix-name = []
-idl-build = ["anchor-lang/idl-build", "solana-axelar-std/idl-build"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "solana-axelar-std/idl-build"]
 
 anchor-debug = []
 custom-heap = []

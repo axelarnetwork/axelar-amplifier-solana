@@ -222,7 +222,7 @@ fn create_token_metadata(
         .is_mutable(false)
         .name(name.to_owned())
         .symbol(symbol.to_owned())
-        .uri(String::with_capacity(0))
+        .uri(String::new())
         .seller_fee_basis_points(0)
         .system_program(&accounts.system_program.to_account_info())
         .sysvar_instructions(&accounts.sysvar_instructions.to_account_info())

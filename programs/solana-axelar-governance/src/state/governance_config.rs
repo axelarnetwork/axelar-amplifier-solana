@@ -17,10 +17,10 @@ pub struct GovernanceConfig {
     pub bump: u8,
     /// The name hash of the governance chain of the remote GMP contract. This
     /// param is used for validating the incoming GMP governance message.
-    pub chain_hash: Hash,
+    pub chain_hash: [u8; 32],
     /// The address hash of the remote GMP governance contract. This param
     /// is used for validating the incoming GMP governance message.
-    pub address_hash: Hash,
+    pub address_hash: [u8; 32],
     /// This is the minimum time in seconds from `now()` a proposal can
     /// be executed. If the incoming GMP proposal does not have an ETA
     /// superior to `unix_timestamp` + `this field`, such ETA will be
@@ -29,7 +29,7 @@ pub struct GovernanceConfig {
     /// The pub key of the operator. This address is able to execute proposals
     /// that were previously scheduled by the Axelar governance infrastructure
     /// via GMP flow regardless of the proposal ETA.
-    pub operator: Address,
+    pub operator: [u8; 32],
 }
 
 impl anchor_lang::Space for GovernanceConfig {
@@ -88,10 +88,10 @@ impl GovernanceConfig {
 /// Parameters for initializing a new governance config.
 #[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
 pub struct GovernanceConfigInit {
-    pub chain_hash: Hash,
-    pub address_hash: Hash,
+    pub chain_hash: [u8; 32],
+    pub address_hash: [u8; 32],
     pub minimum_proposal_eta_delay: u32,
-    pub operator: Address,
+    pub operator: [u8; 32],
 }
 
 impl GovernanceConfigInit {
@@ -114,7 +114,7 @@ impl GovernanceConfigInit {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct GovernanceConfigUpdate {
-    pub chain_hash: Option<Hash>,
-    pub address_hash: Option<Hash>,
+    pub chain_hash: Option<[u8; 32]>,
+    pub address_hash: Option<[u8; 32]>,
     pub minimum_proposal_eta_delay: Option<u32>,
 }

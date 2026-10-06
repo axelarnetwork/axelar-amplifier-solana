@@ -2,6 +2,7 @@
 name = "solana-axelar-std"
 version = "1.1.1"
 edition = "2021"
+rust-version.workspace = true
 description = "Primitive types, encoding and hashing utilities for Axelar Solana integration"
 license.workspace = true
 repository.workspace = true
