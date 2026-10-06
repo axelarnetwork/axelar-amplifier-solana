@@ -158,13 +158,9 @@ fn local_deploy_minter_roles() {
         .minter_roles_pda
         .expect("should have minter roles account");
 
-    its_harness.ctx.process_and_validate_instruction(
-        &deploy_ix,
-        &[
-            Check::success(),
-            Check::account(&minter_user_roles).rent_exempt().build(),
-        ],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&deploy_ix, &[Check::success()]);
 
     let user_roles: UserRoles = its_harness
         .get_account_as(&minter_user_roles)

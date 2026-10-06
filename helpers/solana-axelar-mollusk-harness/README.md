@@ -23,6 +23,10 @@ integrate with Axelar protocols and need end-to-end tests on Mollusk.
 All harnesses use `MolluskContext<HashMap<Pubkey, Account>>`, so state persists
 across instructions within a test.
 
+Mollusk 0.16 checks rent-state transitions during execution by default. Keep these
+checks enabled, and fund recipients to the rent-exempt minimum before testing
+transfers too small to create a rent-exempt account.
+
 The main types are re-exported at the crate root:
 
 ```rust

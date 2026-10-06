@@ -271,6 +271,8 @@ fn should_execute_operator_proposal() {
         .clone();
 
     // Set up accounts for execute operator proposal instruction
+    // The small transfer must land in an already rent-exempt account.
+    let value_receiver_initial_lamports = governance_setup.mollusk.sysvars.rent.minimum_balance(0);
     let accounts = vec![
         (
             SYSTEM_PROGRAM_ID,
@@ -332,7 +334,7 @@ fn should_execute_operator_proposal() {
         (
             value_receiver_pubkey,
             Account {
-                lamports: 0,
+                lamports: value_receiver_initial_lamports,
                 data: vec![],
                 owner: SYSTEM_PROGRAM_ID,
                 executable: false,
@@ -415,7 +417,8 @@ fn should_execute_operator_proposal() {
         .unwrap();
 
     assert_eq!(
-        value_receiver_account_after_execution.1.lamports, native_value_u64,
+        value_receiver_account_after_execution.1.lamports,
+        value_receiver_initial_lamports + native_value_u64,
         "Value receiver should have received native value lamports"
     );
 

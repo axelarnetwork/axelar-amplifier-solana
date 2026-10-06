@@ -61,13 +61,9 @@ fn set_trusted_chain_by_operator() {
         true, // by_operator
     )
     .0;
-    its_harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[
-            Check::success(),
-            Check::account(&its_harness.its_root).rent_exempt().build(),
-        ],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::success()]);
 
     // Verify the trusted chain was added
     let its_root = its_harness.get_its_root();
@@ -161,13 +157,9 @@ fn remove_trusted_chain_by_upgrade_authority() {
     )
     .0;
 
-    its_harness.ctx.process_and_validate_instruction(
-        &ix,
-        &[
-            Check::success(),
-            Check::account(&its_harness.its_root).rent_exempt().build(),
-        ],
-    );
+    its_harness
+        .ctx
+        .process_and_validate_instruction(&ix, &[Check::success()]);
 
     let its_root = its_harness.get_its_root();
     assert!(

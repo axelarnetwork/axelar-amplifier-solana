@@ -177,7 +177,6 @@ fn collect_native_fees_not_rent_exempt() {
             Check::account(&receiver).lamports(receiver_balance).build(),
             Check::account(&harness.treasury())
                 .lamports(treasury_balance)
-                .rent_exempt()
                 .build(),
         ],
     );

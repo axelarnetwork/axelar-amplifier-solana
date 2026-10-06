@@ -55,7 +55,6 @@ pub trait GasServiceSetup: OperatorsSetup {
                 Check::success(),
                 Check::account(&treasury)
                     .owner(&solana_axelar_gas_service::ID)
-                    .rent_exempt()
                     .build(),
             ],
         );

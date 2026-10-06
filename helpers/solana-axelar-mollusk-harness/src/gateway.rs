@@ -143,7 +143,6 @@ pub trait GatewaySetup: TestHarness {
                     Check::success(),
                     Check::account(&registry)
                         .owner(&solana_axelar_operators::ID)
-                        .rent_exempt()
                         .build(),
                 ],
             ),
@@ -153,7 +152,6 @@ pub trait GatewaySetup: TestHarness {
                     Check::success(),
                     Check::account(&operator_account)
                         .owner(&solana_axelar_operators::ID)
-                        .rent_exempt()
                         .build(),
                 ],
             ),
@@ -192,7 +190,6 @@ pub trait GatewaySetup: TestHarness {
                 Check::success(),
                 Check::account(&treasury)
                     .owner(&solana_axelar_gas_service::ID)
-                    .rent_exempt()
                     .build(),
             ],
         )]);
@@ -298,11 +295,9 @@ pub trait GatewaySetup: TestHarness {
                 Check::success(),
                 Check::account(&gateway_root_pda)
                     .owner(&solana_axelar_gateway::ID)
-                    .rent_exempt()
                     .build(),
                 Check::account(&verifier_set_tracker_pda)
                     .owner(&solana_axelar_gateway::ID)
-                    .rent_exempt()
                     .build(),
             ],
         )]);
@@ -386,7 +381,6 @@ pub trait GatewaySetup: TestHarness {
             Check::success(),
             Check::account(&verification_session_account)
                 .owner(&solana_axelar_gateway::ID)
-                .rent_exempt()
                 .build(),
         ];
 
@@ -621,7 +615,6 @@ impl GatewayTestHarness {
                 Check::success(),
                 Check::account(&verification_session_account)
                     .owner(&solana_axelar_gateway::ID)
-                    .rent_exempt()
                     .build(),
             ],
         )]);

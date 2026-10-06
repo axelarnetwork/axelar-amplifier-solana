@@ -51,7 +51,6 @@ pub trait OperatorsSetup: TestHarness {
                 Check::success(),
                 Check::account(&registry)
                     .owner(&solana_axelar_operators::ID)
-                    .rent_exempt()
                     .build(),
             ],
         );
@@ -66,7 +65,6 @@ pub trait OperatorsSetup: TestHarness {
                 Check::success(),
                 Check::account(&self.operator_account(&operator))
                     .owner(&solana_axelar_operators::ID)
-                    .rent_exempt()
                     .build(),
             ],
         )
