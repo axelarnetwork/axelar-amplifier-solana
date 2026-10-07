@@ -32,3 +32,7 @@ bindings/generated/temp
 bindings/generated/dist
 bindings/solana-axelar-its-legacy/dist
 bindings/solana-axelar-its/dist
+
+
+evm-contracts/out
+evm-contracts/cache

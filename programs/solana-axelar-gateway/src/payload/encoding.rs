@@ -195,4 +195,180 @@ pub(crate) mod tests {
             );
         }
     }
+
+    #[test]
+    fn decodes_solidity_borsh_payload_fixture() {
+        let encoded = hex::decode(concat!(
+            // scheme
+            "00",
+            // execute payload length + payload
+            "03000000",
+            "010203",
+            // accounts length
+            "04000000",
+            // signer + writable
+            "0000000000000000000000000000000000000000000000000000000000001111",
+            "03",
+            // signer + readonly
+            "0000000000000000000000000000000000000000000000000000000000002222",
+            "01",
+            // non-signer + writable
+            "0000000000000000000000000000000000000000000000000000000000003333",
+            "02",
+            // non-signer + readonly
+            "0000000000000000000000000000000000000000000000000000000000004444",
+            "00",
+        ))
+        .unwrap();
+
+        assert_decodes_solidity_borsh_payload(&encoded);
+    }
+
+    #[test]
+    fn decodes_forge_generated_borsh_payload() {
+        use std::io::Write as _;
+
+        let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let repo_root = manifest_dir
+            .parent()
+            .and_then(std::path::Path::parent)
+            .expect("gateway crate should be under programs/");
+        let evm_contracts = repo_root.join("evm-contracts");
+
+        let output = std::process::Command::new("forge")
+            .args([
+                "test",
+                "--match-test",
+                "testEmitBorshPayloadForRustCompatibility",
+                "-vv",
+                "--json",
+            ])
+            .current_dir(evm_contracts)
+            .output();
+
+        let output = match output {
+            Ok(output) => output,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                let _ignored = std::io::stderr().write_all(
+                    b"skipping forge-generated Solana gateway payload compatibility test: forge is not installed\n",
+                );
+                return;
+            }
+            Err(err) => {
+                assert_eq!(
+                    err.kind(),
+                    std::io::ErrorKind::NotFound,
+                    "failed to run forge: {err}",
+                );
+                return;
+            }
+        };
+
+        assert!(
+            output.status.success(),
+            "forge failed:\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let stdout = String::from_utf8(output.stdout).expect("forge stdout must be utf8");
+        let event_data = extract_first_json_hex_data(&stdout);
+        let encoded = decode_single_bytes_event_data(&event_data);
+
+        assert_decodes_solidity_borsh_payload(&encoded);
+    }
+
+    fn assert_decodes_solidity_borsh_payload(encoded: &[u8]) {
+        fn pubkey_with_suffix(suffix: [u8; 2]) -> [u8; 32] {
+            let mut pubkey = [0_u8; 32];
+            pubkey[30..].copy_from_slice(&suffix);
+            pubkey
+        }
+
+        let decoded = AxelarMessagePayload::decode(encoded).unwrap();
+        let accounts = decoded.solana_accounts().copied().collect::<Vec<_>>();
+
+        assert_eq!(decoded.encoding_scheme(), EncodingScheme::Borsh);
+        assert_eq!(decoded.payload_without_accounts(), [1, 2, 3]);
+        assert_eq!(accounts.len(), 4);
+        let account_0 = accounts.first().expect("missing account 0");
+        let account_1 = accounts.get(1).expect("missing account 1");
+        let account_2 = accounts.get(2).expect("missing account 2");
+        let account_3 = accounts.get(3).expect("missing account 3");
+
+        assert_eq!(
+            account_0.pubkey.as_slice(),
+            pubkey_with_suffix([0x11, 0x11]).as_slice()
+        );
+        assert!(account_0.is_signer);
+        assert!(account_0.is_writable);
+
+        assert_eq!(
+            account_1.pubkey.as_slice(),
+            pubkey_with_suffix([0x22, 0x22]).as_slice()
+        );
+        assert!(account_1.is_signer);
+        assert!(!account_1.is_writable);
+
+        assert_eq!(
+            account_2.pubkey.as_slice(),
+            pubkey_with_suffix([0x33, 0x33]).as_slice()
+        );
+        assert!(!account_2.is_signer);
+        assert!(account_2.is_writable);
+
+        assert_eq!(
+            account_3.pubkey.as_slice(),
+            pubkey_with_suffix([0x44, 0x44]).as_slice()
+        );
+        assert!(!account_3.is_signer);
+        assert!(!account_3.is_writable);
+    }
+
+    fn extract_first_json_hex_data(json: &str) -> Vec<u8> {
+        let marker = r#""data":"0x"#;
+        let start = json.find(marker).expect("missing event data") + marker.len();
+        let json_bytes = json.as_bytes();
+        let rest = json_bytes.get(start..).expect("missing event data suffix");
+        let end = rest
+            .iter()
+            .position(|byte| *byte == b'"')
+            .expect("unterminated event data")
+            + start;
+        let hex_data = std::str::from_utf8(
+            json_bytes
+                .get(start..end)
+                .expect("missing event data slice"),
+        )
+        .expect("event data must be utf8");
+        hex::decode(hex_data).expect("event data must be hex")
+    }
+
+    fn decode_single_bytes_event_data(event_data: &[u8]) -> Vec<u8> {
+        fn read_abi_usize(word: &[u8]) -> usize {
+            assert_eq!(word.len(), 32);
+            let mut value = 0_usize;
+            for byte in word.get(24..).expect("ABI word should have low bytes") {
+                value = (value << 8) | usize::from(*byte);
+            }
+            value
+        }
+
+        assert!(event_data.len() >= 64, "event data too short");
+        let offset = read_abi_usize(event_data.get(..32).expect("missing ABI offset"));
+        assert_eq!(offset, 32, "unexpected event data offset");
+
+        let length = read_abi_usize(event_data.get(32..64).expect("missing ABI length"));
+        let payload_start = 64;
+        let payload_end = payload_start + length;
+        assert!(
+            event_data.len() >= payload_end,
+            "event data shorter than encoded bytes length"
+        );
+
+        event_data
+            .get(payload_start..payload_end)
+            .expect("missing ABI payload")
+            .to_vec()
+    }
 }
