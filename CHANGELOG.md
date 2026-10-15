@@ -7,6 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v1.1.1...solana-axelar-governance-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
+## [0.1.5](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/governance-gmp-v0.1.4...governance-gmp-v0.1.5)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+- Fix ruint to 1.16 ([#173](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/173)) - ([38f20f4](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/38f20f4c4b63c6d91cd121449fb26f3e1b4b43b9))
+
+### Contributors
+
+* @rista404
+
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-memo-v1.1.1...solana-axelar-memo-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-its-v1.1.1...solana-axelar-its-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gateway-v1.1.1...solana-axelar-gateway-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-gas-service-v1.1.1...solana-axelar-gas-service-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-operators-v1.1.1...solana-axelar-operators-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
+## [1.1.2](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-std-v1.1.1...solana-axelar-std-v1.1.2)
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump rust, agave and anchor ([#176](https://github.com/axelarnetwork/axelar-amplifier-solana/pull/176)) - ([fc52641](https://github.com/axelarnetwork/axelar-amplifier-solana/commit/fc52641f608494f24b7da2dea6ecc8c54d960e0c))
+
+### Contributors
+
+* @rista404
+
 ## [1.1.1](https://github.com/axelarnetwork/axelar-amplifier-solana/compare/solana-axelar-governance-v1.1.0...solana-axelar-governance-v1.1.1)
 
 ### ⚙️ Miscellaneous Tasks
